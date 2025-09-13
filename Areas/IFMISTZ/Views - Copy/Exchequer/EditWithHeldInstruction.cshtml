@@ -1,0 +1,950 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.FundReceivingListVM
+@{
+    ViewBag.Title = "Edit Withheld Allocation Entry";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .form-group {
+        padding-bottom: 10px;
+    }
+
+    .col-md-5 {
+        margin-bottom: 14px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            @Html.AntiForgeryToken()
+                            <div class="row setup-content" id="step-1">
+                                <br />
+                                <fieldset>
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">Withheld Type<i class="fa fa-times" style="color:white" id="WithheldType_1"></i></label>
+                                        <div class="col-md-3">
+                                             <select id="WithheldType" disabled class="form-control">
+                                                @if (ViewBag.WithHeldType == "WithHeldInstruction")
+                                                {
+                                                    <option value='WithHeldInstruction' selected>Withheld Instruction</option>
+                                                    <option value='WithHeldNoBudget' >Withheld No Budget</option>
+                                                    <option value='WithdrawExchequerApproved'>Withdraw Exchequer</option> 
+                                                }
+                                               @if (ViewBag.WithHeldType == "WithHeldNoBudget")
+                                               {
+                                                    <option value='WithHeldInstruction'>Withheld Instruction</option>
+                                                    <option value='WithHeldNoBudget' selected>Withheld No Budget</option>
+                                                    <option value='WithdrawExchequerApproved'>Withdraw Exchequer</option>
+                                               }
+                                                 @if (ViewBag.WithHeldType == "WithdrawExchequerApproved")
+                                                 {
+                                                     <option value='WithHeldInstruction'>Withheld Instruction</option>
+                                                     <option value='WithHeldNoBudget'>Withheld No Budget</option>
+                                                     <option value='WithdrawExchequerApproved' selected>Withdraw Exchequer</option>
+                                                 }
+                                            </select>
+                                        </div>
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"> Reference Number<i class="fa fa-times" style="color:white" id="FundReceivingId_1"></i></label>
+                                        <div class="col-md-3">
+                                            <select id="FundingRefNo" disabled class="form-control" onchange = "FundReceiving()" >
+                                                @foreach (var fundReceiving in ViewBag.FundReceivings)
+                                                {
+                                                    if (ViewBag.FundReceivingId == fundReceiving.FundReceivingId)
+                                                    {
+                                                        <option value='@fundReceiving.FundingRefNo' selected>@fundReceiving.FundingRefNo</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value='@fundReceiving.FundingRefNo'>
+                                                          @fundReceiving.FundingRefNo
+                                                        </option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="form-group"><div class="col-md-2"></div></div>
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">From Institution</label>
+                                        <div class="col-md-3">
+                                            <select name="FromInstitutionCode" id="FromInstitutionCode" disabled onchange="FundReceingByVoteCode()" class="form-control" required style="padding:6px;">
+                                                <option value="">Select Vote Code</option>
+                                            </select>
+                                        </div>
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">To Institution</label>
+                                        <div class="col-md-3">
+                                            <select name="InstitutionId" id="InstitutionId" class="form-control" required style="padding:6px;">
+                                                @foreach (var inst in ViewBag.Institution)
+                                                {
+                                                    if (ViewBag.InstitutionId == inst.InstitutionId)
+                                                    {
+                                                        <option value=@inst.InstitutionId selected>@inst.InstitutionName - @inst.InstitutionCode</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value=@inst.InstitutionId>@inst.InstitutionName - @inst.InstitutionCode</option>
+                                                    }
+                                                }
+                                            </select>
+                                        </div>
+
+                                        <div class="form-group"><div class="col-md-2"></div></div>
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">Component Name</label>
+                                        <div class="col-md-3">
+                                            <a class="search-btn" onclick="ShowExchequerCost()" id="searchbtn" href="#" style="display:block;border:1px solid #ccc;padding:8px">
+                                                <i class="fa fa-search search-icon"></i>
+                                                &nbsp; Component Name(s) <strong id="added_vendors"></strong>
+                                            </a>
+                                        </div>
+                                        
+                                        <div class="form-group"><div class="col-md-2"></div></div>
+                                    </div>
+
+                                    <br />
+                                    <div class="row">
+                                        <div class="col-md-2 col-lg-2 col-sm-2"></div>
+                                        <div class="col-md-8 col-lg-8 col-sm-8">
+                                            <table class="table" id="dt_onload_exchequer_costs">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Component Name</th>
+                                                        <th>Sub Budget Class</th>
+                                                        <th>Allocated Amount</th>
+                                                        <th>Withdrawal Date</th>
+                                                        <th>Action</th>
+                                                    </tr>                                                    
+                                                </thead>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-2 col-lg-2 col-sm-2"></div>
+                                    </div>
+
+                                </fieldset>
+
+                            </div>
+                            <br />
+                            <div class="form-group btnSubmit">
+                                <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"></label>
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("WithHeldInstructionList", "Exchequer")' style="margin-right:5px">
+                                        <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                    </a>
+                                    <button type="button" class="btn btn-info" id="saveForm" onclick="addExchequerReceiving()">
+                                        <i class="fa fa-save"></i>Update
+                                       <img src="~/Content/img/loading.gif" class="saveLoaderInstitution" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="AddExchequerCostForm" style="left:4%">
+    <div class="modal-dialog" style="width:80%;background-color:#b3e5fc;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> WithHeld Amount Allocation </h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-sm-8">
+                        <div style="padding-left:5%;padding-right:1%">
+                            <table style="width:900px">
+                                <tr>
+                                    <td>
+                                        Component Name
+                                        <i class="fa fa-times" style="color:white" id="FundReceivingId_1"></i>
+                                    </td>
+                                    <td>
+                                        New Component Name
+                                        <i class="fa fa-times" style="color:white" id="NewComponentName_1"></i>
+                                    </td>
+                                    <td>
+                                        Exchequer Amount
+                                        <i class="fa fa-times" style="color:white" id="OriginalAmount_1"></i>
+                                    </td>
+                                    <td>
+                                        Amount
+                                        <i class="fa fa-times" style="color:white" id="Amount_1"></i>
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="name-input-container">
+                                            <select name="FundReceivingDataId" id="FundReceivingDataId" onchange="FundReceivingDetails()" required style="width:250px">
+                                                <option value=""></option>
+                                            </select>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="name-input-container">
+                                            <input type="text" name="NewComponentName" id="NewComponentName" class="form-control" style="width:250px" />
+                                        </div>
+                                    </td>
+
+                                    <td>
+                                        <div class="name-input-container">
+                                            <input type="text" name="OriginalAmount" id="OriginalAmount" readonly class="form-control" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="name-input-container">
+                                            <amount-input id="Amount" style="width:100%;" required class="input" maxlength="20" onkeyup="checkAmount()" />
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="name-input-container">
+
+                                            <button type="button" class="btn btn-info" id="btnSaveExchequerAmount" onclick="addExchequerCost()">
+                                                <i class="glyphicon glyphicon-plus"></i>Add
+                                                <img src="~/Content/img/loading.gif" class="saveLoaderInstitution" />
+                                            </button>
+
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+    <script>
+        $("#saveLoader").toggle(false);
+        $(".saveLoaderInstitution").toggle(false);
+        $("#saveForm").prop('disabled', false);
+
+        $("#btnSaveExchequerAmount").prop('disabled', false);
+        $("#FundingRefNo").select2();
+        $("#InstitutionId").select2();
+        $(".saveVendorLoader").toggle(false);
+
+        var oldComponentName = null;
+        var oldComponentDesc = null;
+        var dt_onload_exchequer_costs = $('#dt_onload_exchequer_costs').dataTable();
+        $("#dt_onload_exchequer_costs_wrapper .dt-toolbar").remove();
+        $("#dt_onload_exchequer_costs_wrapper .dt-toolbar-footer").remove();
+
+        $(document).ready(function () {
+            $.ajax({
+                url: '@Url.Action("GetSingleFundReceiving", "Exchequer")/?fundReceivingId=' + '@ViewBag.FundReceivingId',
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    var operationalAmount = data.data.OperationalAmount;
+                     oldComponentName = data.data.ComponentName;
+                    oldComponentDesc = data.data.ComponentDesc;
+
+                    if (data.data.WithheldAllocatedAmount != null) {
+                        var balance = data.data.WithheldAllocatedAmount;
+                    }
+                    else {
+                        var balance = 0;
+                    }
+                    var remainingBalance = parseFloat(operationalAmount) - parseFloat(balance);
+                    $("#NewComponentName").val('@ViewBag.NewComponentName');
+                    $("#SubBudgetClass").val(data.data.SubBudgetClass);
+                    $("#OperationalAmount").val(parseFloat(operationalAmount).toLocaleString());
+                    $("#FundingDate").val(ToJavaScriptDate(data.data.FundingDate));
+                    $("#InstitutionName").val(data.data.InstitutionName);
+                    $("#InstitutionCode").val(data.data.InstitutionCode);
+                    var _amount = '@ViewBag.Amount';
+                    $("#_Amount").val(parseFloat(_amount).toLocaleString());
+                }
+            });
+
+            if ('@ViewBag.WithHeldExchequerId' != null) {
+                var voteCode = '@ViewBag.FromInstitutionCode';
+                updateOnLoadExchequerCostTables(voteCode);
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetFundByRefNo", "Exchequer")/?fundingRefNo=' + '@ViewBag.FundingRefNo',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        console.log(data.data);
+                        option.push('<option value="">Select Vote Code</option>');
+                        data.data.forEach(d=> {
+                            if ('@ViewBag.FromInstitutionCode' == d["VoteCode"]) {
+                                option.push('<option value=' + d["VoteCode"] + ' selected>' + d["VoteCode"] + "-" + d["ComponentName"] + '</option>');
+                            } else {
+                                option.push('<option value=' + d["VoteCode"] + '>' + d["VoteCode"] + "-" + d["ComponentName"] + '</option>');
+                            }
+
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#FromInstitutionCode").html(option);
+                    }
+                });
+
+                var option2 = [];
+                $.ajax({
+                    url: '@Url.Action("GetFundReceivingByVoteCode", "Exchequer")/?voteCode=' + voteCode,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option2.push('<option value="">Select Component Name</option>');
+                        data.data.forEach(d=> {
+                            option2.push('<option value=' + d["FundReceivingId"] + '>' + d["ComponentName"] + '</option>');
+                        });
+                        option2 = option2.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#FundReceivingDataId").html(option2);
+                    }
+                })
+            }
+        });
+
+        var getWithheldType = null;
+        document.getElementById("FundReceivingDataId").disabled = false;
+
+        function ShowExchequerCost() {
+            $("#AddExchequerCostForm").modal("show");
+        };
+
+        /*BEGINNING EXCHEQUER COSTS*/
+
+        var allexchequers = []
+        var exchequers = [];
+
+        function addExchequerCost() {
+            $(".saveLoaderInstitution").toggle(true);
+            $("#btnSaveExchequerAmount").prop('disabled', true);
+
+            var Amount = $("#Amount").val();
+            var FundReceivingId = $("#FundReceivingDataId").val();
+            var NewComponentName = $("#NewComponentName").val();
+
+            if (FundReceivingId == '' || FundReceivingId == 'Select Component Name') {
+                swal("Component name is Required", { icon: "warning" });
+                $(".saveLoaderInstitution").toggle(false);
+                $("#btnSaveExchequerAmount").prop('disabled', false);
+                return false;
+            }
+
+            if (NewComponentName == '') {
+                swal("New Component Name is Required", { icon: "warning" });
+                $(".saveLoaderInstitution").toggle(false);
+                $("#btnSaveExchequerAmount").prop('disabled', false);
+                return false;
+            }
+
+
+            var amount = $("#_Amount").val();
+            var amount2 = amount.split(',').join('');
+
+            if (parseFloat(amount2) == 0) {
+                $("#btnSaveExchequerAmount").prop('disabled', true);
+                document.getElementById("Amount").style.color = 'red';
+                swal("Amount Entered should not be Zero", { icon: "warning" });
+                return false;
+            }
+
+            var voteCode = $("#FromInstitutionCode").val();
+
+            if (!exchequers.includes(NewComponentName)) {
+                var formData = new FormData();
+
+                formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                formData.append('Amount', Amount);
+                formData.append('FundReceivingId', FundReceivingId);
+                formData.append('NewComponentName', NewComponentName);
+                formData.append('FundingRefNo', fundingRefNo);
+                formData.append('WithHeldExchequerId', '@ViewBag.WithHeldExchequerId');
+                var url = '@Url.Action("updateExchequerCost", "Exchequer")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        switch (response) {
+                            case "Success":
+                                allexchequers.push({
+                                    NewComponentName: $("#NewComponentName").val()
+                                })
+                                exchequers.push($("#NewComponentName").val());
+                                updateOnLoadExchequerCostTables(voteCode);
+                                swal("Saved Successfully!", { icon: "success" });
+                                document.getElementById("NewComponentName").value = "";
+                                document.getElementById("_Amount").value = "";
+                                document.getElementById("OriginalAmount").value = "";
+                                document.getElementById("FundReceivingDataId").value = "";
+                                $(".saveLoaderInstitution").toggle(false);
+                                $("#btnSaveExchequerAmount").prop('disabled', false);
+                                break;
+
+                            default:
+                                swal(response, { icon: "warning" });
+                                $(".saveLoaderInstitution").toggle(false);
+                                $("#btnSaveExchequerAmount").prop('disabled', false);
+                        }
+                    },
+                    failure: function (response) {
+                        swal(response.d, { icon: "warning" });
+                        $(".saveLoaderInstitution").toggle(false);
+                        $("#btnSaveExchequerAmount").prop('disabled', false);
+                    }
+                });
+
+            } else {
+                swal("Duplicate, Component Name: " + NewComponentName + " Already Exists");
+                $(".saveLoaderInstitution").toggle(false);
+                $("#btnSaveExchequerAmount").prop('disabled', false);
+            }
+
+        }
+        /*END EXCHEQUER COSTS*/
+
+        function updateOnLoadExchequerCostTables(voteCode) {
+            var url = '@Url.Action("GetExchequerCostByIdAndVoteCode", "Exchequer")';
+            var params = { "id": '@ViewBag.WithHeldExchequerId',"voteCode":voteCode };
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    datalength = data.length;
+                    dt_onload_exchequer_costs.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_onload_exchequer_costs.fnAddData([i + 1,
+                            data[i]["NewComponentName"],
+                            data[i]["SubBudgetClass"],
+                            data[i]["Amount"].toLocaleString(),
+                            ToJavaScriptDate(data[i]["CreatedAt"]),
+                           '<a href="#" onclick="exchequerRemove(' + i + ',' + data[i]["WithHeldExchequerAmountId"] + ')">\
+                           <i class="glyphicon glyphicon-trash"></i></a>'
+                        ]);
+                    }
+                    $("#added_exchequers").text(" (" + data.length + ")");
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function exchequerRemove(index, id) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveComponentName", "Exchequer")';
+
+            swal({
+                title: 'Cancel Component ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        type: "post",
+                        url: url,
+                        data: params,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            if (response = "Success") {
+                                allexchequers.splice(index, 1);
+                                exchequers.splice(index, 1);
+                                updateOnLoadExchequerCostTables(voteCode);
+                                swal("Component Name Cancelled Successfully!", { icon: "success" });
+                            }
+                        },
+                        failure: function (response) {
+                            alert(response.d);
+                        }
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        $("#WithheldType").change(function () {
+
+            $('#FundReceivingDataId').val('');
+            $('#FundReceivingDataId').change();
+
+            $('#InstitutionId').val('');
+            $('#InstitutionId').change();
+
+            $('#Amount').val('');
+            $('#_Amount').val('');
+            $("#NewComponentName").val('');
+            $("#SubBudgetClass").val('');
+            $("#OperationalAmount").val('');
+            $("#FundingDate").val('');
+            $("#InstitutionName").val('');
+            $("#InstitutionCode").val('');
+
+            var withheldType = $(this).val();
+
+            getWithheldType = withheldType;
+            document.getElementById("FundReceivingDataId").disabled = false;
+            getFundReceivingList(withheldType);
+
+        });
+        
+
+        function getFundReceivingList(withheldTypeData) {
+            var option = [];
+            $.ajax({
+                url: '@Url.Action("GetFundByReleaseStatus", "Exchequer")/?withheldType=' + withheldTypeData,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    option.push('<option value="">Select Reference Number</option>');
+                    data.data.forEach(d=> {
+                        option.push('<option value=' + d["FundReceivingId"] + '>' + d["FundingRefNo"] + '</option>');
+                    });
+                    option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                    $("#FundingRefNo").html(option);
+                }
+            })
+        }
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+
+        var fundingRefNo = null;
+
+        function FundReceiving() {
+            $('#FundReceivingDataId').val('');
+            $('#FundReceivingDataId').change();
+
+            $('#InstitutionId').val('');
+            $('#InstitutionId').change();
+
+            $('#Amount').val('');
+            $('#_Amount').val('');
+            $("#NewComponentName").val('');
+            $("#SubBudgetClass").val('');
+            $("#OperationalAmount").val('');
+            $("#FundingDate").val('');
+            $("#InstitutionName").val('');
+            $("#InstitutionCode").val('');
+
+            document.getElementById("FundReceivingDataId").disabled = false;
+
+            var option = [];
+            fundingRefNo = $("#FundingRefNo").val();
+
+            var voteCode = $("#FromInstitutionCode").val();
+
+            updateOnLoadExchequerCostTables(voteCode);
+            if (fundingRefNo != "Select Component Name" && fundingRefNo != "") {
+                $.ajax({
+                    url: '@Url.Action("GetFundByRefNo", "Exchequer")/?fundingRefNo=' + fundingRefNo,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.push('<option value="">Select Component Name</option>');
+                        data.data.forEach(d=> {
+                            option.push('<option value=' + d["FundReceivingId"] + '>' + d["ComponentName"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#FundReceivingDataId").html(option);
+                    }
+                })
+            }
+        }
+
+        var voteCode = null;
+        function FundReceingByVoteCode() {
+           
+            $('#FundReceivingDataId').val('');
+            $('#FundReceivingDataId').change();
+
+            $('#InstitutionId').val('');
+            $('#InstitutionId').change();
+
+            $('#Amount').val('');
+            $('#_Amount').val('');
+            $("#NewComponentName").val('');
+            $("#SubBudgetClass").val('');
+            $("#OperationalAmount").val('');
+            $("#FundingDate").val('');
+            $("#InstitutionName").val('');
+            $("#InstitutionCode").val('');
+
+            document.getElementById("NewComponentName").value = "";
+            document.getElementById("Amount").value = "";
+            document.getElementById("OriginalAmount").value = "";
+            document.getElementById("FundReceivingDataId").value = "";
+
+            document.getElementById("FundReceivingDataId").disabled = false;
+
+            var option = [];
+            voteCode = $("#FromInstitutionCode").val();
+
+            updateOnLoadExchequerCostTables(voteCode);
+            if (voteCode != "Select Vote Code" && voteCode != null && voteCode != '') {
+                $.ajax({
+                    url: '@Url.Action("GetFundReceivingByVoteCode", "Exchequer")/?voteCode=' + voteCode,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.push('<option value="">Select Component Name</option>');
+                        data.data.forEach(d=> {
+                            option.push('<option value=' + d["FundReceivingId"] + '>' + d["ComponentName"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#FundReceivingDataId").html(option);
+                    }
+                })
+            }
+        }
+
+        var fundReceivingId = null;
+        function FundReceivingDetails() {
+            fundReceivingId = $("#FundReceivingDataId").val();
+            document.getElementById("FundReceivingDataId").disabled = false;
+            document.getElementById("NewComponentName").value = "";
+            document.getElementById("Amount").value = "";
+            document.getElementById("OriginalAmount").value = "";
+
+            if (fundReceivingId != "Select Reference Number" && fundReceivingId != "") {
+                $.ajax({
+                    url: '@Url.Action("GetSingleFundReceiving", "Exchequer")/?fundReceivingId=' + fundReceivingId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        var operationalAmount = data.data.OperationalAmount;
+                        var ComponentName = data.data.ComponentName;
+                        var OriginalAmount = data.data.OriginalAmount;
+                         oldComponentName = data.data.ComponentName;
+                        oldComponentDesc = data.data.ComponentDesc;
+
+                        var balance = 0;
+                        var NewOriginalAmount = null;
+                        if (data.data.WithheldAllocatedAmount != null) {
+                            balance = data.data.WithheldAllocatedAmount;
+                        }
+                        var remainingBalance = parseFloat(OriginalAmount) - parseFloat(balance);
+                        if (balance != 0 && balance != null) {
+                            NewOriginalAmount = remainingBalance;
+                        }
+                        else {
+                            NewOriginalAmount = OriginalAmount;
+                        }
+
+                        if (data.data.ReleaseStatus == "WithdrawExchequerApproved") {
+                            if (data.data.WithdrawExchequerAmount != null && data.data.WithdrawExchequerAmount != 0) {
+                                NewOriginalAmount = data.data.WithdrawExchequerAmount;
+                            } else {
+                                NewOriginalAmount = 0;
+                            }
+                        }
+                        $("#ComponentName").val(data.data.ComponentName);
+                        $("#SubBudgetClass").val(data.data.SubBudgetClass);
+                        $("#OperationalAmount").val(parseFloat(operationalAmount).toLocaleString());
+                        $("#NewComponentName").val(ComponentName);
+                        $("#OriginalAmount").val(parseFloat(NewOriginalAmount).toLocaleString());
+                        $("#FundingDate").val(ToJavaScriptDate(data.data.FundingDate));
+                        $("#InstitutionName").val(data.data.InstitutionName);
+                        $("#InstitutionCode").val(data.data.InstitutionCode);
+                    }
+                })
+                var amt2 = $("#_Amount").val();
+                var amt = amt2.split(',').join('');
+
+                if(parseFloat(amt) == 0){
+                    $("#saveForm").prop('disabled', true);
+                    $("#btnSaveExchequerAmount").prop('disabled', true);
+                    document.getElementById("Amount").style.color = 'red';
+                }else{
+                    $("#saveForm").prop('disabled', false);
+                    $("#btnSaveExchequerAmount").prop('disabled', false);
+                    document.getElementById("Amount").style.color = 'black';
+            }
+            }
+        }
+
+        function checkAmount() {
+            var operationalAmount = document.getElementById("OriginalAmount").value;
+            var amount = $("#_Amount").val();
+            var operationalAmount2 = operationalAmount.split(',').join('');
+            var amount2 = amount.split(',').join('');
+
+            if (parseFloat(amount2) == 0) {
+                $("#saveForm").prop('disabled', true);
+                $("#btnSaveExchequerAmount").prop('disabled', true);
+                document.getElementById("Amount").style.color = 'red';
+                swal("Amount Entered should not be Zero", { icon: "warning" });
+                return false;
+            }
+            if (parseFloat(operationalAmount2) < parseFloat(amount2)) {
+                $("#saveForm").prop('disabled', true);
+                $("#btnSaveExchequerAmount").prop('disabled', true);
+                document.getElementById("Amount").style.color = 'red';
+                swal("Amount Entered Exceed Exchequer Amount", { icon: "warning" });
+                return false;
+            } else {
+                $("#saveForm").prop('disabled', false);
+                $("#btnSaveExchequerAmount").prop('disabled', false);
+                document.getElementById("Amount").style.color = '';
+            }
+        }
+
+            function addExchequerReceiving() {
+                $(".saveLoaderInstitution").toggle(true);
+                $("#saveForm").prop('disabled', true);
+                $("#LoaderText").show();
+
+                var InstitutionId = $("#InstitutionId").val();
+                var FromInstitutionCode = $("#FromInstitutionCode").val();
+
+                var WithheldType = '@ViewBag.WithHeldType';
+
+                var FundingRefNo = '@ViewBag.FundingRefNo';
+
+                if (WithheldType == '') {
+                    swal("Withheld Type Required", { icon: "warning" });
+                    $(".saveLoaderInstitution").toggle(false);
+                    $("#saveForm").prop('disabled', false);
+                    $("#LoaderText").hide();
+                    return false;
+                }
+
+                if (FromInstitutionCode == '') {
+                    swal("Please Select Vote Code", { icon: "warning" });
+                    $(".saveLoaderInstitution").toggle(false);
+                    $("#saveForm").prop('disabled', false);
+                    $("#LoaderText").hide();
+                    return false;
+                }
+
+
+                if (FundingRefNo == '') {
+                    swal("Reference Number is Required", { icon: "warning" });
+                    $(".saveLoaderInstitution").toggle(false);
+                    $("#saveForm").prop('disabled', false);
+                    $("#LoaderText").hide();
+                    return false;
+                }
+
+                if (InstitutionId == 'Select Institution' || InstitutionId == '') {
+                    swal("Please Choose Institution Name to allocate", { icon: "warning" });
+                    $(".saveLoaderInstitution").toggle(false);
+                    $("#saveForm").prop('disabled', false);
+                    $("#LoaderText").hide();
+                    return false;
+                }
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                if (InstitutionId != "" && InstitutionId != null) {
+                    formData.append('InstitutionId', InstitutionId);
+                } else {
+                    formData.append('InstitutionId', '@Model.InstitutionId');
+                }
+               
+                formData.append('FromInstitutionCode', $("#FromInstitutionCode").val());
+                formData.append('WithHeldExchequerId', '@ViewBag.WithHeldExchequerId');
+                //formData.append('OldComponentName', oldComponentName);
+                //formData.append('OldComponentDesc', oldComponentDesc);
+                var url = '@Url.Action("updateExchequer", "Exchequer")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        switch (response) {
+                            case "Success":
+                                swal("Updated Successfully", { icon: "success" })
+                                .then((value) => {
+                                    var url = '@Url.Action("WithHeldInstructionList", "Exchequer")';
+                                    window.location.replace(url);
+                                });
+                                break;
+
+                            default:
+                                swal(response, { icon: "warning" });
+                                $(".saveLoaderInstitution").toggle(false);
+                                $("#saveForm").prop('disabled', false);
+                                $("#LoaderText").hide();
+                        }
+                    },
+                    failure: function (response) {
+                        swal(response.d, { icon: "warning" });
+                    }
+                });
+            }
+
+        function exchequerRemove(index, id) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveComponentName", "Exchequer")';
+
+            swal({
+                title: 'Cancel Component ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: params,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            if (response = "Success") {
+                                allexchequers.splice(index, 1);
+                                exchequers.splice(index, 1);
+                                var voteCode = document.getElementById("FromInstitutionCode").value;
+                                updateOnLoadExchequerCostTables(voteCode);
+                                swal("Component Name Cancelled Successfully!", { icon: "success" });
+                            }
+                        },
+                        failure: function (response) {
+                            alert(response.d);
+                        }
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+    </script>
+}

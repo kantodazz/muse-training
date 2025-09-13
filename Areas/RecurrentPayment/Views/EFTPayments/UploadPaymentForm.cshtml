@@ -1,0 +1,269 @@
+@model IFMIS.Areas.RecurrentPayment.Models.UploadBeneficiaryPaymentsVM
+@{
+    ViewBag.Title = "Upload Beneficiaries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body " style="padding-top:10px">
+
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "beneficiariesForm" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    @*<div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            Pay Station
+                                            @Html.DropDownListFor(model => model.PayStationId, Model.PayStations, "Select Pay Station", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.PayStationId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            Department
+                                            @Html.DropDownListFor(model => model.DepartmentId, new SelectList(""), "Select Department", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>*@
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div> 
+                                    
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            <a href="@Url.Action("PreviewTobeUploadFile", "Payment", new { Filename = "Template.xlsx" })">Download Template</a>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-6">
+                                            
+                                            <button type="button" class="btn btn-info">
+                                                <a href='@Url.Action("PaymentBatchLists", "Payments")' style="text-decoration:none;color:white;">
+                                                    <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                                    Back
+                                                </a>
+                                            </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                            <button type="button" class="btn btn-info" onclick="uploadBeneficiaries()">
+                                                <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                                Upload
+                                            </button>
+
+                                        </div>
+
+                                        </div>
+                                    </div>
+                            }
+
+                        </div>
+                        <!-- Start of div loader-->
+                        <div id="divLoader" style="text-align: center; display: none">
+                            <img src="~/Media/Images/ajax_loader.gif" />
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        var url = null;
+        var urlList = null;
+        $("#saveLoader").toggle(false);
+        function upload() {
+
+            swal({
+                title: "Upload",
+                text: "Are you sure you want to Upload Payment Information? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    uploadPayment();
+                }
+            });
+        }
+
+
+
+        var uploadPayment = function () {
+            var FileName = $("#FileName").val();
+
+                if (FileName == '') {
+                    swal("Please Attach File (Excel Format)")
+                    return false;
+                }
+                var file = document.querySelector("#FileName");
+                if (/\.(xlsx)$/i.test(file.files[0].name) === false) {
+                    swal("Please Attach File (Excel Format)")
+                    return false;
+                }
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                    data.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+                }
+
+                 url = '@Url.Action("UploadPayment", "Payment")';
+                 urlList = '@Url.Action("UploadPaymentForm", "Payment")';
+
+                $("#saveLoader").toggle(true);
+                $("#btnUpload").prop('disabled', true);
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (response) {
+                        if (response == "Success") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.href = urlList;
+                            });
+
+                        } else if (response == "InvalidFormat") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Invalid file format, file format should be MS Excel", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        } else if (response == "InvalidSize") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Invalid file size, file size should be less than 2MB!", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        }
+                        else if (response == "DataExist") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Some Loan Data already Exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+
+                        else {
+                            $("#btnUpload").prop('disabled', false);
+                            swal(response, { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                        $("#saveLoader").toggle(false);
+                    }
+                });
+
+        };
+
+    </script>
+}

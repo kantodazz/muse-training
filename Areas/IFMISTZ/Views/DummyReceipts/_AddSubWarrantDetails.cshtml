@@ -1,0 +1,300 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.AddSubWarrantDetailVM
+
+<div class="row" style="padding-left: 10px; padding-right: 30px">
+    <dl class="dl-horizontal">
+        <dt>
+            @Html.DisplayNameFor(model => model.ReferenceNo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.ReferenceNo)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.LegalNo)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.LegalNo)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OperationalAmount)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OperationalAmount, "_DecimalThousands")
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.OperationalCurrency)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.OperationalCurrency)
+        </dd>
+
+        <dt>
+            @Html.DisplayNameFor(model => model.Remarks)
+        </dt>
+
+        <dd>
+            @Html.DisplayFor(model => model.Remarks)
+        </dd>
+    </dl>
+
+    <form class="form-horizontal" name="addSubWarrantForm" id="addSubWarrantForm">
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.ReceiptId)
+        @Html.HiddenFor(model => model.ParentInstitutionName)
+        @Html.HiddenFor(model => model.SubWarrantDescription)
+        <input type="hidden" id="GlAccount" />
+        <input type="hidden" id="GlAccountDesc" />
+        <input type="hidden" id="SubVote" />
+        <input type="hidden" id="SubVoteDesc" />
+        <input type="hidden" id="TR" />
+        <input type="hidden" id="CostCentre" />
+        <input type="hidden" id="CostCentreDesc" />
+        <input type="hidden" id="Facility" />
+        <input type="hidden" id="FacilityDesc" />
+        <input type="hidden" id="GfsCode" />
+        <input type="hidden" id="GfsCodeCategory" />
+        <input type="hidden" id="GeographicalLocationDesc" />
+        <input type="hidden" id="TrDesc" />
+        <input type="hidden" id="ProjectDesc" />
+        <input type="hidden" id="ServiceOutputDesc" />
+        <input type="hidden" id="ActivityDesc" />
+        <input type="hidden" id="FundTypeDesc" />
+        <input type="hidden" id="CofogDesc" />
+        <input type="hidden" id="FundingSourceDesc" />
+        <input type="hidden" id="VoteDesc" />
+        <input type="hidden" id="Vote" />
+        <input type="hidden" id="GeographicalLocation" />
+        <input type="hidden" id="Project" />
+        <input type="hidden" id="ServiceOutput" />
+        <input type="hidden" id="Activity" />
+        <input type="hidden" id="CrFundType" />
+        <input type="hidden" id="COFOG" />
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ParentInstitutionCode, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-4">
+                @Html.DropDownListFor(model => model.ParentInstitutionCode, Model.ParentInstitutionCodes, "Select Parent Institution", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.ParentInstitutionCode, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.SubWarrantCode, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-4">
+                @Html.DropDownListFor(model => model.SubWarrantCode, Model.SubWarrantCodes, "Select Sub Warrant", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.SubWarrantCode, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.SubWarrantGlAccount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.EditorFor(model => model.SubWarrantGlAccount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.SubWarrantGlAccount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </form>
+</div>
+
+<script>
+    $(function () {
+        $("#ParentInstitutionCode").select2();
+        //$("#SubWarrantCode").select2();
+    });
+
+    $("#ParentInstitutionCode").on("change", function () {
+            let institutionCode = $("#ParentInstitutionCode").val();
+
+            $("#divLoader").show();
+            var url = '@Url.Action("GetSubWarrants", "Institutions")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { institutionCode: institutionCode},
+                success: function (data, status, jqXHR) {
+                    $("#SubWarrantCode option").remove();
+                    $("#SubWarrantCode").append('<option value="">Select Sub Warrant</option>');
+                    $.each(data.subWarrants, function (i, subwarrant) {
+                        $("#SubWarrantCode").append('<option value="'
+                            + subwarrant.SubWarrantCode + '">'
+                            + subwarrant.SubWarrantCode + ' - ' + subwarrant.SubWarrantDescription + '</option>');
+                    });
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#SubWarrantCode").on("change", function () {
+
+            let subWarrantCode = $("#SubWarrantCode").val();
+
+            $("#divLoader").show();
+            var url = '@Url.Action("GetSubWarrant", "Institutions")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { subWarrantCode: subWarrantCode},
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#ParentInstitutionName").val(data.ParentInstitutionName);
+                        $("#SubWarrantDescription").val(data.SubWarrantDescription);
+                        $("#SubWarrantGlAccount").val(data.SubWarrantGlAccount);
+                        $("#GlAccount").val(data.GlAccount);
+                        $("#GlAccountDesc").val(data.GlAccountDesc);
+                        $("#SubVote").val(data.SubVote);
+                        $("#SubVoteDesc").val(data.SubVoteDesc);
+                        $("#TR").val(data.TR);
+                        $("#CostCentre").val(data.CostCentre);
+                        $("#CostCentreDesc").val(data.CostCentreDesc);
+                        $("#Facility").val(data.Facility);
+                        $("#FacilityDesc").val(data.FacilityDesc);
+                        $('#GfsCode').val(data.GfsCode);
+                        $('#GfsCodeCategory').val(data.GfsCodeCategory);
+                        $('#GeographicalLocationDesc').val(data.GeographicalLocationDesc);
+                        $('#TrDesc').val(data.TrDesc);
+                        $('#ProjectDesc').val(data.ProjectDesc);
+                        $('#ServiceOutputDesc').val(data.ServiceOutputDesc);
+                        $('#ActivityDesc').val(data.ActivityDesc);
+                        $('#FundTypeDesc').val(data.FundTypeDesc);
+                        $('#CofogDesc').val(data.CofogDesc);
+                        $('#FundingSourceDesc').val(data.FundingSourceDesc);
+                        $('#VoteDesc').val(data.VoteDesc);
+                        $('#Vote').val(data.Vote);
+                        $('#GeographicalLocation').val(data.GeographicalLocation);
+                        $('#Project').val(data.Project);
+                        $('#ServiceOutput').val(data.ServiceOutput);
+                        $('#Activity').val(data.Activity);
+                        $('#CrFundType').val(data.FundType);
+                        $('#COFOG').val(data.COFOG);
+                        $('#FundingSource').val(data.FundingSource);
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#btnSave").on("click", function () {
+    $('#btnSave').prop("disabled", true);
+    $("#divLoader").show();
+
+    if (!$("#addSubWarrantForm").valid()) {
+        $('#btnSave').prop("disabled", false);
+        $("#divLoader").hide();
+        return false;
+    }
+
+    let receiptDetails = [];
+
+    receiptDetails.push({
+        GlAccount: $('#GlAccount').val(),
+        GlAccountDesc: $('#GlAccountDesc').val(),
+        SubVote: $('#SubVote').val(),
+        SubVoteDesc: $('#SubVoteDesc').val(),
+        TR: $('#TR').val(),
+        CostCentre: $('#CostCentre').val(),
+        CostCentreDesc: $('#CostCentreDesc').val(),
+        Facility: $('#Facility').val(),
+        FacilityDesc: $('#FacilityDesc').val(),
+        GfsCode: $('#GfsCode').val(),
+        GfsCodeCategory: $('#GfsCodeCategory').val(),
+        GeographicalLocationDesc: $('#GeographicalLocationDesc').val(),
+        TrDesc: $('#TrDesc').val(),
+        ProjectDesc: $('#ProjectDesc').val(),
+        ServiceOutputDesc: $('#ServiceOutputDesc').val(),
+        ActivityDesc: $('#ActivityDesc').val(),
+        FundTypeDesc: $('#FundTypeDesc').val(),
+        CofogDesc: $('#CofogDesc').val(),
+        FundingSourceDesc: $('#FundingSourceDesc').val(),
+        VoteDesc: $('#VoteDesc').val(),
+        Vote: $('#Vote').val(),
+        GeographicalLocation: $('#GeographicalLocation').val(),
+        Project: $('#Project').val(),
+        ServiceOutput: $('#ServiceOutput').val(),
+        Activity: $('#Activity').val(),
+        CrFundType: $('#CrFundType').val(),
+        COFOG: $('#COFOG').val(),
+        FundingSource: $('#FundingSource').val(),
+        ExpensedAmount: @Model.OperationalAmount,
+        ReturnedAmount: @Model.OperationalAmount,
+    });
+
+    var token = $("[name='__RequestVerificationToken']").val();
+    var data = {
+        __RequestVerificationToken: token,
+        ReceiptId: $('#ReceiptId').val(),
+        ParentInstitutionCode: $('#ParentInstitutionCode').val(),
+        ParentInstitutionName: $('#ParentInstitutionName').val(),
+        SubWarrantCode: $('#SubWarrantCode').val(),
+        SubWarrantDescription: $('#SubWarrantDescription').val(),
+        SubWarrantGlAccount: $('#SubWarrantGlAccount').val(),
+        ReceiptDetails: receiptDetails
+    }
+
+    var url = '@Url.Action("AddSubWarrantDetails", "DummyReceipts")';
+    $.ajax({
+        url: url,
+        type: "POST",
+        //data: JSON.stringify(data),
+        data: data,
+        dataType: "JSON",
+        //contentType: "application/json",
+        contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        success: function (response) {
+            //check is successfully save to database
+            if (response == "Success") {
+                //will send status from server side
+                swal({
+                    text: "Receipt confirmed successfully.",
+                    icon: "success",
+                    button: "OK",
+                }).then(function () {
+                    window.location = '@Url.Action("PendingDummyReceipts", "DummyReceipts")';
+                });
+            }
+            else {
+                swal({
+                    text: response,
+                    icon: "warning",
+                    button: "OK",
+                })
+            }
+        },
+        error: function () {
+            swal({
+                text: "Error. Please try again..",
+                icon: "error",
+                button: "OK",
+            })
+        },
+        complete: function () {
+            $('#btnSave').prop("disabled", false);
+            $("#divLoader").hide();
+        }
+    });
+    });
+</script>

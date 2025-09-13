@@ -1,0 +1,514 @@
+﻿@{
+    ViewBag.Title = "Bulky Payment Tracker";
+    //var vochernumber =;
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select style="width:150px" id="overallstatus">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Verified">Verified</option>
+                                        <option value="Approved">Approved</option>
+                                        <option value="Rejected">Rejected</option>
+                                        <option value="Verified in Payment Office">Verified(Waiting for Approval)</option>
+                                        <option value="Approved in Payment Office">Approved(Waiting for Submission)</option>
+                                        <option value="All">All</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>From</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="FromDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>To</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="ToDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_batch_details" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Batch Number</th>
+                                        <th>Message ID</th>
+                                        <th>Batch Description</th>
+                                        <th>No.Trx</th>
+                                        <th>Total Amount</th>
+                                        <th>Legal Number</th>
+                                        <th>OverallStatus</th>
+                                        <th>Description</th>
+                                        <th>Voucher Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Batch Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Batch Summary</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>1.Batch Number: </th>
+                                                <td id="batchNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2.Message ID:</th>
+                                                <td id="msgid"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3.No of Transactions:</th>
+                                                <td id="Notrx"></td>
+                                            </tr>
+                                            
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>4.Batch Description:</th>
+                                                <td id="batchDescription"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>5.Payment Number:</th>
+                                                <td id="paymetNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>6.Total Amount:</th>
+                                                <td id="totalAmount"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                    
+                        <div id="paymentvoucherInf" class="payee-entry">
+                            <div class="entry-label">Payment Voucher Entries</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>1. Payment Voucher: </th>
+                                                <td id="PVNo"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Comments:</th>
+                                                <td id="Comments"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3. Apply Date:</th>
+                                                <td id="ApplyDate1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>4. Payment Method:</th>
+                                                <td id="PaymentMethod"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>5. OverallStatus:</th>
+                                                <td id="OverallStatus"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>6. Sub Budget Class:</th>
+                                                <td id="SubBudgetClass"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                         
+                        <br />
+                        <br />
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="dt_bulkyPayment_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>EndtoEnd ID</th>
+                                    <th>Beneficiary Name</th>
+                                    <th>Account Number</th>
+                                    <th>Bank Name</th>
+                                    <th>Amount</th>
+                                    <th>OveralStatus</th>
+                                    <th>Description</th>
+                                
+                                </tr>
+                            </thead>
+
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_batch_details = $('#dt_batch_details').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("#dt_batch_details_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_batch_details.DataTable().search(this.value).draw();
+        });
+
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetBulkPayment", "BulkPaymentTracker")' + "/?OverrallStatus=Pending&&FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=0",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_batch_details.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_batch_details.fnAddData([i + 1,
+                       data[i]["BatchNo"],
+                       data[i]["MsgID"],
+                       data[i]["BatchDesc"],
+                       data[i]["NoTrx"],
+                       toLabel(data[i]["TotalAmount"]),
+                       data[i]["PVNo"],
+                       data[i]["OverallStatus"],
+                       data[i]["OverallStatusDescription"],
+                       data[i]["PaymentVoucherStatus"],
+                         '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View PayList</a></li>\
+                                <li><a href="@Url.Action("PaymentSlip","PaymentBatches")/?id='+ data[i]["PaymentBatchID"] +'">Print SLIP</a></li>\
+                                <li><a href="#" onclick="viewAttachment(' + i + ')">View Attachments</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+                }
+
+                if(data.length == 0){
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchPayment() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetBulkPayment", "BulkPaymentTracker")' + "/?OverrallStatus=" + $("#overallstatus").val() + "&&FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response)
+                    data = response.data;
+                    dt_batch_details.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_batch_details.fnAddData([i + 1,
+                            data[i]["BatchNo"],
+                            data[i]["MsgID"],
+                            data[i]["BatchDesc"],
+                            data[i]["NoTrx"],
+                            toLabel(data[i]["TotalAmount"]),
+                            data[i]["PVNo"],
+                            data[i]["OverallStatus"],
+                            data[i]["OverallStatusDescription"],
+                            data[i]["PaymentVoucherStatus"],
+                             '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View PayList</a></li>\
+                                <li><a href="@Url.Action("PaymentSlip","PaymentBatches")/?id='+ data[i]["PaymentBatchID"] + '">Print SLIP</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // *************** LOAD TABLE DATA END *********************
+
+
+        // =============== OPEN VIEW DIALOG START ==================
+        /**
+        * Show View Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        var dt_bulkyPayment_detail = $('#dt_bulkyPayment_detail').dataTable();
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_bulkyPayment_detail.DataTable().search(this.value).draw();
+        });
+        $("#dt_bulkyPayment_detail_wrapper .dt-toolbar").remove();
+
+        function openViewDialog(i) {
+            globalPayeeId = i;
+
+            $("#batchNumber").text(data[i]["BatchNo"]);
+            $("#batchDescription").text(data[i]["BatchDesc"]);
+            $("#Notrx").text(data[i]["NoTrx"]);
+            $("#totalAmount").text(toLabel(data[i]["TotalAmount"]));
+            $("#msgid").text(data[i]["MsgID"]);
+            $("#paymetNumber").text(data[i]["PVNo"]);
+
+            debugger
+            var vochernumber = data[i]["PVNo"];
+            var bulkpaymentMethod = data[i]["BulkPaymentMethod"];
+
+            if (vochernumber != null && bulkpaymentMethod == "Different Account") {
+                $('#paymentvoucherInf').toggle(true)
+            } else {
+                $('#paymentvoucherInf').toggle(false)
+            }
+
+            if (data[i]["PVNo"] != null && data[i]["BulkPaymentMethod"] == "Different Account") {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetPaymentVoucher", "BulkPaymentTracker")' + "/?pvnumber=" + data[i]["PVNo"],
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    debugger
+                    console.log(response.ldata);
+                    ldata = response.ldata;
+                    $("#PVNo").text(ldata.PVNo);
+                    $("Comments").text(ldata.PaymentDesc);
+                    $("#SubBudgetClass").text(ldata.SubBudgetClass);
+                    $("#ApplyDate1").text(ldata.ApplyDateFormatted);
+                    $("#OverallStatus").text(ldata.OverallStatus);
+                    $("#PaymentMethod").text(ldata.PaymentMethod);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            }
+
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetBulkPaymentdetails", "BulkPaymentTracker")' + "/?batchid=" + data[i]["PaymentBatchID"],
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                   var _data = response.data2;
+                    dt_bulkyPayment_detail.fnClearTable();
+                    for (var i = 0; i < _data.length; i++) {
+                        dt_bulkyPayment_detail.fnAddData([i + 1,
+                           _data[i]["EndtoEndID"],
+                           _data[i]["BeneficiaryName"],
+                           _data[i]["BeneficiaryAccountNo"],
+                           _data[i]["BankName"],
+                           toLabel(_data[i]["Amount"]),
+                           _data[i]["OverallStatus"],
+                          _data[i]["SettledDescription"],
+                        ]);
+                    }
+
+                    if (_data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+            $('#confirmModal').modal('show');
+
+        }
+
+         function viewAttachment(i) {
+            window.location.href =
+                 '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentBatchID"] + '&&sourceModule=bulkpayment'; 
+        }
+        // *************** END SHOW VIEW DIALOG ********************
+    </script>
+}
+
+

@@ -1,0 +1,164 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.BeneficiaryAllowance>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="panel panel-default" style="font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; font-style:normal; font-size:15px">
+    <!-- Default panel contents -->
+    <div class="panel-heading">
+    </div>
+    <div class="panel-body">
+        <button type="button" class="btn btn-default btn-flat" onclick="confirmAllowance(@ViewBag.Id)" id="btnConfirm">
+            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+            Confirm
+        </button>
+        <a href="@Url.Action("Index","BeneficiaryAllowances")" class="btn btn-default btn-flat">
+            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+            Back
+        </a>
+        <hr />
+        <div>
+            Overall Status: @ViewBag.OverallStatus
+        </div>
+        <hr />
+        <table class="display" id="tblDataList">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.BeneficiaryId)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.BeneficiaryCode)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.AllowanceName)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.AllowanceDescription)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.AllowanceAmount)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.BeneficiaryGroup)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.Status)
+                    </th>
+                    <th>
+                        @Html.DisplayNameFor(model => model.OverallStatus)
+                    </th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                @{
+                    int i = 0;
+                }
+                @foreach (var item in Model)
+                {
+                    i++;
+                    <tr>
+                        <td>@i</td>
+                       
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Beneficiary.BeneficiaryName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Beneficiary.BeneficiaryCode)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AllowanceList.AllowanceName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AllowanceList.AllowanceDescription)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.AllowanceList.AllowanceAmount)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BeneficiaryGroup)
+                        </td>
+                         
+                        <td>
+                            @Html.DisplayFor(modelItem => item.Status)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                        </td>
+                        <td>
+                            <input type="checkbox" value="@item.BeneficiaryAllowanceId" class="checkBoxConfirm">
+                        </td>
+                        <td>
+                            @Html.ActionLink("Edit", "Edit", new { id = item.BeneficiaryAllowanceId }) |
+                            @Html.ActionLink("Details", "Details", new { id = item.BeneficiaryAllowanceId }) |
+                            @Html.ActionLink("Delete", "Delete", new { id = item.BeneficiaryAllowanceId })
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+                "scrollX": false
+            });
+            if ('@ViewBag.OverallStatus' == "Confirmed") {
+                $('#btnConfirm').attr('disabled', true);
+            }
+        });
+        $(".cbCheckAll").click(function () {
+            $(".checkBoxConfirm").prop('checked',
+                $(this).prop('checked'));
+        });
+
+        var confirmAllowance = function () {
+
+            var result = confirm("Are you sure you want to confirm.?");
+
+            if (!result) {
+                return;
+            }
+
+            var csvIds = [];
+
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                alert("No record selected!");
+                return;
+            }
+
+            $("#divLoader").show();
+
+            var url = '@Url.Action("ConfirmAllowance", "BeneficiaryAllowances")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "Success") {
+                        alert("Successfully Confirmed");
+                        location.reload();
+                    }
+                },
+                error: function (err) {
+                    alert(err.statusText);
+                },
+            });
+
+        };
+
+    </script>
+}

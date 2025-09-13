@@ -1,0 +1,211 @@
+﻿@model IFMIS.Areas.ALS.Models.ALS_CreateFundAllocationVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "addWithdrawAmountForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.HiddenFor(model => model.FundAllocDetailId)
+        @Html.HiddenFor(model => model.AllocationSummaryId)
+        @Html.HiddenFor(model => model.FundReceivingId)
+        @Html.HiddenFor(model => model.FundingRefNo)
+        @Html.HiddenFor(model => model.SubBudgetClass)
+        @Html.HiddenFor(model => model.AllocInstitutionName)
+        @Html.HiddenFor(model => model.AllocInstitutionCode)
+        <div class="form-group">
+            @Html.LabelFor(model => model.ComponentName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.ComponentName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.ComponentName, "", new { @class = "text-danger" })
+            </div>
+
+
+            @Html.LabelFor(model => model.FundingSource, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.FundingSource, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.FundingSource, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FundDetails, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.FundDetails, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.FundDetails, "", new { @class = "text-danger" })
+            </div>
+
+            @Html.LabelFor(model => model.AllocationAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.AllocationAmount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.AllocationAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        @*<div class="form-group">
+            @Html.LabelFor(model => model.OperationalAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.OperationalAmount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.OperationalAmount, "", new { @class = "text-danger" })
+            </div>
+
+
+        </div>*@
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.VoteBalance, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.VoteBalance, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.VoteBalance, "", new { @class = "text-danger" })
+            </div>
+
+            @Html.LabelFor(model => model.WithdrawAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.WithdrawAmount, new { htmlAttributes = new { @class = "form-control", onkeyup = "Validation()" } })
+                @Html.ValidationMessageFor(model => model.WithdrawAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">
+                Allocation Description
+                <i class="fa fa-times" style="color:white" id="AllocationDesc-1"></i>(<span style="font-weight:bold;" id="AllocationDescCount">250</span>)
+            </label>
+            <div class="col-md-8">
+                <textarea class="form-control" id="AllocationDesc" name="AllocationDesc" maxlength="250"></textarea>
+            </div>
+        </div>
+    </div>
+
+}
+<script>
+    $(document).ready(function () {
+         $("#WithdrawAmount").autoNumeric('init');
+        $("#OriginalAmount").autoNumeric('init');
+        //$("#OperationalAmount").autoNumeric('init');
+        $("#AllocationAmount").autoNumeric('init');
+        $("#VoteBalance").autoNumeric('init');
+    });
+
+
+    //Count input char
+    $('#AllocationDesc').on("keyup", function () {
+        var count = $('#AllocationDesc').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#AllocationDescCount').text(parseInt(numChars));
+    });
+
+    function isNumberKey(evt) {
+        debugger;
+        $("#WithdrawAmount").autoNumeric('init');
+
+
+         var charCode = (evt.which) ? evt.which : event.keyCode
+            if (charCode > 31 && (charCode < 48 || charCode > 57))
+            return false;
+
+        return true;
+
+
+    }
+
+    function Validation() {
+         var voteBalance = parseFloat($("#VoteBalance").val().toString().split(",").join(""));
+        var withdrawAmount = parseFloat($("#WithdrawAmount").val().toString().split(",").join(""));
+
+        var withdrawtext = document.getElementById("WithdrawAmount");
+
+        if (withdrawAmount > voteBalance) {
+            $("#WithdrawAmount").addClass("input-has-exceeded");
+            withdrawtext.style.backgroundColor = "red";
+                //swal("You can't withdraw the Amount which is greater than Balance Amount", { icon: "warning" })
+                //return false;
+                $("#saveWithdrawData").attr('disabled', true);
+        } else {
+            $("#WithdrawAmount").removeClass("input-has-exceeded");
+            withdrawtext.style.backgroundColor = "";
+            $("#saveWithdrawData").attr('disabled', false);
+        }
+    }
+
+
+
+    $("#saveWithdrawData").click(function () {
+
+         $.validator.unobtrusive.parse("#addWithdrawAmountForm");
+            if (!$("#addWithdrawAmountForm").valid()) {
+                return false;
+        }
+        var WithdrawDesc = $('#AllocationDesc').val();
+        var allocAmount = $("#AllocationAmount").val();
+        var voteBalance = $("#VoteBalance").val();
+        var withdrawAmount = $("#WithdrawAmount").val();
+        var FundAllocDetailId = $("#FundAllocDetailId").val();
+        var AllocationSummaryId = $("#AllocationSummaryId").val();
+        console.log('AllocatedAmount', allocAmount);
+        console.log('withdrawAmount', withdrawAmount);
+        //if (voteBalance < withdrawAmount) {
+        //    swal("You can't withdraw the Amount which is greater than Balance Amount", { icon: "warning" })
+        //    return false;
+        //     $("#saveWithdrawData").prop('disabled', false);
+        //}
+        //else
+        if (withdrawAmount == '') {
+            swal("Please Enter amount which you need to withdraw!", { icon: "warning" });
+            return false;
+            $("#saveWithdrawData").prop('disabled', false);
+        }
+        else if(WithdrawDesc == '') {
+             swal("Description Required", { icon: "warning" });
+            return false;
+            $("#saveWithdrawData").prop('disabled', false);
+        }
+        var formData = {
+            "FundAllocDetailId": FundAllocDetailId,
+            "AllocationSummaryId": AllocationSummaryId,
+            "WithdrawAmount": withdrawAmount,
+
+            "FundReceivingId": $("#FundReceivingId").val(),
+            "FundingSource":     $('#FundingSource').val(),
+            "WithdrawDesc": $('#AllocationDesc').val(),
+            "FundingRefNo": $("#FundingRefNo").val(),
+            "AllocInstitutionCode": $('#AllocInstitutionCode').val(),
+            "AllocInstitutionName": $('#AllocInstitutionName').val(),
+            "AllocationAmount": $('#AllocationAmount').val(),
+            "SubBudgetClass" :   $("#SubBudgetClass").val(),
+            //"BudgetClass":       $('#BudgetClass').val(),
+        }
+
+        console.log('formdata', formData);
+
+        var url = '@Url.Action("SaveFundWithdrawDetails","FundWithdraw")';
+        @*//var urlList = '@Url.Action("FundWithdrawList","FundWithdraw")';*@
+        var urlList = '@Url.Action("FundPendingWithdrawList","FundWithdraw")';
+        $("#saveWithdrawData").prop('disabled', true);
+        $.ajax({
+                url: url,
+                type: "POST",
+                data: JSON.stringify(formData),
+                dataType: "JSON",
+                contentType: "application/json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Fund Withdraw Successfully Save", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else if (response == "No Balance") {
+                        swal("Withdraw Amount exceed balance Amount", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                 error: function () {
+                        alert("Error Please Try again");
+                        $('#btnSave').val('save');
+                    }
+        });
+    });
+</script>
+

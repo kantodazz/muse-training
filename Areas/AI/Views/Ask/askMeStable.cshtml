@@ -1,0 +1,274 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Me About the System</title>
+    <style>
+        /* General Page Styling */
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #f4f7f9;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            flex-direction: column;
+        }
+
+        /* Chat Container */
+        #chatContainer {
+            width: 60%;
+            max-width: 600px;
+            height: 500px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        /* Chat Bubbles */
+        .message {
+            padding: 12px 18px;
+            margin: 5px;
+            border-radius: 18px;
+            max-width: 75%;
+            font-size: 15px;
+            line-height: 1.5;
+            word-wrap: break-word;
+            position: relative;
+        }
+
+        .userMessage {
+            background: #007bff;
+            color: white;
+            align-self: flex-end;
+            text-align: right;
+            border-bottom-right-radius: 4px;
+            transition: 0.3s;
+        }
+
+        .botMessage {
+            background: #f1f1f1;
+            color: black;
+            align-self: flex-start;
+            text-align: left;
+            border-bottom-left-radius: 4px;
+            box-shadow: 2px 2px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Typing Indicator */
+        .thinking {
+            background: #ccc;
+            color: black;
+            font-style: italic;
+            padding: 8px;
+        }
+
+        /* Input Field & Buttons */
+        #inputArea {
+            display: flex;
+            justify-content: center;
+            width: 60%;
+            max-width: 600px;
+            margin-top: 10px;
+        }
+
+        #questionBox {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            outline: none;
+            font-size: 14px;
+        }
+
+        #askButton, #voiceButton {
+            padding: 10px 18px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 20px;
+            cursor: pointer;
+            margin-left: 8px;
+        }
+
+            #askButton:hover, #voiceButton:hover {
+                background-color: #0056b3;
+            }
+
+        /* Quick Question Buttons */
+        #quickQuestions {
+            margin-top: 10px;
+        }
+
+        .quickBtn {
+            padding: 8px 15px;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 5px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+            .quickBtn:hover {
+                background: #e9ecef;
+            }
+  @@keyframes
+      spin {
+          0%
+
+      {
+          transform: rotate(0deg);
+      }
+
+      100% {
+          transform: rotate(360deg);
+      }
+        }
+
+    .loadingIcon {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+        font-size: 16px;
+        margin-left: 5px;
+    }
+    </style>
+</head>
+<body>
+
+    <h2>Ask Me About the System</h2>
+
+    <!-- Chat Container -->
+    <div id="chatContainer">
+        <!-- ✅ Welcome Message -->
+        <div class="message botMessage">Hi, I am your AI assistant. How can I help you? 😊</div>
+    </div>
+
+    <!-- Input Box & Buttons -->
+    <div id="inputArea">
+        <input type="text" id="questionBox" placeholder="Type your question here..." onkeypress="handleKeyPress(event)">
+        <button id="askButton" onclick="askQuestion()">Ask</button>
+        <button id="voiceButton">🎤 Speak</button>
+    </div>
+
+    <!-- Quick Question Buttons -->
+    <div id="quickQuestions">
+        <button class="quickBtn" onclick="askPredefinedQuestion('How do I log in?')">🔑 Login Help</button>
+        <button class="quickBtn" onclick="askPredefinedQuestion('How do I reset my password?')">🔄 Reset Password</button>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+    <script>
+        $(document).ready(function () {
+            // ✅ Ensure the welcome message is always present
+            if ($("#chatContainer").children().length === 0) {
+                $("#chatContainer").append(`<div class="message botMessage">🤖 Hi, I am your AI assistant. How can I help you? 😊</div>`);
+            }
+        });
+
+        function askQuestion() {
+            let question = $("#questionBox").val();
+            let chatContainer = $("#chatContainer");
+
+            if (!question) {
+                alert("Please enter your question!");
+                return;
+            }
+
+            // Add user message to chat
+            chatContainer.append(`<div class="message userMessage">${question}</div>`);
+
+            // Clear input box
+            $("#questionBox").val("");
+
+            // Show animated "Thinking..." indicator with rotating 🔄 icon
+            let loadingIndicator = $(`
+                <div class="message botMessage thinking" id="loading">
+                    Thinking<span id="loadingDots">.</span>
+                    <span class="loadingIcon">🔄</span>
+                </div>
+            `);
+            chatContainer.append(loadingIndicator);
+
+            // Animate the "Thinking..." dots
+            let dots = 1;
+            let loadingAnimation = setInterval(() => {
+                dots = (dots % 3) + 1; // Loop through 1 to 3 dots
+                $("#loadingDots").text('.'.repeat(dots));
+            }, 500);
+
+            $.ajax({
+                url: "http://10.1.87.43:5000/ask",
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ question: question }),
+                success: function (response) {
+                    clearInterval(loadingAnimation); // ✅ Stop the animation
+                    $("#loading").remove(); // ✅ Remove "Thinking..." message
+
+                    if (response.answer) {
+                        chatContainer.append(`<div class="message botMessage">${response.answer}</div>`);
+                    } else {
+                        chatContainer.append(`<div class="message botMessage"><strong>Error:</strong> No response received.</div>`);
+                    }
+                    chatContainer.scrollTop(chatContainer[0].scrollHeight); // Auto-scroll to latest message
+                },
+                error: function (xhr, status, error) {
+                    clearInterval(loadingAnimation); // ✅ Stop animation on error
+                    $("#loading").remove();
+                    console.error("Error Details:", xhr, status, error);
+                    chatContainer.append(`<div class="message botMessage"><strong>Error:</strong> ${xhr.responseText || "Unknown error"}</div>`);
+                }
+            });
+        }
+
+        function handleKeyPress(event) {
+            if (event.keyCode === 13) {
+                askQuestion();
+            }
+        }
+
+        function askPredefinedQuestion(question) {
+            $("#questionBox").val(question);
+            askQuestion();
+        }
+        // Enable Voice Recognition for "🎤 Speak" Button
+        document.getElementById("voiceButton").addEventListener("click", function () {
+            let recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+            recognition.lang = "en-US"; // Change to "sw-TZ" for Swahili if needed
+
+            recognition.onstart = function () {
+                $("#voiceButton").text("🎙️ Listening...");
+            };
+
+            recognition.onresult = function (event) {
+                let transcript = event.results[0][0].transcript;
+                $("#questionBox").val(transcript); // Insert recognized text into input field
+                askQuestion(); // Automatically send the question
+            };
+
+            recognition.onerror = function (event) {
+                console.error("Speech recognition error:", event.error);
+                alert("Sorry, I couldn't understand. Try again!");
+            };
+
+            recognition.onend = function () {
+                $("#voiceButton").text("🎤 Speak"); // Reset button text
+            };
+
+            recognition.start(); // Start listening
+        });
+    </script>
+
+
+</body>
+</html>

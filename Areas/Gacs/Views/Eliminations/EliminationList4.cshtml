@@ -1,0 +1,422 @@
+﻿@model IFMIS.Areas.Gacs.Models.EliminationListVM
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Elimination List </h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            <div class="form-group" style="padding-top:30px">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <select id="FinancialYear" class="form-control select2">
+                                            <option value="Select Financial Year" selected="selected">--Select Financial Year--</option>
+                                            @foreach (var financiallist in ViewBag.financialList)
+                                            {
+                                                <option value='@financiallist.fiscal_year'>
+                                                    @financiallist.fiscal_year
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <select id="GFSCode" class="form-control select2">
+                                            <option value="Select Gfs Code" selected="selected">--Select Gfs Code--</option>
+                                            @foreach (var gfslist in ViewBag.gfsList)
+                                            {
+                                                <option value='@gfslist.GFSTransaction'>
+                                                    @gfslist.GFSTransactionItemDescription
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn action-btn btn btn-info" id="submit" onclick="reloadDataTable()">
+                                            <i class="fa fa-save"></i>
+                                            Search
+                                        </button>
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <button class="btn btn-info" id="confirmEliminate" onclick="confirmEliminate()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Eliminate
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Left List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedLeft">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_LeftEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th><input type="checkbox" onchange="checkAll()" id="checkall" /></th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                                <th></th>
+                                                            </tr>
+                                                        </thead>
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Right List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedRight">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_RightEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th><input type="checkbox" onchange="checkAll()" id="checkall" /></th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                                <th></th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        var reloadDataTable = function () {
+            debugger;
+            reloadDataLeft();
+            reloadDataRight();
+        }
+
+      //Left list
+        var dt_LeftEliminationList = $('#dt_LeftEliminationList').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("dt_LeftEliminationList_wrapper .dt-toolbar").remove();
+        $("#loader").text("Loading")
+
+        var l_data = []
+        var reloadDataLeft = function () {
+            $("#loader").text("Loading...")
+            var gfsCode = $("#GFSCode").val();
+            var financialYear = $("#FinancialYear").val();
+            var url = '@Url.Action("GetLeftSideDetails", "Eliminations")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { gfsCode: gfsCode, financialYear: financialYear },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    l_data = response.data;
+                    dt_LeftEliminationList.fnClearTable();
+                    for (var i = 0; i < l_data.length; i++) {
+                        var Id = l_data[i]["ID"]
+                        dt_LeftEliminationList.fnAddData([i + 1,
+                            '<input type="checkbox" id="row-' + Id + '" onchange="rowLeftChecked(' + Id + ')" value=' + l_data[i]["ID"] + ' />',
+                            l_data[i]["GFSCode"],
+                            l_data[i]["GFSCodeDescription"],
+                            toLabel(l_data[i]["Amount"]),
+                            '<input type="number" placeholder="Amount" id="amrow-' + i + '" onkeyup="amountLeftChanged(' + i + ')"/>'
+                        ]);
+                    }
+                    if (l_data.length == 0) {
+
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var checkedLeftRows = [];
+        function rowLeftChecked(rowId) {
+            console.log(rowId)
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedLeftRows.push(rowId);
+            } else {
+                remove(checkedLeftRows, rowId);
+            }
+           // toggleAmount();
+        }
+
+
+        //function toggleAmount() {
+        //    var TotalAmount = 0;
+        //    if (checkedLeftRows.length > 0) {
+        //        checkedLeftRows.forEach(rowId => {
+        //            var row = l_data.filter(a => a.ID == rowId)[0];
+        //            TotalAmount = TotalAmount + toNumber(row["Amount"]);
+        //        });
+        //       // $("#confirm").attr('disabled', false);
+        //        $("#totalAmountSelectedLeft").text(checkedLeftRows.length + " Item(s) Selected ~ Total: " + toLabel(TotalAmount));
+        //    } else {
+        //      /*  $("#confirm").attr('disabled', true);*/
+        //        $("#totalAmountSelectedLeft").text("No Item(s) Selected");
+        //    }
+        //}
+
+
+        function amountLeftChanged(i) {
+            debugger;
+            var data = dt_LeftEliminationList.DataTable().rows().data();
+            //console.log(data);
+            var row = data.rows(i).data()[0]
+            console.log(row);
+
+            var entered_amount = parseFloat($("#amrow-" + i).val());
+            console.log(entered_amount);
+            $("#totalAmountSelectedLeft").text(toLabel(entered_amount));
+        }
+
+      //End of Left side
+
+
+
+      //Right list
+        var dt_RightEliminationList = $('#dt_RightEliminationList').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("dt_RightEliminationList_wrapper .dt-toolbar").remove();
+        $("#loader").text("Loading")
+        var rdata = []
+        var reloadDataRight = function () {
+            $("#loader").text("Loading...")
+            var gfsCode = $("#GFSCode").val();
+            var url = '@Url.Action("GetRightSideDetails", "Eliminations")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { gfsCode: gfsCode},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    rdata = response.data;
+                    dt_RightEliminationList.fnClearTable();
+                    for (var i = 0; i < rdata.length; i++) {
+                        var Id = rdata[i]["EliminID"]
+                        dt_RightEliminationList.fnAddData([i + 1,
+                            '<input type="checkbox" id="row-2' + Id + '" onchange="rowRightChecked(' + Id + ')" value=' + rdata[i]["EliminID"] + ' />',
+                            rdata[i]["EliminGfsCode"],
+                            rdata[i]["EliminGfsDesc"],
+                            toLabel(rdata[i]["EliminationAmount"]),
+                           '<input type="number" placeholder="Amount" id="amrow-2' + i + '" onkeyup="amountRightChanged(' + i + ')"/>'
+                        ]);
+                    }
+                    if (rdata.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var checkedRightRows = [];
+        function rowRightChecked(rowId2) {
+            debugger;
+            console.log(rowId2)
+            if ($("#row-2" + rowId2).is(":checked")) {
+                checkedRightRows.push(rowId2);
+            } else {
+                remove(checkedRightRows, rowId2);
+            }
+        }
+
+        function amountRightChanged(i) {
+            debugger;
+            var data = dt_RightEliminationList.DataTable().rows().data();
+            console.log(data);
+            var row = data.rows(i).data()[0]
+            console.log(row);
+
+            var entered_amount = parseFloat($("#amrow-2" + i).val());
+            console.log(entered_amount);
+            $("#totalAmountSelectedRight").text(toLabel(entered_amount));
+        }
+
+        //End of Right side
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        function confirmEliminate() {
+            swal({
+                text: "Eliminate",
+                buttons: ["NO", "YES"],
+            }).then((willEliminate) => {
+                if (willEliminate) {
+                    postElimination();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+     
+        $("#saveLoader").toggle(false);
+        function postElimination() {
+            debugger;
+            leftList = [];
+            rightList = [];
+
+            checkedLeftRows.forEach(rowId => {
+                leftList.push($("#row-" + rowId).val());
+                leftList.push({
+                    Id: $("#row-" + rowId).val(),
+             
+                });
+            });
+
+            checkedRightRows.forEach(rowId => {
+                rightList.push($("#row-2" + rowId).val());
+            });
+
+               var url = '@Url.Action("SaveElimination", "Eliminations")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+                        leftList: checkedLeftRows,
+                        rightList: checkedRightRows
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == 'Success') {
+                            swal("Successfully!", { icon: "success" })
+                            .then((e) => {
+                                window.location.href = '@Url.Action("PendingElimination", "Eliminations")';
+                            });
+                        } else {
+                            swal(response, { icon: "warning" })
+                                .then((e) => {
+                                    window.location.href = '@Url.Action("PendingElimination", "Eliminations")';
+                                });
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            
+        }
+
+    </script>
+
+}

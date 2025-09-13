@@ -1,0 +1,179 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.Institution>
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+
+                        <h2 style="color:black;">InstitutionList</h2>
+
+                    </header>
+                    <div>
+                      
+                        <div class="widget-body " style="padding-top:10px; width:100%;">
+
+                            <table style="width:100%">
+                                <tr>
+                                    <td colspan="1">
+
+                                        <div style="margin-bottom: 2%">
+                                            <a class="btn btn-info" href='@Url.Action("CreateInstitution", "Institutions")' style="width:auto;color:black">
+                                                <i class="fa fa-plus"></i> Add New
+                                            </a>
+                                        </div>
+                             
+                                        <br/>
+                                        <div class="widget-body no-padding">
+                                            <table id="dt_institution" class="table table-condensed table-bordered table-hover">
+                                                <thead>
+                                                    <tr>
+                                                        <th>ID</th>
+                                                        <th>Institution Code</th>
+                                                        <th>Institution Name</th>
+                                                        <th>Institution Category</th>
+                                                        <th>Institution TIN </th>
+                                                        <th>City </th>
+                                                        <th>Action</th>
+                                                    </tr>
+
+                                                </thead>
+                                                <tbody>
+
+                                                </tbody>
+
+                                            </table>
+
+                                            </div>
+                                <td colspan="1"></td>
+                                </tr>
+                            </table>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+    </div>
+
+@section pagespecific{
+        <script type="text/javascript">
+
+
+
+        $(function () {
+            BindDataTable();
+        });
+
+                var BindDataTable = function (response) {
+                    var url = '@Url.Action("GetInstitution", "Institutions")';
+                    $("#dt_institution").DataTable({
+                        "bServerSide": true,
+                        "sAjaxSource": url,
+                        "fnServerData": function (sSource, aoData, fnCallback) {
+                            $.ajax({
+                                type: "GET",
+                                url: sSource,
+                                data: aoData,
+                                success: fnCallback
+                            });
+                        },
+                       "aoColumns": [
+                        {
+                            render: function (data, type, row, meta) {
+                                return meta.row + meta.settings._iDisplayStart + 1;
+                            }
+                        },
+
+                        { "mData": "InstitutionCode" },
+                        { "mData": "InstitutionName" },
+                        { "mData": "InstitutionCategory" },
+                        { "mData": "AoTin" },
+                        { "mData": "City" },
+
+                        {
+                            "mData": "InstitutionId",
+                            "render": function (InstitutionId, type, full, meta) {
+                             return '<div class="btn-group">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                          <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                      <li><a href="@Url.Action("EditInstitution", "Institutions")/' + InstitutionId + '">Edit</a></li>\
+                      <li><a href="@Url.Action("InstitutionDetails", "Institutions")/' + InstitutionId + '">Details</a></li>\
+                      <li><a href="#" onclick="Cancel(' + InstitutionId + ')">Cancel</a></li>\
+                      </ul>\
+                      </div>'
+                        }
+
+                        },
+                    ]
+                });
+            }
+
+
+            function Cancel(i) {
+                status = "Cancelled";
+                swal({
+                    title: "Are you sure?",
+                    text: "This Institution will be Cancelled!",
+                    buttons: [
+                      'No',
+                      'Yes'
+                    ],
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        ChangeItemStatus(i, status)
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+
+            function ChangeItemStatus(Id, status) {
+                var url = '@Url.Action("ChangeStatus", "Institutions")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+                        Status: status,
+                        InstitutionId: Id
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+
+                        if (response == "Success") {
+                            swal("Changed Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }
+
+        </script>
+
+    }

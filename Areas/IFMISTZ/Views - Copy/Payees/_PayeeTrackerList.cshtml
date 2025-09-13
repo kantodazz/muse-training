@@ -1,0 +1,429 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.TrackerVM
+@{
+    ViewBag.Title = "Payee Tracker";
+}
+
+<table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Payee Name</th>
+            <th>Payee Code</th>
+            <th>Address</th>
+            <th>Payee Status</th>
+            <th>Approval Status</th>
+            @*<th>Institution Code</th>*@
+            <th>Action</th>
+        </tr>
+    </thead>
+</table>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Payee Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Payee Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> Payee Name: </th>
+                                                <td id="_PayeeName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Payee Code:</th>
+                                                <td id="_PayeeCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> Payee Address1:</th>
+                                                <td id="_Address1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Payee Address2:</th>
+                                                <td id="_Address2"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Phone Number1:</th>
+                                                <td id="_PhoneNumber1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>  Phone Number2:</th>
+                                                <td id="_PhoneNumber2"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> City:</th>
+                                                <td id="_City"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Country:</th>
+                                                <td id="_Country"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Zip:</th>
+                                                <td id="_Zip"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Fax:</th>
+                                                <td id="_Fax"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Telephone:</th>
+                                                <td id="_Telephone"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Email Address:</th>
+                                                <td id="_EmailAddress"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Payee status:</th>
+                                                <td id="_OverallStatus"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Approval status:</th>
+                                                <td id="_ApprovalStatus"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Created By:</th>
+                                                <td id="_CreatedBy"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Created At:</th>
+                                                <td id="_CreatedAt"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Cancelled By:</th>
+                                                <td id="_CancelledBy"></td>
+                                            </tr>
+                                            @*<tr>
+                                                    <th> Cancelledt At:</th>
+                                                    <td id="_CancelledAt"></td>
+                                                </tr>*@
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+
+                        <div>
+                            <div colspan="5"><strong>Payee Bank Information:</strong></div>
+                        </div>
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="approveModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Approve Payee</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Approve this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="verifyModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Verify Payee</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Verify this Payee ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script>
+
+    $(function () {
+
+        $.fn.serializeObject = function () {
+            var o = {};
+            var a = this.serializeArray();
+            $.each(a, function () {
+                if (o[this.name] !== undefined) {
+                    if (!o[this.name].push) {
+                        o[this.name] = [o[this.name]];
+                    }
+                    o[this.name].push(this.value || '');
+                } else {
+                    o[this.name] = this.value || '';
+                }
+            });
+            return o;
+        };
+        var data = [];
+        var globalPayeeId = null;
+        var url = '@Url.Action("GetPayeeInformation1", "Payees")';
+        $("#dt_voucher_listing").DataTable({
+            "bServerSide": true,
+            "sAjaxSource": url,
+            "fnServerData": function (sSource, aoData, fnCallback) {
+                var formData = $('#trackForm').serializeObject();
+                for (var key in formData) {
+                    if (formData.hasOwnProperty(key)) {
+                        aoData.push({
+                            name: key,
+                            value: formData[key]
+                        });
+                    }
+                }
+                $.ajax({
+                    "dataType": 'json',
+                    "type": "POST",
+                    "url": sSource,
+                    "data": aoData,
+                    "success": fnCallback
+                })
+            },
+            "aoColumns": [
+                {
+                    render: function (data, type, row, meta) {
+                        return meta.row + meta.settings._iDisplayStart + 1;
+                    }
+                },
+                { "mData": "PayeeName" },
+                { "mData": "PayeeCode" },
+                { "mData": "Address" },
+                { "mData": "PayeeStatus" },
+                { "mData": "ApprovalStatus" },
+                 //{ "mData": "InstitutionCode" },
+                {
+                    "mData": "PayeeId",
+                    "bSortable": false,
+                    "render": function (PayeeId, type, full, meta) {
+                        //return '<a href="#" onclick=openViewDialog(' + PayeeId + ')><i class="glyphicon glyphicon-eye-open"></i></a>'
+                        @*'<a href="@Url.Action("PayeeDetails", "Payees")/' + PayeeId + '"><i class="glyphicon glyphicon-eye-open"></i></a>'*@
+                        return '<div class="btn-group" id="drop-' + PayeeId + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                        <ul class="dropdown-menu">\
+                             <li><a href="@Url.Action("PayeeDetails", "Payees")/' + PayeeId + '">View</a></li>\
+                        </ul>\
+                        </div>'
+                    }
+                },
+            ]
+        });
+    });
+
+    var showPayeeDetails = function (Id) {
+        //alert(Id);
+        $(".modal-body").load(url, function () {
+            $("#confirmModal").modal("show");
+        });
+    }
+    // =============== OPEN VIEW DIALOG START ==================
+    /**
+    * Show View Dialog
+    * param  {Int} i - Id of the selected Item
+    */
+    function openViewDialog(i) {
+        globalPayeeId = i;
+
+        console.log(data[i])
+        $("#_PayeeName").text(data[i]["PayeeName"]);
+        $("#_PayeeCode").text(data[i]["PayeeCode"]);
+        $("#_Address1").text(data[i]["Address1"]);
+        $("#_Address2").text(data[i]["Address2"]);
+        $("#_PhoneNumber1").text(data[i]["PhoneNumber1"]);
+        $("#_PhoneNumber2").text(data[i]["PhoneNumber2"]);
+        $("#_City").text(data[i]["City"]);
+        $("#_Country").text(data[i]["Country"]);
+        $("#_Zip").text(data[i]["Zip"]);
+        $("#_Fax").text(data[i]["Fax"]);
+        $("#_Telephone").text(data[i]["Telephone"]);
+        $("#_EmailAddress").text(data[i]["_EmailAddress"]);
+        $("#_OverallStatus").text(data[i]["OverallStatus"]);
+        $("#_ApprovalStatus").text(data[i]["ApprovalStatus"]);
+        $("#_CreatedBy").text(data[i]["CreatedBy"]);
+        $("#_CreatedAt").text(data[i]["CreatedAtFormatted"]);
+        $("#_CancelledBy").text(data[i]["CancelledByFormatted"]);
+        //$("#_CancelledAt").text(data[i]["CancelledAtFormatted"]);
+
+
+
+
+        dt_voucher_detail.fnClearTable();
+        var totalAmount = 0;
+        data[i]["PayeeDetails"].forEach(row => {
+            dt_voucher_detail.fnAddData([
+                row["PayeeType"].split("|").join("-"),
+                row["Accountnumber"],
+                row["AccountName"],
+                row["BIC"],
+                 row["OverallStatus"],
+            ]);
+
+        });
+
+        $("#totalAmount").text(totalAmount.toLocaleString() + ".00");
+        $("#Description1").text(data[i]["PaymentDesc"]);
+        $("#reasonId").text(data[i]["OverallStatusDesc"] ? data[i]["OverallStatusDesc"] : "-");
+        $("#statusId").text(data[i]["OverallStatus"]);
+        $("#InvoiceNo1").text(data[i]["InvoiceNo"]);
+        $("#total_voucher_amount1").val(data[i]["OperationalAmount"]);
+        $("#ApplyDate1").text(data[i]["ApplyDateFormatted"]);
+        $("#Comments1").text(data[i]["Narration"]);
+        $("#PaymentMethod1").text(data[i]["PaymentMethod"]);
+        $("#ControlNumber1").text(data[i]["ControlNumber"] ? data[i]["ControlNumber"] : "-");
+        $("#SubBudgetClass1").text(data[i]["SubBudgetClass"]);
+        $('#confirmModal').modal('show');
+
+    }
+    // *************** END SHOW VIEW DIALOG ********************
+    var approvePayee = function (id) {
+        $("#approveModal").modal('show');
+
+        $(".delete-confirm").click(function () {
+            if (id != "") {
+                var url = '@Url.Action("ApprovePayee", "Payees")';
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    type: "POST",
+                    success: function (response) {
+                        if (response == "Success") {
+                            //now re-using the boostrap modal popup to show success message.
+                            //hide ok button as it is not necessary
+                            $('.delete-confirm').css('display', 'none');
+                            $('.delete-cancel').html('Ok').click(function () {
+                                location.reload();
+                            });
+                        }
+                        $('.success-message').html('Approved successfully');
+                    }, error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-info')) {
+                            $('.modal-header').removeClass('alert-info').addClass('alert-info');
+                            //$('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+            }
+        });
+    };
+
+    //function to reset bootstrap modal popups
+    $("#responseModal").on("hidden.bs.modal", function () {
+        $(".modal-header").removeClass(' ').addClass('alert-info');
+        $('.delete-confirm').css('display', 'inline-block');
+        $('.success-message').html('').html('Are you sure you want to Approve this record ?');
+    });
+    var verifyPayee = function (id) {
+        $("#verifyModal").modal('show');
+
+        $(".delete-confirm").click(function () {
+            if (id != "") {
+                var url = '@Url.Action("VerifyPayee", "Payees")';
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    type: "POST",
+                    success: function (response) {
+                        if (response == "Success") {
+                            //now re-using the boostrap modal popup to show success message.
+                            //hide ok button as it is not necessary
+                            $('.delete-confirm').css('display', 'none');
+                            $('.delete-cancel').html('Ok').click(function () {
+                                location.reload();
+                            });
+                        }
+                        $('.success-message').html('Verified successfully');
+                    }, error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-info')) {
+                            $('.modal-header').removeClass('alert-info').addClass('alert-info');
+                            //$('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+            }
+        });
+    };
+
+    //function to reset bootstrap modal popups
+    $("#responseModal").on("hidden.bs.modal", function () {
+        $(".modal-header").removeClass(' ').addClass('alert-info');
+        $('.delete-confirm').css('display', 'inline-block');
+        $('.success-message').html('').html('Are you sure you want to Verify this Payee ?');
+    });
+
+</script>

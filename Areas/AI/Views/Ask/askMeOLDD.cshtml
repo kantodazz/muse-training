@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ask Me About the System</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            text-align: center;
+        }
+
+        #questionBox {
+            width: 80%;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
+
+        #askButton, #voiceButton, #speakResponse {
+            padding: 10px 20px;
+            margin: 5px;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        #askButton { background-color: #007bff; }
+        #voiceButton { background-color: #28a745; }
+        #speakResponse { background-color: #dc3545; }
+
+        #answerBox {
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            width: 80%;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <h2>Ask Me About the System</h2>
+    
+    <input type="text" id="questionBox" placeholder="Type your question here...">
+    <button id="askButton" onclick="askQuestion()">Ask</button>
+    <button id="voiceButton">🎤 Speak</button>
+    <button id="speakResponse">🔊 Read Out</button>
+
+    <div id="answerBox"></div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script> <!-- ✅ jQuery for AJAX -->
+
+    <script>
+        function askQuestion() {
+            let question = $("#questionBox").val();
+            let answerBox = $("#answerBox");
+
+            if (!question) {
+                alert("Please enter a question!");
+                return;
+            }
+
+            answerBox.show();
+            answerBox.html("Thinking... 🔄"); // Show loading text
+
+            $.ajax({
+                url: "http://10.1.87.43:5000/ask", // Flask API address
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify({ question: question }),
+                success: function (response) {
+                    if (response.answer) {
+                        answerBox.html(`<strong>Answer:</strong> ${response.answer}`);
+                    } else {
+                        answerBox.html(`<strong>Error:</strong> No response received.`);
+                    }
+                },
+                error: function (xhr, status, error) {
+                    answerBox.html(`<strong>Error:</strong> ${xhr.responseText}`);
+                }
+            });
+        }
+
+        // Voice Input (Speech-to-Text)
+        if ('webkitSpeechRecognition' in window) {
+            const recognition = new webkitSpeechRecognition();
+            recognition.continuous = false;
+            recognition.lang = "en-US";
+
+            document.getElementById("voiceButton").addEventListener("click", function () {
+                recognition.start();
+            });
+
+            recognition.onresult = function (event) {
+                document.getElementById("questionBox").value = event.results[0][0].transcript;
+            };
+        } else {
+            alert("Your browser does not support speech recognition.");
+        }
+
+        // text-to-Speech (Read Answer Aloud)
+        document.getElementById("speakResponse").addEventListener("click", function () {
+            let answerText = document.querySelector("#answerBox").innerText;
+            if (!answerText) {
+                alert("No answer to read!");
+                return;
+            }
+            let speech = new SpeechSynthesisUtterance(answerText);
+            window.speechSynthesis.speak(speech);
+        });
+    </script>
+
+</body>
+</html>

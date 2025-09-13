@@ -1,0 +1,467 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.FundReceivingVM
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+  
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+ 
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+             
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Fund Distribution </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+                    <div class="widget-body">
+
+                            <form action="" method="post" id="create-bill-form" class="form-horizontal">
+                                @Html.AntiForgeryToken()
+                                <fieldset>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">
+                                            Fund Source 
+                                         <i class="fa fa-asterisk" style="color:white" id="errorFundSource"></i>
+                                        </label>
+                                        <div class="col-md-3">
+                                            @Html.DropDownList("fundSource", ViewBag.fundSource as SelectList, "Select Fund Source", new { @class = "form-control" })
+                                            @*@Html.ValidationMessageFor(model => model.CostingId, "", new { @class = "text-danger" })*@
+                                        </div>
+                                        <label class="col-md-2 control-label"> Fund Type 
+                                            <i class="fa fa-asterisk" style="color:white" id="errorFundType"></i>
+                                        </label>
+                                        <div class="col-md-5">
+                                            @Html.DropDownList("fundingType", new SelectList(""), "Select Fund Type", new { @class = "form-control" })
+                                            <input type="hidden" id="fundTypeHidden" name="fundTypeHidden" />
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label"> Budget Class 
+                                            <i class="fa fa-asterisk" style="color:white" id="errorBudget"></i>
+                                        </label>
+                                        <div class="col-md-3">
+                                            @Html.DropDownList("budgetClass", new SelectList(""), "Select Budget Class", new { @class = "form-control" })
+                                            @*@Html.ValidationMessageFor(model => model.CostingId, "", new { @class = "text-danger" })*@
+                                        </div>
+                                        <label class="col-md-2 control-label"> Fund Reference
+                                            <i class="fa fa-asterisk" style="color:white" id="errorReference"></i>
+                                         </label>
+                                        <div class="col-md-5">
+                                            @Html.TextBoxFor(model => model.FundingRefNo, new { @class = "form-control", @placeholder = "Search Reference No." })
+                                            @Html.ValidationMessageFor(model => model.FundingRefNo, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label"> 
+                                            Component
+                                            <i class="fa fa-asterisk" style="color:white" id="errorComponet"></i>
+                                         </label>
+                                        <div class="col-md-3">
+                                            @Html.DropDownList("Component", new SelectList(""), "Select Component", new { @class = "form-control" })
+                                            <input type="hidden" id="fundTypeHidden" name="fundTypeHidden" />
+                                        </div>
+
+                                        <label class="col-md-2 control-label"> Available Balance
+                                            <i class="fa fa-asterisk" style="color:white" id="errorIssuedAmount"></i>
+                                         </label>
+                                        <div class="col-md-5">
+                                            <input onkeyup="" class="form-control" type="text" readonly="readonly" name="operationalAmount" id="operationalAmount">
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Department
+                                            <i class="fa fa-asterisk" style="color:white" id="errorDepartment"></i>
+                                        </label>
+                                        <div class="col-md-3">
+                                            <select name="Department" id="Department" class="form-control" required>
+                                                <option value="">Select Department</option>
+                                                @foreach (var item in Model.departments)
+                                                {
+                                                    <option value=@item.Value>@item.Value - @item.Text</option>
+                                                }
+                                            </select><i></i>
+
+                                        </div>
+                                        <label class="col-md-2 control-label"> Amount 
+                                            <i class="fa fa-asterisk" style="color:white" id="errorAmount"></i>
+                                        </label>
+                                        <div class="col-md-5">
+                                            <input onkeyup="ValidateEntry()" class="form-control" type="text" name="Amount" id="Amount" autocomplete="off">
+                                            <a href="#" id="exceedMsg" style="display:none;color:red">Amount Exceed Available Fund Balance </a>
+                                        </div>
+                                        @*<label class="col-md-2 control-label">Balance Amount </label>
+                                            <div class="col-md-5">
+                                                <input class="form-control" type="text" name="budgetClass" readonly="readonly" id="budgetClass">
+                                            </div>*@
+                                    </div>
+
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label">Description
+                                            <i class="fa fa-asterisk" style="color:white" id="errorDescription"></i>
+                                        </label>
+                                        <div class="col-md-3">
+                                            <textarea class="form-control" maxlength="80" name="Description" id="Description"></textarea>
+                                            (Remained characters: <i id="maxchars">80</i>)
+                                        </div>
+
+                                    </div>
+
+
+                                </fieldset>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="col-md-2">
+                                            </div>
+                                            <div class="col-md-10">
+                                                <a href="../FundAllocations/FundDistribution" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                                <button class="btn btn-info" id="savebtn" type="button" style="float: left">
+                                                    <i class="fa fa-save"></i>
+                                                    Save
+                                                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('[data-toggle="tooltip"]').tooltip();
+           // $('#operationalAmount').autoNumeric('init');
+            ///$('#operationalAmount').val(a);
+        });
+
+        var OldDescVal = ""
+        $("#Description").on("keyup", function (e) {
+
+            $("#maxchars").text(80 - this.value.length)
+            if(this.value){
+                var reg = new RegExp(/[0-9a-zA-Z ]/);
+                if (!reg.test(this.value.substr(-1))) {
+                    $("#PaymentDescription").val(OldDescVal)
+                } else {
+                    OldDescVal = this.value
+                }
+            }
+        });
+
+
+
+
+        $("#fundSource").change(function () {
+
+            debugger
+            var fundsourceId = $(this).val();
+
+            var url = "GetFundSourceType/?FundSourceId=" + fundsourceId;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#fundingType").empty();
+                    $("#fundingType").append(response);
+
+
+                }
+            });
+
+
+        });
+
+        function ValidateEntry() {
+            debugger;
+            var amount = parseFloat($("#Amount").val().toString().split(",").join(""));
+            var issued = parseFloat($("#operationalAmount").val().toString().split(",").join(""));
+            if (amount > issued) {
+                $("#Amount").css({ 'color': 'red' });
+                $("#savebtn").attr("disabled", true);
+                $("#exceedMsg").show();
+            }
+            else {
+                $("#Amount").css({ 'color': 'black' });
+                $("#savebtn").attr("disabled", false);
+                $("#exceedMsg").hide();
+            }
+        };
+
+
+
+
+        $("#fundingType").change(function () {
+
+            debugger
+            var fundtype = $(this).val();
+
+            var url = "GetFundBudgetClass/?fundtype=" + fundtype;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#budgetClass").empty();
+                    $("#budgetClass").append(response);
+                }
+            });
+
+
+        });
+
+
+
+        $("#budgetClass").change(function () {
+            debugger;
+            var budgetClass = $(this).val();
+            var url = "GetReference/?budgetClass=" + budgetClass;
+
+            $("#FundingRefNo").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (referenceNo) {
+                        return {
+                            referenceNo: referenceNo
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.references }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        $("#FundingRefNo").change(function () {
+
+            var fundReferenceNo = $(this).val();
+            // var budgetclass = $(this).val();
+            var url = "GetFundComponent/?fundReferenceNo=" + fundReferenceNo;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#Component").empty();
+                    $("#Component").append(response);
+                }
+            });
+
+
+        });
+
+
+        $("#Component").change(function () {
+
+            debugger;
+            var fundReferenceNo = $("#FundingRefNo").val();
+            var component = $(this).val();
+            var url = "GetComponentAmount/?fundReferenceNo=" + fundReferenceNo + "&&component="+component;
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    if (response[0] == "Success") {
+                        //$(".widget-body #ComponentName").val(response[1]);
+                        //$(".widget-body #budgetClass").val(response[2]);
+                        $(".widget-body #operationalAmount").val(response[1]);
+                    }
+                    $("#operationalAmount").autoNumeric({ aNeg: "-" }).trigger("change");
+                }
+            });
+
+        });
+
+
+        $("#saveLoader").toggle(false);
+        $("#savebtn").click(function () {
+            debugger;
+            if (formValidation()) {
+
+                var data = {
+                    "FundType": $("#fundingType").val(),
+                    "FundingSource": $("#fundSource").val(),
+                    "FundTypeId": $("#fundTypeHidden").val(),
+                    "BudgetClass": $("#budgetClass").val(),
+                    "FundingRefNo": $("#FundingRefNo").val(),
+                    "OperationalAmount": $("#operationalAmount").val(),
+                    "SubVoteCode": $("#Department").val(),
+                    "Description": $("#Description").val(),
+                    "Component": $("#Component").val(),
+                    "TotalAmount": $("#Amount").val()
+                }
+                console.log(data);
+                var url = '@Url.Action("DepartmentDistribution", "FundAllocations")';
+                var urlList = '@Url.Action("FundDistribution", "FundAllocations")';
+                $("#savebtn").prop('disabled', true);
+                $("#saveLoader").toggle(true);
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: data,
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        $("#savebtn").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        if (response == "Success") {
+                            swal("Distribution Saved Successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    window.location.href = urlList;
+                                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        $("#savebtn").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        swal(error);
+                    }
+                });
+
+
+            }
+            else {
+                swal("Please Fill all the Distribution Details");
+            }
+
+        });
+
+
+        function formValidation() {
+            debugger;
+            $("#errorFundSource").attr("style", "color: white;");
+            $("#errorFundType").attr("style", "color: white;");
+            $("#errorComponet").attr("style", "color: white;");
+            $("#errorBudget").attr("style", "color: white;");
+            $("#errorReference").attr("style", "color: white;");
+            $("#errorComponet").attr("style", "color: white;");
+            $("#errorIssuedAmount").attr("style", "color: white;");
+            $("#errorDepartment").attr("style", "color: white;");
+            $("#errorAmount").attr("style", "color: white;");
+            $("#errorDescription").attr("style", "color: white;");
+
+
+
+            if ($("#fundSource").val().trim() == "") {
+                $("#errorFundSource").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#fundingType").val().trim() == "") {
+                $("#errorFundType").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#budgetClass").val().trim() == "") {
+                $("#errorBudget").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#FundingRefNo").val().trim() == "") {
+                $("#errorReference").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#Component").val().trim() == "") {
+                $("#errorComponet").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#operationalAmount").val().trim() == "") {
+                $("#errorIssuedAmount").attr("style", "color: red;");
+                return false
+            }
+
+
+            if ($("#Department").val().trim() == "") {
+                $("#errorDepartment").attr("style", "color: red;");
+                return false
+            }
+
+
+            if ($("#Amount").val().trim() == "") {
+                $("#errorAmount").attr("style", "color: red;");
+                return false
+            }
+
+            if ($("#Description").val().trim() == "") {
+                $("#errorDescription").attr("style", "color: red;");
+                return false
+            }
+
+
+
+            return true
+
+        };
+
+        //$('#operationalAmount').autoNumeric('init');
+        $('#Amount').autoNumeric('init');
+
+    </script>
+}

@@ -1,0 +1,553 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.UnpaidDeductionByInstVM>
+@{
+    ViewBag.Title = "At Source Deduction Summary By Institution";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var unpaidInstructionId = Model.Select(a => a.UnpaidInstructionId).FirstOrDefault();
+}
+<style>
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    /*input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }*/
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .backgroundColor {
+        background: #ff0000;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="row">
+                            <div style="padding-left:10px;padding-right:10px">
+                                <div class="form-group">
+                                    <div class="col-md-2">
+                                        <button class="btn btn-info PrintBtn" id="PrintSummary" onclick="printAtSourceSummary(@Model.Select(a => a.UnpaidInstructionId).FirstOrDefault())">
+                                            <span class="glyphicon glyphicon-print"></span>
+                                            Preview Report
+                                        </button>
+                                    </div>
+                                    <div class="col-md-2">
+                                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <hr />
+
+                        <div class="widget-body">
+                            @Html.AntiForgeryToken()
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_loanReceived_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Ben Institution</th>
+                                        <th style="text-align:right"> Net Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                        Decimal SubNET = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        SubNET += decimal.Parse(item.TotalAmount.ToString());
+
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>
+                                                <a href="#" onclick="openViewDialog('@item.UnpaidInstructionId','@item.BenInstitution')"> @Html.DisplayFor(modelItem => item.BenInstitution) </a>
+                                            </td>
+                                            <td style="text-align: right">
+                                                @Html.DisplayFor(modelItem => item.TotalAmount, "_DecimalThousands")
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2" style="text-align:right">Total </th>
+                                        <th style="text-align:right">@String.Format("{0:#,0.00}", SubNET)</th>
+                                    </tr>
+                                </tfoot>
+
+                            </table>
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-2 col-md-offset-3">
+                                   
+                                        @*<a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                        </a>*@
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="istdetailsModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Summary of Deductions by Vote</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body" id="instDetail_body">
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info btn-150" id="btncancel" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="viewModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Summary of Deductions by Vote</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="hidden" name="unpaidId2" id="unpaidId2" value="" />
+                                <button class="btn btn-info PrintBtn" id="Print" onclick="printSlip()">
+                                    <span class="glyphicon glyphicon-print"></span>
+                                    Preview Report
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        @ViewBag.Title2
+                        <br/>
+                        <table id="dt_view" class="table table-bordered table-condensed"></table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!------------------------- END VIEW DIALOG ---------------------->
+
+
+@section pagespecific{
+
+    <script type="text/javascript">
+
+                    //----Display Details---//
+        var instDetails = function (id,institution) {
+            debugger
+            $("#divLoader").show();
+            var url = '@Url.Action("SummaryAtSourceVote", "UnpaidPaymentSummary")';
+            $("#instDetail_body").load(url, { id: id ,institution:institution}, function (response, status, xhr) {
+                $("#divLoader").hide();
+                if (status == "error") {
+                    $("#instDetail_body").html(status + " Error on accessing this details, contact system support.");
+                }
+                $("#istdetailsModal").modal("show");
+            });
+        };
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+
+
+        var dt_view = $('#dt_view').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "targets": [1],
+                "visible": false
+            }],
+            "columns": [
+                {
+                    "className": 'details-control',
+                    "orderable": false,
+                    "data": null,
+                    "defaultContent": ''
+                },
+                { title: "UnpaidInstructionId" },
+                { title: "Institution"},
+                { title: "Vote Code" },
+                { title: "Vote Desc" },
+                { title: "Num Trx" },
+                { title: "Total Amount" }
+            ]
+        });
+
+        $("#dt_view_wrapper .dt-toolbar").remove();
+
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_view.DataTable().search(this.value).draw();
+        });
+
+        function openViewDialog(id, institution) {
+            viewData(id, institution);
+            $("#viewModal").modal("show");
+        }
+
+        var unpaidInstrId;
+        var inst;
+        function viewData(id, institution) {
+            unpaidInstrId = id;
+            inst = institution;
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetSummaryAtSourceVote", "UnpaidPaymentSummary")' + "/?id=" + id + "&&institution=" + institution  + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    dt_view.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_view.fnAddData([i + 1,
+                           d[i]["UnpaidInstructionId"],
+                           d[i]["BenInstitution"],
+                           d[i]["VoteCode"],
+                           d[i]["VoteDesc"],
+                           d[i]["NoofEmployees"],
+                           toLabel(d[i]["TotalAmount"])
+
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function initTableEmployeeDetail(i) {
+            window["dt_view_employee_detail" + i]
+                = $('#dt_view_employee_detail' + i)
+                    .dataTable({
+                        //"sDom": 't',
+                        "columns": [
+                            { title: "#" },
+                            { title: "Check Number" },
+                            { title: "Full Name" },
+                            { title: "Ded Code" },
+                            { title: "Ded Description" },
+                            { title: "Check Date" },
+                            { title: "Amount" },
+                            { title: "OverallStatus" },
+                        ]
+                    });
+            $("#dt_view_employee_detail" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_view tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_view.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view_employee_detail' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initTableEmployeeDetail(row.data()[0]);
+                tr.addClass('shown');
+                debugger;
+                getEmployeeDetails(row.data()[0], row.data()[1], row.data()[2], row.data()[3]);
+            }
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        debugger;
+
+
+        function getEmployeeDetails(rowId, id, institution, votecode) {
+
+            $.ajax({
+                type: "get",
+
+                url: '@Url.Action("GetSummaryAtSourceVote2", "UnpaidPaymentSummary")' + "/?id=" + id + "&&institution=" + institution + "&&votecode=" + votecode + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view_employee_detail" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+
+                        if (d[i]["Checkdate"] != "" && d[i]["Checkdate"] != null) {
+                            checkDate = ToJavaScriptDate(d[i]["Checkdate"]);
+                        }
+                        else {
+
+                            checkDate = "NULL";
+                        }
+
+                        window["dt_view_employee_detail" + rowId]
+                            .fnAddData([i + 1,
+                                d[i]["CheckNo"],
+                                d[i]["FullName"],
+                                d[i]["DedCode"],
+                                d[i]["DedDesc"],
+                                checkDate,
+                                toLabel(d[i]["AtSource"]),
+                                d[i]["OverallStatus"]
+                            ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function printAtSourceSummary(id) {
+
+            debugger;
+            $("#divLoader").show();
+            window.location = '@Url.Action("PreviewReportAtSourceSummary", "UnpaidPaymentSummary")' + "/?id=" + id;
+        }
+
+
+        function printSlip() {
+
+            PriviewSlip(unpaidInstrId, inst);
+        };
+
+        var PriviewSlip = function (ids,inst) {
+            debugger;
+            $("#divLoader").show();
+            window.location = '@Url.Action("PreviewReportAtSourceVoteDetails", "UnpaidPaymentSummary")' + "/?ids=" + ids + "&&instCode=" + inst + ""
+        };
+
+
+
+    </script>
+}
+

@@ -1,0 +1,716 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetReallocationVM>
+
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    /*table, th, tr, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        border-color: gray;
+        /*border-collapse: separate;*
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 40%;
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+        tr:not([data-level='2']) {
+            cursor: pointer;
+        }
+
+        tr.expanded .sign:after {
+            content: url(/ifmis/Content/img/budget/Minus3.png);
+        }
+
+        tr.folded .sign:after {
+            content: url(/ifmis/Content/img/budget/Collapse2.png);
+            cursor: pointer;
+        }
+
+        td:first-child {
+            padding: inherit;
+        }
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+
+    thead {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    tfoot {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }*/
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budget Reallocations Reversal Entry</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                    <a class="btn btn-info" href='#' onclick="SearchReallocations()">
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+
+                                </div>
+
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th></th>
+                                        <th data-hide="phone,tablet"><b>Reallocation ID</b></th>
+                                        <th data-hide="phone,tablet"><b>SubBudget Class</b></th>
+                                        <th data-hide="phone,tablet"><b>Request Type</b></th>
+                                        <th data-hide="phone,tablet"><b>Request Date</b></th>
+                                        <th data-hide="phone,tablet"><b>Description</b></th>
+                                        <th data-hide="phone,tablet"><b>Total CR Amount </b></th>
+                                        <th data-hide="phone,tablet"><b>Total DR Amount</b></th>
+                                        <th data-hide="phone,tablet"><b>Status</b></th>
+                                        <th data-hide="phone,tablet"><b>Comments</b></th>
+                                        <th data-hide="phone,tablet"><b>Action</b></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{ int cnt = 0;}
+                                    @foreach (var sbc in Model)
+                                    {
+                                        cnt = cnt + 1;
+                                        <tr>
+                                            <td>@cnt</td>
+                                            <td>@sbc.LegalNumber</td>
+                                            <td>@sbc.SuBbudgetClassDesc</td>
+                                            <td>@sbc.RequestType</td>
+                                            <td>@sbc.ApplyDate</td>
+                                            <td>@sbc.RequestDesc</td>
+                                            <td>@string.Format("{0:#,0.00}", sbc.TotalAmountFrom)</td>
+                                            <td>@string.Format("{0:#,0.00}", sbc.TotalAmountTo)</td>
+                                            <td>@sbc.OverallStatus</td>
+                                            <td>@sbc.Comments</td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret">
+                                                        </span>
+                                                        <span class="sr-only"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="#" onclick="openViewDialog(@sbc.ReallocationID)"> View Detail</a></li>
+                                                        <li><a href="#" onclick="confirmDialog(@sbc.BudgetReallocationReversalId)">Confirm</a></li>
+                                                        <li><a href="#" onclick="cancellDialog(@sbc.BudgetReallocationReversalId)">Cancel</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+
+                            </table>
+
+
+                        </div>
+
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Confirm this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Budget Lines</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+
+                        <div class="payee-entry">
+                            <div class="entry-label">Realocated Lines</div>
+                            <div class="row">
+                                <table id="" class="table table-bordered table-condensed">
+                                    <thead>
+                                        <tr>
+                                            <th><b>#</b></th>
+                                            <th><b>GLAccount</b></th>
+                                            <th><b>Description </b></th>
+                                            <th style="text-align:right"><b>DR Amount</b></th>
+                                            <th style="text-align:right"><b>CR Amount</b> </th>
+                                            <th style="text-align:right"><b>Status</b></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var lines in Model.Where(a => a.ReallocationID == 11))
+                                        {
+                                            int cn = 0;
+                                            cn = cn + 1;
+                                            <tr>
+                                                <th>@cn</th>
+                                                <th>@lines.GLAccount</th>
+                                                <th>Description </th>
+                                                <th style="text-align:right">@lines.AmountTo</th>
+                                                <th style="text-align:right">@lines.AmountFrom </th>
+                                                <th style="text-align:right">@lines.OverallStatus</th>
+                                            </tr>
+
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <div class="total-amount">TOTAL <strong id="totalAmount">0.00</strong></div>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="confirmDialog('x')">
+                        <i class="fa fa-check"></i>Confirm
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="Delete('x')">
+                        <i class="fa fa-trash-o"></i>Delete
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="edit('x')">
+                        <i class="fa fa-edit"></i>Edit
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="glItemsModalTo" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Reallocated GL Items</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container submit-btn" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="searchbox2">
+                            </div>
+                        </div>
+                    </div>
+                    <table id="dt_search_gl_item_to" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>GL Item</th>
+                                <th>Description</th>
+                                <th>Credit Amount</th>
+                                <th>Debit Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    @*<button type="submit" class="btn btn-info" id="btn_save_gl_items2">
+                            <i class="fa fa-save"></i>Save
+                        </button>*@
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>OK
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="SearchReallocations" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Search Budget Reallocations</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container submit-btn" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_reallocation">
+                            </div>
+                        </div>
+                    </div>
+                    <table id="dt_search_leallocation" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                        <thead>
+                            <tr style="text-align:left">
+                                <th></th>
+                                <th data-hide="phone,tablet"><b>Legal Number</b></th>
+                                <th data-hide="phone,tablet"><b>SubBudget Class</b></th>
+                                <th data-hide="phone,tablet"><b>Request Type</b></th>
+                                <th data-hide="phone,tablet"><b>Total CR Amount </b></th>
+                                <th data-hide="phone,tablet"><b>Total DR Amount</b></th>
+                                <th data-hide="phone,tablet"><b>Status</b></th>
+                                <th data-hide="phone,tablet"><b>Action</b></th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        var datatable_tabletools = $('#datatable_tabletools').dataTable({
+            "autoWidth": true,
+            "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+            "bPaginate": false,
+            "info": true,
+        });
+        var reallocationid = 0;
+        var dt_search_gl_item_to = $('#dt_search_gl_item_to').dataTable();
+        var dt_search_leallocation = $('#dt_search_leallocation').dataTable();
+
+        // GRAB THIS==================================
+        $("#searchbox").on("keyup search input paste cut", function () {
+            datatable_tabletools.DataTable().search(this.value).draw();
+        });
+        var SEARCHED_REALOCATION = []
+        $("#search_reallocation").on("keyup search input paste cut", function () {
+            if(this.value){
+                searchReallocation(this.value)
+            } else {
+                SEARCHED_REALOCATION = []
+                displayRealloactionData()
+            }
+        });
+
+        function searchReallocation(legalNumber) {
+            var url = '@Url.Action("GetBudgReallocation", "BudgetReallocationReversal")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {legalNumber},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    SEARCHED_REALOCATION = response.data || []
+                    displayRealloactionData()
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function displayRealloactionData() {
+            dt_search_leallocation.fnClearTable();
+            for (var i = 0; i < SEARCHED_REALOCATION.length; i++) {
+                dt_search_leallocation
+                    .fnAddData([i + 1,
+                       SEARCHED_REALOCATION[i].LegalNumber,
+                       SEARCHED_REALOCATION[i].SubBudgetClass,
+                       SEARCHED_REALOCATION[i].RequestType,
+                       toLabel(SEARCHED_REALOCATION[i].AmountFrom),
+                       toLabel(SEARCHED_REALOCATION[i].AmountTo),
+                       SEARCHED_REALOCATION[i].OverallStatus,
+                       "<a href='#' onclick='createReallocReversal(" + SEARCHED_REALOCATION[i].ReallocationID + ")'>CREATE</a>"
+                ]);
+            }
+        }
+
+        function createReallocReversal(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Create Reallocation Reversal!",
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    createReallocReversalPost(id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function createReallocReversalPost(id) {
+            var url = '@Url.Action("BudgetReallocationReversalCreate", "BudgetReallocationReversal")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                              window.location.reload()
+                            });
+                    }else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var confirmBudget = function (id) {
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                //if (CostCenter != "") {
+                var url = '@Url.Action("ConfirmBudgetReallocation", "BudgetReallocations")';
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    type: "POST",
+                    success: function (response) {
+                        if (response) {
+                            if (response == "Success") {
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-info')) {
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Confirmed successfully');
+                            }
+                        }
+                    }, error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-danger')) {
+                            $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                            $('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+                //} //
+            });
+        };
+        function openViewDialog(id) {
+            $('#glItemsModalTo').modal('show');
+            updateSearchGIToTable(id);
+
+        }
+
+
+
+        function SearchReallocations() {
+            $('#SearchReallocations').modal('show');
+        }
+
+        function updateSearchGIToTable(id) {
+
+            var url = '@Url.Action("GetBudgReallocDetails", "BudgetReallocations")';
+            var fundBalanceParams = { "reallocationid": id };
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: fundBalanceParams,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    //=== UPDATE SEARCH GI TABLE ====
+                    data = response.data;
+                    //console.log(data);
+                    dt_search_gl_item_to.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+
+                        var acc = data[i]["GLAccount"];
+                        var accdesc = data[i]["GLAccountDesc"];
+                        //var amt = string.Format("{0:#,0.00}", data[i]["AmountFrom"])
+                        var amt = data[i]["AmountFrom"]
+                       // console.log(acc);
+                       // dt_search_gl_item_to.fnAddData([0,1,2,3,4])
+                        dt_search_gl_item_to.fnAddData([i + 1,
+                                                        acc,
+                                                        accdesc,
+                                                        amt.toLocaleString(),
+                                                        data[i]["AmountTo"].toLocaleString()
+                                                    ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function Delete(id) {
+            //if (i == 'x') i = globalPayeeId;
+            console.log(id)
+            swal({
+                title: "Are you sure?",
+                text: "Once Cancelled, you will not be able to recover this Entry!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteItemConfirmed(id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function deleteItemConfirmed(id) {
+            var url = '@Url.Action("DeleteReallocation", "Budgetreallocations")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Record Cancelled!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        //=================== CONFIRM START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmDialog(id) {
+
+            swal({
+                title: 'Confirm this Item?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmBudgetReallocation(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmBudgetReallocation(id) {
+                var url = '@Url.Action("BudgetReallocationReversalActions", "BudgetReallocationReversal")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id, status: "Confirmed" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function cancellDialog(id) {
+
+            swal({
+                title: 'Cancell this Transaction ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    cancellBudgetReallocation(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+
+        function cancellBudgetReallocation(id) {
+            var url = '@Url.Action("BudgetReallocationReversalActions", "BudgetReallocationReversal")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id, status: "Cancelled" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Budget Reallocation Cancelled!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+           // $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+
+
+
+    </script>
+}

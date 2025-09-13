@@ -1,0 +1,192 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.Costing>
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input {
+        border: 1px solid lightgray;
+        width: 300px;
+        height: 35px;
+    }
+
+        input[type=search] {
+            padding: 4px;
+            border: hidden;
+            width: 200px;
+            height: 30px;
+        }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2 style="color:black;">Costing Lists.</h2>
+
+                    </header>
+
+                    <div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a href='@Url.Action("Create", "Costings")' class="btn btn-info" style="width:auto;color:black">
+                                    <i class="fa fa-plus"></i>Add New
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="widget-body">
+                            <table id="dt_coasting" class="table table-condensed table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>No:</th>
+                                        <th>Cost Code</th>
+                                        <th>Cost Name</th>
+                                        <th>Cost Description</th>
+                                        <th>GLAccount Revenue</th>
+                                        <th>GLAccount Receivable</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                @{ int i = 0;}
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.CostCode)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.CostName)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.CostDesc)
+                                            </td>
+                                            <td>
+                                                @{ var GLAccountRevenue = item.GLAccountRevenue.Replace("|", "-"); }
+                                                @GLAccountRevenue
+                                            </td>
+                                            <td>
+                                                @{ var GLAccountReceivable = item.GLAccountReceivable.Replace("|", "-"); }
+                                                @GLAccountReceivable
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+
+                                                        <li>
+                                                            <a href="@Url.Action("Edit", "Costings",new {id=item.CostingId })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="@Url.Action("Details", "Costings",new {id=item.CostingId })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Details
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="@Url.Action("Delete", "Costings",new {id=item.CostingId })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                    </div>
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+        var dt_coasting = $('#dt_coasting').dataTable();
+
+        $("#dt_coasting_wrapper .dt-toolbar").remove();
+        function actionTemplate(i) {
+            return '<div class="btn-group">\
+                       <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                          <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                      <li><a href="#" onclick="edit(' + i + ')">Edit</a></li>\
+                   <li><a href="#" onclick="Delete(' + i + ')">Delete</a></li>\
+               </ul>\
+          </div>'
+        }
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_coasting.fnClearTable();
+            } else {
+                searchTableUpdate(this.value);
+            }
+        });
+
+        function searchTableUpdate(search) {
+            var url = '@Url.Action("SearchAccount", "Accounts")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_coasting.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_coasting.fnAddData([i + 1,
+                           data[i]["AccountName"],
+                           data[i]["AccountNo"],
+                           data[i]["AccountTypeCode"],
+                           data[i]["BankName"],
+                           data[i]["BankBIC"],
+                           data[i]["Status"],
+                          actionTemplate(i)
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}

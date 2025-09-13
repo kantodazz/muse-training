@@ -1,0 +1,501 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.GfsCodeDataVm
+@{
+    ViewBag.Title = "Create Gfs Code";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .input[type="text"], select {
+        border: 1px solid lightgray;
+        width: 100%;
+        height: 35px;
+    }
+
+    .textarea {
+        border: 1px solid lightgray;
+        width: 100%;
+    }
+
+    .input[type="text"]:focus {
+        border: 1px solid lightblue;
+    }
+
+    th {
+        text-align: left;
+    }
+</style>
+<!-- widget grid -->
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2 style="color:black;">Approved GFS Code</h2>
+                    </header>
+                    <div>
+                        <table id="dt_basic" class="table table-condensed table-bordered">
+                            <thead>
+                                <tr>
+                                    <th colspan="7">
+                                        <div class="row">
+                                            <div class="col-md-6">
+                                                <select id="distributeAction" class="form-control input-sm select2">
+                                                    <option value="">-- Select Action --</option>
+                                                    <option value="distribute">Distribute Selected</option>
+                                                    <option value="distributeBatch">Distribute Batch</option>
+                                                </select>
+                                            </div>
+                                            <div class="col-md-2">
+                                                <button id="executeAction" class="btn btn-primary btn-sm">Execute</button>
+                                            </div>
+                                        </div>
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th><input type="checkbox" id="checkAll" /></th>
+                                    <th> No.</th>
+                                    <th style="text-align:left"> Chapter Name</th>
+                                    <th style="text-align:left"> Sub Chapter Name</th>
+                                    <th style="text-align:left"> GfsCode</th>
+                                    <th style="text-align:left">Entry Source</th>
+                                    <th style="text-align:left"> Overallstatu</th>
+                                    <th style="width:50px">Action</th>
+                                </tr>
+                            </thead>
+                            @{ int i = 0;}
+                            @foreach (var group in ((IEnumerable<IFMIS.Areas.IFMISTZ.Models.GfscodeSetup>)ViewBag.list).GroupBy(a => a.GfscodeSetupId))
+                            {
+                                <tbody>
+                                    @foreach (var item in group)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td><input type="checkbox" class="rowCheckbox" value="@item.GfscodeSetupId" /></td>
+                                            <td>@i</td>
+                                            <td style="text-align:left">@item.Chapter.ChapterNo : @item.Chapter.ChapterName</td>
+                                            <td style="text-align:left"> @item.SubChapter.SubChapterNo : @item.SubChapter.SubChapterName</td>
+                                            <td style="text-align:left"> @item.GfscodeName : @item.GfscodeDesc</td>
+                                            <td style="text-align:left"> @item.InsertSource</td>
+                                            <td style="text-align:left"> @item.StatusLevel</td>
+                                            <td style="text-align:center; width:15%;">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="#" Onclick="DistributeTheRecord(@item.GfscodeSetupId)" class="btn-xs edit">
+                                                                <i class="fa fa-share-square"></i>  Distribute
+                                                            </a>
+                                                        </li>
+                                                        @*<li>
+                                                            <a href="#" Onclick="RejectTheRecord(@item.GfscodeSetupId)" class="btn-xs edit">
+                                                                <i class="fa fa-trash-o"></i>  Reject
+                                                            </a>
+                                                        </li>*@
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            }
+                        </table>
+                    </div>
+
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script type="text/javascript">
+        if ('@TempData["Success"]' == 'Success') {
+            swal("Successfully Saved", { icon: 'success'})
+        } else if ('@TempData["Success"]' == 'No') {
+            swal("Already Created!!", { icon: 'warning'})
+                .then(Ok => {
+                    window.location.href = '@Url.Action("GfsCodeSetupCreate", "GfscodeSetup")';
+                });
+        } else if ('@TempData["Success"]' == 'Exist'){
+            swal("Chapter Number Already in Used!!", { icon: 'warning' })
+                .then(Ok => {
+                    window.location.href = '@Url.Action("GfsCodeSetupCreate", "GfscodeSetup")';
+                });
+        };
+
+        $("form").submit(function () {
+            $("#saveLoader").toggle(true);
+            $('#submit').attr("disabled", true);
+        });
+
+        $("#saveLoader").toggle(false);
+        $("#submit").prop('disabled', false);
+
+
+        $(document).ready(function () {
+
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            var otable = $('#datatable_fixed_column').DataTable({
+
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            $('#datatable_tabletools').dataTable({
+
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sTitle": "SmartAdmin_PDF",
+                            "sPdfMessage": "SmartAdmin PDF Export",
+                            "sPdfSize": "letter"
+                        },
+                        {
+                            "sExtends": "print",
+                            "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                        }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+
+        })
+
+
+        function DistributeTheRecord(i) {
+            status = "Distributed";
+            swal({
+                title: "Are you sure?",
+                text: "Gfs Code will be Distributed to Other MUSE Systems!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    ChangeToStatusLevel(i, status);
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function RejectTheRecord(i) {
+            status = "Rejected";
+            swal({
+                title: "Are you sure?",
+                text: "Gfs Code will be Rejected!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    ChangeToStatusLevel(i, status);
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function ChangeToStatusLevel(i, status) {
+                var url = '@Url.Action("GfsCodeSetupConfirm", "GfscodeSetup")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+                        Id: i,
+                        statusLevel: status
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+
+                        if (response == "Success") {
+                            swal(status + " Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+        }
+
+
+
+       $(document).ready(function() {
+            // Check/uncheck all checkboxes
+            $("#checkAll").on("click", function() {
+                $(".rowCheckbox").prop("checked", $(this).prop("checked"));
+            });
+
+            // Update "checkAll" state when individual checkboxes change
+            $(document).on("change", ".rowCheckbox", function() {
+                if ($(".rowCheckbox:checked").length == $(".rowCheckbox").length) {
+                    $("#checkAll").prop("checked", true);
+                } else {
+                    $("#checkAll").prop("checked", false);
+                }
+            });
+
+            // Execute action button click
+            $("#executeAction").on("click", function() {
+                var selectedAction = $("#distributeAction").val();
+                if (!selectedAction) {
+                    swal({
+                        text: "Please select an action to perform.",
+                        icon: "warning",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    });
+                    return;
+                }
+
+                // For individual distribute
+                if (selectedAction === "distribute") {
+                    var selectedIds = [];
+                    $(".rowCheckbox:checked").each(function() {
+                        selectedIds.push($(this).val());
+                    });
+
+                    if (selectedIds.length === 0) {
+                        swal({
+                            text: "Please select at least one record to distribute to Other MUSE server.",
+                            icon: "warning",
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        });
+                        return;
+                    }
+
+                    // Call the approval function
+                    distributeSelected(selectedIds);
+                }
+                    // For batch distribute
+                else if (selectedAction === "distributeBatch") {
+                    distributeBatch();
+                }
+            });
+
+            // Function to distribute selected records
+           function distributeSelected(ids) {
+                swal({
+                    title: "Are you sure?",
+                    text: "You are about to distribute the selected records to other MUSE server.",
+                    icon: "warning",
+                    buttons: ["Cancel", "Distribute"],
+                    dangerMode: true,
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                }).then((willDistribute) => {
+                    if (willDistribute) {
+                        $.ajax({
+                            url: '@Url.Action("DistributeSelected", "GfscodeSetup")',
+                            type: 'POST',
+                            data: { ids: ids },
+                            traditional: true,
+                            success: function(response) {
+                                if (response.success) {
+                                    swal({
+                                        text: "Selected records Distributed successfully!",
+                                        icon: "success",
+                                        customClass: {
+                                            container: 'my-swal'
+                                        }
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    swal({
+                                        title: "Error",
+                                        text: response.message,
+                                        icon: "error",
+                                        customClass: {
+                                            container: 'my-swal'
+                                        }
+                                    });
+                                }
+                            },
+                            error: function() {
+                                swal({
+                                    title: "Error",
+                                    text: "An error occurred during the Distributed process.",
+                                    icon: "error",
+                                    customClass: {
+                                        container: 'my-swal'
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+
+            // Function to distribute batch
+           function distributeBatch() {
+                swal({
+                    title: "Are you sure?",
+                    text: "You are about to distribute all records in the current batch to other MUSE System.",
+                    icon: "warning",
+                    buttons: ["Cancel", "Distribute"],
+                    dangerMode: true,
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                }).then((willDistribute) => {
+                    if (willDistribute) {
+                        $.ajax({
+                            url: '@Url.Action("DistributeBatch", "GfscodeSetup")',
+                            type: 'POST',
+                            success: function(response) {
+                                if (response.success) {
+                                    swal({
+                                        text: "Batch Distributed successfully!",
+                                        icon: "success",
+                                        customClass: {
+                                            container: 'my-swal'
+                                        }
+                                    }).then(() => {
+                                        location.reload();
+                                    });
+                                } else {
+                                    swal({
+                                        title: "Error",
+                                        text: response.message,
+                                        icon: "error",
+                                        customClass: {
+                                            container: 'my-swal'
+                                        }
+                                    });
+                                }
+                            },
+                            error: function() {
+                                swal({
+                                    title: "Error",
+                                    text: "An error occurred during the batch Distributed process.",
+                                    icon: "error",
+                                    customClass: {
+                                        container: 'my-swal'
+                                    }
+                                });
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    </script>
+}

@@ -1,0 +1,401 @@
+﻿@model IFMIS.Areas.Coadmis.DTO.AuditCompletionVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/Areas/Coadmis/Contents/css/jquery.dataTables.min.css" rel="stylesheet" />
+<link href="~/Areas/Coadmis/Contents/css/rowGroup.dataTables.min.css" rel="stylesheet" />
+
+<div id="divLoader"></div>
+<div id="content">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <div class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+                    -->
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-table"></i></span>
+                        <h2>Details</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+
+                            @Html.HiddenFor(model => model.AuditableAreaId)
+                            @{
+                                var overallStatue = new[] { "Pending", "Confirmed", "Verified", "Reviewed", "Rejected by Verifier" };
+                            }
+                            <ul class="nav nav-tabs">
+                                <li class="active">
+                                    <a data-toggle="tab" href="#tab_default-1">
+                                        <span class="fa fa-briefcase" aria-hidden="true"></span>
+                                        Audit Findings
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#tab_default-2">
+                                        <span class="fa fa-briefcase" aria-hidden="true"></span>
+                                        Audit Matters
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#tab_default-4">
+                                        <span class="fa fa-briefcase" aria-hidden="true"></span>
+                                        Financial Statements 
+                                    </a>
+                                </li>
+                                <li>
+                                    <a data-toggle="tab" href="#tab_default-3">
+                                        <span class="fa fa-comments" aria-hidden="true"></span>
+                                        Comments
+                                    </a>
+                                </li>
+                            </ul>
+                            <div class="tab-content" style="padding-top: 10px">
+                                <div class="tab-pane in active" id="tab_default-1">
+                                    <div class="row col-md-8" style="display:flex;justify-content:flex-start">
+                                        <dl class="dl-horizontal">
+                                            <dt>
+                                                @Html.DisplayNameFor(model => model.ClientName):
+                                            </dt>
+
+                                            <dd>
+                                                @Html.DisplayFor(model => model.ClientName)
+                                            </dd>
+                                            <dt>
+                                                @Html.DisplayNameFor(model => model.FinancialYear):
+                                            </dt>
+
+                                            <dd>
+                                                @Html.DisplayFor(model => model.FinancialYear)
+                                            </dd>
+                                        </dl>
+                                        <hr />
+                                    </div>
+                                    @if (ViewBag.FindingName != null)
+                                    {
+                                        <div class="row col-md-4" style="display:flex;justify-content:flex-end;margin-top:20px">
+                                          
+                                            <button id="excel" type="button" class="btn btn-sm btn-info"
+                                                    onclick="location.href='@Url.Action("FindingSummaryReport", "AuditCompletion", new { id = Model.MgtSummaryResponseId})'" target="_blank">
+                                                <span class="glyphicon glyphicon-print"></span>
+                                                Preview
+                                            </button>
+                                        </div>
+                                    }
+                                    <table id="finding" class="display table table-bordered table-condensed table-striped" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Auditable Area</th>
+                                                <th>Finding </th>
+                                                <th>Criteria </th>
+                                                <th>Condition </th>
+                                                <th>Consequence</th>
+                                                <th>Recommendation</th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+                                        @{
+                                            int i = 0;
+                                        }
+                                        <tbody>
+                                            @foreach (var item in ViewBag.FindingName)
+                                            {
+
+                                                i++;
+                                                <tr>
+                                                    <td> </td>
+                                                    <td> @item.AuditableAreaName </td>
+                                                    <td> @item.FindingName </td>
+                                                    <td> @item.Criteria </td>
+                                                    <td> @item.Condition </td>
+                                                    <td> @item.Consequence </td>
+                                                    <td> @item.Recomendation </td>
+                                                    <td>
+                                                        <a href="#" onclick="viewFndingDetails(@item.ManagementAuditorCommentId)">
+                                                            <i class="glyphicon glyphicon-eye-open" aria-hidden="true" aria-hidden="true"></i>
+                                                        </a>
+                                                    </td>
+                                                </tr>
+
+                                            }
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="tab-pane fade" id="tab_default-2">
+                                    <div class="row col-md-8" style="display:flex;justify-content:flex-start">
+                                        <dl class="dl-horizontal">
+                                            <dt>
+                                                @Html.DisplayNameFor(model => model.ClientName):
+                                            </dt>
+
+                                            <dd>
+                                                @Html.DisplayFor(model => model.ClientName)
+                                            </dd>
+
+                                            <dt>
+                                                @Html.DisplayNameFor(model => model.FinancialYear):
+                                            </dt>
+
+                                            <dd>
+                                                @Html.DisplayFor(model => model.FinancialYear)
+                                            </dd>
+                                        </dl>
+                                        <br />
+                                    </div>
+
+                                    <div class="row" style="display:inline">
+                                        @if (ViewBag.Matters != null)
+                                        {
+
+                                            <div class="row col-md-4" style="display:flex;justify-content:flex-end;margin-top:20px">
+                                                <button id="excel" type="button" class="btn btn-sm btn-info"
+                                                        onclick="location.href='@Url.Action("AuditMatersSummaryReport", "AuditCompletion", new { id = Model.MgtSummaryResponseId })'">
+                                                    <span class="glyphicon glyphicon-print"></span>
+                                                    Preview
+                                                </button>
+                                            </div>
+                                        }
+                                        <table id="example" class="display table table-bordered table-condensed table-striped" style="width:100%">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Name</th>
+                                                    <th>Description of Matter</th>
+                                                    <th>Reference</th>
+                                                    <th>Work Undertaken</th>
+                                                    <th>Conclusion</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in ViewBag.Matters)
+                                                {
+                                                    <tr>
+                                                        <td></td>
+                                                        <td>@item.Name</td>
+                                                        <td>@item.Description</td>
+                                                        <td>@item.Reference</td>
+                                                        <td>@item.Workundertaken</td>
+                                                        <td>@item.Conclusion</td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="tab_default-4">
+                                    <div class="row col-md-8" style="display:flex;justify-content:flex-start">
+                                        <div class="col-md-12">
+                                            @foreach (var item in ViewBag.finacialstatement)
+                                            {
+                                                <dl class="dl-horizontal">
+                                                    <dt>
+                                                        @item.FinancialstatementName:
+                                                    </dt>
+
+                                                    <dd>
+                                                        @item.FinancialstatementName
+                                                    </dd>
+                                                    <hr />
+                                                    <dd>
+                                                        @Html.Raw(item.FinancialstatementDescription)
+                                                    </dd>
+                                                    <hr />
+                                                </dl>
+                                            }
+                                        </div>
+                                        <br />
+                                    </div>
+                                </div>
+                                <div class="tab-pane fade" id="tab_default-3">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="smart-timeline">
+                                                <ul class="smart-timeline-list">
+                                                    @foreach (var item in ViewBag.Comments)
+                                                    {
+                                                        <li>
+                                                            <div class="smart-timeline-icon">
+                                                                <i class="fa fa-user"></i>
+                                                            </div>
+                                                            <div class="smart-timeline-time">
+                                                                <small>@item.CreatedAt</small>
+                                                            </div>
+                                                            <div class="smart-timeline-content">
+                                                                <p>
+                                                                    <a href="javascript:void(0);">
+                                                                        <strong>@item.OverallStatus </strong>(@item.CreatedBy)
+                                                                    </a>
+                                                                </p>
+                                                                <p>
+                                                                    @item.Remarks
+                                                                </p>
+                                                                <ul class="list-inline">
+                                                                    @if (!string.IsNullOrEmpty(item.FileName))
+                                                                    {
+                                                                        <li>
+                                                                            <a href="@Url.Action("ViewCommentDoc", "Transfers", new { id = "" })" target="_blank">
+                                                                                <img src=@Url.Content("~/Content/img/attachment.png") alt="img" width="50">
+                                                                            </a>
+                                                                        </li>
+                                                                    }
+                                                                </ul>
+                                                            </div>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="footer">
+                                <div class="form-group">
+                                    <div class="col-md-10">
+                                        <a href="@Request.UrlReferrer" style="margin-left:5px;margin-bottom:5px" type="button" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</div>
+<!-- Start of modal -->
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 70%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Details</h4>
+            </div>
+            <div id="modal-body" class="modal-body" style="padding:5px"></div>
+            <div class="modal-footer">
+                @*<button class="btn btn-default" id="btnSave">
+                        <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                        Save
+                    </button>*@
+                <button class="btn btn-info role-dismiss" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of modal -->
+@section pagespecific {
+    <script src="~/Areas/Coadmis/Scripts/jquery.dataTables.min.js"></script>
+    <script src="~/Areas/Coadmis/Scripts/dataTables.rowGroup.min.js"></script>
+    <script type="text/javascript">
+       
+        $(document).ready(function () {
+            $("#divLoader").toggle(true);
+            debugger 
+            
+            var t = $('#example').DataTable({
+                "columnDefs": [{
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": 0
+                }],
+                "order": [[1, 'asc']]
+                ,
+                rowGroup: {
+                    dataSrc: [1]
+                },
+                columnDefs: [{
+                    targets: [1],
+                    visible: false
+                }]
+                ,initComplete: function () {
+                    $("#divLoader").toggle(false);
+                }
+            });
+            t.on('order.dt search.dt', function () {
+                t.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }).draw();
+
+            var f = $('#finding').DataTable({
+                "columnDefs": [{
+                    "searchable": false,
+                    "orderable": false,
+                    "targets": 0
+                }],
+                "order": [[1, 'asc']]
+                ,
+                rowGroup: {
+                    dataSrc: [1]
+                },
+                columnDefs: [{
+                    targets: [1],
+                    visible: false
+                }]
+                , initComplete: function () {
+                    $("#divLoader").toggle(false);
+                }
+            });
+            f.on('order.dt search.dt', function () {
+                f.column(0, { search: 'applied', order: 'applied' }).nodes().each(function (cell, i) {
+                    cell.innerHTML = i + 1;
+                });
+            }).draw();
+        });
+
+
+    function viewFndingDetails(id) {
+          debugger;
+            $("#divLoader").show();
+            var url = '@Url.Action("GetFindingDetails", "AuditCompletion")/' + id;
+
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+                $("#divLoader").hide();
+            });
+        };
+
+        function viewMatersDetails(id) {
+          debugger;
+            $("#divLoader").show();
+            var url = '@Url.Action("GetFindingDetails", "AuditCompletion")/' + id;
+
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+                $("#divLoader").hide();
+            });
+        };
+    </script>
+}

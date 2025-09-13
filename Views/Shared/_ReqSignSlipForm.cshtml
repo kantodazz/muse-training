@@ -1,0 +1,173 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SignDocumentVM
+<style>
+    .my-swal {
+        z-index: 2147483600;
+    }
+
+    .inline-form {
+        display: flex;
+        /*align-items: center;*/
+        /*gap: 10px;*/
+        justify-content: center;
+        /*margin: 20px 0;*/
+    }
+
+    .password-input {
+        flex: 1;
+        max-width: 400px;
+        padding: 8px 12px;
+        border: 1px solid #ccc;
+        font-size: 14px;
+    }
+
+    .sign-btn {
+        background-color: #999;
+        color: white;
+        border: none;
+        padding: 8px 20px;
+        font-size: 14px;
+        cursor: pointer;
+        min-width: 80px;
+    }
+
+        .sign-btn:hover {
+            background-color: #777;
+        }
+
+        .sign-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+    .modal-header-custom {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+        padding: 15px 20px;
+        font-size: 18px;
+        font-weight: normal;
+    }
+
+    .modal-body-custom {
+        padding: 10px 5px;
+        text-align: center;
+    }
+
+    .description-text {
+        color: #333;
+        font-size: 14px;
+        text-align: left;
+        padding-left: 15px;
+        margin-left: 177px;
+    }
+
+    .modal-header {
+        /*padding: 15px;*/
+        border-bottom: 1px solid #e5e5e5;
+        height: 50px;
+    }
+</style>
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "commentForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.ModuleId)
+        @Html.HiddenFor(model => model.IsSigned)
+        @Html.HiddenFor(model => model.Stage)
+
+        @if (Model.IsSigned == null || Model.IsSigned == false)
+        {
+            <div class="modal-body-custom">
+                <div class="description-text">
+                    Please provide a passphrase for signing bulk Payment.
+                </div>
+                <div class="inline-form">
+                    @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "password-input", @type = "password"} })
+                    <button type="button" id="btnSign" class="sign-btn" >Sign</button>
+                </div>
+            </div>
+        }
+        else
+        {
+        }
+    </div>
+}
+
+<script type="text/javascript">
+    $("#btnSign").on("click", function() {
+        debugger;
+        var url = ""
+        var currentStage = $("#Stage").val();
+        if (currentStage == "verifierOfficer") {
+            url = '@Url.Action("SignSlipFormAsyncs", "PaymentBatches")';
+        } else {
+            url = '@Url.Action("SignSlipFormSecondReq", "PaymentBatches")';
+        }
+
+        var password = $('#Password').val();
+        if (password == null || password == "") {
+            swal("Please provide passphrase", { icon: "warning" });
+            return false;
+        }
+
+        var token = $("[name='__RequestVerificationToken']").val();
+        var formData = new FormData();
+        formData.append("ids", $('#ModuleId').val());
+        formData.append("password", $('#Password').val());
+        formData.append("stage", $('#Stage').val());
+        formData.append("__RequestVerificationToken", token);
+
+        $("#divLoader").show();
+        $("#btnSign").prop("disabled", true);
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function (response) {
+                $("#btnSign").prop("disabled", false);
+                if (response == "Success") {
+                    $("#releaseDiv").show();
+                    $('#modal').modal('hide');
+                    swal({
+                        text: "Signed successfully",
+                        icon: "success",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    }).then(function() {
+                        location.reload();
+                    });
+                } else {
+                    swal({
+                        text: response,
+                        icon: "warning",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    })
+                }
+            },
+            error: function (xhr) {
+                console.log(xhr.responseText);
+                swal({
+                    text: "An error occured while processing your request, please contact system support",
+                    icon: "error",
+                    button: "OK",
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                })
+            },
+            complete: function() {
+                $("#divLoader").hide();
+                $("#btnSign").prop("disabled", false);
+            }
+        });
+    });
+</script>

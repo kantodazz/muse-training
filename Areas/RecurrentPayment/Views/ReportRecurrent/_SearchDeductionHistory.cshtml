@@ -1,0 +1,190 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.PaymentsStatementVM>
+
+@{
+    ViewBag.Title = "Payment Details";
+}
+
+@{
+    string imgSrc = "";
+
+    if (Model.Select(a => a.GroupLogo != null).FirstOrDefault())
+    {
+        imgSrc = "/Media/Images/" + Model.Select(a => a.GroupLogo).FirstOrDefault();
+    }
+}
+
+<style type="text/css">
+    * {
+        box-sizing: border-box;
+    }
+
+    body {
+        font-family: 'Gill Sans','lucida grande', helvetica, arial, sans-serif;
+    }
+
+    table {
+        width: 100%;
+        border-collapse: collapse;
+        border-spacing: 0;
+        margin: 0px;
+    }
+
+    td, th {
+        border: 1px solid;
+        padding: 8px;
+    }
+
+    .alinearDerecha {
+        text-align: right;
+    }
+
+    .negrita {
+        font-weight: bold;
+    }
+
+    thead {
+        display: table-row-group;
+    }
+
+    tr {
+        page-break-inside: avoid;
+    }
+</style>
+
+<!-- START CUSTOM TABS -->
+
+        <div class="row">
+    <div class="col-md-8" style="text-align: center">
+
+        <img src="@Server.MapPath(imgSrc)" width="150" height="150" class="img-responsive" />
+        <h2>
+            @Model.Select(a => a.GroupName).FirstOrDefault()
+        </h2>
+        <h3>DEDUCTION HISTORY</h3>
+        <h3>
+            @ViewBag.CheckDate
+        </h3>
+    </div>
+    <div id="conntent">
+        <div class="panel panel-default">
+            <div class="col-sm-12">
+                <br /><br />
+
+                <div class="tab-pane active" id="tab_1" style="width:100%">
+
+                    <!-- /.box-header -->
+                    <div class="box-body" style="padding-left: 0px; padding-right: 0px">
+                        <table class="bordered" id="dvdatatable">
+                            <thead>
+                            </thead>
+                            <tbody>
+
+                                @{
+                                    int i = 0;
+                                    decimal? totalBalanceAmount = 0,
+                                             totalPaidAmount = 0,
+                                             grandTotalBalanceAmount = 0,
+                                             grandTotalPaidAmount = 0;
+                                }
+
+                                @foreach (var group in Model.GroupBy(a => a.CheckDate))
+                                {
+                                    <tr>
+                                        <td colspan="6">
+                                            <b>@group.Key</b>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td colspan="6">
+                                           <b> @Model.Select(a=>a.BeneficiaryCode).FirstOrDefault()</b> -@Model.Select(a=>a.BeneficiaryName).FirstOrDefault()
+                                        </td>
+                                    </tr>
+
+
+                                    <tr>
+                                        <th style="text-align:right">#</th>
+                                        <th>Ded Code</th>
+                                        <th>Ded Description</th>
+                                        <th style="text-align:right">Deduction Amount</th>
+                                        <th style="text-align:right">Month Balance Amount</th>
+                                        <th>Payment Status</th>
+                                    </tr>
+
+                                    foreach (var item in group)
+                                    {
+                                        i++;
+                                        totalBalanceAmount += item.BalanceAmount;
+                                        totalPaidAmount += item.PaidAmount;
+
+                                        grandTotalBalanceAmount += item.BalanceAmount;
+                                        grandTotalPaidAmount += item.PaidAmount;
+                                        <tr>
+                                            <td style="text-align:right;">@i &nbsp;</td>
+                                            <td>
+                                                @item.DedCode
+                                            </td>
+
+                                            <td>
+                                                @item.DedDescription
+                                            </td>
+
+                                            <td style="text-align:right">
+                                                @String.Format("{0:#,0.00}", item.DeductionAmount)
+                                            </td>
+
+                                            <td style="text-align:right;">
+                                                @String.Format("{0:#,0.00}", item.CurrentMonthBalanceAmount)
+                                            </td>
+
+                                            <td>
+                                                @item.PaymentStatus
+                                            </td>
+                                       </tr>
+                                    }
+                                }
+
+                            </tbody>
+                        </table>
+                    </div>
+                    <!-- /.box-body -->
+                </div>
+                <!-- /.tab-pane -->
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+
+
+        function CancelFunction(modelvalue, modelvalue1, modelvalue2, modelvalue3, modelvalue4) {
+            //alert("your model value: " + modelvalue + "-" + modelvalue1);
+            var msg = confirm("Do you want to Cancel Payment for: " + modelvalue4 + " ?");
+            if (msg == true) {
+                $("#divLoader").show();
+                $.ajax({
+                    type: "POST",
+                    url: "CancelDetailsApprovalPayments?PYID=" + modelvalue2 + "&PBID=" + modelvalue1 + "&PSID=" + modelvalue,
+                })
+                        .done(function (response) {
+                            if (response == "Success") {
+                                alert("Payment for: " + modelvalue4 + "  Cancelled Successfully!");
+                                $("#divLoader").hide();
+                                window.location.href = "PaymentBatchApprovalDetails?PBID=" + modelvalue1 + "&PSID=" + modelvalue + "&DPID=" + modelvalue3;
+                            }
+                        });
+            } else {
+                alert("Payment for: " + modelvalue4 + "  not Cancelled!");
+                window.location.href = "PaymentBatchApprovalDetails?PBID=" + modelvalue1 + "&PSID=" + modelvalue + "&DPID=" + modelvalue3;
+
+            }
+        }
+
+        function goBack() {
+            window.history.back();
+        }
+
+    </script>
+}

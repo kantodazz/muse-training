@@ -1,0 +1,144 @@
+﻿<table class="table table-condensed table-striped table-bordered">
+    <thead style="display: table-header-group;">
+        <tr style="text-align:center;font-weight:bold;height:20px" bgcolor="lightgrey">
+            <td id="natd" style="width:15%"> Auditable Area   </td>
+            <td id="fungutd" style="width:5%"> No </td>
+            <td id="fungutd" style="width:32%"> Procedures </td>
+            <td id="amounttd" style="width:12%"> Test Required </td>
+            <td id="amounttdp" style="width:12%"> Result Satisfactory </td>
+            <td id="amounttdp" style="width:32%"> Comments </td>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var group1 in ((IEnumerable<IFMIS.Areas.Coadmis.Models.AuditableAreaProgram>)ViewBag.AuditableAreaProgram).GroupBy(a => a.Title))
+        {
+            <tr bgcolor="lightgrey"> <td colspan="6" style="font-weight:bold;width:600px"> @group1.Key </td> </tr>
+
+            foreach (var group in group1)
+            {
+                <tr>
+                    <td>
+
+                        @group.AuditableAreaName
+                    </td>
+                    <td style="text-align:center"> @group.No </td>
+                    <td> @group.ProcedureName  </td>
+                    <td>
+                        <select class="form-control" id="testrequired-@group.AuditableAreaProgramId"
+                                onchange="amountChanged('testrequired',@group.AuditableAreaProgramId)">
+                            <option> Select One </option>
+                            <option value="Yes"> Yes </option>
+                            <option value="No"> No </option>
+                        </select>
+                    </td>
+                    <td>
+                        <select class="form-control" id="resultsat-@group.AuditableAreaProgramId"
+                                onchange="amountChanged('resultsat',@group.AuditableAreaProgramId)">
+                            <option> Select One </option>
+                            <option value="Yes"> Yes </option>
+                            <option value="No"> No </option>
+                        </select>
+                    </td>
+
+                    <td>
+                        <span>
+                            <input type="text" class="form-control" id="comments-@group.AuditableAreaProgramId" onchange="amountChanged('comments',@group.AuditableAreaProgramId)" autocomplete="off" />
+                        </span>
+                    </td>
+
+                </tr>
+            }
+
+
+        }
+    </tbody>
+
+</table>
+<button class="btn btn-info" id="btnSaveRedirection">Add</button>
+
+<br />
+
+
+
+<script>
+    debugger;
+    $(function () {
+        $(".input-type-no").autoNumeric("init");
+    });
+
+
+    let notes2 = [];
+    let formAmounts = {}
+    function amountChanged(amountType, AuditableAreaAssignId) {
+        formAmounts[AuditableAreaAssignId] = {
+            [amountType]: $(`#${amountType}-${AuditableAreaAssignId}`).val(),
+            ...(formAmounts[AuditableAreaAssignId] || []),
+            'AuditableAreaAssignId': AuditableAreaAssignId
+        }
+    }
+
+
+
+    $("#btnSaveRedirection").on('click', function () {
+        debugger;
+        //var formdata = new FormData();
+        for (let AuditableAreaAssignId in formAmounts) {
+            let TestRequired = formAmounts[AuditableAreaAssignId].testrequired
+            let ResultSatisfactory = formAmounts[AuditableAreaAssignId].resultsat
+            let Remark = formAmounts[AuditableAreaAssignId].comments
+
+            notes2.push({
+                AuditableAreaProgramId: AuditableAreaAssignId,
+                TestRequired: TestRequired,
+                ResultSatisfactory: ResultSatisfactory,
+                Remark: Remark
+            });
+
+            console.log(notes2);
+        }
+
+        var formData = {
+            "FieldWorkSummaryId": $("#FieldWorkSummaryId").val(),
+            "AuditProgramDatas": notes2
+        }
+
+
+        $("#divLoader").toggle(true);
+        var url = '@Url.Action("SaveAuditProgram", "FieldWorks")';
+        $.ajax({
+            url: url,
+            data: JSON.stringify(formData),
+            type: 'POST',
+            dataType: "JSON",
+            contentType: "application/json",
+            success: function (response) {
+                console.log('response', response)
+                $("#btnSaveRedirection").prop('disabled', false);
+                $("#divLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Program!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#divLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+
+
+</script>
+

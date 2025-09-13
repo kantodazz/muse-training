@@ -1,0 +1,233 @@
+﻿@model IFMIS.Areas.ALS.Models.ALS_CreateFundAllocationVM
+@{
+    ViewBag.Title = "Fund Withdraw List";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<!--Main Content Start here-->
+<div id="content" style="margin: 5px;">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-table"></i></span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div class="widget-body">
+                        <div class="row">
+                            @*<div class="col-md-6">
+                                    <a href="@Url.Action("CreateFundWithdraw", "FundWithdraw")" style="margin-left:15px;" class="btn btn-info">
+                                        <i class="fa fa-lg fa-fw fa-plus"></i>Add New
+                                    </a>
+                                </div>*@
+                            <div class="col-md-12">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search"></i>
+                                    <input type="search" name="search" placeholder="Search Allocatin .." id="search-box">
+                                </div>
+                            </div>
+                        </div>
+
+                        <table id="datatable" class="table table-bordered table-hover table-condensed">
+                            <thead style="border-bottom: 1px solid white;">
+                                <tr>
+                                    <th>#</th>
+                                    <th>Funding Ref No.</th>
+                                    <th>Allocation Ref No.</th>
+                                    <th>Funding Source</th>
+                                    <th>Allocated Vote Detail</th>
+                                    <th>Total Allocated Amount(TZs)</th>
+                                    <th>Status</th>
+                                    <th style="width:30px">Actions</th>
+                                </tr>
+                            </thead>
+                        </table>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+
+    </section>
+</div>
+<!--My partial view for withdraw Amount start here-->
+<div id="withdrawVoteModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:80%;background-color:#b3e5fc;">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Withdraw Summary Amount</h3>
+            </div>
+            <div class="modal-body" id="withdrawFundBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-info" id="saveWithdrawData">
+                    <i class="fa fa-save">Save</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times">Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end here-->
+@section Scripts {
+    <script>
+        var datatable = $("#datatable").dataTable();
+        $("#datatable_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#datatable").DataTable().search(this.value).draw();
+            $("#datatable_wrapper .dt-toolbar").remove();
+        });
+
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetFundWithdrawList", "FundWithdraw")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                datatable.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    datatable.fnAddData(
+                        [i + 1,
+                        data[i]["FundingRefNo"],
+                        data[i]["TransactionCtrlNo"],
+                        data[i]["FundDetails"],
+                        data[i]["AllocVoteDetail"],
+                        "<p align='right'>" +toLabel(data[i]["TotalAllocationAmount"])+ "</p>",
+                        //toLabel(data[i]["OperationalAmount"]),
+                        //data[i]["SubBudgetClass"],
+                        //data[i]["FundingSource"],
+                        //data[i]["TotalAllocatedAmount"],
+                        //data[i]["AllocationType"],
+                        ///data[i]["LoginInstitutionCode"] +' - '+ data[i]["LoginInstitutionName"],
+
+                        data[i]["OverallStatus"],
+                        '<div class="btn-group id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                        </button>\
+                        <ul class="dropdown-menu">\
+                            <li><a href="@Url.Action("FVoteWithdrawAmount", "FundWithdraw")/?id=' + data[i]["FundAllocDetailId"] + '">Details</a></li>\
+                            <li><a href="#" onclick="Withdraw(' + data[i]["FundAllocDetailId"] + ')">Withdraw</a></li>\
+                        </ul>\
+                        </div>'
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function Withdraw(i) {
+            var url = '@Url.Action("GetAllocationVoteDetail", "FundWithdraw")/' + i;
+            $("#withdrawFundBody").load(url, function () {
+                $("#withdrawVoteModal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+            });
+        }
+
+        @*function Withdraw(i, id) {
+            if (i == 'x') i = id;
+            swal({
+                title: "Are you sure,",
+                text: "You want to Withdraw selected Fund?",
+                buttons: [
+                    'No',
+                    'Yes',
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("GetAllocationVoteDetail", "FundWithdraw")/' + i;
+                    $("#withdrawFundBody").load(url, function () {
+                        $("#withdrawVoteModal").modal({
+                            backdrop: "static",
+                            keyboard: false
+                        })
+                    });
+                }
+                else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }*@
+
+        function Delete(i, id) {
+            if (i == 'x') i = id;
+            swal({
+                title: "Are you sure?",
+                text: "Once Deleted, you will not be able to recover this !",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteSelectedItem(i)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+         function deleteSelectedItem(id) {
+            var url = '@Url.Action("DeleteFundWithdrawDetails", "FundWithdraw")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+         }
+    </script>
+}

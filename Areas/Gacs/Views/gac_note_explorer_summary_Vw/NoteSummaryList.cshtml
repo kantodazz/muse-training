@@ -1,0 +1,250 @@
+﻿@{
+    ViewBag.Title = "NoteSummaryList";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Not Review List</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <hr />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Note Number</th>
+                                        <th>Note Description</th>
+                                        <th> Gov Actual Expenditure</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody></tbody>
+
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+@section Scripts{
+    <script>
+
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetNoteReviewDetails", "gac_note_explorer_summary_Vw")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "Note_No" },
+                    { "mData": "Note_Desc" },
+                    { "mData": " Gov_Actual_Exp" },
+                    { "mData": "InstitutionName" },
+
+                    {
+                        "mData": "ID",
+                        "bSortable": false,
+                        "render": function (PayeeId, type, full, meta) {
+                           // console.log(full)
+                            @*return '<a href="@Url.Action("UserDetails", "Manage")/' + Id + '"><i class="glyphicon glyphicon-eye-open"></i></a>'*@
+                            return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("PayeeDetails", "Payees")/' + PayeeId + '">Details</a></li><span>\</span>\
+                                @if (User.IsInRole("Payee Entry"))
+                                  {
+                                 <li><a href="#" onclick="checkTIN(' + PayeeId + ')">Add Payee Account</a></li>{ <span>\</span> }
+                                  }\
+                                @if (User.IsInRole("Payee Verification") )
+                                 {
+                                 <li><a href="#" onclick="verifyPayee(' + PayeeId + ')">Verify</a></li>{ <span>\</span> }
+                                 }\
+                                 <li><a href="@Url.Action("EditPayeeType", "Payees")/' + PayeeId + '">Edit Payee Type</a></li><span>\</span>\
+                            </ul>\
+                        </div>'
+                        }
+                    },
+                ]
+            });
+        };
+        var verifyPayee = function (id) {
+            swal({
+                text: "Are you sure you want to verify this Payee?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    var url = '@Url.Action("verifyPayee", "Payees")';
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "Success") {
+                                swal({
+                                    text: "verified successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                            else {
+                                swal({
+                                    text: response,
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (response) {
+                            swal({
+                                text: response,
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        }
+                    });
+                }
+            });
+        }
+
+        function checkTIN(payeeId) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("CheckTraPayee", "Payees")',
+                data: { payeeId},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (data) {
+                    if (data.success) {
+                        swal("You can't add account to this payee!");
+                    } else {
+
+                        //swal("You can add account!");
+                        window.location = '@Url.Action("AddPayeeAccount", "Payees")/?payeeId=' + payeeId + '';
+                    }
+                    $("#saveLoaderTIN").toggle(false);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

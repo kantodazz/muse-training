@@ -1,0 +1,176 @@
+﻿@model IEnumerable<IFMIS.Areas.PayrollManagement.Models.RationPayment>
+@{
+
+    ViewBag.Title = "RationPaymentlist";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br/>
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Payment</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!--end widget edit box-->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                @*<div class="input-group">
+                                    <button type="button" style="margin-bottom:20px" class="btn btn-info" onclick="location.href='@Url.Action("CreateJob", "PayrollJobs")'">
+                                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                        Add New
+                                    </button>
+                                </div>*@
+                            </div>
+                            <br />
+                            <table id="tblDataList" class="table table-striped table-bordered table-hover table-condensed table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            #
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Amount)
+                                        </th>
+
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Checkdate)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Status)
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                @{
+                                    int i = 0;
+                                }
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>
+                                                @i
+                                            </td>
+                                            <td>
+                                                @Convert.ToDecimal(item.Amount).ToString("#,##0")
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.Checkdate)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.Status)
+                                            </td>
+                                            <td>
+                                                <a href="#" onclick="editrationAmount(@item.RationAmountId)" class="btn btn-info btn-xs edit"><i class="fa fa-edit"></i> Edit </a>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+<div id="modal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 40%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title"> Modal Info </h4>
+            </div>
+            <div id="modal-body" class="modal-body" style="padding:5px"></div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnSavePayment">Save</button>
+                <button class="btn btn-default role-dismiss" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <link href="~/Content/DataTable/css/jquery.dataTables.css" rel="stylesheet" />
+    <script src="~/assets/DataTable/jquery.dataTables.min.js"></script>
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#tblDataList").DataTable();
+        });
+
+        var editrationAmount = function (id) {
+            $(".modal-title").text("Edit Amount");
+            debugger
+            var url = '@Url.Action("RationPaymentEdit", "PayrollJobs")/' + id;
+            $("#modal-body").load(url, function (){
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: true
+                });
+            });
+        }
+
+         $("#btnSavePayment").on("click", function (){
+
+            var url = '@Url.Action("SavePayment", "PayrollJobs")';
+
+             var model = $("#form").serialize();
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: model,
+                success: function (response) {
+                            if (response == "Success") {
+                                swal({
+                                    text: "Saved successfuly!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            } else {
+                                swal({
+                                    text: "An error occured while processing your request, please contact system support",
+                                    icon: "warning",
+                                    button: "OK",
+                                })
+                            }
+                        },
+                        error: function () {
+                            swal({
+                                text: "An error occured while processing your request, please contact system support",
+                                icon: "warning",
+                                button: "OK",
+                            })
+                        }
+            });
+        });
+    </script>
+}

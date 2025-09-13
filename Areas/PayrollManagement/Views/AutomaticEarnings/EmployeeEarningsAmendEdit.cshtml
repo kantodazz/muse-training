@@ -1,0 +1,179 @@
+﻿@model IFMIS.Areas.PayrollManagement.Models.EditEarningVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 5%">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2 style="color:black;">Employee Allowance</h2>
+                    </header>
+                    <div class="widget-body" style="padding-top:10px; width:100%;">
+                        @using (Html.BeginForm("", "", FormMethod.Post, new { id = "form" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.FullName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.CheckNumber, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.EditorFor(model => model.CheckNumber, "Check Number", new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                        @Html.ValidationMessageFor(model => model.CheckNumber, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                @Html.HiddenFor(model => model.EmployeeEarningId)
+                                @Html.HiddenFor(model => model.EmployeeId)
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.AccountNumber, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.EditorFor(model => model.AccountNumber, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                        @Html.ValidationMessageFor(model => model.AccountNumber, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.PaymentCodeName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.EditorFor(model => model.PaymentCodeName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                        @Html.ValidationMessageFor(model => model.PaymentCodeName, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                        @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.StatusName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.DropDownListFor(model => model.StatusName, ViewBag.EarningStatus as SelectList, "Select Status", new { @class = "form-control select2" })
+                                        @Html.ValidationMessageFor(model => model.StatusName, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                @Html.HiddenFor(model => model.EmployeeEarningAmendId)
+                                @Html.HiddenFor(model => model.EarningJobCodeMapId)
+                                <div class="row" style="padding-bottom:10px;padding-left:330px">
+                                    <div class="col-md-12">
+                                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                        </a>
+                                        <button style="margin-right:245px" onclick="addmanualEarning()" class="btn btn-info">
+                                            <i class="fa fa-save"></i>Save
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- Search Payee ----------------->
+@section pagespecific {
+    <script>
+      
+        var addmanualEarning = function () {
+            $.validator.unobtrusive.parse("#form");
+            if (!$("#form").valid()) {
+                return false;
+            }
+
+            var url = '@Url.Action("EditEarningEntryAmend", "AutomaticEarnings")';
+            var url1 = '@Url.Action("AutomaticEmployeeEarningsAmendList", "AutomaticEarnings")'
+
+            $("#divLoader").toggle(true);
+
+            var model = $("#form").serialize();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: model,
+                success: function (response) {
+                    $("#divLoader").toggle(false);
+                    if (response == "success") {
+                        swal("Earning Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = url1;
+                            })
+                    } else if (response == "cant save the same status") {
+                        swal("You can not  save the same status as before!", { icon: "info" })
+                            .then((value) => {
+                            })
+                    }
+                    else {
+                        swal("Error on Saving earning!", { icon: "error" })
+                            .then((value) => {
+                            })
+                    }
+                },
+                error: function (response){
+                    swal("Error on Saving!")
+                }
+            });
+        };
+    </script>
+}
+

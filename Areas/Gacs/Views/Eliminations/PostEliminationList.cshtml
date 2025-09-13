@@ -1,0 +1,431 @@
+﻿@model IEnumerable<IFMIS.Areas.Gacs.Models.PendingEliminationDataVM>
+@{
+    ViewBag.Title = "Run Elimination List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            @*<div class="row">
+                                    <div class="col-md-12">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search searchIcon"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                        </div>
+                                    </div>
+                                </div>*@
+
+                            <div class="form-group" style="padding-top: 30px; padding-left:15px">
+                                <div class="row">
+                                    <div class="col-md-offset-12">
+                                        <button class="btn btn-info" id="PostEliminate" onclick="postAllEliminate()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Post Elimination
+                                        </button>
+                                    </div>
+
+                                    @*<div class="col-md-2">
+                                        <select id="FinancialYear" class="form-control select2">
+                                            <option value="Select Financial Year" selected="selected">--Select Financial Year--</option>
+                                            @foreach (var financiallist in ViewBag.financialList)
+                                            {
+                                                <option value='@financiallist.fiscal_year'>
+                                                    @financiallist.fiscal_year
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>*@
+
+                                    @*<div class="col-md-1">
+                                        <button type="submit" class="btn action-btn btn btn-info" id="submit" onclick="loadEliminationDetails()">
+                                            <i class="fa fa-save"></i>
+                                            Search
+                                        </button>
+                                    </div>*@
+                                </div>
+                            </div>
+                            <hr />
+
+                            <table id="dt_trxsummary" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        @*<th><input type="checkbox" onchange="checkAll()" id="checkall" /></th>*@
+                                        <th>Financial Year</th>
+                                        <th>Entity Code</th>
+                                        <th>Entity Description</th>
+                                        <th style="text-align:right">Amount</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="RejectModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="institutionCode" id="institutionCode" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="rejectremarks2"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="rejectremarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="RejectedForm()" id="rejectform">
+                        <i class="fa fa-times"></i>Reject
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        var dt_trxsummary = $('#dt_trxsummary').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("dt_trxsummary_wrapper .dt-toolbar").remove();
+
+        var data = []
+        function loadPaymentDetails() {
+            var url = '@Url.Action("GetEliminationByInstSummary", "Eliminations")';
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    console.log(data);
+                    dt_trxsummary.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var Id = data[i]["institutionCode"]
+                        dt_trxsummary.fnAddData([i + 1,
+                           /* '<input type="checkbox" id="row-' + Id + '" onchange="rowChecked(' + Id + ')" value=' + data[i]["institutionCode"] + ' />',*/
+                            data[i]["financialYear"],
+                            data[i]["institutionCode"],
+                            data[i]["entityName"],
+                            data[i]["totalAmount"].toLocaleString(),
+                              '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                              <li><a href="#" onclick="view(' + i + ')">View Detail</a></li>\
+                              <li><a href="#" onclick="postElimination(' + i + ')">Run Elimination</a></li>\
+                              <li><a href="#" onclick="Reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadPaymentDetails()
+
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            debugger;
+            console.log(rowId)
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+
+            }
+
+        }
+
+        function checkAll() {
+            debugger;
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    var Id = data[i]["institutionCode"]
+                    checkedRows.push(Id);
+                    $("#row-" + Id).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    var Id = data[i]["institutionCode"]
+                    $("#row-" + Id).prop('checked', false);
+                }
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+
+        function postElimination(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Posting Elimination',
+                text: "Are you sure you want to Post this elimination",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postEliminationByInstitution(data[i]["institutionCode"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+
+        function postEliminationByInstitution(institutionCode) {
+            var url = '@Url.Action("postingEliminationByInstitution", "Eliminations")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { institutionCode },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Posted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+
+        function postAllEliminate() {
+            swal({
+                title: 'Posting Elimination',
+                text: "Are you sure you want to Post All elimination",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    allElimination();
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+
+        function allElimination() {
+            var url = '@Url.Action("postingAllElimination", "Eliminations")'
+            $.ajax({
+                type: "post",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Posted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        // =============== Rejection Start ==================
+        function Reject(i) {
+            debugger;
+            $("#institutionCode").text(data[i]["institutionCode"]);
+            document.getElementById("institutionCode").value = data[i]["institutionCode"];
+            $('#RejectModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function RejectedForm() {
+            debugger
+            var institutionCode = $("#institutionCode").val();
+            var remarks = $("#rejectremarks").val();
+
+            if (institutionCode == '' || remarks == '') {
+                var url = '@Url.Action("PostEliminationList", "Eliminations")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            postRejection(institutionCode, remarks);
+        }
+
+        function postRejection(institutionCode, remarks) {
+            $(".loadingImg").show();
+            $("#rejectform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("RejectionEliminationByInstitution", "Eliminations")';
+            $.ajax({
+                url: url,
+                data: { institutionCode: institutionCode, remarks: remarks },
+                type: 'POST',
+                success: function (response) {
+                    $("#rejectform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Rejected successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#rejectform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    $("#rejectform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        // =============== End Rejection ===============
+
+    </script>
+}

@@ -1,0 +1,587 @@
+﻿@model IFMIS.Areas.Gacs.Models.EliminationListVM
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 7px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Create Elimination</h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            <div class="form-group" style="padding-top: 30px; padding-left:15px">
+                                <div class="row">
+                                    <div class="col-md-2">
+                                        <select id="FinancialYear" class="form-control select2">
+                                            <option value="Select Financial Year" selected="selected">--Select Financial Year--</option>
+                                            @foreach (var financiallist in ViewBag.financialList)
+                                            {
+                                                <option value='@financiallist.fiscal_year'>
+                                                    @financiallist.fiscal_year
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-3">
+                                        <select id="GFSCode" class="form-control select2">
+                                            <option value="Select Gfs Code" selected="selected">--Select Gfs Code--</option>
+                                            @*@foreach (var gfslist in ViewBag.gfsList)
+                                                {
+                                                    <option value='@gfslist.GFSTransaction'>
+                                                        @gfslist.GFSTransactionItemDescription
+                                                    </option>
+                                                }*@
+                                            @foreach (var gfslist in ViewBag.gfsList)
+                                            {
+                                                string decription = gfslist.Value + "-" + gfslist.Text;
+                                        <option value="@gfslist.Value">
+                                            @decription
+                                        </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    <div class="col-md-1">
+                                        <button type="submit" class="btn action-btn btn btn-info" id="submit" onclick="reloadDataTable()">
+                                            <i class="fa fa-save"></i>
+                                            Search
+                                        </button>
+                                    </div>
+
+                                    <div class="col-md-1">
+                                        <button class="btn btn-info" id="confirmEliminate" onclick="confirmEliminate()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>Eliminate
+                                        </button>
+                                    </div>
+
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Left List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedLeft">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @*<div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>*@
+                                                    </div>
+                                                    <table id="dt_LeftEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Institution Code</th>
+                                                                <th>Institution Name</th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                                <th>Entered Amount</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Right List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedRight">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        @*<div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>*@
+                                                    </div>
+                                                    <table id="dt_RightEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Entity Code</th>
+                                                                <th>Entity Description</th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                                <th>Entered Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        var reloadDataTable = function () {
+            debugger;
+            reloadDataLeft();
+            reloadDataRight();
+        }
+
+      //Left list
+        var dt_LeftEliminationList = $('#dt_LeftEliminationList').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("dt_LeftEliminationList_wrapper .dt-toolbar").remove();
+        $("#loader").text("No matching records found")
+        var l_data = []
+        var reloadDataLeft = function () {
+            $("#loader").text("Loading...")
+            var gfsCode = $("#GFSCode").val();
+            var financialYear = $("#FinancialYear").val();
+            var url = '@Url.Action("GetLeftSideDetails", "Eliminations")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { gfsCode: gfsCode, financialYear: financialYear },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    l_data = response.data;
+                    dt_LeftEliminationList.fnClearTable();
+                    for (var i = 0; i < l_data.length; i++) {
+                        var Id = l_data[i]["ID"]
+                        dt_LeftEliminationList.fnAddData([i + 1,
+                            l_data[i]["InstitutionCode"],
+                            l_data[i]["EntityDescription"],
+                            l_data[i]["GFSCode"],
+                            l_data[i]["GFSCodeDescription"],
+                            toLabel(l_data[i]["Amount"]),
+                            '<input type="number" placeholder="Amount" id="amrow-' + i + '"  onChange="amountLeftChanged(' + i + ')"/>'
+                        ]);
+                    }
+                    if (l_data.length == 0) {
+
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var leftDataArray = [];
+        function amountLeftChanged(i) {
+
+            var id = l_data[i]["ID"];
+            var gfsCode = l_data[i]["GFSCode"];
+            var gfsCodeDescription = l_data[i]["GFSCodeDescription"];
+            var amount = l_data[i]["Amount"];
+            var enteredAmount = $("#amrow-" + i).val();
+            var instCode = l_data[i]["InstitutionCode"];
+            var entityDescription = l_data[i]["EntityDescription"];
+            var financialYear = l_data[i]["FinancialYear"];
+            var trxID = l_data[i]["TrxID"];
+            var itemID = l_data[i]["ItemID"];
+            var sectorDescription = l_data[i]["SectorDescription"];
+            var subSectorDescription = l_data[i]["SubSectorDescription"];
+            debugger;
+
+            var balance = amount - enteredAmount;
+            if (balance < 0) {
+                $("#amrow-" + i).css({ 'color': 'red' });
+               //alert("Amount exceeded total Amount");
+                swal("Amount Exceeded Total Amount", { icon: "warning" }).then((e) => {
+                    //window.location.reload();
+                });
+
+                $("#confirmEliminate").attr('disabled', true);
+
+            } else {
+
+                $("#amrow-" + i).css({ 'color': 'black' });
+            }
+
+            console.log(financialYear);
+
+            if (leftDataArray.length > 0) {
+                var foundMatch = false;
+                for (var j = 0; j < leftDataArray.length; j++)
+                {
+                    if (leftDataArray[j].id == id) {
+                        leftDataArray[j].enteredAmount = enteredAmount;
+                        foundMatch = true;
+                    }
+                }
+                if(!foundMatch)
+                {
+                   
+                    leftDataArray.push({
+                        "id": id,
+                        "financialYear": financialYear,
+                        "gfsCode": gfsCode,
+                        "gfsCodeDescription": gfsCodeDescription,
+                        "amount": parseFloat(amount),
+                        "instCode": instCode,
+                        "entityDescription": entityDescription,
+                        "trxID": trxID,
+                        "itemID":itemID,
+                        "sectorDescription": sectorDescription,
+                        "subSectorDescription": subSectorDescription,
+                        "enteredAmount": parseFloat(enteredAmount)
+                    });
+                }
+            }
+            else {
+
+                leftDataArray.push({
+                    "id": id,
+                    "gfsCode": gfsCode,
+                    "financialYear": financialYear,
+                    "gfsCodeDescription": gfsCodeDescription,
+                    "amount": parseFloat(amount),
+                    "instCode": instCode,
+                    "entityDescription": entityDescription,
+                    "trxID": trxID,
+                    "itemID": itemID,
+                    "sectorDescription": sectorDescription,
+                    "subSectorDescription": subSectorDescription,
+                    "enteredAmount": parseFloat(enteredAmount)
+                });
+            }
+
+          $("#totalAmountSelectedLeft").text("");
+            var totalLeftAmount = 0;
+            leftDataArray.forEach(l => {
+                var enteredAmount = l.enteredAmount;
+
+                if (isNaN(enteredAmount) || enteredAmount == "" || enteredAmount == null) {
+
+                    enteredAmount = "0";
+                }
+                totalLeftAmount = parseFloat(totalLeftAmount) + parseFloat(enteredAmount);
+            })
+
+            $("#totalAmountSelectedLeft").text(toLabel(totalLeftAmount));
+
+            activitebutton();
+        }
+
+      //End of Left side
+
+
+
+      //Right list
+        var dt_RightEliminationList = $('#dt_RightEliminationList').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("dt_RightEliminationList_wrapper .dt-toolbar").remove();
+        $("#loader").text("No matching records found")
+        var rdata = []
+        var reloadDataRight = function () {
+            $("#loader").text("Loading...")
+            var gfsCode = $("#GFSCode").val();
+            var url = '@Url.Action("GetRightSideDetails", "Eliminations")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { gfsCode: gfsCode},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    rdata = response.data;
+                    dt_RightEliminationList.fnClearTable();
+                    for (var i = 0; i < rdata.length; i++) {
+                        var Id = rdata[i]["EliminID"]
+                        dt_RightEliminationList.fnAddData([i + 1,
+                            rdata[i]["EliminEntityCode"],
+                            rdata[i]["EliminEntityDesc"],
+                            rdata[i]["EliminGfsCode"],
+                            rdata[i]["EliminGfsDesc"],
+                            toLabel(rdata[i]["EliminationAmount"]),
+                            '<input type="number" placeholder="Amount" id="amrow-2' + i + '" onChange="amountRightChanged(' + i + ')"/>'
+                        ]);
+                    }
+                    if (rdata.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var checkedRightRows = [];
+        function rowRightChecked(rowId2) {
+            debugger;
+            console.log(rowId2)
+            if ($("#row-2" + rowId2).is(":checked")) {
+                checkedRightRows.push(rowId2);
+            } else {
+                remove(checkedRightRows, rowId2);
+            }
+        }
+
+        var rightDataArray = [];
+        function amountRightChanged(i) {
+            debugger;
+                var id = rdata[i]["EliminID"];
+                var gfsCode = rdata[i]["EliminGfsCode"];
+                var gfsCodeDescription = rdata[i]["EliminGfsDesc"];
+                var amount = rdata[i]["EliminationAmount"];
+                var eliminEntityCode = rdata[i]["EliminEntityCode"];
+                var eliminEntityDesc = rdata[i]["EliminEntityDesc"];
+                var eliminItemID = rdata[i]["EliminItemID"];
+                var eliminatorTrxID = rdata[i]["EliminatorTrxID"];
+                var enteredAmount = $("#amrow-2" + i).val();
+
+                if (rightDataArray.length > 0) {
+                    var foundMatch = false;
+                    for (var j = 0; j < rightDataArray.length; j++) {
+                        if (rightDataArray[j].id == id) {
+                            rightDataArray[j].enteredAmount = enteredAmount;
+                            foundMatch = true;
+                        }
+                    }
+                    if (!foundMatch) {
+                        console.log("Match not found. Pushing new entry")
+                        rightDataArray.push({
+                            "id": id,
+                            "gfsCode": gfsCode,
+                            "gfsCodeDescription": gfsCodeDescription,
+                            "eliminEntityCode": eliminEntityCode,
+                            "eliminEntityDesc": eliminEntityDesc,
+                            "amount": parseFloat(amount),
+                            "eliminItemID": eliminItemID,
+                            "eliminatorTrxID": eliminatorTrxID,
+                            "enteredAmount": parseFloat(enteredAmount)
+                        });
+                    }
+                }
+                else {
+
+                    rightDataArray.push({
+                        "id": id,
+                        "gfsCode": gfsCode,
+                        "gfsCodeDescription": gfsCodeDescription,
+                        "eliminEntityCode": eliminEntityCode,
+                        "eliminEntityDesc": eliminEntityDesc,
+                        "amount": parseFloat(amount),
+                        "eliminItemID": eliminItemID,
+                        "eliminatorTrxID": eliminatorTrxID,
+                        "enteredAmount": enteredAmount
+                    });
+                }
+
+            $("#totalAmountSelectedRight").text("");
+            var totalRightAmount = 0;
+            rightDataArray.forEach(v => {
+                var enteredAmount = v.enteredAmount;
+
+                if (isNaN(enteredAmount) || enteredAmount == "" || enteredAmount == null) {
+                    enteredAmount = "0";
+                }
+                //totalRightAmount += v.enteredAmount;
+                totalRightAmount = parseFloat(totalRightAmount) + parseFloat(enteredAmount);
+                })
+
+            $("#totalAmountSelectedRight").text(toLabel(totalRightAmount));
+       
+            //var j = 1;
+            //var totalExpensedAmount = 0;
+            //$("#tblExemptionItems  tbody  tr").each(function () {
+            //    var expenditureAmount = $(this).find('input[name="ExpenditureAmount' + j + '"]').val();
+            //    expenditureAmount = expenditureAmount.replace(/,/g, "");
+
+            //    if (isNaN(expenditureAmount) || expenditureAmount == "" || expenditureAmount == null) {
+            //        expenditureAmount = "0";
+            //    }
+            //    totalExpensedAmount = parseFloat(totalExpensedAmount) + parseFloat(expenditureAmount);
+
+            //    j++;
+            //});
+
+            activitebutton();
+            }
+
+
+        //End of Right side
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+
+        $("#confirmEliminate").attr('disabled', true);
+        function activitebutton() {
+            debugger;
+            var leftTotalAmount = $("#totalAmountSelectedLeft").text();
+            var rightTotalAmount = $("#totalAmountSelectedRight").text();
+
+            if (rightTotalAmount == leftTotalAmount && rightTotalAmount != 0) {
+                $("#match").text("Matched Amount");
+                $("#confirmEliminate").attr('disabled', false);
+            } else {
+
+                $("#confirmEliminate").attr('disabled', true);
+                $("#match").text("Unmatched Amount");
+            }
+
+        }
+
+
+        //function confirmEliminate() {
+        //    swal({
+        //        text: "Eliminate",
+        //        buttons: ["NO", "YES"],
+        //    }).then((willEliminate) => {
+        //        if (willEliminate) {
+        //            postElimination();
+        //        } else {
+        //            swal("Cancelled");
+        //        }
+        //    });
+        //}
+
+
+
+        function confirmEliminate() {
+            swal({
+                title: "Confirm Elimination",
+                text: "Are you sure you want to eliminate this record ? ",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    postElimination();
+                }
+            });
+        }
+
+
+        $("#saveLoader").toggle(false);
+        function postElimination() {
+            debugger;
+            console.log(rightDataArray);
+            console.log(leftDataArray);
+
+               var url = '@Url.Action("SaveElimination", "Eliminations")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+
+                        leftElimListVM: leftDataArray,
+                        rightElimListVM: rightDataArray
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == 'Success') {
+                            swal("Successfully!", { icon: "success" })
+                            .then((e) => {
+                                window.location.href = '@Url.Action("EliminationPendingList", "Eliminations")';
+                            });
+                        } else {
+                            swal(response, { icon: "warning" })
+                                .then((e) => {
+                                    window.location.href = '@Url.Action("EliminationPendingList", "Eliminations")';
+                                });
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+        }
+
+    </script>
+
+}

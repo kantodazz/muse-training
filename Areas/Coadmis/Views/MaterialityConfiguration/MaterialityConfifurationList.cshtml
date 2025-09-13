@@ -1,0 +1,287 @@
+﻿@model IEnumerable<IFMIS.Areas.Coadmis.Models.MaterialityConfigVM>
+@{
+    ViewBag.Title = "Materiality Confifuration List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+
+    body {
+        margin-top: 40px;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body ">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="@Url.Action("CreateMaterialityConf", "MaterialityConfiguration")" style="margin-left:15px;" class="btn btn-info">
+                                        <i class="fa fa-lg fa-fw fa-plus"></i>Add Configuration
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+
+                                </div>
+                            </div>
+
+                            <table id="dt_application_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Client Name</th>
+                                        <th>Approach</th>
+                                        <th>Method To be Used</th>
+                                        <th>Calculated %</th>
+                                        <th style="width:30px">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_application_list = $('#dt_application_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+
+        //$("#dt_application_list_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_application_list.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        var calculated = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetMaterialityConfiguration", "MaterialityConfiguration")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_application_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i]["CalculatedValue"]==null) {
+                        calculated = "Tabular Formula";
+                    } else {
+                        calculated = data[i]["CalculatedValue"]+'%';
+                    }
+
+                    dt_application_list.fnAddData(
+                        [i + 1,
+                        data[i]["ClientName"],
+                        data[i]["MaterialityApproach"],
+                        data[i]["MaterialityMethod"],
+                        calculated,
+                        '<div class="btn-group id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                            </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="Delete(' + data[i]["MaterialConfId"] + ')">Cancel</a></li>\
+                                <li><a href="@Url.Action("EditMaterialityConf", "MaterialityConfiguration")/?id=' + data[i]["MaterialConfId"] + '">Edit</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function Delete(i) {
+            swal({
+                title: 'Delete Materiality ?',
+                text: "Are you sure you want to Cancel Selected Materiality: This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    DeleteMateriality(i);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function DeleteMateriality(id) {
+            debugger;
+            var url = '@Url.Action("DeleteMaterialityData", "MaterialityConfiguration")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if(response =="Closed") {
+                        swal("You can not Cancelled In Used Materiality!", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } 
+                    else {
+                        swal("Error in Cancelled Materiality", { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error in Cancelled Materiality", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}
+

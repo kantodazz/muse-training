@@ -1,0 +1,181 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.InstitutionAccount>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+
+                        <h2 style="color:black;">Institution Account List</h2>
+
+                    </header>
+
+                    <div>
+                        <a href='@Url.Action("CreateAccount", "InstitutionAccounts")' class="btn btn-info" style="width:100px;border-radius:1px;color:black">
+                            <i class="fa fa-plus"></i>Add New
+                        </a>
+                        @if (TempData["message"] != null)
+                        {
+                            <strong style="color:red">@TempData["message"]</strong>
+                        }
+                        <div class="widget-body " style="padding-top:10px">
+                         
+                            <table style="width:100%">
+                                <tr>
+                                    <td colspan="1">
+
+                                        <table id="dt_institutionAccount" class="table table-condensed table-bordered table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th> Account Number</th>
+                                                    <th> Account Name</th>
+                                                    <th>Account type</th>
+                                                    <th> SubBudgetClass</th>
+                                                    <th>Bank Name</th>
+                                                    <th>Currency</th>
+                                                    <th>Institution Code</th>
+                                                    <th>Institution Name</th>
+                                                    <th style="width:50px">Action</th>
+
+                                                </tr>
+
+                                            </thead>
+                                            <tbody></tbody>
+
+                                        </table>
+
+                                    </td>
+                                    <td colspan="1"></td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+    </div>
+    @section pagespecific {
+        <script type="text/javascript">
+
+            // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+            $(function () {
+                BindDataTable();
+            });
+
+            var BindDataTable = function (response) {
+                var url = '@Url.Action("GetInstitutionAccountList", "InstitutionAccounts")';
+                $("#dt_institutionAccount").DataTable({
+                    "bServerSide": true,
+                    "sAjaxSource": url,
+                    "fnServerData": function (sSource, aoData, fnCallback) {
+                        $.ajax({
+                            type: "GET",
+                            url: sSource,
+                            data: aoData,
+                            success: fnCallback
+                        });
+                    },
+                    "aoColumns": [
+                     {
+                         render: function (data, type, row, meta) {
+                             return meta.row + meta.settings._iDisplayStart + 1;
+                         }
+                     },
+
+                     { "mData": "AccountNumber" },
+                     { "mData": "AccountName" },
+                     { "mData": "AccountType" },
+                     { "mData": "SubBudgetClass" },
+                     { "mData": "BankName" },
+                     { "mData": "Currency" },
+                     { "mData": "InstitutionCode" },
+                     { "mData": "InstitutionName" },
+                     
+                     {
+                         "mData": "InstitutionAccountId",
+                         "render": function (InstitutionAccountId, type, full, meta) {
+                             return '<div class="btn-group">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                          <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                      <li><a href="@Url.Action("Edit", "InstitutionAccounts")/' + InstitutionAccountId + '">Edit</a></li>\
+                      <li><a href="@Url.Action("Details", "InstitutionAccounts")/' + InstitutionAccountId + '">Details</a></li>\
+                      <li><a href="#" onclick="Cancel(' + InstitutionAccountId + ')">Cancel</a></li>\
+                      </ul>\
+                      </div>'
+                         }
+
+                     },
+                    ]
+                });
+            }
+
+            function Cancel(i) {
+                status = "Cancelled";
+                swal({
+                    title: "Are you sure?",
+                    text: "Institution Account  will be Cancelled!",
+                    buttons: [
+                      'No',
+                      'Yes'
+                    ],
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        ChangeItemStatus(i, status);
+
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+
+            function ChangeItemStatus(i, status) {
+                var url = '@Url.Action("ChangeAccountStatus", "InstitutionAccounts")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+                        Status: status,
+                        InstitutionAccountId: i
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+
+                        if (response == "Success") {
+                            swal("Changed Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }
+
+
+
+
+
+        </script>
+    }

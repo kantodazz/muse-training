@@ -1,0 +1,281 @@
+﻿@model IEnumerable<IFMIS.Areas.Consolidation.Models.TBValidationResultVM>
+@{
+
+    ViewBag.Title = "Trial Balance Validation Output";
+    var i=0;
+}
+
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                <span>Financial Year:</span><strong>@Model.Select(a => a.FinancialYear).FirstOrDefault()</strong><br />
+                                <span>Overall comment:</span>
+                                @if (Model.Any(a => a.IsBalanced == 1))
+                                {
+                                    <strong>Data failed in validation because their is unbalanced report.</strong>
+                                }
+                                else
+                                {
+                                    <strong>Data passed in validation.</strong>
+                                }
+
+                            </p>
+                            <table class="table table-bordered table-hover table-condensed" id="dt_summary">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right">
+                                            #
+                                        </th>
+
+                                        <th style="text-align:left">
+                                            @Html.DisplayNameFor(model => model.ValidationType)
+                                        </th>
+
+                                        <th style="text-align:right">
+                                            @Html.DisplayNameFor(model => model.DebitAmount)
+                                        </th>
+                                        <th style="text-align:right">
+                                            @Html.DisplayNameFor(model => model.CreditAmount)
+                                        </th>
+                                        <th style="text-align:right">
+                                            @Html.DisplayNameFor(model => model.NetChangeAmount)
+                                        </th>
+                                        <th style="text-align:center">
+                                            @Html.DisplayNameFor(model => model.IsBalanced)
+                                        </th>
+                                        <th style="text-align:left">
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                    <tr>
+                                        <td style="text-align:right">
+                                            @i
+                                        </td>
+
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.ValidationType)
+                                        </td>
+
+                                        <td style="text-align:right">
+                                            @Html.DisplayFor(modelItem => item.DebitAmount)
+                                        </td>
+                                        <td style="text-align:right">
+                                            @Html.DisplayFor(modelItem => item.CreditAmount)
+                                        </td>
+                                        <td style="text-align:right">
+                                            @Html.DisplayFor(modelItem => item.NetChangeAmount)
+                                        </td>
+                                        <td style="text-align:center">
+                                            @if(item.IsBalanced==1){
+                                            <strong><em>Yes</em></strong>
+                                            }
+                                            else{
+                                        <strong><em>No</em></strong>
+                                            }
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a href="@Url.Action("PendingTB","ConsoTransactions")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_search_summary = $('#dt_summary').dataTable();
+        $("#dt_summary_wrapper .dt-toolbar").remove();
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_summary").DataTable().search(this.value).draw();
+        });
+
+
+           var confirmEntry = function (id, fy) {
+             swal({
+                        title: 'Confirmation',
+                        text: "Do you want to confirm this Note ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmEntry", "ConsoTransactions")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id,fy:fy },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Confirmed  successfully!", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                         });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        swal("An error has occured, contact system support");
+
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+        };
+
+
+        var cancelEntry = function (id, fy) {
+             swal({
+                        title: 'Confirmation',
+                        text: "Do you want to cancel this Note ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("CancelEntry", "ConsoTransactions")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id,fy:fy },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Cancelled  successfully!", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                         });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        swal("An error has occured, contact system support");
+
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+        };
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}

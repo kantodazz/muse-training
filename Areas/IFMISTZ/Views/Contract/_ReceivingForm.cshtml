@@ -1,0 +1,885 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PurchaseReceivingVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", @id = "editForm", onsubmit = "return SubmitData(this)" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.ContractId)
+    @Html.HiddenFor(model => model.PaymentType)
+    @Html.HiddenFor(model => model.TransactionCurrency)
+    @Html.HiddenFor(model => model.CrossTrxToAOExchangeRate)
+    @Html.HiddenFor(model => model.CrossTrxToOperationExchangeRate)
+    @Html.HiddenFor(model => model.CrossTrxToContractExchangeRate)
+<div class="form-horizontal">
+    @if (Model.ShowApprovalType)
+    {
+        <div class="form-group">
+            @Html.LabelFor(model => model.ApprovalType, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                @Html.DropDownListFor(model => model.ApprovalType, new List<SelectListItem>{
+                new SelectListItem{ Text="--Select ---", Value = "" },
+                new SelectListItem{ Text="Manually", Value = "Manually" },
+                 new SelectListItem{ Text="Electronic", Value = "Electronic" },
+                 }, new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.ApprovalType, "", new { @class = "text-danger" })
+
+            </div>
+            @Html.LabelFor(model => model.PurchasePayeeAccountId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left;padding-top:8px;" })
+            <div class="col-md-4">
+                @Html.DropDownListFor(model => model.PurchasePayeeAccountId, Model.PayeeAccountsList, "Select ---", new { @class = "form-control select2" })
+            </div>
+        </div>
+    }
+    else
+    {
+        @Html.HiddenFor(model => model.ApprovalType)
+        <div class="form-group">
+            @Html.LabelFor(model => model.PurchasePayeeAccountId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left;padding-top:8px;" })
+            <div class="col-md-10">
+                @Html.DropDownListFor(model => model.PurchasePayeeAccountId, Model.PayeeAccountsList, "Select ---", new { @class = "form-control select2" })
+            </div>
+        </div>
+    }
+
+    <div id="eApprovalField" style="display:none">
+        <div class="form-group">
+            @Html.LabelFor(model => model.EOfficeApprovalId, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                @Html.EditorFor(model => model.EOfficeApprovalId, new { htmlAttributes = new { @class = "form-control", @placeholder = "Select Approval Reference" } })
+                @Html.ValidationMessageFor(model => model.EOfficeApprovalId, "", new { @class = "text-danger" })
+
+            </div>
+            @Html.LabelFor(model => model.AvailableBalanceEOffice, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon aoCurrency"></span>
+                    @Html.EditorFor(model => model.AvailableBalanceEOffice, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+                    @Html.ValidationMessageFor(model => model.AvailableBalanceEOffice, "", new { @class = "text-danger" })
+
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.EOfficeTitle, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                @Html.EditorFor(model => model.EOfficeTitle, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly" } })
+                @Html.ValidationMessageFor(model => model.EOfficeTitle, "", new { @class = "text-danger" })
+
+            </div>
+            @Html.LabelFor(model => model.AoAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon aoCurrency"></span>
+                    @Html.EditorFor(model => model.AoAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                    @Html.ValidationMessageFor(model => model.AoAmount, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.SubBudgetClass, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.DropDownList("SubBudgetClass", Model.SubBudgetClassList, "Select ---", new { @class = "form-control select2", @required = "required" })
+            @Html.ValidationMessageFor(model => model.SubBudgetClass, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.PayerBankAccount, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.DropDownListFor(model => model.PayerBankAccount, Model.PayerAccountsList, "Select ---", new { @class = "form-control select2", @required = "required" })
+            @Html.ValidationMessageFor(model => model.PayerBankAccount, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.PaymentScheduleId, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.DropDownListFor(model => model.PaymentScheduleId, Model.PaymentScheduleList, "Select ---", new { @class = "form-control select2" })
+        </div>
+        @Html.LabelFor(model => model.ReceiveType, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <select id="ReceiveType" name="ReceiveType" class="form-control select2">
+                <option value="" selected>Select ---</option>
+            </select>
+        </div>
+
+    </div>
+    <div style="display:none" id="payment-schedule">
+        <div class="form-group">
+            @Html.LabelFor(model => model.PaymentScheduleAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                    @Html.EditorFor(model => model.PaymentScheduleAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                    @Html.ValidationMessageFor(model => model.PaymentScheduleAmount, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            @Html.LabelFor(model => model.PaymentSchedulePaid, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                    @Html.EditorFor(model => model.PaymentSchedulePaid, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                    @Html.ValidationMessageFor(model => model.PaymentSchedulePaid, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.PaymentScheduleBalance, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                    @Html.EditorFor(model => model.PaymentScheduleBalance, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                    @Html.ValidationMessageFor(model => model.PaymentScheduleBalance, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            @Html.LabelFor(model => model.ContractOperationalAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                    @Html.EditorFor(model => model.ContractOperationalAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                    @Html.ValidationMessageFor(model => model.ContractOperationalAmount, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.TransactionExchangeRate, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.TransactionExchangeRate, new { htmlAttributes = new { @class = "form-control", @required = "required", @readonly = "readonly", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.TransactionExchangeRate, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.OperationalExchangeRate, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.OperationalExchangeRate, new { htmlAttributes = new { @class = "form-control", @required = "required", @readonly = "readonly", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.OperationalExchangeRate, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.TransactionAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon trxCurrency"></span>
+                @Html.EditorFor(model => model.TransactionAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                @Html.ValidationMessageFor(model => model.TransactionAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @Html.LabelFor(model => model.OperationalAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon oprCurrency">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                @Html.EditorFor(model => model.OperationalAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.OperationalAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.CertificateNumber, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.CertificateNumber, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.CertificateNumber, "", new { @class = "text-danger" })
+
+        </div>
+        @if (Model.HasAdvancePayment)
+        {
+            @Html.LabelFor(model => model.AdvancePaymentDeduction, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon trxCurrency"></span>
+                    @Html.EditorFor(model => model.AdvancePaymentDeduction, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                    @Html.ValidationMessageFor(model => model.AdvancePaymentDeduction, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Accrual, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <input type="checkbox" style="width:30px" id="IsAccrual">
+            <input id="Accrual" name="Accrual" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+
+        </div>
+
+    </div>
+    <div class="form-actions">
+        <div class="row">
+            <div class="col-md-offset-2">
+                <a href="@Url.Action("PendingReceiving","Contract")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                <button type="submit" id="save_data" class="btn btn-info" style="float: left; margin-left: 5px">
+                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+}
+
+<!----------- Add Receiving Items ----------------->
+<div class="modal fade" id="itemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Receiving By Items</h3>
+
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+        </div>
+    </div>
+</div>
+<!----------- End Receiving Items----------------->
+
+<script>
+    $(".select2").select2();
+
+        $("#ApprovalType").change(function () {
+            var approvalType = $(this).val();
+            if (approvalType == "Electronic") {
+                $("#eApprovalField").show();
+            }
+            else {
+                $("#eApprovalField").hide();
+            }
+
+        });
+
+      // ON SUB BUDGET CLASS
+      var payerAccounts = [];
+    var operationalCurrency = '@Model.OperationalCurrency';
+    var contractCurrency='@Model.Currency';
+    var trxCurrency = null;
+    var aoCurrency = null;
+    var aoExchangeRate = 0;
+     var availableBalanceEOffice = 0;
+     var trxToContractExchangeRate = 0;
+     var trxToOperationExchangeRate = 0;
+   var exchangeRate = 0;
+    $("#SubBudgetClass1").change(function () {
+        var sbc = $(this).val();
+        var url = '@Url.Action("GetPayerAccounts", "Contract")';
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {sbc:sbc },
+            success: function (response) {
+               debugger
+                if (response.res == "Success") {
+                    payerAccounts = response.data;
+                    $("#PayerBankAccount").empty();
+                    $('<option value="" selected>------Select-------</option>').appendTo('#PayerBankAccount');
+                    $.each(payerAccounts, function (i, d) {
+                        $('<option value=' + d.AccountNumber + '>' + d.AccountNumber + '-' + d.Currency + '-' + d.AccountName + '</option>').appendTo('#PayerBankAccount');
+                    });
+
+                }
+                else {
+                    swal(response.res);
+                }
+
+            }
+        })
+    });
+
+    $("#PayerBankAccount1").change(function () {
+        var account = $(this).val();
+        var id = $("#ContractId").val();
+        var sbc = $("#SubBudgetClass").val();
+        if (sbc) {
+            saveNewPayerAccount(id, sbc, account);
+        }
+        else {
+            swal("Please select Sub Budget Class first");
+        }
+
+    });
+
+    $("#PaymentScheduleId").change(function () {
+        $("#payment-schedule").show();
+      var id = $(this).val();
+      var url = '@Url.Action("GetReceivingTypes", "Contract")';
+
+        $.ajax({
+            type: "GET",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                $("#ReceiveType").empty();
+                $("#ReceiveType").append(response);
+            }
+        });
+        loadPaymentSheduleDetails(id);
+    });
+
+    function loadPaymentSheduleDetails(id) {
+        var url = '@Url.Action("GetPaymentScheduleDetails", "Contract")';
+
+     $.ajax({
+         type: "GET",
+         url: url,
+         data: { id: id },
+         success: function (result) {
+             if (result.response == "Success") {
+                 $("#PaymentScheduleAmount").val(toLabel(result.payment.Amount));
+                 $("#PaymentSchedulePaid").val(toLabel(result.payment.Paid));
+                 $("#PaymentScheduleBalance").val(toLabel(result.payment.Balance));
+             }
+             else {
+                 $("#PaymentScheduleAmount").val("");
+                 $("#PaymentSchedulePaid").val("");
+                 $("#PaymentScheduleBalance").val("");
+                 $("#ContractOperationalAmount").val("");
+                 swal(result.response);
+             }
+            
+         },
+         error: function (xhr) {
+             swal(error);
+         },
+     });
+    }
+
+    function saveNewPayerAccount(id, sbc, account) {
+
+            var url = '@Url.Action("SaveNewPayerAccount", "Contract")';
+            $.ajax(
+            {
+                type: "POST",
+                url: url,
+                data: { id: id,sbc:sbc, account: account },
+                    success: function (response) {
+                        if (response == "Success") {
+                        swal("New Payer account changed  successfully!", { icon: "success" })
+                                     .then((value) => {
+                                         loadReceivingSelection(id);
+                                     });
+                    }
+                    else {
+                            swal(response);
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    swal("An error has occured, contact system support");
+
+                },
+
+            });
+
+    }
+
+
+    $("#ReceiveType").change(function () {
+        if (!$("#PurchasePayeeAccountId").val()) {
+            swal("Please first select  Payee Account Number", { icon: "warning" }).then((e) => {
+                $("#TransactionAmount").val("");
+            });
+            return false;
+        }
+        var receivingType = $(this).val();
+        if (receivingType == "Quantity") {
+            var id = $("#ContractId").val();
+            var psid = $("#PaymentScheduleId").val();
+            if (psid) {
+                var approvalType = $("#ApprovalType").val();
+                if (approvalType == "Electronic") {
+                    var aoId = $("#EOfficeApprovalId").val();
+                    if (!aoId) {
+                        swal("Please select Accounting Officer Approval first");
+                        }
+                     }
+
+                      
+                        var url = '@Url.Action("GetItems", "Contract")';
+                        $("#divModalBody").load(url, { id: id, psid: psid, trxCurrency: trxCurrency }, function (response, status, xhr) {
+                            if (status == "error") {
+                                $("#divModalBody").html("Error on loading receiving items, contact system support.");
+                            }
+                            $("#TransactionAmount").prop('readonly', true);
+                            $('#itemsModal').modal('show');
+                        });
+
+
+            }
+            else {
+                swal("Please select payment schedule first");
+            }
+
+        }
+        else {
+            $("#TransactionAmount").prop('readonly', false);
+           }
+    });
+
+    function search(nameKey, payerAccounts) {
+
+        for (var j = 0; j < payerAccounts.length; j++) {
+            if (payerAccounts[j].AccountNumber == nameKey) {
+                return payerAccounts[j].Currency;
+            }
+
+        }
+
+    }
+
+       $(function () {
+           if ($("#EOfficeApprovalId")[0]) {
+           availableBalanceEOffice = 0;
+       }
+       $("#EOfficeApprovalId").select2({
+           minimumInputLength: 2,
+           width: 'resolve',
+           ajax: {
+               url: '@Url.Action("GetApprovalByApprovalCategory", "DfundApprovals")',
+               type: "GET",
+               dataType: 'json',
+               data: function (term) {
+                   return { term: term, approvalCategory:"AO" };
+               },
+               results: function (data, page) {
+                   return { results: data.approvals };
+               }
+           }
+       });
+       });
+
+        $("#EOfficeApprovalId").change(function () {
+            if (!$("#PurchasePayeeAccountId").val()) {
+                $("#EOfficeApprovalId")[0].selectedIndex = 0;
+                swal("Please first select  Payee Account Number", { icon: "warning" }).then((e) => {
+                    $("#TransactionAmount").val("");
+                });
+                return false;
+            }
+        var id = $(this).val();
+          $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetApprovalByApprovalId", "DfundApprovals")',
+              data: { id: id},
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+              success: function (response) {
+
+                  if (response.success) {
+                      $(".aoCurrency").text(response.currency);
+                      $("#AvailableBalanceEOffice").val(0);
+                      $("#EOfficeTitle").val(response.title);
+                      availableBalanceEOffice = 0;
+                      aoCurrency = response.currency;
+                      $("#TransactionAmount").val("");
+                      $("#OperationalAmount").val("");
+                       $("#ContractOperationalAmount").val("");
+                      $("#AdvancePaymentDeduction").val("");
+                      $("#DFundAmount").val(0);
+                      if (response.balanceAmount) {
+                          availableBalanceEOffice = response.balanceAmount;
+                          $("#AvailableBalanceEOffice").val(toLabel(availableBalanceEOffice));
+                          getCrossExchangeRate(trxCurrency, response.currency, operationalCurrency, "AO");
+
+                      }
+
+                  }
+              },
+              failure: function (error) {
+                  swal(error);
+              }
+          });
+      });
+
+
+    $("#TransactionAmount").keyup(function () {
+
+        var approvalType = $("#ApprovalType").val();
+
+        if (!approvalType) {
+            swal("Please select  Approval Type first", { icon: "warning" }).then((e) => {
+                $("#TransactionAmount").val("");
+            });
+            return false;
+        }
+
+        if (!$("#PurchasePayeeAccountId").val()) {
+            swal("Please first select  Payee Account Number", { icon: "warning" }).then((e) => {
+                $("#TransactionAmount").val("");
+            });
+            return false;
+        }
+
+        if (approvalType == "Electronic") {
+            if (!$("#EOfficeApprovalId").val()) {
+                swal("Please first select AO Approval", { icon: "warning" }).then((e) => {
+                    $("#TransactionAmount").val("");
+                });
+                return;
+            }
+        }
+        if (!$("#SubBudgetClass").val()) {
+            swal("Please first select Sub Budget Class", { icon: "warning" }).then((e) => {
+                $("#TransactionAmount").val("");
+            });
+            return;
+        }
+
+        if (trxToOperationExchangeRate == 0) {
+            swal("Failed to fetch exchange rate", { icon: "warning" }).then((e) => {
+                $("#TransactionAmount").val("");
+            });
+
+            return;
+        }
+        var amount = $(this).val();
+        var trxAmount = 0;
+        var opearationAmt = 0;
+        var aoAmount = 0;
+        var dFundAmount = 0;
+        var contractAmount = 0;
+        if (amount) {
+            trxAmount = parseFloat(amount.split(",").join(""));
+            opearationAmt = trxAmount * trxToOperationExchangeRate;
+            $("#OperationalAmount").val(toLabel(opearationAmt));
+            if (approvalType == "Electronic") {
+
+                if (aoExchangeRate > 0) {
+                    aoAmount = trxAmount * aoExchangeRate;
+                    $("#AoAmount").val(toLabel(aoAmount));
+                }
+                else {
+                    $("#AoAmount").val(0);
+                }
+            }
+
+            if (trxToContractExchangeRate > 0) {
+                contractAmount = trxAmount * trxToContractExchangeRate;
+                $("#ContractOperationalAmount").val(toLabel(contractAmount));
+            }
+            else {
+                $("#ContractOperationalAmount").val(0);
+            }
+
+
+        }
+        else {
+            $("#OperationalAmount").val("");
+            $("#AdvancePaymentDeduction").val("");
+            $("#ContractOperationalAmount").val("");
+        }
+    }
+    );
+
+
+    function quantityEntry(e, rowId) {
+        var $row = $("#" + rowId);
+        var max_value = parseFloat(e.max);
+        var quantity = parseFloat($row.find('input[name="item.Quantity"]').val().split(",").join(""));
+        var unitPrice = parseFloat($row.find('input[name="item.UnitPrice"]').val().split(",").join(""));
+        if (quantity) {
+            if (quantity <= max_value) {
+                var amount = unitPrice * quantity;
+                $row.find('input[name="item.Amount"]').val(toLabel(amount));
+            }
+            else {
+
+                swal("Amount can not exceed " + max_value, { icon: "warning" })
+                    .then((value) => {
+                        $row.find('input[name="item.Quantity"]').val("");
+                        $row.find('input[name="item.Amount"]').val("");
+                    });
+            }
+        }
+    }
+    var items = [];
+    function addEntry(e, rowId) {
+        var $row = $("#" + rowId);
+        var max_value = parseFloat(e.max);
+        var quantity = parseFloat($row.find('input[name="item.Quantity"]').val().split(",").join(""));
+        var unitPrice = parseFloat($row.find('input[name="item.UnitPrice"]').val().split(",").join(""));
+        if (quantity) {
+            if (quantity <= max_value) {
+                var amount = unitPrice * quantity;
+
+                //CHECK IF EXIST IN THE ARRAY
+                var found = false;
+                for (var j = 0; j < items.length; j++) {
+                    if (items[j].Id == rowId) {
+                        items[j].Amount = amount;
+                        found = true;
+                    }
+                }
+
+                if (!found) {
+                    items.push({
+                        "Id": rowId,
+                        "Amount": amount,
+                        "Quantity": quantity
+                    });
+                }
+
+            }
+            else {
+                        for (var j = 0; j < items.length; j++) {
+                            if (items[j].Id == rowId) {
+                                removeObjectWithId(items, rowId);
+                            }
+                        }
+
+                 }
+            }
+          else {
+            for (var j = 0; j < items.length; j++)
+                    {
+                            if (items[j].Id == rowId) {
+                                removeObjectWithId(items, rowId);
+                            }
+                    }
+
+            }
+        }
+        function saveItems(rate) {
+            var approvalType = $("#ApprovalType").val();
+        var receivedAmount = 0;
+            var trxAmount = 0;
+            var oprAmount = 0;
+        var dFundAmount = 0;
+        if (items.length > 0) {
+
+            $("#itemsModal").modal("hide");
+            for (var j = 0; j < items.length; j++) {
+                if (items[j].Amount >0) {
+                    receivedAmount = receivedAmount + items[j].Amount;
+                }
+            }
+
+            $("#ContractOperationalAmount").val(toLabel(receivedAmount));
+
+            if (trxToContractExchangeRate > 0) {
+                trxAmount = receivedAmount / trxToContractExchangeRate;
+                $("#TransactionAmount").val(toLabel(trxAmount));
+
+            }
+            else {
+                swal("Please failed to convert amount to transaction amount", { icon: "warning" })
+                    .then((value) => {
+                        $("#TransactionAmount").val("");
+                        $("#OperationalAmount").val("");
+                        $("#ContractOperationalAmount").val("");
+                    });
+                return false;
+            }
+
+            if (trxToOperationExchangeRate > 0) {
+                oprAmount = trxAmount * trxToOperationExchangeRate;
+                $("#OperationalAmount").val(toLabel(oprAmount));
+            }
+            else {
+             
+                swal("Please failed to convert amount to operation amount", { icon: "warning" })
+                    .then((value) => {
+                        $("#TransactionAmount").val("");
+                        $("#OperationalAmount").val("");
+                    });
+                return false;
+            }
+            if (approvalType == "Electronic") {
+                if (aoExchangeRate > 0) {
+                    aoAmount = trxAmount * aoExchangeRate;
+                    $("#AoAmount").val(toLabel(aoAmount));
+                }
+                else {
+                    $("#AoAmount").val("");
+                }
+            }
+
+        }
+        else {
+            swal("Please enter at least one quantity ", { icon: "warning" })
+                .then((value) => {
+                });
+        }
+    }
+    function removeObjectWithId(arr, id) {
+        const objWithIdIndex = arr.findIndex((obj) => obj.id === id);
+        arr.splice(objWithIdIndex, 1);
+        return arr;
+    }
+
+                function SubmitData(formData) {
+                    $("#save_data").prop('disabled', true);
+                    var formDataVal = new FormData(formData);
+
+                    var type = $("#ReceiveType").val();
+                    if (type == "Quantity") {
+                        if (items.length > 0) {
+                            var itemsData = JSON.stringify(items);
+                            formDataVal.append("ItemsData", itemsData);
+                        }
+                        else {
+                            swal("Please  enter items to be received!");
+                            return false;
+                        }
+                    }
+
+                      var url = '@Url.Action("SavePayment", "Contract")';
+                     var ajaxConfig = {
+                         type: "POST",
+                         url: url,
+                         data: formDataVal,
+                         success: function (response) {
+                        if (response == "Success") {
+                                 swal("Data saved successfully", { icon: "success" })
+                                     .then((value) => {
+                                      var url = '@Url.Action("PendingReceiving", "Contract")';
+                                       window.location.replace(url);
+                                     });
+                             }
+                             else {
+                            $("#save_data").prop('disabled', false);
+                                 swal(response);
+                             }
+                         },
+                         error: function (xhr) {
+                             $("#save_data").prop('disabled', false);
+                             swal(error);
+                         },
+                  }
+                  if ($(formData).attr('enctype') == "multipart/form-data") {
+                      ajaxConfig["contentType"] = false;
+                      ajaxConfig["processData"] = false;
+                  }
+                  $.ajax(ajaxConfig);
+                  return false;
+                   }
+
+    $("#IsAccrual").change((e) => {
+        $("#Accrual").val(e.target.checked ? "YES" : "NO")
+    });
+
+
+
+    $("#PurchasePayeeAccountId").change(function () {
+    var id = $(this).val();
+      $.ajax({
+          type: "GET",
+          url: '@Url.Action("GetTranactionInfo", "Contract")',
+          data: { id: id, operationalCurrency: operationalCurrency },
+          contenttype: "application/json; charset=utf-8",
+          datatype: "json",
+          success: function (response) {
+              $("#TransactionAmount").val("");
+              $("#OperationalAmount").val("");
+              $("#ContractOperationalAmount").val("");
+              $("#AdvancePaymentDeduction").val("");
+              $("#CrossTrxToOperationExchangeRate").val("");
+              $("#CrossTrxToAOExchangeRate").val("");
+              $("#CrossTrxToContractExchangeRate").val("");
+              if (response.success) {
+                  trxCurrency=response.currency;
+                  $(".trxCurrency").text(response.currency);
+                  $("#TransactionCurrency").val(response.currency);
+                  if (response.rate > 0) {
+                      $("#TransactionExchangeRate").val(toLabel(response.rate));
+                      $("#OperationalExchangeRate").val(toLabel(response.operationrate));
+                      exchangeRate = response.operationrate;
+                      getCrossExchangeRate(trxCurrency, operationalCurrency, operationalCurrency, "Operation");
+                      getCrossExchangeRate(trxCurrency, contractCurrency, operationalCurrency, "Contract");
+                  }
+                  else {
+                      swal(response.message, { icon: "warning" }).then((e) => {
+                          $("#TransactionExchangeRate").val("");
+                          $("#OperationalExchangeRate").val("");
+                      });
+                  }
+              }
+              else {
+                  swal(response.message, { icon: "warning" }).then((e) => {
+                      $("#TransactionExchangeRate").val("");
+                      $("#OperationalExchangeRate").val("");
+
+                  });
+              }
+          },
+          failure: function (error) {
+              swal(error);
+          }
+      });
+  });
+
+           function getCrossExchangeRate(fromCurrency, toCurrency, operationCurrency,type) {
+                $.ajax({
+                type: "GET",
+                url: '@Url.Action("ComputeExchangeRate", "Contract")',
+                data: { currencyFrom: fromCurrency, currencyTo: toCurrency, operationCurrency: operationCurrency },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response.success) {
+                        if (type == "Operation") {
+                            debugger
+                            trxToOperationExchangeRate = response.exchangeRate;
+                            $("#CrossTrxToOperationExchangeRate").val(trxToOperationExchangeRate);
+                        }
+                        else if (type == "AO") {
+                            aoExchangeRate = response.exchangeRate;
+                            $("#CrossTrxToAOExchangeRate").val(aoExchangeRate);
+                        }
+                        else if (type == "Contract") {
+                            trxToContractExchangeRate = response.exchangeRate;
+                            $("#CrossTrxToContractExchangeRate").val(trxToContractExchangeRate);
+                        }
+                       
+                }
+                else {
+                    swal(response.message);
+                }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+                    });
+           }
+
+   function exchangeRateV2(currency, operationCurrency) {
+      $.ajax({
+      type: "GET",
+      url: '@Url.Action("GetExchangeRateV2", "Procurement")',
+      data: { currency: currency, operationCurrency: operationCurrency },
+      contenttype: "application/json; charset=utf-8",
+      datatype: "json",
+      success: function (response) {
+
+          if (response.success) {
+              operationExchangeRate = response.operationrate;
+        $("#TransactionExchangeRate").val(toLabel(response.tranasction));
+              $("#OperationalExchangeRate").val(toLabel(response.operationrate));
+              exchangeRate = response.operationrate;
+      }
+      else {
+          swal(response.message);
+      }
+      },
+      failure: function (error) {
+          swal(error);
+      }
+      });
+   }
+
+
+    $("#TransactionAmount").autoNumeric('init');
+    $("#AdvancePaymentDeduction").autoNumeric('init');
+</script>

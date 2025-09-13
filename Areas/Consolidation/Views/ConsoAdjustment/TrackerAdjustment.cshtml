@@ -1,0 +1,547 @@
+﻿@{
+    ViewBag.Title = "Tracker Adjustment";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select style="width:150px" id="overallstatus" class="form-control select2">
+                                        <option value="ALL">All</option>
+                                        <option value="Pending">Pending</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Approved">Approved</option>
+                                     </select>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" name="legalnumber" placeholder="legalnumber" id="legalnumber" class="form-control">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="datetime" name="datefrom" placeholder="date from" id="datefrom" class="form-control">
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="datetime" name="dateto" placeholder="date to" id="dateto" class="form-control">
+                                </div>
+                                <div class="col-md-2">
+                                    <a class="btn btn-info" onclick="track()" id="track">
+                                        <i class="fa fa-search"></i> Search
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                    </a>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_trxsummary" class="table table-bordered table-condensed table-amount"></table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Adjustment Details</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Adjustment Summary</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Institution Name: </th>
+                                                <td id="_Institutionname"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Institution Code:</th>
+                                                <td id="_InstitutionCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Category Name:</th>
+                                                <td id="_CategoryName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Financial Year:</th>
+                                                <td id="_FinancialYear"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Legal Number:</th>
+                                                <td id="_LegalNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Apply Date:</th>
+                                                <td id="_ApplyDate"></td>
+                                            </tr>
+                                            <tr id="revesDesc">
+                                                <th>Reversal Description:</th>
+                                                <td id="_revesDesc"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Adjustment Category:</th>
+                                                <td id="_Reason"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Description:</th>
+                                                <td id="_Description"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Status:</th>
+                                                <td id="_Status"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="adjustmentDetails" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%">
+                            <thead>
+                                <tr>
+                                    <th colspan="6" style="text-align:center">Adjustment Detail</th>
+                                </tr>
+                                <tr>
+                                    <th>#</th>
+                                    <th>GfsCode</th>
+                                    <th>GfsCode Desc</th>
+                                    <th style="text-align:right">Transaction Type</th>
+                                    <th style="text-align:left">DR Amount</th>
+                                    <th style="text-align:left">CR Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var adjustment_Details = $('#adjustmentDetails').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": []
+        });
+
+        var dt_trxsummary = $('#dt_trxsummary').dataTable({
+            "data": [],
+            //"columnDefs": [{
+            //    "targets": [1],
+            //    "visible": false
+            //}],
+            "columns": [
+           //{
+           //    "className": 'details-control',
+           //    "orderable": false,
+           //    "data": null,
+           //    "defaultContent": ''
+           //},
+           { title: "#" },
+           { title: "Category" },
+           { title: "Financial Year" },
+           { title: "Legal Number" },
+           { title: "Date" },
+           { title: "Amount" },
+           { title: "Category" },
+           { title: "Description" },
+           { title: "Status" },
+           { title: "" }
+          ]
+        });
+
+
+
+        $("#dt_trxsummary_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_trxsummary.DataTable().search(this.value).draw();
+        });
+
+
+        $("#saveLoader").toggle(false);
+        function track() {
+            var url = '@Url.Action("GetTrackAdjustment", "ConsoAdjustment")';
+            var status = $("#overallstatus").val();
+            var legalnumber = $("#legalnumber").val();
+            var datefrom = $("#datefrom").val();
+            var dateto = $("#dateto").val();
+            $("#saveLoader").toggle(true);
+            $('#track').attr("disabled", true);
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                data: { Status: status, LegalNumber: legalnumber, DateFrom: datefrom, DateTo: dateto },
+                success: function (response) {
+                    debugger
+                    $("#saveLoader").toggle(false);
+                    $('#track').attr("disabled", false);
+                    data = response.data;
+                    dt_trxsummary.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_trxsummary.fnAddData([i + 1,
+                            data[i]["AdjustmentCategory"],
+                            data[i]["FinancialYear"],
+                            data[i]["LegalNumber"],
+                            data[i]["ApplyDateFormatted"],
+                            data[i]["AdjustementAmount"].toLocaleString(),
+                            data[i]["AdjustmentReason"],
+                            data[i]["AdjustmentReasonDesc"],
+                            data[i]["OverallStatus"],
+                              '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                              <li><a href="#" onclick="openViewDialog(' + i + ')">Details</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function openViewDialog(i) {
+            debugger
+            globalPayeeId = i;
+
+            $("#_Institutionname").text(data[i]["InstitutionName"]);
+            $("#_InstitutionCode").text(data[i]["InstitutionCode"]);
+            $("#_CategoryName").text(data[i]["AdjustmentCategory"]);
+            $("#_FinancialYear").text(data[i]["FinancialYear"]);
+            $("#_LegalNumber").text(data[i]["LegalNumber"]);
+            $("#_ApplyDate").text(data[i]["ApplyDateFormatted"]);
+            $("#_Reason").text(data[i]["AdjustmentReason"]);
+            $("#_Description").text(data[i]["AdjustmentReasonDesc"]);
+            $("#_Status").text(data[i]["OverallStatus"]);
+
+            if (data[i]["ReverseReasonDesc"] == null) {
+                $("#revesDesc").hide();
+            } else {
+                $("#revesDesc").show();
+                $("#_revesDesc").text(data[i]["ReverseReasonDesc"]);
+            }
+
+            adjustment_Details.fnClearTable();
+            var DRTotalAmount = 0;
+            var CRTotalAmount = 0;
+            var imprestDetailsIds = [];
+            var k=0
+            adjustment_Details.fnClearTable();
+            data[i]["ConsoAdjustementDetails"].forEach(row => {
+                k = k + 1;
+                adjustment_Details.fnAddData([
+                    k,
+                    row["GfsCode"],
+                    row["GFSCodeDesc"],
+                    row["TransactionType"],
+                    row["TransactionType"]=="DR"?row["AdjustmentAmount"].toLocaleString():"",
+                    row["TransactionType"] == "CR"?row["AdjustmentAmount"].toLocaleString():"",
+                ]);
+                DRTotalAmount = DRTotalAmount + parseFloat(row["TransactionType"] == "DR" ? row["AdjustmentAmount"]: 0);
+                CRTotalAmount = CRTotalAmount + parseFloat(row["TransactionType"] == "CR" ? row["AdjustmentAmount"] : 0);
+                imprestDetailsIds.push(row["ImprestDetailId"]);
+            });
+            var footerRow = $('<tr>');
+
+            // Add footer cells with calculated values
+            footerRow.append('<td></td>');
+            footerRow.append('<td colspan="3">Total</td>');
+            footerRow.append('<td style="text-align:left">' + DRTotalAmount.toLocaleString() + '</td>');
+            footerRow.append('<td style="text-align:left">' + CRTotalAmount.toLocaleString() + '</td>');
+
+            // Append the footer row to the DataTable
+            $('#adjustmentDetails tbody').append(footerRow);
+            $('#confirmModal').modal('show');
+        }
+
+
+        function confirm(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Approve this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmAdjustmentSummary(data[i]["TrxAdjustmentSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancel(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Reject this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    cancellAdjustmentSummary(data[i]["TrxAdjustmentSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+        function cancellAdjustmentSummary(Id) {
+            var url = '@Url.Action("ConfirmTrxAdjustmentSummary", "ConsoAdjustment")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { Id, status: "Reject" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function confirmAdjustmentSummary(Id) {
+            var url = '@Url.Action("ConfirmTrxAdjustmentSummary", "ConsoAdjustment")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { Id, status:"Approve" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function initInnerTable(i) {
+            window["dt_view" + i] = $('#dt_view' + i)
+           .dataTable({
+               "sDom": 't',
+               columnDefs: [
+                   { width: 20, targets: 0 },
+                   { width: 700, targets: 1 }
+               ],
+               "columns": [
+                   { title: "#" },
+                   { title: "GlAccount" },
+                   { title: "FundingRefNo" },
+                   { title: "Type" },
+                   { title: "Amount" },
+               ]
+           });
+            $("#dt_view" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_trxsummary tbody').on('click', 'td.details-control', function () {
+            debugger
+            //var details =data[]
+            var tr = $(this).closest('tr');
+            var row = dt_trxsummary.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initInnerTable(row.data()[0]);
+                tr.addClass('shown');
+                getTrxDetails(row.data()[0], row.data()[1]);
+            }
+        });
+
+        function getTrxDetails(rowId, TrxId) {
+             var url = '@Url.Action("GetTransactionAdjustmentDetails", "ConsoAdjustment")';
+            $.ajax({
+                type: "get",
+                url: url + '/?TrxId=' + TrxId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        window["dt_view" + rowId]
+                            .fnAddData([i + 1,
+                            d[i]["GlAccount"].split("|").join("-"),
+                            d[i]["FundingRefNo"],
+                            d[i]["TransactionType"].split("|").join("-"),
+                            d[i]["OperationalAmount"].toLocaleString()
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

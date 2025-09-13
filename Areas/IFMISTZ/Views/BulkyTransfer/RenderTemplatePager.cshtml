@@ -1,0 +1,771 @@
+﻿@model IEnumerable<IFMIS.Models.UploadedFileHistoryVM>
+
+@{
+    ViewBag.Title = "Bulky Fund Transfer Template";
+}
+
+<div id="divLoader">
+</div>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-info btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-info">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Bulky Transfer </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <a href="#" onclick="createBulkyModalPopup()" class="btn btn-info" style="display: inline-block">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Download Template
+                            </a>
+                            <form style="display: inline-block" id="formUpload1">
+                                @Html.AntiForgeryToken()
+                                <input name="FileName" type="file" id="FileName" class="btn btn-default" style="display: inline-block" />
+                                <a href="#" class="btn btn-info" id="btnUpload1">
+                                    <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                    Upload
+                                </a>
+                            </form>
+
+                            <hr />
+                            <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.FilePath)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.TotalTransferAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.UploadedDate)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.CreatedBy)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.OverallStatus)
+                                        </th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                @{int i = 0;}
+                                @foreach (var item in Model.OrderByDescending(a => a.FileId))
+                                {
+                                    i++;
+                                    <tr>
+                                        <td>@i</td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.FilePath)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.TotalTransferAmount)
+                                        </td>
+                                        <td style="text-align: right">
+                                            @Html.DisplayFor(modelItem => item.UploadedDate, "_ShortDateTime")
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.CreatedBy)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+                                        <td style="text-align:center">
+
+                                            <div class="btn-group">
+
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+
+                                                    @if (@item.OverallStatus == "Uploaded")
+                                                    {
+                                                        <li>
+                                                            <a href="#" onclick="onClickProcessFile(@item.FileId);">
+                                                                <i class="fa fa-send"></i>  Process
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" onclick="cancelEntry(@item.FileId)">
+                                                                <i class="fa fa-close"></i>Cancel
+                                                            </a>
+                                                        </li>
+                                                    }
+
+                                                    @if (@item.OverallStatus == "Processed")
+                                                    {
+                                                        <li>
+                                                            <a href="@Url.Action("ConfirmedTransfer", "BulkyTransfer", new { id = item.FileId })">
+                                                                <i class="fa fa-download"></i>View
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" onclick="verifyAllProcessedData(@item.FileId);">
+                                                                <i class="fa fa-check"></i>Confirm
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" onclick="cancelEntry(@item.FileId)">
+                                                                <i class="fa fa-close"></i>Cancel
+                                                            </a>
+                                                        </li>
+                                                    }
+                                                </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        }
+                                    </table>
+                                </div>
+                                <!-- end widget content -->
+                            </div>
+                            <!-- end widget div -->
+                        </div>
+                        <!-- end widget -->
+                    </article>
+                    <!-- END COL -->
+                </div>
+                <!-- END ROW -->
+            </section>
+            <!-- end widget grid -->
+        </div>
+        <!-- END MAIN CONTENT -->
+        <!--Start of delete confirmation modal section-->
+        <div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+            <div class="modal-dialog" style="width: 60%">
+                <div class="modal-content">
+                    <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="lblmodal">Standing Imprest Details</h4>
+                    </div>
+                    <div class="modal-body" id="modal-body"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-info" style="display: inline-block" id="btnSave" type="button">
+                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                            Save
+                        </button>
+                        <button class="btn btn-info role-dismiss" style="display: inline-block" data-dismiss="modal">
+                            <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                            Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!--End of delete confirmation modal section-->
+        <div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                        <h4 class="modal-title" id="lblmodal">Edit Forecast</h4>
+                    </div>
+                    <div class="modal-body" id="divModalBody"></div>
+                    <div class="modal-footer">
+                        <button class="btn btn-success role-save" onclick="UpdateForecast()">Update Forecast</button>
+                        <button class="btn btn-default role-cancel" data-dismiss="modal">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @section Scripts{
+            <script>
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        $(document).ready(function () {
+            /* // DOM Position key index //
+
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+
+            Also see: http://legacy.datatables.net/usage/features
+            */
+
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                    "copy",
+                    "csv",
+                    "xls",
+                       {
+                           "sExtends": "pdf",
+                           "sTitle": "SmartAdmin_PDF",
+                           "sPdfMessage": "SmartAdmin PDF Export",
+                           "sPdfSize": "letter"
+                       },
+                       {
+                           "sExtends": "print",
+                           "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                       }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+
+        });
+
+        var createForecast = function () {
+            $("#divLoader").show();
+            $("#btnSave").show();
+            $(".modal-title").text("Create Forecast");
+            var url = '@Url.Action("CreateForecast", "Forecasts")';
+
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+
+                $("#divLoader").hide();
+            });
+        };
+
+        var createBulkyModalPopup = function () {
+            $("#divLoader").show();
+            $("#btnSave").show();
+            $("#btnSave").html('Generate');
+            $(".modal-title").text("Generate Bulky Transfer Template");
+            var url = '@Url.Action("RenderDataChoicePager", "BulkyTransfer")';
+            //console.log("*** START createBulkyModalPopup ***");
+            //console.log(url);
+            //console.log("*************");
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+                $("#divLoader").hide();
+            });
+        };
+
+        var confirmAll = function () {
+            swal({
+                text: "Are you sure you want to confirm all projections ?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    $("#divLoader").show();
+                    var url = '@Url.Action("ConfirmAllProjections", "Forecasts")';
+                    $.ajax({
+                        type:        "POST",
+                        url:         url,
+                        dataType:    "JSON",
+                        processData: false,
+                        contentType: false,
+                        success: function (response) {
+                            console.log(response);
+                            if (!response.error) {
+                                swal({
+                                    text: response.message,
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            } else if(response.error) {
+                                swal({
+                                    text: response.message,
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }else{
+                                swal({
+                                    text: response.message,
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function () {
+                            swal({
+                                text: "An error occurred while performing your request, contact system support",
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        },
+                        complete: function () {
+                            $("#divLoader").hide();
+                        }
+                    });
+                }
+            });
+        };
+
+        $("#btnUpload").on("click", function () {
+            if (window.FormData !== undefined) {
+                var token = $("[name='__RequestVerificationToken']").val();
+
+                if (!$("#formUpload").valid()) {
+                    return false;
+                }
+
+                $("#divLoader").show();
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length == 0) {
+                    $("#divLoader").hide();
+                    return false;
+                }
+
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                }
+
+                data.append("__RequestVerificationToken", token);
+                var url = '@Url.Action("UploadForecast", "Forecasts")';
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (response, status, jqXHR) {
+                        console.log(response);
+                        if (!response.error) {
+                            swal(response.message);
+                            $("#divLoader").hide();
+                            location.reload();
+                        }
+                        else {
+                            swal(response.message);
+                            $("#divLoader").hide();
+                            location.reload();
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                    },
+                    complete: function () {
+                        $("#divLoader").hide();
+                    }
+                });
+
+            };
+        });
+
+        var onClickProcessFile = function (id) {
+            $("#divLoader").show();
+            var url = '@Url.Action("ReceiveFileIdForProcessing", "BulkyTransfer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.status === "Success") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response.status === "Error") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function (jqXHR, exception) {
+                    //console.log(exception);
+                    //console.log("----------------------");
+                    //console.log(jqXHR);
+                    swal({
+                        text: "An error occurred while performing your request, contact system support",
+                        icon: "error",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        };
+
+        $("#btnUpload1").on("click", function () {
+            if (window.FormData !== undefined) {
+                var token = $("[name='__RequestVerificationToken']").val();
+                //alert(token);
+                if (!$("#formUpload1").valid()) {
+                    return false;
+                }
+                $("#divLoader").show();
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+                if (file.length == 0) {
+                    $("#divLoader").hide();
+                    return false;
+                }
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                }
+                data.append("__RequestVerificationToken", token);
+                var url = '@Url.Action("ReceiveBulkFundTRansfer", "BulkyTransfer")';
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (response, status, jqXHR) {
+                        console.log(response);
+                        if (response.status === "Success") {
+                            swal({
+                                    text: response.statusDesc,
+                                    icon: "success",
+                                    button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                            $("#divLoader").hide();
+                            location.reload();
+                        }
+                        else {
+                            swal({
+                                text: response.statusDesc,
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                            $("#divLoader").hide();
+                        }
+                    },
+                    error: function (err) {
+                        swal({
+                            text: err.message,
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                        console.log(err);
+                    },
+                    complete: function () {
+                        $("#divLoader").hide();
+                    }
+                });
+            }
+        });
+
+        var cancelEntry = function (id) {
+            $("#divLoader").show();
+            var url = '@Url.Action("CancelFileIdForProcessing", "BulkyTransfer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.status === "Success") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response.status === "Error") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function (jqXHR, exception) {
+                    //console.log(exception);
+                    //console.log("----------------------");
+                    //console.log(jqXHR);
+                    swal({
+                        text: "An error occurred while performing your request, contact system support",
+                        icon: "error",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        };
+
+
+        var verifyAllProcessedData = function(id){
+            $("#divLoader").show();
+            var url = '@Url.Action("ConfirmAllProcessedData", "BulkyTransfer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.status === "Success") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response.status === "Error") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    }
+                },
+                error: function (jqXHR, exception) {
+                    swal({
+                        text: "An error occurred while performing your request, contact system support",
+                        icon: "error",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        }
+
+            </script>
+        }

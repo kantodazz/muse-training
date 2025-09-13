@@ -1,0 +1,254 @@
+﻿@model List<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Budget Confirmation";
+}
+<script type="text/javascript">
+    function ConfirmUpdate() {
+
+        return confirm("Do you want to Update these records.?");
+    }
+
+    function SelectedIndexChanged() {
+        $("#ApprovalStatus").val($('#SelectedApprovalStatus').val());
+    }
+
+
+</script>
+<style>
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budget Confirmation</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th data-hide="phone">S/N</th>
+                                        <th data-class="expand"> Financial Year</th>
+                                        <th>Budget Type</th>
+                                        <th>Sub Budget Class</th>
+                                        <th>Funding Source</th>
+                                        <th>Status</th>
+                                        <th>Amount</th>
+                                        <th>Action</th>
+                                </thead>
+                                <tbody>
+                                    @{ int j = 0;}
+
+                                    @foreach (var budg in Model)
+                                    {
+                                        j = j + 1;
+                                        <tr>
+                                            <td>
+                                                @j
+                                                @Html.HiddenFor(model => budg.BudgetSummaryId)
+                                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                            </td>
+                                            <td>
+                                                @budg.FinancialYearDesc
+                                            </td>
+                                            <td>
+                                                @budg.JournalTypeDesc
+                                            </td>
+                                            <td>
+                                                @budg.SubBudgetClass - @budg.SuBbudgetClassDesc
+                                            </td>
+                                            <td>
+                                                @budg.FundingSource - @budg.FundingSourceDesc
+                                            </td>
+                                            <td>
+                                                @budg.OverAllStatus
+                                            </td>
+                                            <td>
+                                                @string.Format("{0:#,0.00}", budg.OperationalAmount)
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                       <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    @*<input type="hidden" id="ctr-@cnt" value="@model[i].BudgetSummaryId" />*@
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="#" onclick="ConfirmBudget(@budg.BudgetSummaryId)">Confirm</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Confirm this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+    var datatable_tabletools = $('#datatable_tabletools').dataTable({
+        "autoWidth": true,
+        "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+        "bPaginate": false,
+        "info": true,
+    });
+
+ // GRAB THIS==================================
+    $("#searchbox").on("keyup search input paste cut", function () {
+        datatable_tabletools.DataTable().search(this.value).draw();
+    });
+
+//END HERE ==========================================
+    $(function () {
+            $("#cboAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w3-check").prop('checked', true);
+                }
+                else {
+                    $(".w3-check").prop('checked', false);
+                }
+            });
+        })
+        $(function () {
+            $("#cboApprAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w4-check").prop('checked', true);
+                }
+                else {
+                    $(".w4-check").prop('checked', false);
+                }
+            });
+        })
+        var ConfirmBudget = function (id) {
+
+            $("#responseModal").modal('show');
+
+
+
+            $(".delete-confirm").click(function () {
+                // if (CostCenter != "") {
+                var url = '@Url.Action("ConfirmBudg", "BudgetSummaries")';
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    type: "POST",
+                    success: function (response) {
+                        if (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show success message.
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-info')) {
+                                    //$('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Confirmed successfully');
+                            }
+                        }
+                    }, error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-danger')) {
+                            $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                            $('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+                //}
+            });
+        };
+
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Confirm this record ?');
+        });
+    </script>
+}

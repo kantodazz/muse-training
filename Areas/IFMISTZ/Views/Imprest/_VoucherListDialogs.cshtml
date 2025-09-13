@@ -1,0 +1,246 @@
+﻿<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+    <div class="modal-dialog" style="width:90%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Imprest Information</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <table class="table  table-hover table-condensed" id="leftData"></table>
+                            </div>
+                            <div class="col-md-6">
+                                <table class="table  table-hover table-condensed" id="rightData"></table>
+                            </div>
+                        </div>
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <div class="total-amount">TOTAL <strong id="totalAmount">0.00</strong></div>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                        <table id="dt_imprest_item" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%">
+                            <thead>
+                                <tr>
+                                    <th colspan="6" style="text-align:center">Imprest Items</th>
+                                </tr>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Item Name</th>
+                                    <th>Item Desc</th>
+                                    <th>Quantity</th>
+                                    <th>Unit price</th>
+                                    <th>Total price</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="confirmImprestModal">
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Confirmation </h3>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                <div class="form-group">
+                    <input id="id" type="hidden" />
+                    @Html.Label("PayerAccount", "PayerBankAccount", htmlAttributes: new { @class = "control-label   col-md-3", @style = "text-align:left" })
+                    <div class="col-md-9">
+                        <select id="PayerBankAccount" name="PayerBankAccount" class="form-control select2"></select>
+                        @Html.ValidationMessage("PayerAccount", "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="confirmForm()" style="width:100px;" id="form_submision">
+                    <i class="fa fa-save"></i>Confirm
+                    <img src="/Content/img/loading.gif" id="saveLoader" />
+                </button>
+                <button class="btn btn-info"
+                        data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!----------- ATTACH DIALOG ----------------->
+<div class="modal fade" id="attachFileModal">
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Attach </h3>
+            </div>
+
+            <div class="modal-body">
+                <input type="file" name="file" id="file" accept=".pdf" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="uploadForm()" style="width:100px;" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="/Content/img/loading.gif" id="saveLoader" />
+                </button>
+                <button class="btn btn-info"
+                        data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+<script>
+
+    
+
+    function openViewDialog(i) {
+        globalPayeeId = i;
+        debugger
+        var ids = data[i]["ImprestId"];
+        var impresttype = data[i]["ImprestTypeDesc"];
+
+        $.ajax({
+            type: "post",
+            url: '@Url.Action("GetImprestRetirementItems", "ImprestRetirement")',
+            data: { id: ids },
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                debugger
+                itemdata = response.data;
+                if (itemdata.length > 0) {
+                    dt_imprest_item.fnClearTable();
+                    var totalPrice = 0;
+                    for (var j = 0; j < itemdata.length; j++) {
+                        totalPrice += itemdata[j]["TotalAmount"];
+                        dt_imprest_item.fnAddData([
+                            j + 1,
+                            itemdata[j]["ItemName"],
+                            itemdata[j]["ItemDescription"],
+                            itemdata[j]["Quantity"],
+                            itemdata[j]["UnitPrice"].toLocaleString(),
+                            itemdata[j]["TotalAmount"].toLocaleString()
+                        ]);
+                    }
+                    var footerRow = $('<tr>');
+
+                    // Add footer cells with calculated values
+                    footerRow.append('<td></td>');
+                    footerRow.append('<td colspan="4">Total</td>');
+                    footerRow.append('<td>' + totalPrice.toLocaleString() + '</td>');
+
+                    // Append the footer row to the DataTable
+                    $('#dt_imprest_item tbody').append(footerRow);
+                    $("#dt_imprest_item").show();
+                }
+                else {
+                    $("#dt_imprest_item").hide();
+                }
+
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        let leftData = '';
+        let rightData = '';
+        let columns = [
+            "PayeeAccountName", "PayeeBankAccount", "PayerBankName", "PayerBankAccount",
+            "ImprestNo", "PayeeCode", "Narration", "ImprestType",
+            "PaymentDesc", "OperationalAmount", "BaseAmount", "BaseCurrency", "OperationalCurrency",
+            "ExchangeRate", "CreatedBy", "CreatedAtFormatted", "SubBudgetClassDesc",
+            "AOApprovalTitle", "DfundTitle", "AOApprovalRef", "DfundApprovalRef", "TransactionExchangeRate", "TransactionAmount",
+            "OperationalExchangeRate", "DfundCurrency", "TransactionCurrency"
+        ];
+
+        let counter = columns.length / 2;
+
+        const render = (key, value) => {
+            if (["AOApprovalRef", "DfundApprovalRef"].includes(key) && value) {
+                let id = data[i].AOApprovalId;
+                if (key === "DfundApprovalRef") {
+                    id = data[i].DfundApprovalId;
+                }
+                return `<tr><th>${key}</th><td>${dataLink(value, id)}</td></tr>`
+            }
+
+            if (key.endsWith("Amount") || key.endsWith("ExchangeRate")) {
+                return `<tr><th>${key}</th><td>${toLabel(value)}</td></tr>`
+            }
+            return `<tr><th>${key}</th><td>${String(value || "NA").split("|").join("-")}</td></tr>`
+        }
+
+        let switcher = true
+        columns.forEach((key) => {
+            let value = data[i][key]
+            if ((value && !["NA", "N/A"].includes(value)) || value == 0) {
+                if (switcher) {
+                    leftData += render(key, value);
+                } else {
+                    rightData += render(key, value);
+                }
+                switcher = !switcher
+            }
+        })
+
+        document.getElementById('leftData').innerHTML = leftData;
+        document.getElementById('rightData').innerHTML = rightData;
+
+        var totalAmount = 0;
+        dt_voucher_detail.fnClearTable();
+        data[i]["ImprestDetails"].forEach(row => {
+            dt_voucher_detail.fnAddData([
+                row["ExpenditureGlAccount"].split("|").join("-"),
+                row["ExpenditureGlAccountDesc"],
+                row["FundingRef"],
+                row["IssuedAmount"].toLocaleString(),
+            ]);
+            totalAmount = totalAmount + parseFloat(row["IssuedAmount"]);
+        });
+
+        $("#totalAmount").text(toLabel(totalAmount));
+        $("#reasonId").text(data[i]["OverallStatusDesc"] ? data[i]["OverallStatusDesc"] : data[i]["RejectedReason"]);
+        $("#statusId").text(data[i]["OverallStatus"]);
+        $('#confirmModal').modal('show');
+        
+    }
+
+    function openLink(id) {
+        var url = `@Url.Action("EofficeDetails", "DFundApprovals")/${id}`
+        window.open(url, '_blank');
+    }
+
+    function dataLink(value, id) {
+        return `<a href="#" onclick="openLink(${id})"><strong>${value}</strong></a>`
+    }
+
+</script>

@@ -1,0 +1,178 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.DeductionCodeVM
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .input {
+        border: 1px solid lightgray;
+        width: 100%;
+        height: 35px;
+    }
+
+    .textarea {
+        border: 1px solid lightgray;
+        width: 100%;
+    }
+
+    .input[type="text"]:focus {
+        border: 1px solid lightblue;
+    }
+</style>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 5%">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+
+                        <h2 style="color:black;">Add Deduction Codes</h2>
+
+                    </header>
+                    <div>
+                        <div class="widget-body" style="padding-top:10px; width:100%;">
+
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitData(this)", id = "AddDeduction" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                        <div class="form-horizontal">
+
+                                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.DedCode, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.DedCode, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.DedCode, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.DedDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.DedDescription, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.DedDescription, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.DeductionCategory, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EnumDropDownListFor(model => model.DeductionCategory, "Select Deduction Category", new { @class = "form-control select2" })
+                                                    @Html.ValidationMessageFor(model => model.DeductionCategory, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.BankId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.DropDownListFor(model => model.BankId, ViewBag.Bank as SelectList, "Select Bank", new { @class = "form-control select2" })
+                                                    @Html.ValidationMessageFor(model => model.BankId, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.PaymentMode, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EnumDropDownListFor(model => model.PaymentMode, "Select Payment Mode", new { @class = "form-control select2" })
+                                                    @Html.ValidationMessageFor(model => model.PaymentMode, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.DeductionPercent, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.DeductionPercent, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.DeductionPercent, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-offset-2 col-md-10">
+                                                    <button type="submit" class="btn btn-info" id="submit" style="float: left">
+                                                        <span class="glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                                                        Save
+                                                    </button>
+
+                                                    <a href="@Url.Action("DeductionCodeList","DeductionCodes")" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                        <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                                        Back
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                        }
+                                    </td>
+                                    <td colspan="1"></td>
+                                </tr>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts{
+    <script>
+
+        $("#PaymentMode").change(function () {
+
+            var paymentMode = $("#PaymentMode option:selected").text();
+
+            if (paymentMode == "Flat") {
+                $("#DeductionPercent").val("");
+                $("#DeductionPercent").prop("disabled", true);
+            } else {
+                $("#DeductionPercent").prop("disabled", false);
+            }
+        });
+
+        function SubmitData(formData) {
+            debugger;
+            if (!$("#AddDeduction").valid()) {
+                swal("Please fill required area");
+                return false;
+            }
+            var url = '@Url.Action("CreateDeductionCode", "DeductionCodes")';
+            $("#divLoader").show();
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Deduction Code saved successfully", { icon: "success" })
+                            .then((value) => {
+                                var url = '@Url.Action("DeductionCodeList", "DeductionCodes")';
+                                window.location.replace(url);
+                            });
+                    }
+                    else {
+                        //pageLoading("false");
+                        swal(response, { icon: "warning" });
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+
+    </script>
+}
+

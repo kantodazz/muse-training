@@ -1,0 +1,424 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PrePaymentVM>
+@{
+    ViewBag.Title = "Prepayment";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-prepaymentAmount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-prepaymentAmount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a href="@Url.Action("CreatePrePayment", "PrePayment")" class="btn btn-info" style="width:120px;border-radius:1px;">
+                                        <i class="fa fa-plus"></i>Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_prepayment">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right"></th>
+                                        <th style="text-align:left;width:10%">Prepayment Number</th>
+                                        <th style="text-align:left">Description</th>
+                                        <th style="text-align:right">Prepayment Amount</th>
+                                        <th style="text-align:center">Items</th>
+                                        <th style="text-align:right">Items Value</th>
+                                        <th style="text-align:right">GL Items Charge</th>
+                                        <th style="text-align:left">Status</th>
+                                        <th style="text-align:center"></th>
+
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="PrepaymentRejection">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h5 align="center">Rejected Prepayment: <span id="PrepaymentNo"></span></h5>
+            </div>
+
+            <div class="modal-body form-horizontal">
+
+                <div class="form-group">
+                    <div class="col-md-7">
+                        <span id="Remarks"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_prepayment = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_prepayment = $('#dt_prepayment').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+
+        //$("#dt_prepayment_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_prepayment.DataTable().search(this.value).draw();
+        });
+
+        function toLabel(number) {
+            if (number != null) {
+                return number.toLocaleString(undefined, {
+                    minimumFractionDigits: 2,
+                    maximumFractionDigits: 2
+                })
+            } else {
+                return number;
+            }
+          
+        }
+
+
+        function rejectedDialog(i) {
+            $("#Remarks").text(data[i]["ApprovalStatus"]);
+            $("#PrepaymentNo").text(data[i]["PrePaymentNo"]);
+            $('#PrepaymentRejection').modal('show');
+        }
+
+        var data = [];
+        var PrepaymentId = null;
+        var applicationDate = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPrepaymentList", "PrePayment")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_prepayment.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var displayConfirm = 'display:none;';
+                    var displayEdit = 'display:none;';
+                    var displayAttach = 'display:none;';
+                    var displayCancel = 'display:none;';
+
+                    var balance1 = parseFloat(data[i]["PrePaymentAmount"]).toFixed(2) - parseFloat(data[i]["TotalAmount"]).toFixed(2);
+
+                    var balance2 = parseFloat(data[i]["PrePaymentAmount"]).toFixed(2) - parseFloat(data[i]["ItemCharge"]).toFixed(2);
+
+                    var prepaymentAmount = data[i]["PrePaymentAmount"];
+                    var pAmount = 0;
+                    if (prepaymentAmount != null) {
+                        prepaymentAmount = "<p align='right'>" + toLabel(data[i]["PrePaymentAmount"]); +"</p>";
+                        pAmount = parseFloat(data[i]["PrePaymentAmount"]).toFixed(2);
+                    } else {
+                        prepaymentAmount = "<p align='right'>" + data[i]["PrePaymentAmount"]; +"</p>"
+                    }
+
+
+                    var TotalAmount = data[i]["TotalAmount"];
+                    if (TotalAmount != null) {
+                        TotalAmount = "<p align='right'>" + toLabel(data[i]["TotalAmount"]); +"</p>"
+                    } else {
+                        TotalAmount = "<p align='right'>" + data[i]["TotalAmount"]; +"</p>"
+                    }
+
+                    var TotalItems = '<p align="right"><a href="@Url.Action("Items", "PrePayment")/?id='+data[i]["PrePaymentId"]+'"><span class="badge inbox-badge margin-right-13">' + data[i]["TotalItems"] + '</span></a></p>';
+
+                    var ItemCharge = data[i]["ItemCharge"];
+                    var iCharge = 0;
+                    if (ItemCharge != null) {
+                        ItemCharge = "<p align='right'>" + data[i]["Currency"] + " " + toLabel(data[i]["ItemCharge"]); +"</p>";
+                        iCharge = parseFloat(data[i]["ItemCharge"]).toFixed(2);
+                    } else {
+                        ItemCharge = "<p align='right'>" + data[i]["Currency"] + " " + data[i]["ItemCharge"]; +"</p>";
+                    }
+
+                    var currencyPrepaymentAmount = "<p align='right'>" + data[i]["Currency"]+" "+toLabel(data[i]["PrePaymentAmount"]); +"</p>";
+
+                    var currencyTotalAmount = data[i]["TotalAmount"];
+                    var crTotalAmt = 0;
+                     if (currencyTotalAmount != null) {
+                         currencyTotalAmount = "<p align='right'>" + data[i]["Currency"] + " " + toLabel(data[i]["TotalAmount"]); +"</p>";
+                         crTotalAmt = parseFloat(data[i]["TotalAmount"]).toFixed(2);
+                     }else{
+                         currencyTotalAmount = "<p align='right'>" + data[i]["Currency"]+(data[i]["TotalAmount"]); +"</p>";
+                     }
+
+                     var overallStatus = data[i]["OverallStatus"];
+                     if (overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.REJECTED.ToUpper()') {
+                         overallStatus = '<a href="#" data-toggle="modal" data-target="#rejectedPrePayment"  data-ppy='+data["PrePaymentNo"]+' data-reason='+data["ApprovalStatus"]+' class="rejected_prepayment"> <i class="fa fa-eye"></i>'+data[i]["OverallStatus"]+'</a>';
+
+                         overallStatus = '<a href="#" onclick="rejectedDialog(' + i + ')">Rejected</a>'
+                     } else {
+                         overallStatus = overallStatus;
+                     }
+
+                    if (overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.PENDING.ToUpper()' || overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.REJECTED.ToUpper()') {
+                         displayEdit = 'display:block;';
+                        displayAttach = 'display:block;';
+                        displayCancel = 'display:block;';
+                        displayConfirm = 'display:block;';
+                    }
+
+                    @*if ((overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.PENDING.ToUpper()') ||
+                        (overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.REJECTED.ToUpper()') ) {
+                        displayCancel = 'display:block;';
+                        displayConfirm = 'display:block;';
+                    }*@
+                    dt_prepayment.fnAddData([i + 1,
+                       data[i]["PrePaymentNo"],
+                       data[i]["PrePaymentDesc"],
+                       currencyPrepaymentAmount,
+                       TotalItems,
+                       currencyTotalAmount,
+                        ItemCharge,
+                        overallStatus,
+                      '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("PreviewPrePayment", "PrePayment")/?id=' + data[i]["PrePaymentId"] + '">Preview</a></li>\
+                                <li style=""><a href="@Url.Action("EditPrePayment", "PrePayment")/?id=' + data[i]["PrePaymentId"] + '">Edit</a></li>\
+                                <li style=""><a href="@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=' + data[i]["PrePaymentId"] + '&&sourceModule=' + "Prepayment" + '">Attach</a></li>\
+                                <li id="decisionList" style=""><a href="#" onclick="confirmDialog(' + i + ')">Confirm</a></li>\
+                                <li id="decisionList2"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function confirmDialog(i) {
+            swal({
+                title: 'Prepayment Issue Confirmation ?',
+                text: "Do you what to confirm Prepayment: " + data[i]["PrePaymentNo"],
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                document.getElementById("decisionList").style.display = "none";
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmPrepayment(data[i]["PrePaymentId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmPrepayment(PrepaymentId) {
+            var url = '@Url.Action("ConfirmPrePayment", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": PrepaymentId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Error Confirming Prepayment", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function cancelDialog(i) {
+            swal({
+                title: 'Prepayment Issue Cancellation',
+                text: "Do you what to cancel Prepayment: " + data[i]["PrePaymentNo"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                document.getElementById("decisionList2").style.display = "none";
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPrepayment(data[i]["PrePaymentId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelPrepayment(PrepaymentId) {
+            var url = '@Url.Action("CancelPrePayment", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": PrepaymentId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal(response, { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Error Cancelling Prepayment", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}

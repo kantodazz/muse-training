@@ -1,0 +1,212 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ReceivingSummaryVM
+@{
+    ViewBag.Title = "Edit Receiving";
+}
+
+<!-- MAIN CONTENT -->
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Edit  LPO Receiving </h2>
+
+                    </header>
+                    <div align="center">
+                        <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+
+                    @{ decimal balance = (Decimal)Model.PurchaseOrderAmount - (Decimal)Model.ReceivingItemsValue;}
+                    <div class="jarviswidget" id="wid-id-12" data-widget-colorbutton="false" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-togglebutton="false" data-widget-deletebutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false">
+                        <p align="left">
+                            <span>Receiving Number &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.ReceivingNumber</strong></span><br />
+                            <span>LPO Number &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.PurchaseOrderNo</strong></span><br />
+                            <span>Supplier&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.SupplierName</strong></span><br />
+                            Purchase Order Amount :<strong>@Model.Currency  @Convert.ToDecimal(Model.PurchaseOrderAmount).ToString("#,##0/=")</strong><br />
+                            Received Item(s) Value &nbsp;&nbsp;:<strong>@Model.Currency @Convert.ToDecimal(Model.ReceivingItemsValue).ToString("#,##0/=")</strong><br />
+                            Balance &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.Currency @balance.ToString("#,##0/=")</strong><br />
+                            Ordered Date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Convert.ToDateTime(Model.OrderDate).ToString("dd/MM/yyyy")</strong><br />
+                            Delivered Date&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Convert.ToDateTime(Model.DeliveryDate).ToString("dd/MM/yyyy")</strong><br />
+                            Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.PurchaseOrderDesc</strong>
+                        </p>
+                        <br>
+                        @using (Html.BeginForm("EditReceiving", "Procurement", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitForm(this)" }))
+                        {
+                            @Html.AntiForgeryToken()
+                            @Html.HiddenFor(model => model.PurchaseOrderId)
+                            @Html.HiddenFor(model => model.ReceivingSummaryId)
+                            <div class="form-horizontal">
+
+                                <table class="table  table-bordered table-hover table-condensed" style="width:100%">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:center;width:4%">#</th>
+                                            <th style="text-align:left;width:18%">Item</th>
+                                            <th style="text-align:left;width:13%">UOM</th>
+                                            <th style="text-align:right;width:13%">Unit Price</th>
+                                            <th style="text-align:right;width:13%">VAT</th>
+                                            <th style="text-align:right;width:13%">Total Amount</th>
+                                            <th style="text-align:center;width:13%">Received Quantity</th>
+                                            <th style="text-align:center;width:13%">Maxmum Quantity</th>
+
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @for (var i = 0; i < Model.ReceivedItemsList.Count(); i++)
+                                        {
+                                            var j = i + 1;
+                                            <tr>
+                                                <td style="text-align:center">@j</td>
+                                                <td style="width:140px">
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].ItemDesc)
+
+                                                </td>
+                                                <td>
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].UOM)
+                                                    @Html.HiddenFor(modelItem => Model.ReceivedItemsList[i].PurchaseOrderDetailId)
+
+                                                    @Html.HiddenFor(modelItem => Model.ReceivedItemsList[i].Quantity)
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].UnitPrice)
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].VAT)
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].TotalAmount)
+                                                </td>
+                                                <td align="center">
+
+                                                    @Html.EditorFor(modelItem => Model.ReceivedItemsList[i].ReceivedQuantity, new { htmlAttributes = new { @class = "form-control", @required = "required", style = "width:60px;text-align:right", @min = @Model.ReceivedItemsList[i].ReceivedQuantity, @max = @Model.ReceivedItemsList[i].Quantity, @onkeyup = "quantityChanged(this)" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].Quantity)
+                                                </td>
+
+
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+
+                                <div class="col-md-offset-1">
+                                    <a href="@Url.Action("ReceivingList","Procurement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    <button type="submit" class="btn btn-info" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>
+                                </div>
+                            </div>
+                        }
+
+                        <br />
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+          function quantityChanged(e) {
+            var max_value = parseFloat(e.max);
+            var entered_value = parseFloat(e.value);
+            var current_value = parseFloat(e.min);
+
+            if (parseFloat(e.value) || e.value=="" || entered_value==0) {
+                if (entered_value > max_value) {
+                    swal("Maxmum value " + max_value);
+                    e.value = current_value;
+                }
+
+            } else {
+                swal("Invalid quantity");
+                   e.value = current_value;
+            }
+          }
+
+             function SubmitForm(formData) {
+            var url = '@Url.Action("EditReceiving", "Procurement")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    if (result == "Success") {
+                        swal("Data updated successfully", { icon: "Success" })
+                                                                   .then((value) => {
+                                                                       var url = '@Url.Action("ReceivingList", "Procurement")';
+                                                                       window.location.replace(url);
+                                                                   });
+                    }
+                    else if (result == "SetupProblem") {
+                     swal("Currency Rate Setup is Incomplete");
+                    }
+                    else if (result == "AssignGL") {
+                               swal("Successfully updated,GLs released if previously was assigned.Go to Edit Receiving Attachment to assign new Gls!", { icon: "success" })
+                                                  .then((value) => {
+                                                          var url = '@Url.Action("ReceivingList", "Procurement")';
+                                                          window.location.replace(url);
+                                                  });
+                    }                 
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Items Charges ====================
+            $(document).ready(function () {
+
+                
+            });
+        $(document).ajaxStart(function () {
+          $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+    </script>
+}
+
+
+
+

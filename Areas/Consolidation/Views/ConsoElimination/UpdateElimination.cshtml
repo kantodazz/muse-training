@@ -1,0 +1,430 @@
+﻿@{
+    ViewBag.Title = "Elimination Details";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-4">
+                                    Financial Year: <input type="text" disabled value="@ViewBag.fy" style="font-weight: bold; border: none" />
+                                </div>
+                                <div class="col-md-4">
+                                    Note: <select id="notes"></select>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>GFSCode</th>
+                                        <th>GFSCodeDesc</th>
+                                        <th>TB Amount</th>
+                                        <th>Counterpart Amount</th>
+                                        <th>Elimination Amount</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-info" style="margin-right:5px" onclick="goBack()">
+                                        <i class="glyphicon glyphicon-arrow-left"></i> Back
+                                    </button>
+                                    @*<button type="submit" class="btn btn-info" id="form_submision" onclick="saveAmounts()">
+                                        <i class="fa fa-save"></i> SAVE
+                                        <img src="~/Content/img/loading.gif" id="saveLoader"/>
+                                    </button>*@
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+        $("#saveLoader").toggle(false);
+        var dt_table = $('#dt_table').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+            },
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        $('#dt_table').on('draw.dt', function () {
+            Object.keys(amounts).forEach(key => {
+                $(`#_${key}`).val(toLabel(amounts[key]))
+                $(`#_${key}`).val(toLabel(amounts[key]))
+            });
+            $(".loading-gif").toggle(false);
+        });
+
+        function actionTypes(key, id, canConfirm) {
+            if (canConfirm) {
+                return '<div class="btn-group" id="drop-' + id + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle"\
+                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                 <span class="sr-only"></span>\
+                             </button>\
+                             <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "saveInBackground(' + key + ')">Edit</a></li>\
+                                <li><a href="#" onclick= "confirm(' + id + ')">Confirm</a></li>\
+                            </ul>\
+                        </div>\
+                 <img src = "/Content/img/loading.gif" id = "saveLoader-' + key + '" class="loading-gif" />';
+            }
+
+            return '<div class="btn-group" id="drop-' + key + '">\
+                     <button type="button" class="btn btn-info btn-xs dropdown-toggle"\
+                           data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                        <span class="caret"></span\
+                        <span class="sr-only"></span>\
+                    </button>\
+                    <ul class="dropdown-menu">\
+                       <li><a href="#" onclick= "saveInBackground(' + key + ')">Add Countapart</a></li>\
+                   </ul>\
+               </div>\
+        <img src = "/Content/img/loading.gif" id = "saveLoader-' + key + '" class="loading-gif" />';
+        }
+
+        var data = []
+        var amounts = {}
+
+        $("#notes").on("change", function () {
+            if (this.value) {
+                loadData(this.value.split('-')[0])
+            }
+        });
+
+        function loadData(NoteNo) {
+            localStorage.setItem("note", NoteNo);
+            $("#loader").text("Loading Please Wait...")
+                  $.ajax({
+                      type: "GET",
+                      url: '@Url.Action("GetEliminationByNote", "ConsoElimination")',
+                      contenttype: "application/json; charset=utf-8",
+                      data: {
+                          FinancialYear: '@ViewBag.fy',
+                          reportSubCategId: '@ViewBag.reportSubCategId',
+                          NoteNo,
+                      },
+                      datatype: "json",
+                      success: function (response) {
+                          data = response.data;
+                          if (!data.length) {
+                              $("#loader").text("No matching records found.")
+                          }
+                          dt_table.fnClearTable();
+
+                          for (var i = 0; i < data.length; i++) {
+                              var key = data[i].GFSCode;
+                              var EliminationAmount = data[i].ElData?.EliminationAmount || 0;
+                              var CounterpartAmount = data[i].ElData?.CounterpartAmount || 0;
+                              var Overallstatus = data[i].ElData?.OverallStatus || 'Pending';
+                              var TBAmount = Math.abs(data[i].TBAmount);
+                              var id = data[i].ElData?.ConsoInstitutionEliminationSummaryId;
+                              var canConfirm = (CounterpartAmount == EliminationAmount) && id;
+
+                              if (Overallstatus == 'Confirmed') {
+                                  continue;
+                              }
+
+                              dt_table.fnAddData([i + 1,
+                                  data[i].GFSCode,
+                                  data[i].GFSCodeDesc,
+                                  toLabel(TBAmount),
+                                  toLabel(CounterpartAmount),
+                                  TBAmount ? `<amount-input id="${key}" onkeyup="amountChanged('${key}')" value="${toLabel(EliminationAmount)}"/>`: '-',
+                                  TBAmount ? actionTypes(key, id, canConfirm): '-'
+                              ]);
+
+                              $("#saveLoader-" + key).toggle(false);
+                          }
+                      },
+                      failure: function (error) {
+                          swal(error);
+                      }
+                  });
+        }
+
+
+        function amountChanged(key) {
+            amounts[key] = toNumber($(`#_${key}`).val());
+            var enteredAmount = Math.round(amounts[key]);
+            var tbAmount = Math.round(Math.abs(data.filter(a => a.GFSCode == key)[0].TBAmount));
+
+            if (enteredAmount > tbAmount) {
+                document.getElementById(`_${key}`).style.color = "red";
+            } else {
+                document.getElementById(`_${key}`).style.color = "black";
+            }
+        }
+
+        function saveInBackground(id) {
+            var d = data.filter(a => a.GFSCode == id)[0]
+            var TBAmount = toNumber(`${Math.abs(d.TBAmount)}`);
+            var elAmount = toNumber(`${amounts[id]}`);
+            if (elAmount > TBAmount) {
+                swal(`Elimination amount: ${elAmount} cannot exceed TB amount: ${TBAmount}.`);
+                return;
+            }
+            var form = [];
+            Object.keys(amounts).forEach(key => {
+                form.push({
+                    ...data.filter(a => a.GFSCode == key)[0],
+                    EliminationAmount: toNumber(`${amounts[key]}`),
+                    Id: d.ElData?.ConsoInstitutionEliminationSummaryId
+                })
+            });
+
+           if (!form.length) {
+               var key = data.filter(a => a.GFSCode == id)[0].ElData?.ConsoInstitutionEliminationSummaryId;
+               if (!key) {
+                   swal("Please enter elimination amount first!")
+                   return;
+               }
+               details(key, d.EliminGfsCode);
+               return;
+           }
+
+           $("#saveLoader").toggle(true);
+           $("#saveLoader-" + id).toggle(true);
+           $("#drop-" + id).toggle(false);
+           $("#form_submision").prop('disabled', true);
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("CreateUpdateEliminationAmount", "ConsoElimination")',
+                data: { data: form },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.message == "Success") {
+                        details(response.id, d.EliminGfsCode)
+                    } else {
+                        swal(response);
+                    }
+                    $("#saveLoader").toggle(false)
+                    $("#saveLoader-" + id).toggle(false)
+                    $("#drop-" + id).toggle(true);
+                    $("#form_submision").prop('disabled', false)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function getNotes() {
+              $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetNotes", "ConsoElimination")',
+              contenttype: "application/json; charset=utf-8",
+              data: { notes: '@ViewBag.notes'},
+              datatype: "json",
+                  success: function (response) {
+                      var options = response.data;
+
+                  var select = document.getElementById("notes")
+                      options.forEach(opt => {
+                      let option = document.createElement('option')
+                          option.value = opt.NoteNo
+                          option.text = `${opt.NoteNo}-${opt.NoteDesc}`
+                      select.appendChild(option);
+                      });
+
+                      var x = options.filter(a=>['@ViewBag.note',localStorage.getItem("note")].includes(a.NoteNo))
+                      if (x.length) {
+                          $("#notes").val(localStorage.getItem("note") || '@ViewBag.note')
+                      }
+
+                      $("#notes").trigger("change");
+              },
+              failure: function (error) {
+                  swal(error);
+                }
+              });
+        }
+
+        function details(id, eliminGfsCode) {
+            var url = '@Url.Action("UpdateEntityElimination", "ConsoElimination")';
+            var note = $("#notes").val()
+            window.location.href = `${url}/?id=${id}&fy=@ViewBag.fy&notes=@ViewBag.notes&reportSubCategId=@ViewBag.reportSubCategId&note=${note}&eliminGfsCode=${eliminGfsCode}`;
+        }
+
+        function goBack(id) {
+            var url = '@Url.Action("PendingElimination", "ConsoElimination")';
+            window.location.href = `${url}/?reportSubCategId=@ViewBag.reportSubCategId`;
+        }
+
+
+        $(document).ready(function () {
+            getNotes()
+        });
+
+         function confirm(id) {
+            swal({
+                title: 'Are you sure?',
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    confirmPost(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function confirmPost(id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ConsoActions", "ConsoElimination")',
+                data: { idz: [id].toString(), actionId: 2 },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}

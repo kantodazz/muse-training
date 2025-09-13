@@ -1,0 +1,252 @@
+﻿@{
+    ViewBag.Title = "Arrears List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br/>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3"></div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i></span>
+                        <h2> Employee(s) Arrears </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="row">
+                                    <button class="btn btn-info" onclick="location.href='@Url.Action("CreateArrears", "Arreas")'" style="margin-left:15px">
+                                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                                        Add New
+                                    </button>
+                                    <a class="btn btn-info " onclick="approveAmendEmployee()">
+                                        <i class="glyphicon glyphicon-thumbs-up"></i> Confirm
+                                    </a>
+                            </div>
+                            <br />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>Employee</th>
+                                        <th>CheckNumber</th>
+                                        <th>Payment Code</th>
+                                        <th>Payment Code Description</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+<div id="resultLoading" style="display: none; width: 100%; height: 100%; position: fixed; z-index: 10000; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto;">
+    <div style="width: 340px; height: 200px; text-align: center; position: fixed; top: 0px; left: 0px; right: 0px; bottom: 0px; margin: auto; z-index: 10; color: rgb(255, 255, 255);">
+        <div class="uil-default-css">
+            <img src="~/Content/loader.gif" style="max-width: 150px; max-height: 150px; display: block; margin-left: auto; margin-right: auto;" />
+        </div>
+        <div class="loader-text" style="display: block; font-size: 18px; font-weight: 300;">&nbsp;</div>
+    </div>
+    <div style="background: rgb(0, 0, 0); opacity: 0.6; width: 100%; height: 100%; position: absolute; top: 0px;"></div>
+</div>
+@section pagespecific {
+
+    <script type="text/javascript">
+       $(function () {
+            BindDataTable();
+        });
+
+        $('#divLoader').show();
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetEmployeeArrearsList", "Arreas")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                    $('#divLoader').hide();
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { // Checkbox column
+                        "bSortable": false,
+                        "render": function (data, type, row, meta) {
+                            return '<input type="checkbox" value="' + row.EmployeeArrearsId + '" class="checkBoxConfirm">';
+                        }
+                    },
+                    { "mData": "FullName" },
+                    { "mData": "CheckNumber" },
+                    { "mData": "PaymentCodeIdentifier" },
+                    { "mData": "PaymentCodeDescription" },
+                    {
+                        "mData": "Amount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "EmployeeArrearsId",
+                        "bSortable": false,
+                        "render": function (EmployeeArrearsId, type, full, meta) {
+                            return '<div class="btn-group">\
+                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                            <span class="caret"></span>\
+                                            <span class="sr-only">Toggle Dropdown</span>\
+                                        </button>\
+                                        <ul class="dropdown-menu">\
+                                            <li><a href="@Url.Action("EditArreas", "Arreas")/' + EmployeeArrearsId + '"> Edit </a></li>\
+                                            <li><a href="#" onclick="deleteArreras(' + EmployeeArrearsId + ')"> Delete </a></li>\
+                                        </ul>\
+                                        </div>';
+                        }
+                    },
+                ]
+            });
+        };
+
+        var approveAmendEmployee = function () {
+            debugger
+            var csvIds = [];
+
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No record selected!");
+                return;
+            }
+
+            swal({
+                title: "Confirmation!",
+                text: "Are you sure you want to Confirm?",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirmAmend(csvIds)
+                }
+            });
+        }
+
+        function confirmAmend(csvIds) {
+
+            $('#resultLoading').show();
+
+            var url = '@Url.Action("ConfirmMultArrears", "Arreas")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Arreas Confirmed Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on confirmation!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    swal("An error has occured, contact system support");
+                },
+            });
+        };
+
+
+
+    function deleteArreras(i, id){
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Deletion!",
+                text: "Are you sure you want to Delete?",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+            }).then(function (isConfirm){
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirmdeletion(i)
+                }
+            });
+        };
+
+    var confirmdeletion = function (id){
+            debugger;
+            var url = '@Url.Action("DeleteArreras", "Arreas")/' + id;
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Deleted Successfully!",{ icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException"){
+                        swal("Error on Delete!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr){
+                    swal("An error has occured, contact system support");
+                },
+            });
+        };
+
+    </script>
+}
+
+
+
+
+
+

@@ -1,0 +1,616 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.TicketVM>
+
+@{
+    ViewBag.Title = "Assigned Tickets";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-folder-open"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Ticket Number</th>
+                                        <th>Module</th>
+                                        @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                        {
+                                            <th>Category</th>
+                                        }
+                                        <th>Title</th>
+                                        @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                        {
+                                            <th>Email</th>
+                                        }
+                                        @if (ViewBag.InstitutionCode == IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                        {
+                                            <th>Ticket Level</th>
+                                        }
+                                        <th>Mobile</th>
+                                        <th>Attachment</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Date</th>
+                                        @if (ViewBag.InstitutionCode == IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                        {
+                                            <th>Institution Name</th>
+                                        }
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@Html.DisplayFor(modelItem => item.TicketNumber)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.ModuleName)</td>
+                                            @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                            {
+                                                <td>@Html.DisplayFor(modelItem => item.TicketCategoryName)</td>
+                                            }
+                                            <td><a href="#" data-toggle="modal" data-target="#TicketDescription" title="Ticket Description" data-ticket='@item.TicketNumber' data-title='@item.Title' data-description='@item.Description' class="ticket_description"><i class="fa fa-eye"></i>@Html.DisplayFor(modelItem => item.Title)</a></td>
+                                            @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                            {
+                                                <td>@Html.DisplayFor(modelItem => item.Email)</td>
+                                            }
+
+                                            @if (ViewBag.InstitutionCode == IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                            {
+                                                <td>@Html.DisplayFor(modelItem => item.LevelName)</td>
+                                            }
+                                            <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
+                                            @if (item.AttachmentName == null)
+                                            {
+                                                <td>NILL</td>
+                                            }
+                                            else
+                                            {
+                                                <td><a href="~/Media/HelpDesk/Tickets/@item.AttachmentName" target="_blank">Preview</a></td>
+                                            }
+
+                                            @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                            {
+                                                if ((item.OverAllStatus == IFMIS.Libraries.Constants.FOWARDED_TO_SUPERVISOR || item.OverAllStatus != IFMIS.Libraries.Constants.RESOLVED || item.OverAllStatus != IFMIS.Libraries.Constants.CLOSED.ToUpper()) && (item.MofpView == IFMIS.Libraries.Constants.YES))
+                                                {
+                                                    <td>@IFMIS.Libraries.Constants.SENT_TO_MOFP</td>
+                                                }
+                                                else
+                                                {
+                                                    <td>@Html.DisplayFor(modelItem => item.OverAllStatus)</td>
+                                                }
+
+                                            }
+                                            else
+                                            {
+                                                <td>@Html.DisplayFor(modelItem => item.OverAllStatus)</td>
+                                            }
+
+                                            @if (item.Priority == "1")
+                                            {
+                                                <td>NORMAL</td>
+                                            }
+                                            @if (item.Priority == "2")
+                                            {
+                                                <td>MEDIUM</td>
+                                            }
+                                            @if (item.Priority == "3")
+                                            {
+                                                <td>HIGH</td>
+                                            }
+                                            @if (item.Priority == "4")
+                                            {
+                                                <td>URGENT</td>
+                                            }
+                                            <td>
+                                                @*@Convert.ToDateTime(item.CreatedAt).ToString("dd/MM/yyyy")*@
+                                                @Convert.ToDateTime(item.CreatedAt).ToString("dd/MM/yyyy HH:mm:ss")
+                                            </td>
+                                            @if (ViewBag.InstitutionCode == IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                            {
+                                                <td>@Html.DisplayFor(modelItem => item.InstitutionName)</td>
+                                                @*<td>@Html.DisplayFor(modelItem => item.InstitutionCode)</td>*@
+                                            }
+                                            <input type="hidden" name="TicketsId" value="@item.TicketsId" />
+                                            <td style="text-align:center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @*@if (item.OverAllStatus == "Pending")
+                                                            {
+                                                                <li>
+                                                                    <a href="@Url.Action("Edit", "Tickets",new {id=item.TicketsId })" class="btn-xs edit">
+                                                                        <i class="fa fa-edit"></i>  Edit
+                                                                    </a>
+                                                                </li>
+
+                                                                <li><a href="#" data-toggle="modal" class="ticketCancellation   delete" data-id=@item.TicketsId data-lpo='@item.TicketNumber'><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                                            }*@
+                                                        @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                                                        {
+                                                            if (item.MofpView != IFMIS.Libraries.Constants.YES)
+                                                            {
+                                                                if (item.OverAllStatus != IFMIS.Libraries.Constants.FOWARDED_TO_SUPERVISOR)
+                                                                {
+                                                                    if (item.OverAllStatus != IFMIS.Libraries.Constants.RESOLVED)
+                                                                    {
+                                                                        <li><a href="#" data-toggle="modal" data-target="#Activity" data-id=@item.TicketsId data-ticket_number='@item.TicketNumber' data-atitle='@item.Title' class="activity  btn-xs edit"><i class="fa fa-edit"></i>Remarks</a></li>
+                                                                    }
+                                                                }
+                                                            }
+
+                                                        }
+                                                        else
+                                                        {
+
+                                                            if (ViewBag.UserLevelLabel == item.LevelLabel && item.OverAllStatus != IFMIS.Libraries.Constants.RESOLVED)
+                                                            {
+                                                                if (ViewBag.UserLevelLabel == IFMIS.Libraries.Constants.LEVEL_ONE && item.OverAllStatus != IFMIS.Libraries.Constants.FOWARDED.ToUpper())
+                                                                {
+                                                                    <li><a href="#" data-toggle="modal" data-target="#Activity" data-id=@item.TicketsId data-ticket_number='@item.TicketNumber' data-atitle='@item.Title' class="activity  btn-xs edit"><i class="fa fa-edit"></i>Remarks</a></li>
+                                                                }
+                                                                if ((ViewBag.UserLevelLabel == IFMIS.Libraries.Constants.LEVEL_TWO || ViewBag.UserLevelLabel == IFMIS.Libraries.Constants.LEVEL_THREE) && item.OverAllStatus != IFMIS.Libraries.Constants.RESOLVED)
+                                                                {
+                                                                    <li><a href="#" data-toggle="modal" data-target="#Activity" data-id=@item.TicketsId data-ticket_number='@item.TicketNumber' data-atitle='@item.Title' class="activity  btn-xs edit"><i class="fa fa-edit"></i>Remarks</a></li>
+                                                                }
+
+                                                            }
+
+                                                        }
+                                                        <li>
+                                                            <a href="@Url.Action("PreviewTicket", "Tickets",new {ticketNumber=item.TicketNumber})" class="btn-xs edit">
+                                                                <i class="fa fa-search-minus"></i>Preview
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="Activity">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Ticket:<span id="ticket_number"></span></h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                <h5 align="center"><span id="atitle"></span></h5>
+                <br />
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TicketNumber" id="TicketNumber" />
+                <input type="hidden" name="UserId" id="UserId" value="@ViewBag.UserId" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Status"> Status</label>
+                    <div class="col-md-7">
+                        @if (ViewBag.InstitutionCode != IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE)
+                        {
+                            @Html.DropDownList("Status", new List<SelectListItem>{
+                            new SelectListItem{ Text="--Select ---", Value = "" },
+                            new SelectListItem{ Text="IN PROGRESS", Value = "INPROGRESS" },
+                            new SelectListItem{ Text="PENDING", Value = "PENDING" },
+                            new SelectListItem{ Text="RESOLVE", Value = "RESOLVED" },
+                            new SelectListItem{ Text="FOWARD TO SUPERVISOR", Value = "FOWARDED" },
+                             }, new { @class = "form-control", style = "width:300px;" })
+                        }
+                        else
+                        {
+                            if (ViewBag.LevelLabel == IFMIS.Libraries.Constants.LEVEL_THREE)
+                            {
+                                @Html.DropDownList("Status", new List<SelectListItem>{
+                            new SelectListItem{ Text="--Select ---", Value = "" },
+                            new SelectListItem{ Text="IN PROGRESS", Value = "INPROGRESS" },
+                            new SelectListItem{ Text="PENDING", Value = "PENDING" },
+                            new SelectListItem{ Text="RESOLVE", Value = "RESOLVED" }
+                             }, new { @class = "form-control", style = "width:300px;" })
+                            }
+                            else
+                            {
+                                @Html.DropDownList("Status", new List<SelectListItem>{
+                            new SelectListItem{ Text="--Select ---", Value = "" },
+                            new SelectListItem{ Text="IN PROGRESS", Value = "INPROGRESS" },
+                            new SelectListItem{ Text="PENDING", Value = "PENDING" },
+                            new SelectListItem{ Text="RESOLVE", Value = "RESOLVED" },
+                            new SelectListItem{ Text="FOWARD TO SUPERVISOR", Value = "FOWARDED" },
+                             }, new { @class = "form-control", style = "width:300px;" })
+
+                            }
+
+                        }
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Firstname"> Description (<span style="font-weight:bold;" id="DescriptionCount">250</span>) </label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Description" name="Description" style="width:300px;" maxlength="250"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="TicketDescription">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Ticket Number <span id="tnumber"></span></h4>
+            </div>
+
+            <div class="modal-body">
+
+                <center><b><span id="title"></span></b></center>
+                <br />
+                <span id="description"></span>
+
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+
+        /*$('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            if (count.length > 250) {
+                swal("You have Exceed Maximum Characters: (250)", { icon: "warning" });
+            }
+            $('#DescriptionCount').text(count.length);
+        });*/
+
+        $('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount').text(parseInt(numChars));
+        });
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        // ============ INIT DATA TABLES START =====================
+        /*var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });*/
+
+        $(document).ready(function () {
+            var dt_Loan_listing = $('#dt_Loan_listing').DataTable({});
+
+            $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+            $("#searchbox").on("keyup search input paste cut", function () {
+                dt_Loan_listing.search(this.value).draw();
+            });
+
+        });
+
+        $(".ticket_description").on('click', function () {
+            var reason = $(this).data('description');
+            var tNo = $(this).data('ticket');
+            var title = $(this).data('title');
+            $("#tnumber").text(tNo);
+            $("#title").text(title);
+            $("#description").text(reason);
+        });
+
+        var message = '@TempData["Message"]';
+        if (message == "Success") {
+            swal("Ticket Saved Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Updated") {
+            swal("Ticket Updated Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Error") {
+            swal("Error saving Tickets Entry. Please contact System Administrator", { icon: "warning" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        // ********************** INIT DATA TABLES END **********************
+
+        $(".ticketCancellation").on('click', function () {
+            var id = $(this).data('id');
+            var lpo = $(this).data('lpo');
+            swal({
+                title: 'Cancellation',
+                text: "Do you what to Cancel Ticket   " + lpo + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelTicket", "Tickets")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Ticket Cancelled successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to Cancel Ticket" + response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+        var ticketId = null;
+        var ticket_number = null;
+        $(".activity").on('click', function () {
+            var id = $(this).data('id');
+            ticketId = id;
+            ticket_number = $(this).data('ticket_number');
+            var title = $(this).data('atitle');
+            $("#ticket_number").text(ticket_number);
+            $("#atitle").text(title);
+            $(".modal-body #Id").val(id);
+
+        });
+
+
+        $("#saveLoader").toggle(false);
+        $("#form_submision").click(function () {
+            var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "TicketNumber": ticket_number,
+                "Status": $("#Status").val(),
+                "Description": $("#Description").val(),
+                "TicketsId": ticketId
+            }
+            //console.log(form_data);
+            var Status = $("#Status").val();
+            var Description = $("#Description").val();
+            if (!Status || !Description) {
+                swal("Please Fill the Required Fields", { icon: "warning" })
+                                                        .then((value) => { });
+                return
+            }
+            var url = '@Url.Action("Activity", "Tickets")';
+            var urlList = '@Url.Action("MyTicketList", "Tickets")';
+            $("#form_submision").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket Activity Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        $(function () {
+
+            var url = '@Url.Action("GetEmployees", "Tickets")';
+
+            $("#SupportTeamId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder: 'Select Employee',
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.employees }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        $('#SupportTeamId').on("change", function () {
+            var employeeId = $("#SupportTeamId").val();
+            $.ajax({
+                type: "POST",
+                url: "GetEmployee",
+                data: { id: employeeId },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#CheckNumber").val(data.CheckNumber);
+                        $("#UserName").val(data.UserName);
+                        $("#FirstName").val(data.FirstName);
+                        $("#MiddleName").val(data.MiddleName);
+                        $("#LastName").val(data.LastName);
+                        $("#PhoneNumber").val(data.PhoneNumber);
+                        $("#Email").val(data.Email);
+                    } else {
+                        alert('Error on accessing employee details');
+                    }
+                },
+                error: function () {
+                    alert("Error on accessing employee details...");
+                }
+            })
+        });
+
+
+    </script>
+}

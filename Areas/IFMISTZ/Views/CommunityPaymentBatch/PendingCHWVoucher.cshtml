@@ -1,0 +1,1183 @@
+﻿
+@{
+    ViewBag.Title = "Pending CHWs Voucher";
+}
+
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <article class="col-sm-12 col-md-12 col-lg-12">
+            <div class="row">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="col-md-12">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                </div>
+                            </div>
+                        </div>
+                        @{ Html.RenderPartial("_CommVoucherListTable"); }
+                    </div>
+                </div>
+            </div>
+        </article>
+    </section>
+</div>
+@{ Html.RenderPartial("_CommVoucherListDialogs"); }
+
+<div class="modal fade" id="payer_account_modal">
+    <div id="divLoader"></div>
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Set Payer Account</h4>
+            </div>
+            <div class="modal-body" id="divFormBody">
+
+            </div>
+            <br />
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        $(function () {
+            LoadData();
+        });
+
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        var dt_search_payee = $('#dt_search_payee').dataTable({
+            "aoColumnDefs": [{ "bVisible": false, "aTargets": [1, 2, 3] }],
+        });
+
+        $("#dt_search_payee_wrapper .dt-toolbar").remove();
+        function SearchPayee() {
+            $('#payeeModal').modal('show');
+        }
+        $("#searchboxPayee").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_search_payee.fnClearTable();
+            } else {
+                searchPayeeTableUpdate(this.value);
+            }
+        });
+
+        function searchPayeeTableUpdate(search) {
+            var url = '@Url.Action("GetPayee", "PaymentVoucher")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var d = response.data;
+                    dt_search_payee.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_search_payee.fnAddData([i + 1,
+                           d[i]["PayeeDetailId"],
+                           d[i]["BIC"],
+                           d[i]["RequireControlNum"],
+                           d[i]["PayeeName"],
+                           d[i]["AccountName"],
+                           d[i]["PayeeCode"],
+                           d[i]["BankName"],
+                           d[i]["Accountnumber"],
+                           d[i]["PayeeType"],
+                           d[i]["Currency"],
+                           '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var miscDedeductionPayeeId = 0
+        function payeeClicked(rowId) {
+            var data = dt_search_payee.DataTable().rows().data();
+            var row = data[rowId];
+            miscDedeductionPayeeId = row[1]
+            $("#MiscDeductionPayee").val(row[5]);
+            $("#payeeModal").modal("hide");
+        }
+
+        MiscDeductionIsProvided = false;
+        $("#MiscDeductionCheckbox").change(function () {
+            $('#MiscDeduction').toggle(this.checked);
+            $('.MiscDeduction').toggle(this.checked);
+            MiscDeductionIsProvided = this.checked;
+        });
+
+        $('#MiscDeduction').toggle(false);
+        $('.MiscDeduction').toggle(false);
+
+        $(document).ready(function () {
+            $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+        });
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+
+        WithHoldingIsProvided = false;
+        $("#WithHoldingCheckbox").change(function () {
+            $(".with-holding").toggle(this.checked);
+            WithHoldingIsProvided = this.checked;
+        });
+
+
+        var data = [];
+        var globalPayeeId = null;
+
+        function sourceModule(d) {
+            switch (d["SourceModule"]) {
+                case "Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Accrual Payment":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return '<a href="@Url.Action("Purchase", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                    case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Prepayment":
+                    return '<a href="@Url.Action("PreviewPrepayment","Prepayment")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Imprest":
+                    return '<a href="@Url.Action("ImprestDetails","Imprest")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Unapplied":
+                    return '<a href="@Url.Action("Details","Unapplieds")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "BulkPayment":
+                    return '<a href="@Url.Action("PaymentDetails", "PaymentBatches")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Loan":
+                    return '<a href="@Url.Action("PreviewLoanTracker","Loan")/' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                     break;
+                case "PSAF":
+                    return '<a href="@Url.Action("PaymentLoanDetails", "ALSLoanAssignment", new { Area = "ALS" })/?loanNumber=' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                default:
+                    return d["SourceModule"] + withholdingTemplate(d);
+            }
+        }
+
+
+        function LoadData1() {
+            $("#loader").text("Loading Please Wait...")
+            $.ajax({
+            type: "get",
+                url: '@Url.Action("GetCHWPaymentVoucher", "CommunityPaymentBatch")' + "/?overallStatus=CHWPending",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_voucher_listing.fnAddData([i + 1,
+                       data[i]["PVNo"],
+                       data[i]["PayeeAccountName"],
+                       data[i]["PayeeBankAccount"],
+                        toLabel(data[i]["OperationalAmount"]),
+                       data[i]["OperationalCurrency"],
+                      /* calculate(data[i]),*/
+                       sourceModule(data[i]),
+                       data[i]["OverallStatus"],
+                       '<a href="#" onclick="viewAttachment('+i+')"><i class="fa fa-file-pdf-o"></i></a>',
+                       actionTypes(i, data[i]["SourceModule"], data[i]["OverallStatus"],data[i].Sender)
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }
+          var data = [];
+        var globalPayeeId = null;
+        $("#loader").text("Loading...")
+        function loadData() {
+            $.ajax({
+            type: "get",
+            url: '@Url.Action("GetCHWPaymentVoucher", "CommunityPaymentBatch")' + "/?overallStatus=CHWPending",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_voucher_listing.fnAddData([i+1,
+                        data[i]["PVNo"],
+                        data[i]["PayeeAccountName"],
+                        data[i]["PayeeBankAccount"],
+                        toLabel(data[i]["OperationalAmount"]),
+                        data[i]["OperationalCurrency"],
+                       /*calculate(data[i]),*/
+                        sourceModule(data[i]),
+                        data[i]["OverallStatus"],
+                        '<a href="#" onclick="viewAttachment(' + i + ')"><i class="fa fa-file-pdf-o"></i></a>',
+                       '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                             <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                             <li><a href="#" onclick="accept(' + i + ')">Confirm</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                  ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        }
+
+        loadData()
+
+        function accept(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Are you sure you want co confirm?',
+                buttons: [
+                    'NO',
+                    'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmAcceptance(data[i]["PaymentVoucherId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function confirmAcceptance(i) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("ConfirmCHWVoucher", "CommunityPaymentBatch")',
+                data: { "paymentVoucherId": i },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", {icon:"success"}).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        $(".with-holding").toggle(false)
+        $(".liquidated-demage").toggle(false)
+        $(".rentation").toggle(false)
+        $(".other").toggle(false)
+
+        OtherIsProvided = false;
+        $("#Other").change(function () {
+            $(".other").toggle(this.checked);
+            OtherIsProvided = this.checked;
+        });
+
+        $(".force-acc-details").toggle(false);
+        var ForceAccountPaymentRegistrationId = null
+
+        function viewForceAccDetails() {
+            window.location.href = `@Url.Action("details", "ForceAccountPayment")/${ForceAccountPaymentRegistrationId}`
+        }
+
+        var DFundApprovalId = null
+        var AOApprovalId = null
+        $(".ao-approval-details").toggle(false);
+        $(".df-approval-details").toggle(false);
+
+        function edit(i) {
+            WithHoldingIsProvided = false;
+            $(".with-holding").toggle(false);
+            $("#WithHoldingCheckbox").prop('checked', false)
+
+            if (i == 'x') i = globalPayeeId;
+            localStorage.setItem("globalPayeeId", i);
+            $("#ApplyDate").val('');
+            $("#InvoiceDate").val('');
+            $("#PaymentVoucherId").val(data[i]["PaymentVoucherId"]);
+            $("#ControlNumber").val(data[i]["ControlNumber"]);
+            $("#PaymentMethod").val(data[i]["PaymentMethod"]);
+            $("#InvoiceNo").val(data[i]["InvoiceNo"]);
+            $("#total_voucher_amount").val(data[i]["OperationalAmount"]);
+            $("#InvoiceDateOld").text(data[i]["InvoiceDateFormatted"]);
+            $("#ApplyDateOld").text(data[i]["ApplyDateFormatted"]);
+            $("#PaymentDescription").val(data[i]["PaymentDesc"]);
+            $("#Comments").val(data[i]["Narration"]);
+            $("#AvailableTotalAmount").val(toLabel(data[i]["OperationalAmount"]));
+
+            $("#WithHoldingCheckbox").prop('disabled', false)
+            $("#_ServiceAmount").prop('disabled', false)
+            $("#_VATOnService").prop('disabled', false)
+            $("#_GoodsAmount").prop('disabled', false)
+            $("#_VATOnGoods").prop('disabled', false)
+            $("#_OtherWithholdingAmount").prop('disabled', false)
+            $("#_OtherWithholdingPercent").prop('disabled', false)
+
+            if (data[i]["MiscDeductionPayeeDetailsId"]) {
+                $("#MiscDeductionCheckbox").prop('checked', true)
+                $("#MiscDeduction").val(toLabel(data[i]["MiscDeduction"]||0))
+                $("#_MiscDeduction").val(toLabel(data[i]["MiscDeduction"]||0))
+                $("#MiscDeductionDescription").val(data[i]["MiscDeductionDescription"])
+                $("#MiscDeductionPayee").val(data[i].MiscDeductionPayeeName)
+                miscDedeductionPayeeId = data[i].MiscDeductionPayeeDetailsId
+                MiscDeductionIsProvided = true
+                $('#MiscDeduction').toggle(true);
+                $('.MiscDeduction').toggle(true);
+            } else {
+                $("#MiscDeductionCheckbox").prop('checked', false)
+                $("#MiscDeduction").val('')
+                $("#_MiscDeduction").val('')
+                $("#MiscDeductionDescription").val('')
+                $("#MiscDeductionPayee").val('')
+                miscDedeductionPayeeId = null
+                MiscDeductionIsProvided = false
+                $('#MiscDeduction').toggle(false);
+                $('.MiscDeduction').toggle(false);
+            }
+
+            if (data[i]["hasWithHolding"]) {
+                WithHoldingIsProvided = true
+                $(".with-holding").toggle(true)
+                $("#WithHoldingCheckbox").prop('checked', true)
+                $("#_ServiceAmount").val(toLabel(data[i]["ServiceAmount"] || 0))
+                $("#_VATOnService").val(toLabel(data[i]["VATOnService"] || 0))
+                $("#_GoodsAmount").val(toLabel(data[i]["GoodsAmount"] || 0))
+                $("#_VATOnGoods").val(toLabel(data[i]["VATOnGoods"] || 0))
+                $("#WithHoldingAmount").text(toLabel(data[i]["OperationalWithHoldingAmount"] || 0))
+                $("#WithHoldingTotalAmount").val(toLabel(data[i]["OperationalAmount"] || 0));
+                if (data[i]["OtherWithholdingAmount"]) {
+                    if (toNumber(data[i]["OtherWithholdingAmount"]) > 0) {
+                        $("#_OtherWithholdingAmount").val(toLabel(data[i]["OtherWithholdingAmount"]));
+                        $("#_OtherWithholdingPercent").val(data[i]["OtherWithholdingPercent"]);
+                        $("#other_w").text("+ " + toLabel(data[i]["OtherWithholdingAmount"]) + "x" + data[i]["OtherWithholdingPercent"] + "%");
+                        $("#Other").prop('checked', true);
+                        $(".other").toggle(true);
+                    }
+                }
+
+                if (data[i]["OverallStatusDesc"] == "WORKS") {
+                    $("#WithHoldingCheckbox").prop('disabled', true)
+                    $("#_ServiceAmount").prop('disabled', true)
+                    $("#_VATOnService").prop('disabled', true)
+                    $("#_GoodsAmount").prop('disabled', true)
+                    $("#_VATOnGoods").prop('disabled', true)
+                    $("#_OtherWithholdingAmount").prop('disabled', true)
+                    $("#_OtherWithholdingPercent").prop('disabled', true)
+                }
+
+            } else {
+                $("#_ServiceAmount").val('')
+                $("#_VATOnService").val('')
+                $("#_GoodsAmount").val('')
+                $("#_VATOnGoods").val('')
+                $("#WithHoldingAmount").text('')
+                $("#WithHoldingTotalAmount").val('')
+                $("#_OtherWithholdingAmount").val('');
+                $("#_OtherWithholdingPercent").val('');
+                $("#other_w").text('');
+                $("#Other").prop('checked', false);
+                $(".other").toggle(false);
+            }
+            $('#confirmModal').modal('hide');
+            $('#editModal').modal('show');
+        }
+
+        var OldDescVal = ""
+        $("#PaymentDescription").on("keyup", function (e) {
+            if (this.value) {
+                var reg = new RegExp(/[0-9a-zA-Z ]/);
+                if (!reg.test(this.value.substr(-1))) {
+                    $("#PaymentDescription").val(OldDescVal)
+                } else {
+                    OldDescVal = this.value
+                }
+            }
+        });
+
+
+        function postEditFormData() {
+
+            var form_data = {}
+
+            form_data['PaymentVoucherId'] = $("#PaymentVoucherId").val();
+            form_data['Narration'] = $("#Comments").val();
+            form_data['PaymentDesc'] = $("#PaymentDescription").val();
+            form_data['InvoiceNo'] = $("#InvoiceNo").val();
+            form_data['ControlNumber'] = $("#ControlNumber").val();
+            form_data['ApplyDate'] = $("#ApplyDate").val() != "" ? $("#ApplyDate").val() : $("#ApplyDateOld").text();
+            form_data['InvoiceDate'] = $("#InvoiceDate").val() != "" ? $("#InvoiceDate").val() : $("#InvoiceDateOld").text();
+            form_data['PaymentMethod'] = $("#PaymentMethod").val();
+
+            form_data['hasWithHolding'] = $("#WithHoldingCheckbox").is(":checked");
+            form_data['ServiceAmount'] = $("#_ServiceAmount").val() ? $("#_ServiceAmount").val() : 0;
+            form_data['VATOnService'] = $("#_VATOnService").val() ? $("#_VATOnService").val() : 0;
+            form_data['GoodsAmount'] = $("#_GoodsAmount").val() ? $("#_GoodsAmount").val() : 0;
+            form_data['OtherWithholdingAmount'] = $("#_OtherWithholdingAmount").val() ? $("#_OtherWithholdingAmount").val() : 0,
+            form_data['OtherWithholdingPercent'] = $("#_OtherWithholdingPercent").val() ? $("#_OtherWithholdingPercent").val() : 0,
+            form_data['VATOnGoods'] = 0;
+            form_data['OperationalWithHoldingAmount'] = $("#WithHoldingAmount").text() ? toNumber($("#WithHoldingAmount").text()) : 0;
+            form_data['BaseWithHoldingAmount'] = $("#WithHoldingAmount").text() ? toNumber($("#WithHoldingAmount").text()) : 0;
+
+            if (MiscDeductionIsProvided) {
+                form_data.MiscDeduction = $("#MiscDeduction").val()
+                form_data.MiscDeductionDescription = $("#MiscDeductionDescription").val()
+                form_data.MiscDeductionPayeeDetailsId = miscDedeductionPayeeId
+                form_data.MiscDeductionPayeeName = $("#MiscDeductionPayee").val()
+            }
+
+            if (WithHoldingIsProvided) {
+                if (toNumber($("#AvailableTotalAmount").val())
+                   == toNumber($("#WithHoldingTotalAmount").val())
+                   && toNumber($("#WithHoldingTotalAmount").val()) > 0) {
+                    saveEdits(form_data)
+                } else {
+                    swal("Total amount didn't match!")
+                }
+            } else {
+                if (validateMiscDed()) {
+                    saveEdits(form_data);
+                }
+            }
+      }
+
+        function validateMiscDed() {
+            if (MiscDeductionIsProvided) {
+                if (!$("#_MiscDeduction").val()) {
+                    $("#MiscDeduction_1").attr("style", "color: red;");
+                    return false
+                }
+
+                if (!$("#MiscDeductionDescription").val()) {
+                    $("#MiscDeductionDescription_1").attr("style", "color: red;");
+                    return false
+                }
+                if (!$("#MiscDeductionPayee").val()) {
+                    $("#MiscDeductionPayee_1").attr("style", "color: red;");
+                    return false
+                }
+                if (toNumber($("#_MiscDeduction").val()) > toNumber($("#AvailableTotalAmount").val())) {
+                    swal("Misc Deduction exceeds voucher amount.")
+                    return false
+                }
+
+                var amount = toNumber($("#AvailableTotalAmount").val()) - toNumber($("#_MiscDeduction").val());
+                if (amount < 5000) {
+                    swal("[Voucher Amount - Misc Deduction Amount] should not be less than 5,000")
+                    return false
+                }
+            }
+            return true
+        }
+
+        function saveEdits(form_data) {
+            if (form_data.ControlNumber && '@ViewBag.ValidateControlNumber' == 'TRUE'){
+               // validateContolNumber(form_data)
+            } else {
+               // saveFormDetails(form_data)
+            }
+            saveFormDetails(form_data)
+        }
+
+        function editGlItems(i) {
+            window.location.href = '@Url.Action("EditCHWVoucherGl", "CommunityPaymentBatch")/?id='+data[i].PaymentVoucherId;
+        }
+
+        function validateContolNumber(form_data) {
+
+            var url = '@Url.Action("CheckControlNumber", "PaymentVoucher")';
+            var ControlNumber = $("#ControlNumber").val();
+            var OperationalAmount = toNumber($("#AvailableTotalAmount").val());
+            var _id = localStorage.getItem('globalPayeeId');
+            var PayeeBankAccount = data[_id].PayeeBankAccount.toLocaleLowerCase();
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { ControlNumber, OperationalAmount, PayeeBankAccount },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response != "Valid") {
+                        swal(response);
+                        return
+                    }
+                    saveFormDetails(form_data)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function saveFormDetails(form_data) {
+            var url = '@Url.Action("EditVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                             .then((value) => {
+                                 window.location.reload();
+                             });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#editModal').modal('hide');
+        }
+
+        function Delete(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: "Cancel this voucher?",
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    deleteItemConfirmed(data[i]["PaymentVoucherId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("DeleteVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PaymentVoucherId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        let PaymentVoucherId = 0
+        function confirmDialog(i) {
+            PaymentVoucherId = data[i].PaymentVoucherId;
+            if (data[i].OverallStatus == "Approved - Waiting for Payment") {
+                $("#total_voucher_amount2").val(data[i].OperationalAmount)
+                $("#difference").val(data[i].OperationalAmount)
+                if (_data.length == 0) {
+                    updateSearchGITable(data[i].SubBudgetClass)
+                }
+                $("#glItemsModal").modal("show")
+            } else {
+                _confirmDialog(i)
+            }
+        }
+
+        let _data = []
+        function updateSearchGITable(subBudgetClass) {
+            $("#loader").text("Loading Please Wait...")
+            var url = '@Url.Action("GetFundBalance", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { subBudgetClass, JournalTypeCode: "ACR" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    _data = response.data;
+                    updateGLSearchTable(_data)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function updateGLSearchTable(d) {
+            dt_search_gl_item.fnClearTable();
+            for (var i = 0; i < d.length; i++) {
+                dt_search_gl_item.fnAddData([i + 1,
+                      d[i]["GlAccount"].split("|").join("-"),
+                      d[i]["GlAccountDesc"],
+                      toLabel(d[i]["FundBalance"]),
+                      d[i]["FundingRefNo"],
+                      '<amount-input placeholder="Amount" id="Id-' + i + '" onkeyup="amountChanged(' + i + ')" />'
+                ]);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var form_data_status = [];
+        var all_amounts = {};
+        function amountChanged(i) {
+            var _data = dt_search_gl_item.DataTable().rows().data();
+            var row = _data.rows(i).data()[0]
+            var original_amount = toNumber(row[3]);
+            var entered_amount = toNumber($("#_Id-" + i).val());
+            all_amounts["Id-" + i] = toNumber($("#_Id-" + i).val());
+            var balance = original_amount - entered_amount;
+
+            if (balance < 0) {
+                form_data_status.push(i);
+                $("#_Id-" + i).css({ 'color': 'red' });
+            } else {
+                $("#_Id-" + i).css({ 'color': 'black' });
+                remove(form_data_status, i);
+                computeTotalAmount();
+            }
+
+        }
+
+
+        function computeTotalAmount() {
+            var total_amount = 0;
+            var difference = 0;
+            var amount = "";
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var obj = [];
+
+            for (var i = 0; i < data.length; i++) {
+                var amount = all_amounts["Id-" + i];
+
+                if (amount == undefined) {
+                    amount = "";
+                }
+                if (amount) {
+                    total_amount = toNumber(total_amount) + toNumber(amount);
+                }
+            }
+
+            try {
+                difference = toNumber($('#total_voucher_amount2').val()) - toNumber(total_amount);
+                $('#difference').val(toLabel(difference));
+                if (difference < 0) {
+                    $("#difference").css({ 'color': 'red' });
+                } else {
+                    $("#difference").css({ 'color': 'black' });
+                }
+            } catch (e) { }
+            $("#total_line_amount").val(toLabel(total_amount));
+        }
+
+        $("#btn_save_gl_items").click(function () {
+            var total_amount = 0;
+            var difference = 0;
+            var data = dt_search_gl_item.DataTable().rows().data();
+
+            if (form_data_status.length == 0) {
+                var obj = [];
+                $("#total_amount").text("0.00");
+                for (var i = 0; i < data.length; i++) {
+
+                    var amount = all_amounts["Id-" + i];
+                    if (amount == undefined) {
+                        amount = "";
+                    }
+                    if (amount.toString().trim()) {
+                        var row = data.rows(i).data()[0];
+                        if (parseFloat(amount) > 0) {
+
+                            dt_voucher_detail.fnAddData([
+                                row[1],
+                                row[2],
+                                row[4],
+                                toLabel(amount)
+                            ]);
+                        }
+                        total_amount = parseFloat(total_amount) + parseFloat(amount);
+                        $("#total_amount").text(toLabel(total_amount));
+                    }
+                }
+
+                difference = toNumber($('#total_voucher_amount2').val()) - parseFloat(total_amount);
+                if (difference < 0) {
+                    swal("Difference Cannot be negative..");
+                } else {
+                    $('#glItemsModal').modal('hide');
+                    saveAccrual()
+                }
+            } else {
+                swal("Item has insufficient fund balance....");
+            }
+        });
+
+        function saveAccrual() {
+            swal({
+                title: 'Confirm Acrual Voucher?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    saveAccrualVoucher();
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function saveAccrualVoucher() {
+            var voucherDetails = []
+            var voucherDetailsData = dt_search_gl_item.DataTable().rows().data();
+
+            for (var i = 0; i < voucherDetailsData.length; i++) {
+                var _row = voucherDetailsData.rows(i).data()[0];
+                if (parseInt($("#_Id-" + i).val()) > 0) {
+                    voucherDetails.push({
+                        "ExpenditureLineItem": _row[1].split("-").join("|"),
+                        "ItemDescription": _row[2],
+                        "FundingReference": _row[3],
+                        "ExpenseAmount": $("#_Id-" + i).val(),
+                    })
+                }
+            }
+
+            if (voucherDetailsData.length > 0) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ApproveAccrualVoucher", "PaymentVoucher")',
+                    data: { voucherDetails, PaymentVoucherId },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: "success" })
+                                .then((e) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response).then((e) => {
+                                window.location.reload();
+                            });
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                });
+            }
+            $('#glItemsModal').modal('hide');
+        }
+
+        function _confirmDialog(i) {
+            if (data[i]["SourceModule"] == "Imprest") {
+                confirmedDialog(i);
+            } else {
+                if (data[i]["hasWithHolding"]) {
+                    confirmedDialog(i)
+                } else {
+                    swal({
+                        title: 'Does the voucher contain Withholding?',
+                        text: "Press 'Yes' to add Withholding Details",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            edit(i)
+                        } else {
+                            confirmedDialog(i);
+                        }
+                    });
+                }
+            }
+        }
+
+        function confirmedDialog(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Voucher ?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    if (data[i].SourceModule === "Normal Voucher") {
+                        CheckForexDaysLimit(data[i]["PaymentVoucherId"], i)
+                    } else {
+                        confirmPendingVoucher(data[i]["PaymentVoucherId"], i);
+                    }
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+
+        function CheckForexDaysLimit(id,i) {
+          var url = '@Url.Action("CheckForexDaysLimit", "PaymentVoucher")';
+          $.ajax({
+              type: "POST",
+              url: url,
+              data: { id },
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+              success: function (response) {
+                  if (response == "Success") {
+                      confirmPendingVoucher(data[i]["PaymentVoucherId"],i);
+                  }
+                  else {
+                      swal({
+                          title: response,
+                          buttons: ['CANCEL','PROCEED'],
+                      }).then(function (isConfirm) {
+                          if (isConfirm) {
+                              confirmPendingVoucher(data[i]["PaymentVoucherId"], i);
+                          } else {
+                              Delete(i)
+                          }
+                      });
+                  }
+                  $("#saveLoader-" + i + "").toggle(true)
+                  $("#drop-" + i + "").toggle(false)
+              },
+              failure: function (error) {
+                  swal(error);
+              }
+          });
+          $('#confirmModal').modal('hide');
+      }
+
+
+        function confirmPendingVoucher(id,i) {
+            var url = '@Url.Action("ConfirmVoucher", "CommunityPaymentBatch")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PaymentVoucherId": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        if (response == "SetPayerAccount") {
+                            $('#confirmModal').modal('hide');
+                            setPayerAccount(id);
+                        }
+                        else {
+                            swal(response);
+                        }
+                    }
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function advancedEdit() {
+            if (data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "Normal Voucher"
+                && data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "Accrual Voucher"
+                && data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "Ten Percent"
+                && data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "TPPS") {
+                swal("Sorry..! You cannot edit voucher which originates from other source modules.")
+            } else {
+                var Id = data[localStorage.getItem("globalPayeeId")]["PaymentVoucherId"]
+                window.location.href = '@Url.Action("AdvancedEdit", "PaymentVoucher")/?paymentId=' + Id + '';
+            }
+        }
+
+        function computeWithHoldTotal() {
+            var ServiceAmount = $("#_ServiceAmount").val() ? $("#_ServiceAmount").val() : 0;
+            var VATOnService = $("#_VATOnService").val() ? $("#_VATOnService").val() : 0;
+            var GoodsAmount = $("#_GoodsAmount").val() ? $("#_GoodsAmount").val() : 0;
+            var VATOnGoods = $("#_VATOnGoods").val() ? $("#_VATOnGoods").val() : 0;
+            var OtherWithholdingAmount = $("#_OtherWithholdingAmount").val() ? $("#_OtherWithholdingAmount").val() : 0;
+            var OtherWithholdingPercent = $("#_OtherWithholdingPercent").val() ? $("#_OtherWithholdingPercent").val() : 0;
+
+            var total = toNumber(ServiceAmount)
+                + toNumber(VATOnGoods)
+                + toNumber(VATOnService)
+                + toNumber(GoodsAmount)
+                + toNumber(OtherWithholdingAmount);
+
+            var withHoldingAmount = toNumber(ServiceAmount) * 0.05
+                + toNumber(GoodsAmount) * 0.02
+                + toNumber(OtherWithholdingAmount) * toNumber(OtherWithholdingPercent) / 100;
+
+            $("#WithHoldingAmount").text(toLabel(withHoldingAmount))
+            $("#WithHoldingTotalAmount").val(toLabel(total))
+
+            $("#other_w").text("+ " + OtherWithholdingAmount + "x" + OtherWithholdingPercent + "%");
+        }
+
+       function attach(i) {
+           window.location.href =
+               '@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentVoucherId"] + '&&sourceModule='+data[i]["SourceModule"];
+        }
+
+       function viewAttachment(i) {
+           window.location.href =
+               '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentVoucherId"] + '&&sourceModule='+data[i]["SourceModule"];
+        }
+
+         function reverseWitholding(i) {
+            swal({
+                title: "Reverse this Voucher?",
+                text: "You will find it here => Withholding Tax Entry!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    reverseConfirmed(data[i]["PVNo"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+          function reverseConfirmed(PVNo) {
+            var url = '@Url.Action("ReverseWithholding", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PVNo": PVNo },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Reversed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+          }
+
+        function reject(i) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(data[i]["PaymentVoucherId"], remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, remark) {
+            @*var url = '@Url.Action("RejectVoucher", "PaymentVoucher")';*@
+              var url = '@Url.Action("RejectVoucher", "CommunityPaymentBatch")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+     function setPayerAccount(id) {
+          $("#payer_account_modal").modal("show");
+            var url = '@Url.Action("GetPayerAccounts", "PaymentVoucher")';
+              $("#divFormBody").load(url, { id: id }, function (response, status, xhr) {
+            if (status == "error") {
+                $("#divFormBody").html("Error on loading form, contact system support.");
+               }
+                  $("#payer_account_modal").modal("show");
+             });
+        }
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}

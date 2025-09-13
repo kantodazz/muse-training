@@ -1,0 +1,261 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SingleDatePickerVM
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Reconcilliations </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form name="trackForm" id="trackForm" class="form-horizontal">
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                                <div class="form-group">
+                                    <div class="col-md-3">
+                                        @Html.EditorFor(model => model.DatePickerField, new { htmlAttributes = new { @class = "form-control", @placeholder = "Pick Reconcilliation Date" } })
+                                        @Html.ValidationMessageFor(model => model.DatePickerField, "", new { @class = "text-danger" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <button class="btn btn-info" type="button" style="float: left; margin-left: 5px" onclick="GetRecon()">
+                                            <i class="fa fa-download"></i>
+                                            Get Reconcilliation
+                                        </button>
+                                    </div>
+                                </div>
+                            </form>
+                            <hr />
+                            <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr style="background-color: #f5f5f5; color:black">
+                                        <th>#</th>
+                                        <th>
+                                            Bill Id
+                                        </th>
+                                        <th>
+                                            Bill Ctrl Num
+                                        </th>
+                                        <th>
+                                            Psp Trx Id
+                                        </th>
+                                        <th>
+                                            Paid Amt
+                                        </th>
+                                        <th>
+                                            Trx Dt Tm
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+@section Scripts{
+    <script>
+
+        $(document).ready(function () {
+
+            $("#DatePickerField")
+.wrap('<div class="input-group">')
+.datepicker({
+    dateFormat: "yy-mm-dd",
+    changeMonth: true,
+    changeYear: true,
+    showOn: "both",
+    buttonImage: "../../Media/Images/calendar.gif",
+    maxDate: "+0D"
+})
+.next("button").button({
+    icons: { primary: "ui-icon-calendar" },
+    label: "Select a date",
+    text: false
+})
+.addClass("btn btn-default")
+.wrap('<span class="input-group-btn">')
+.find('.ui-button-text')
+.css({
+    'visibility': 'hidden',
+    'display': 'inline'
+});
+
+            BindDataTable();
+
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetReconcTrxInfs", "ReconcTrxInfs")';
+            $("#dt_basic").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "SpBillId" },
+                    { "mData": "BillCtrNum" },
+                    { "mData": "pspTrxId" },
+                    {
+                        data: 'PaidAmt',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "TrxDtTm" },
+                    {
+                        "mData": "ReconcTrxInfId",
+                        "bSortable": false,
+                        "render": function (ReconcTrxInfId, type, full, meta) {
+                            return '<a href="@Url.Action("UserDetails", "Manage")/' + ReconcTrxInfId + '"><i class="glyphicon glyphicon-eye-open"></i></a>'
+                        }
+                    },
+                ]
+            });
+        };
+
+        var GetRecon = function () {
+            var url = '@Url.Action("GetRecon", "ReconcTrxInfs")';
+            var reconcDt = $("#DatePickerField").val();
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { reconcDt: reconcDt },
+                success: function (response) {
+                    if (response == "OK") {
+                        swal({
+                            text: "Reconcilliation data returned successfully!",
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response == "NotOk") {
+                        swal({
+                            text: "Error on getting reconcilliation data. Contact system support",
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                    else {
+                        swal({
+                            text: "Exception on getting reconcilliation data, contact system support",
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "Exception on getting reconcilliation data, contact system support",
+                        icon: "error",
+                        button: "OK",
+                    })
+                }
+            });
+        }
+    </script>
+}

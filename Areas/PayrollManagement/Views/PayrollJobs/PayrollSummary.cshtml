@@ -1,0 +1,165 @@
+﻿@model IEnumerable<IFMIS.Areas.PayrollManagement.Models.PaymasterTimerecordVM>
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<!-- MAIN CONTENT -->
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i></span>
+                        <h2> Payroll Summary </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!--end widget edit box-->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                <div class="input-group">
+                                    <button type="button" style="margin-bottom:20px" class="btn btn-info" onclick="comfirmPayroll()">
+                                        <span class="glyphicon glyphicon-plus-sign" aria-hidden="true"></span>
+                                        Confirm Payroll
+                                    </button>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-condensed table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Job Code</th>
+                                        <th>No# Employees (Previous)</th>
+                                        <th>No# Employees (Current)</th>
+                                        <th>Amount (Previous)</th>
+                                        <th>Amount (Current)</th>
+                                        <th>Discrepancy</th>
+                                    </tr>
+                                </thead>
+                                @{
+                                    int i = 0;
+                                    int? noempprev = 0;
+                                    int? noempcurrent = 0;
+                                    decimal? tamountPrev = 0;
+                                    decimal? tamountCurr = 0;
+                                }
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        tamountPrev = tamountPrev + item.AmountPrevious;
+                                        tamountCurr = tamountCurr + item.AmountCurrent;
+                                        noempprev = noempprev + item.NoEmployeePrevious;
+                                        noempcurrent = noempcurrent + item.NoEmployeeCurrent;
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@Html.DisplayFor(modelItem => item.JobCodeName)</td>
+                                            <td style="text-align:right">@Html.DisplayFor(modelItem => item.NoEmployeePrevious)</td>
+                                            <td style="text-align:right">@Html.DisplayFor(modelItem => item.NoEmployeeCurrent)</td>
+                                            <td style="text-align:right">@Convert.ToDecimal(item.AmountPrevious).ToString("#,##0")</td>
+                                            <td style="text-align:right">@Convert.ToDecimal(item.AmountCurrent).ToString("#,##0")</td>
+                                            <td style="text-align:right">
+                                                @if (item.NoEmployeePrevious != item.NoEmployeeCurrent || item.AmountPrevious != item.AmountCurrent)
+                                                {
+                                                    <span class="text-danger">Discrepancy</span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="text-success">Match</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tr>
+                                    <td style="text-align:center" colspan="2">Total Amount</td>
+                                    <td><strong>@noempprev</strong></td>
+                                    <td><strong>@noempcurrent</strong></td>
+                                    <td style="text-align:right" colspan="1"><strong>@Convert.ToDecimal(tamountPrev).ToString("#,##0")</strong></td>
+                                    <td style="text-align:right" colspan="1"><strong>@Convert.ToDecimal(tamountCurr).ToString("#,##0")</strong></td>
+                                    <td></td>
+                                </tr>
+                            </table>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+@section pagespecific {
+    <link href="~/Content/DataTable/css/jquery.dataTables.css" rel="stylesheet" />
+    <script src="~/assets/DataTable/jquery.dataTables.min.js"></script>
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $(document).ready(function (){
+            $("#tblDataList1").DataTable();
+        });
+
+        function comfirmPayroll(i){
+            debugger;
+            if (i == 'x');
+            swal({
+                title: "Confirmation!",
+                text: "Are you sure you want to Confirm Payroll?",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirm(i)
+                }
+            });
+        };
+
+        var confirm = function (){
+            debugger;
+            $('#divLoader').show();
+            var url = '@Url.Action("ConfirmPayroll", "PayrollJobs")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                success: function (response) {
+                    $('#divLoader').hide();
+                    if (response == "Success") {
+                        swal("Payroll Confirmed Successfully!",{ icon: "success" }).then((e) =>{
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on Confirming Payroll!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    $('#divLoader').hide();
+                    swal("An error has occured, contact system support");
+                },
+            });
+        };
+    </script>
+}
+

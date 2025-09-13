@@ -1,0 +1,554 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.Questionnaire
+
+@{
+    ViewBag.Title = "GFS Code Questionnaire";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .input[type="text"], select {
+        border: 1px solid lightgray;
+        width: 100%;
+        height: 35px;
+    }
+
+    .textarea {
+        border: 1px solid lightgray;
+        width: 100%;
+    }
+
+    .input[type="text"]:focus {
+        border: 1px solid lightblue;
+    }
+
+    th {
+        text-align: left;
+    }
+
+    /* Improved error styling */
+    .input-error {
+        border: 1px solid red !important;
+        background-color: #fff0f0 !important;
+    }
+
+    .select2-error .select2-selection {
+        border: 1px solid red !important;
+        background-color: #fff0f0 !important;
+    }
+
+    /* Required field indicator */
+    .required-indicator {
+        color: red;
+        font-weight: bold;
+        margin-left: 3px;
+    }
+
+    /* Animation to draw attention to error fields */
+    @@keyframes errorPulse {
+        0% {
+            box-shadow: 0 0 0 0 rgba(255, 0, 0, 0.4);
+        }
+
+        70% {
+            box-shadow: 0 0 0 5px rgba(255, 0, 0, 0);
+        }
+
+        100% {
+            box-shadow: 0 0 0 0 rgba(255, 0, 0, 0);
+        }
+    }
+
+    .input-error {
+        animation: errorPulse 1.5s infinite;
+    }
+</style>
+<!-- widget grid -->
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2 style="color:black;">GFS Code Questionnaire</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body" style="padding-top:10px; width:100%;">
+                            <table style="width:100%;">
+                                <tr>
+                                    <td colspan="1">
+                                        @if (Model != null && Model.Questions != null)
+                                        {
+                                            using (Html.BeginForm("SubmitQuestionnaire", "GfscodeSetup", FormMethod.Post, new { @class = "form-horizontal", enctype = "multipart/form-data" }))
+                                            {
+                                                <div style="padding-left:17%">
+                                                    @Html.AntiForgeryToken()
+                                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                                    @Html.HiddenFor(model => model.Id)
+
+                                                    @*<div class="form-group">
+                                                            <label class="col-md-3 control-label" style="text-align:right;">Institution Name:</label>
+                                                            <div class="col-md-9 inputGroupContainer">
+                                                                <div class="input-group">
+                                                                    <input type="text" id="institutionName" name="institutionName" class="input" style="width:300px;" required="required" />
+                                                                </div>
+                                                            </div>
+                                                        </div>*@
+                                                    @foreach (var question in Model.Questions.OrderBy(q => q.OrderIndex))
+                                                    {
+                                                        <div class="form-group">
+                                                            <label class="col-md-3 control-label" style="text-align:right;">@question.Text</label>
+                                                            <div class="col-md-9 inputGroupContainer">
+                                                                <div class="input-group">
+                                                                    @if (question.QuestionType == "text")
+                                                                    {
+                                                                        <input type="text" id="question@(question.Id)" name="answers[@question.Id]" class="input" style="width:300px;" required="required" />
+                                                                    }
+                                                                    else if (question.QuestionType == "textarea")
+                                                                    {
+                                                                        <textarea id="question@(question.Id)" name="answers[@question.Id]" class="textarea" style="width:300px;height:80px;" required="required"></textarea>
+                                                                    }
+                                                                    else if (question.QuestionType == "select" && !string.IsNullOrEmpty(question.ChoiceOptions))
+                                                                    {
+                                                                        <select id="question@(question.Id)" name="answers[@question.Id]" class="input" style="width:300px;" required="required">
+                                                                            <option value="">-- Select an option --</option>
+                                                                            @foreach (var option in question.ChoiceOptions.Split(','))
+                                                                            {
+                                                                                <option value="@option.Trim()">@option.Trim()</option>
+                                                                            }
+                                                                        </select>
+                                                                    }
+                                                                    else if (question.QuestionType == "file")
+                                                                    {
+                                                                        <input type="file" id="attachment" name="attachment" style="width:300px;" required="required" />
+                                                                    }
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    }
+
+                                                </div>
+                                                <div class="form-group">
+                                                    <div class="col-md-12">
+                                                        <div style="margin-left:50%">
+                                                            <button type="submit" class="btn action-btn btn btn-info" id="submit">
+                                                                <i class="fa fa-save"></i>
+                                                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                                Save
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            }
+                                        }
+                                        else if (Model == null)
+                                        {
+                                            <div class="alert alert-warning">
+                                                <strong>No active questionnaire found!</strong> Please, Make sure a questionnaire created first by Administrator.
+                                            </div>
+                                        }
+                                        else if (Model.Questions == null || !Model.Questions.Any())
+                                        {
+
+                                            <div class="alert alert-info">
+                                                <strong>Questionnaire exists but has no questions!</strong> Please add questions to the questionnaire.
+                                            </div>
+                                        }
+
+
+                                    </td>
+                                    <td colspan="1"></td>
+                                </tr>
+                            </table>
+                        </div>
+
+                        <!-- Submission History Table -->
+                        <table id="dt_basic" class="table table-condensed table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>No.</th>
+                                    <th>Institution Name</th>
+                                    <th>Submission Date</th>
+                                    <th>Status</th>
+                                    <th style="width:50px">Action</th>
+                                </tr>
+                            </thead>
+                            @{ int i = 0; }
+
+                            @if (ViewBag.Submissions != null)
+                            {
+                                <tbody>
+                                    @foreach (var item in (IEnumerable<IFMIS.Areas.IFMISTZ.Models.QuestionnaireSubmission>)ViewBag.Submissions)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td style="text-align:left">@item.Institution.InstitutionName</td>
+                                            @*<td style="text-align:left"></td>*@
+                                            <td style="text-align:left">@item.SubmissionDate.ToString("dd-MMM-yyyy hh:mm tt")</td>
+                                            <td style="text-align:left">@item.Status</td>
+                                            <td style="text-align:left">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="#" onclick="viewSubmission(@item.Id)" class="btn-xs edit">
+                                                                <i class="fa fa-eye"></i> View Details
+                                                            </a>
+                                                        </li>
+                                                        @if (item.Status == "Saved")
+                                                        {
+                                                            <li>
+                                                                <a href="#" onclick="submissionOfQn(@item.Id)" class="btn-xs edit">
+                                                                    <i class="fa fa-send"></i> Submit
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="#" onclick="deleteQn(@item.Id)" class="btn-xs edit">
+                                                                    <i class="fa fa-remove"></i> Delete
+                                                                </a>
+                                                            </li>
+                                                        }
+
+                                                        @if (!string.IsNullOrEmpty(item.AttachmentPath))
+                                                        {
+                                                            <li>
+                                                                <a href="@Url.Content(item.AttachmentPath)" target="_blank" class="btn-xs edit">
+                                                                    <i class="fa fa-file"></i> View Attachment
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                             }
+                        </table>
+                        <br />
+                        <br />
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+    <div id="content" style="margin: 5px;">
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger">
+                <strong>Error!</strong> @TempData["Error"]
+            </div>
+        }
+    </div>
+</div>
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger">
+        <strong>Error!</strong> @TempData["Error"]
+    </div>
+}
+
+<!-- Modal for Submission Details -->
+<div class="modal fade" id="submissionDetailsModal" tabindex="-1" role="dialog" aria-labelledby="submissionDetailsModalLabel">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="submissionDetailsModalLabel">Saved Details</h4>
+            </div>
+            <div class="modal-body" id="submissionDetailsContent">
+                <!-- Content will be loaded dynamically -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <script type="text/javascript">
+    // Add required field indicators on page load
+            $(document).ready(function() {
+                // Add visual indication for all required fields
+                $('input[required], select[required], textarea[required]').each(function() {
+                    // Find the label for this field
+                    var label = $(this).closest('.form-group').find('label');
+
+                    // Add a required indicator to the label if it doesn't already have one
+                    if (label.text().indexOf('*') === -1) {
+                        label.append(' <span class="required-indicator" style="color: red;">*</span>');
+                    }
+                });
+
+                // Add a note about required fields at the top of the form
+                $('.form-horizontal').prepend('<div class="alert alert-info"><strong>Note:</strong> Fields marked with <span style="color: red;">*</span> are required.</div>');
+            });
+
+            // Handle success message
+            if ('@TempData["Success"]' == 'Success') {
+                swal("Successfully Saved", { icon: 'success'});
+            }
+
+            // Handle error message display with specific missing fields
+            if ('@TempData["Error"]' != null && '@TempData["Error"]' != '') {
+                swal("Validation Error", '@Html.Raw(TempData["Error"])', "error");
+
+                // If we have specific missing questions, highlight them
+                var missingQuestions = '@TempData["MissingQuestions"]';
+                if (missingQuestions) {
+                    // Split the comma-separated list
+                    var questions = missingQuestions.split(',');
+
+                    // Loop through each question and find its corresponding input
+                    questions.forEach(function(questionText) {
+                        // Find the label containing this text
+                        $('label').filter(function() {
+                            return $(this).text().trim().indexOf(questionText.trim()) !== -1;
+                        }).each(function() {
+                            // Find the corresponding input and mark it as error
+                            var formGroup = $(this).closest('.form-group');
+                            var input = formGroup.find('input, select, textarea');
+                            input.addClass('input-error');
+
+                            // If using Select2, also style that
+                            if (input.next('.select2-container').length) {
+                                input.next('.select2-container').find('.select2-selection').addClass('select2-error');
+                            }
+                        });
+                    });
+                }
+            }
+
+            // Always ensure the submit button is enabled after page load if there was an error
+            if ('@TempData["Error"]' != null) {
+                $("#saveLoader").toggle(false);
+                $('#submit').attr("disabled", false);
+            }
+
+            // Hide the loader by default
+            $("#saveLoader").toggle(false);
+
+            // Enhance form validation to show which fields are missing
+            $("form").submit(function (e) {
+                var isValid = true;
+                var missingFields = [];
+
+                // Check all required inputs (excluding file inputs)
+                $(this).find('input[required]:not([type="file"]), textarea[required]').each(function () {
+                    if ($(this).val() === "") {
+                        isValid = false;
+                        $(this).addClass('input-error');
+
+                        // Get the label text for this field
+                        var fieldName = $(this).closest('.form-group').find('label').text().replace('*', '').trim();
+                        missingFields.push(fieldName);
+                    } else {
+                        $(this).removeClass('input-error');
+                    }
+                });
+
+                // Special handling for file inputs
+                $(this).find('input[type="file"][required]').each(function () {
+                    if (this.files.length === 0) {
+                        isValid = false;
+                        $(this).addClass('input-error');
+
+                        // Get the label text for this field
+                        var fieldName = $(this).closest('.form-group').find('label').text().replace('*', '').trim();
+                        missingFields.push(fieldName);
+                    } else {
+                        $(this).removeClass('input-error');
+                    }
+                });
+
+                // Check all required selects
+                $(this).find('select[required]').each(function () {
+                    if (!$(this).val()) {
+                        isValid = false;
+                        $(this).addClass('input-error');
+
+                        // Add Select2 error if applicable
+                        if ($(this).next('.select2-container').length) {
+                            $(this).next('.select2-container').find('.select2-selection').addClass('select2-error');
+                        }
+
+                        // Get the label text for this field
+                        var fieldName = $(this).closest('.form-group').find('label').text().replace('*', '').trim();
+                        missingFields.push(fieldName);
+                    } else {
+                        $(this).removeClass('input-error');
+
+                        // Remove Select2 error if applicable
+                        if ($(this).next('.select2-container').length) {
+                            $(this).next('.select2-container').find('.select2-selection').removeClass('select2-error');
+                        }
+                    }
+                });
+
+                if (!isValid) {
+                    e.preventDefault();
+
+                    // Show a more detailed error message with the missing fields
+                    var errorMessage = "Please fill in all required fields: " + missingFields.join(", ");
+                    swal("Required Fields Missing", errorMessage, "error");
+
+                    // Re-enable the submit button if validation fails
+                    $("#saveLoader").toggle(false);
+                    $('#submit').attr("disabled", false);
+                    return false;
+                }
+
+                // If form is valid, show loading indicator
+                $("#saveLoader").toggle(true);
+                $('#submit').attr("disabled", true);
+            });
+
+            // Clear validation errors when user starts typing or changing selection
+            $('input, textarea, select').on('change keyup', function () {
+                $(this).removeClass('input-error');
+
+                // Only remove Select2 error if Select2 is being used
+                if ($(this).next('.select2-container').length) {
+                    $(this).next('.select2-container').find('.select2-selection').removeClass('select2-error');
+                }
+            });
+
+        // Your existing DataTable code
+        var responsiveHelper_dt_basic = undefined;
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+
+        $('#dt_basic').dataTable({
+            "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+            "preDrawCallback": function () {
+                // Initialize the responsive datatables helper once.
+                if (!responsiveHelper_dt_basic) {
+                    responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                }
+            },
+            "rowCallback": function (nRow) {
+                responsiveHelper_dt_basic.createExpandIcon(nRow);
+            },
+            "drawCallback": function (oSettings) {
+                responsiveHelper_dt_basic.respond();
+            }
+        });
+
+    // Your existing viewSubmission function
+        function viewSubmission(submissionId) {
+            debugger;
+            $.ajax({
+                url: '@Url.Action("GetSubmissionDetails", "GfscodeSetup")',
+                type: "GET",
+                data: { id: submissionId },
+                success: function (data) {
+                    console.log('response', data);
+                    if (data) {
+                        var content = '<table class="table table-striped">' +
+                            '<tr><th>Institution:</th><td>' + data.Institution.Name + '</td></tr>' +
+                            '<tr><th>Submission Date:</th><td>' + new Date(data.SubmissionDate).toLocaleString() + '</td></tr>';
+
+                        data.Answers.forEach(function(answer) {
+                            content += '<tr><th>' + answer.Question.Text + ':</th><td>' + answer.ResponseText + '</td></tr>';
+                        });
+
+                        if (data.AttachmentPath) {
+                            content += '<tr><th>Attachment:</th><td><a href="' + data.AttachmentPath +
+                                '" target="_blank" class="btn btn-xs btn-info"><i class="fa fa-download"></i> Download</a></td></tr>';
+                        }
+
+                        content += '</table>';
+
+                        $('#submissionDetailsContent').html(content);
+                        $('#submissionDetailsModal').modal('show');
+                    }
+                }
+            });
+        }
+
+
+        function submissionOfQn(id) {
+            swal({
+                text: "Are you sure you need to Submit the Questionnaire?",
+                buttons: ["NO", "YES"],
+            }).then((ok) => {
+                if (ok) {
+                    submitInforItem(id);
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function submitInforItem(Id){
+             $.ajax({
+                 type: "POST",
+                 url: '@Url.Action("SubmittedQuestionnaire", "GfscodeSetup")',
+                 data: { Id },
+                 contenttype: "application/json; charset=utf-8",
+                 datatype: "json",
+                 success: function (response) {
+                     if (response == 'Success') {
+                         swal("Submitted successfully!", { icon: "success" })
+                         .then((e) => {
+                             window.location.reload();
+                         });
+                     } else {
+                         swal(response);
+                     }
+                 },
+                 failure: function (error) {
+                     swal(error);
+                 }
+             });
+        }
+
+        function deleteQn(id) {
+            swal({
+                text: "Are you sure you need to Delete the Questionnaire?",
+                buttons: ["NO", "YES"],
+            }).then((ok) => {
+                if (ok) {
+                    deleteInforItem(id);
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function deleteInforItem(Id){
+             $.ajax({
+                 type: "POST",
+                 url: '@Url.Action("DeleteQuestionnaire", "GfscodeSetup")',
+                 data: { Id },
+                 contenttype: "application/json; charset=utf-8",
+                 datatype: "json",
+                 success: function (response) {
+                     if (response == 'Success') {
+                         swal("Deleted successfully!", { icon: "success" })
+                         .then((e) => {
+                             window.location.reload();
+                         });
+                     } else {
+                         swal(response);
+                     }
+                 },
+                 failure: function (error) {
+                     swal(error);
+                 }
+             });
+        }
+
+    </script>
+}

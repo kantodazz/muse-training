@@ -1,0 +1,1269 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+    ViewBag.Title = "Variation By Date";
+}
+<style type="text/css">
+    body {
+        margin-top: 40px;
+    }
+
+    .stepwizard-step p {
+        margin-top: 10px;
+    }
+
+    .stepwizard-row {
+        display: table-row;
+    }
+
+    .stepwizard {
+        display: table;
+        width: 100%;
+        position: relative;
+    }
+
+    .stepwizard-step button[disabled] {
+        opacity: 1 !important;
+        filter: alpha(opacity=100) !important;
+    }
+
+    .stepwizard-row:before {
+        top: 14px;
+        bottom: 0;
+        position: absolute;
+        content: " ";
+        width: 100%;
+        height: 1px;
+        background-color: #ccc;
+        z-order: 0;
+    }
+
+    .stepwizard-step {
+        display: table-cell;
+        text-align: center;
+        position: relative;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid 1 -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID start)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>  Variation by increasing amount</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNumber)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Reg #&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNo)</div></div>
+                            <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractName)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractAmount)</div></div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" />
+                            </div>
+                            <hr />
+                            <!----WIZARD HEADING -->
+
+                            <div class="stepwizard">
+                                <div class="stepwizard-row setup-panel">
+                                    <div class="stepwizard-step">
+                                        <a href="#step-1" type="button" class="btn btn-primary btn-circle">1</a>
+                                        <p><strong>Basic Information </strong></p>
+                                    </div>
+
+                                    <div class="stepwizard-step">
+                                        <a href="#step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
+                                        <p><strong>Payment Schedules</strong></p>
+                                    </div>
+                                    <div class="stepwizard-step">
+                                        <a href="#step-3" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
+                                        <p><strong>Items</strong></p>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <!----WIZARD BODY -->
+                            <!---- STEP 1 START HERE -->
+
+                            <div class="row setup-content" id="step-1">
+                                @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitSummary(this)" }))
+                                {
+                                    @Html.AntiForgeryToken()
+                                    @Html.HiddenFor(model => model.ContractVariationId)
+                                    @Html.HiddenFor(model => model.ContractId)
+                                    @Html.HiddenFor(model => model.VariationType)
+                                    @Html.HiddenFor(model => model.VatPercentage)
+                                    <div class="form-horizontal">
+
+                                        <div class="form-group">
+                                            @Html.LabelFor(model => model.VariationAmount, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                            <div class="col-md-3">
+                                                <div class="input-group">
+
+                                                    <span class="input-group-addon currencyDisp">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                                                    @Html.EditorFor(model => model.VariationAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @placeholder = "Amount to be increased" } })
+                                                    @Html.ValidationMessageFor(model => model.VariationAmount, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            @Html.LabelFor(model => model.VariationReason, htmlAttributes: new { @class = "control-label col-md-2" })
+                                            <div class="col-md-3">
+                                                @Html.EditorFor(model => model.VariationReason, new { htmlAttributes = new { @class = "form-control", @required = "required", rows = "4", maxlength = 250 } })
+
+
+                                            </div>
+
+                                        </div>
+                                    </div>
+                                    <div class="col-md-offset-1">
+                                        <a href="@Url.Action("PendingVariation", "ContractVariation")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        <button type="button" class="save_button btn btn-info" style="margin-right:2px;display:none">
+                                            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                        </button>
+
+                                    </div>
+                                    <button class="btn btn-info" id="save_summary" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>
+                                    <button class="btn btn-info nextBtn" type="button">Next &nbsp;<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></button>
+                                }
+
+                            </div>
+                            <!----STEP 2 START HERE -->
+                            <div class="row setup-content" id="step-2">
+                                <div class="col-xs-12">
+                                    <div class="col-md-12">
+
+
+
+
+
+                                        <form id="add_pay_schedule">
+                                            <fieldset>
+                                                <div class="form-horizontal">
+                                                    <div class="form-group">
+
+                                                        @Html.Label("To Existing Schedule", htmlAttributes: new { @class = "control-label col-md-2" })
+
+                                                        <div class="col-md-3">
+
+                                                            <input type="checkbox" name="Schedule" value="Append" id="Schedule">
+                                                            <input id="ScheduleAppend" name="ScheduleAppend" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <div class="independant">
+                                                            @Html.LabelFor(model => model.FinancialYear, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                            <div class="col-md-3">
+                                                                @Html.DropDownListFor(model => model.FinancialYear, Model.FinancialYearsList, "Select ---", new { @class = "form-control" })
+                                                                @Html.ValidationMessageFor(model => model.FinancialYear, "", new { @class = "text-danger" })
+
+
+                                                            </div>
+                                                        </div>
+                                                        <div id="dependant" style="display:none">
+                                                            @Html.Label("Payment Schedule", htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                            <div class="col-md-3">
+                                                                @Html.DropDownListFor(model => model.PaymentScheduleId, Model.PaymentScheduleList, "Select ---", new { @class = "form-control" })
+                                                            </div>
+                                                        </div>
+                                                        @Html.LabelFor(model => model.PaymentAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                        <div class="col-md-3">
+                                                            <div class="input-group">
+
+                                                                <span class="input-group-addon currencyDisp">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                                                                @Html.EditorFor(model => model.PaymentAmount, new { htmlAttributes = new { @class = "form-control", autocomplete = "off" } })
+                                                            </div>
+                                                            @Html.ValidationMessageFor(model => model.PaymentAmount, "", new { @class = "text-danger" })
+
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="independant">
+                                                        <div class="form-group">
+
+                                                            @Html.LabelFor(model => model.PaymentDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                            <div class="col-md-3">
+                                                                @Html.EditorFor(model => model.PaymentDescription, new { htmlAttributes = new { @class = "form-control", autocomplete = "off", rows = "2", maxlength = 250 } })
+                                                                @Html.ValidationMessageFor(model => model.PaymentDescription, "", new { @class = "text-danger" })
+                                                            </div>
+                                                            @Html.LabelFor(model => model.Deliverable, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                            <div class="col-md-3">
+                                                                @Html.EditorFor(model => model.Deliverable, new { htmlAttributes = new { @class = "form-control", autocomplete = "off", rows = "2", maxlength = 250 } })
+                                                                @Html.ValidationMessageFor(model => model.Deliverable, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+
+
+
+                                    </div>
+
+
+                                    <div class="col-md-offset-2">
+                                        <a href="#step-1" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        <button type="button" id="submit_schedule" class="btn btn-info" style="margin-right:2px">
+                                            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                        </button>
+
+                                        <button class="btn btn-info nextBtn" type="button">Next &nbsp;<span class="glyphicon glyphicon-arrow-right" aria-hidden="true"></span></button>
+                                    </div>
+                                    <br />
+                                    <br />
+
+                                    <table align="center" class="table table-hover table-condensed" style="width:80%">
+                                        <tr>
+                                            <td>Currency &nbsp;&nbsp;&nbsp;@Html.DisplayFor(model => model.OperationalCurrency)</td>
+                                            <td style="padding-top:8px;height:30px">Variation Amount &nbsp;&nbsp;&nbsp;<span class="display_amount"></span></td>
+                                            <td>Payment  &nbsp;&nbsp;&nbsp; <span id="payment_number"></span></td>
+                                            <td>Balance &nbsp;&nbsp;&nbsp;<span id="payment_balance"></span></td>
+                                            <td><a data-toggle="collapse" data-parent="#accordion" href="#collapse1"> View Details</a></td>
+                                        </tr>
+                                    </table>
+
+                                    <div id="collapse1" class="panel-collapse collapse">
+                                        <table align="center" class="table table-bordered table-hover table-condensed" id="paymentSchedule" style="width:80%">
+                                        </table>
+
+                                    </div>
+
+
+
+                                </div>
+
+                            </div>
+
+
+                            <!----STEP 3 START HERE -->
+                            <div class="row setup-content" id="step-3">
+                                <div class="col-xs-12">
+
+                                    <div class="col-md-12">
+                                        <form id="add_item">
+                                            <fieldset>
+                                                <div class="form-horizontal">
+
+                                                    <div class="form-group">
+
+                                                        @Html.LabelFor(model => model.ItemCategory, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                        <div class="col-md-3">
+                                                            @Html.DropDownListFor(model => model.ItemCategory, Model.ItemCategoriesList, "Select ", new { @class = "form-control" })
+                                                            @Html.ValidationMessageFor(model => model.ItemCategory, "", new { @class = "text-danger" })
+                                                        </div>
+                                                        @Html.Label("Quantity", htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                        <div class="col-md-3">
+                                                            <input type="text" name="Quantity" id="Quantity" value="" class="form-control" autocomplete="off">
+                                                            @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        @Html.Label("Class", htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                        <div class="col-md-3">
+                                                            <select name="ItemClassificationId" id="ItemClassificationId" class="form-control"></select>
+                                                            @Html.ValidationMessageFor(model => model.ItemClassificationId, "", new { @class = "text-danger" })
+                                                        </div>
+                                                        @Html.Label("Unit Price", htmlAttributes: new { @class = "control-label col-md-2" })
+                                                    <div class="col-md-3">
+                                                        <div class="input-group">
+                                                        <span class="input-group-addon currencyDisp">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                                                         @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                                        </div>
+                                                        @Html.ValidationMessageFor(model => model.UnitPrice, "", new { @class = "text-danger" })
+                                                    </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        @Html.LabelFor(model => model.ItemDesc, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                        <div class="col-md-3">
+                                                            @Html.EditorFor(model => model.ItemDesc, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", maxlength = 50 } })
+                                                            @Html.ValidationMessageFor(model => model.ItemDesc, "", new { @class = "text-danger" })
+                                                        </div>
+                                                        @Html.Label("Overhead", htmlAttributes: new { @class = "control-label col-md-2" })
+
+                                                        <div class="col-md-3">
+                                                            @Html.EditorFor(model => model.OverheadPercentage, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @placeholder = "Percentage" } })
+                                                            @Html.ValidationMessageFor(model => model.OverheadPercentage, "", new { @class = "text-danger" })
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+
+                                                        @Html.LabelFor(model => model.UOM, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                        <div class="col-md-3">
+                                                            @Html.DropDownListFor(model => model.UOM, Model.UOMList, "Select ", new { @class = "form-control" })
+                                                            @Html.ValidationMessageFor(model => model.UOM, "", new { @class = "text-danger" })
+                                                        </div>
+                                                        @Html.Label("Total Amount", htmlAttributes: new { @class = "control-label col-md-2" })
+
+                                                        <div class="col-md-3">
+                                                            @Html.EditorFor(model => model.TotalAmount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                                                            @Html.ValidationMessageFor(model => model.TotalAmount, "", new { @class = "text-danger" })
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="form-group">
+
+                                                        @Html.LabelFor(model => model.VatStatus, htmlAttributes: new { @class = "control-label col-md-2" })
+
+                                                        <div class="col-md-3">
+
+                                                            <input type="checkbox" name="VatStatus" value="Applicable" id="VatStatus">
+                                                            <input id="VatApplicable" name="VatApplicable" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+
+                                                        </div>
+                                                        @Html.LabelFor(model => model.VariationPayScheduleId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                        <div class="col-md-3">
+                                                            <select name="VariationPayScheduleId" id="VariationPayScheduleId" class="form-control"></select>
+                                                            @Html.ValidationMessageFor(model => model.VariationPayScheduleId, "", new { @class = "text-danger" })
+                                                        </div>
+
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </form>
+                                    </div>
+
+
+                                    <div class="col-md-offset-2">
+                                        <a href="#step-2" style="margin-right:5px" class="btn btn-info pull-left btn-prev"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                        <button type="button" id="contract_item" class="btn btn-info" style="margin-right:2px">
+                                            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                        </button>
+
+                                        <button type="button" id="finish" class="btn btn-info" style="margin-right:2px">
+                                            <i class="glyphicon glyphicon-floppy-disk"></i> Finish and Exit
+                                        </button>
+                                    </div>
+                                    <br />
+                                    <div class="widget-body no-padding">
+
+                                        <br />
+                                        <div class="row">
+
+                                            <div class="col-xs-4 col-sm-4 col-md-4 col-lg-3">
+
+                                            </div>
+
+                                            <div class="col-xs-3 col-sm-7 col-md-7 col-lg-7 text-right">
+                                                <strong>
+                                                    <span>Currency:@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                                                    &nbsp;&nbsp;
+                                                    <span>Variation Amount:<span class="display_amount"></span></span>
+                                                    &nbsp;&nbsp;
+                                                    <span>Balance:<span id="items_balance"></span></span>
+                                                    &nbsp;&nbsp;
+                                                </strong>
+                                            </div>
+
+                                        </div>
+
+                                        <table align="center" class="table table-bordered table-hover table-condensed" id="items" style="width:90%">
+                                        </table>
+
+
+
+
+
+                                    </div>
+
+
+
+
+                                </div>
+
+                            </div>
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+               function SubmitSummary(formData) {
+                            $("#save_summary").prop('disabled', true);
+                            var url = '@Url.Action("SaveVariation", "ContractVariation")';
+                           var ajaxConfig = {
+                            type: "post",
+                            url: url,
+                            data: new FormData(formData),
+                            success: function (data) {
+                                $("#save_summary").prop('disabled', false);
+                                if (data.response == "Success") {
+                                    swal("Variation saved successfully", { icon: "success" })
+                                        .then((value) => {
+                                            $("#ContractVariationId").val(data.id);
+                                            $(".display_amount").text(data.amount.toLocaleString('en'));
+                                            $('#payment_balance').text(data.balance.toLocaleString('en'));
+                                            $("#payment_number").text(data.total);
+                                            $("#items_balance").text(data.item_balance.toLocaleString('en'));
+                                              });
+                                }
+                                else {
+                                    $("#save_summary").prop('disabled', true);
+                                     swal(response);
+                                }
+                            }
+                        }
+                        $("#save_summary").prop('disabled', true);
+                        if ($(formData).attr('enctype') == "multipart/form-data") {
+                            ajaxConfig["contentType"] = false;
+                            ajaxConfig["processData"] = false;
+                        }
+                        $.ajax(ajaxConfig);
+                        return false;
+        }
+        function PaymentScheduleTable(arrayData) {
+            $('#paymentSchedule').empty();
+            $("#PaymentAmount").val("");
+            $("#PaymentDescription").val("");
+            $("#Deliverable").val("");
+
+            var number = arrayData.length;
+            $("#payment_number").text(number);
+            if (number > 0) {
+
+                $('<thead><tr><th style="text-align: center">#</th><th style="text-align: left">Payment Schedule </th><th style="text-align: left">Deliverable</th><th style="text-align: right">Amount</th><th style="text-align: left">Financial Year</th><th style="text-align:center">Action</th></tr></thead>').appendTo('#paymentSchedule');
+
+            }
+            var j = 0;
+            var sum = 0;
+            var vat_sum = 0;
+            $('#add_item #VariationPayScheduleId').empty();
+            $('<option value="">Select...</option>').appendTo('#add_item #VariationPayScheduleId');
+            $('<tbody>').appendTo('#paymentSchedule');
+            $.each(arrayData, function (i, d) {
+                sum = sum + parseFloat(d.Amount);
+                j++;
+                if (d.Balance > 0) {
+                    $('<option value="' + d.VariationPayScheduleId + '">' + d.Description + '-Balance:' + d.Balance.toLocaleString('en') + '</option>').appendTo('#add_item #VariationPayScheduleId');
+                }
+                if (d.Deliverable) {
+                    $('<tr><td align="center">' + j + '</th><td>' + d.Description + '</td><td align="left">' + d.Deliverable + '</td><td align="right">' + d.Amount.toLocaleString('en') + '</td><td align="left">' + d.FinancialYearDesc + '</td><td style="text-align: center"><div class="btn-group"><button type="button" class="btn  btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button> <ul class="dropdown-menu"> <li><a href="#" data-toggle="modal" class="removePayment" data-id="' + d.VariationPayScheduleId + '" data-desc="' + d.Description + '" ><i class="fa fa-edit"></i> Cancel</a></li></div></td></tr>').appendTo('#paymentSchedule');
+                } else {
+                    $('<tr><td align="center">' + j + '</th><td>' + d.Description + '</td><td align="left"></td><td align="right">' + d.Amount.toLocaleString('en') + '</td><td align="left">' + d.FinancialYearDesc + '</td><td style="text-align: center"><div class="btn-group"><button type="button" class="btn  btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button> <ul class="dropdown-menu"> <li><a href="#" data-toggle="modal" class="removePayment" data-id="' + d.VariationPayScheduleId + '" data-desc="' + d.Description + '" ><i class="fa fa-edit"></i> Cancel</a></li></div></td></tr>').appendTo('#paymentSchedule');
+                }
+
+
+            });
+            if (number > 0) {
+                $('<tr><td align="right" colspan="3">Grand Total</td><td align="right"><strong>' + sum.toLocaleString('en') + '</strong></td><td colspan="2"></td></tr>').appendTo('#paymentSchedule');
+            }
+
+            var contract_amount = parseFloat($("#VariationAmount").val().split(",").join(""));
+            var payment_balance = contract_amount - sum;
+            $('#payment_balance').text(payment_balance.toLocaleString('en'));
+
+            $('</tbody>').appendTo('#paymentSchedule');
+
+        }
+        function UpdateItemsTable(arrayData) {
+            $('#ItemDesc').val("");
+            $('#Quantity').val("");
+            $('#UnitPrice').val("");
+            $('#ItemsValue').val("");
+            $("#VatStatus").prop('checked', false);
+            $("#VatApplicable").val("NO");
+            $('#OverheadPercentage').val("");
+            $('#TotalAmount').val("");
+            $('#items').empty();
+            var number = arrayData.length;
+            if (number > 0) {
+                $('<thead><tr><th style="text-align: center">#</th><th>Payment Schedule</th><th>Category</th><th style="text-align: left">Item </th><th style="text-align: center">Quantity</th><th style="text-align: left">UOM</th><th style="text-align: right">Unit Price</th><th style="text-align:right">VAT</th><th style="text-align:center">Overhead</th><th style="text-align: right">Total Amount</th><th  style="text-align:center;width:15%">Action</th></tr></thead>').appendTo('#items');
+            }
+            var j = 0;
+            var sum = 0;
+            var vat_sum = 0;
+            $('<tbody>').appendTo('#items');
+            $.each(arrayData, function (i, d) {
+                sum = sum + parseFloat(d.TotalAmount);
+                vat_sum = vat_sum + parseFloat(d.VAT);
+                j++;
+                var overhead = "";
+                if (d.OverheadPercentage > 0) {
+                    overhead = d.OverheadPercentage + "%";
+                }
+                $('<tr><td align="center">' + j + '</td><td>' + d.PaymentScheduleDesc + '</td><td>' + d.ItemCategory + '</td><td>' + d.ItemDesc + '</td><td align="center">' + d.Quantity + '</td><td align="left">' + d.UOM + '</td><td align="right">' + d.UnitPrice.toLocaleString('en') + '</td><td align="right">' + d.VAT.toLocaleString('en') + '</td><td align="center">' + overhead + '</td><td align="right">' + d.TotalAmount.toLocaleString('en') + '</td><td style="text-align: center"><div class="btn-group"><button type="button" class="btn  btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button> <ul class="dropdown-menu"><li><a href="#" data-toggle="modal" class="removeItems" data-id="' + d.ContractDetailId + '" data-itemdesc="' + d.ItemDesc + '" ><i class="fa fa-edit"></i> Cancel</a></li></div></td></tr>').appendTo('#items');
+
+            });
+            if (number > 0) {
+                $('<tr><td align="right" colspan="7">Grand Total</td><td align="right"><strong>' + vat_sum.toLocaleString('en') + '</strong></td><td></td><td align="right"><strong>' + sum.toLocaleString('en') + '</strong></td><td></td></tr>').appendTo('#items');
+            }
+            var contract_amount = parseFloat($("#VariationAmount").val().split(",").join(""));
+            var balance = contract_amount - sum;
+            $("#items_number").text(number);
+            $("#items_balance").text(balance.toLocaleString('en'));
+            $('</tbody>').appendTo('#items');
+        }
+        function PaymentScheduleList(arrayData) {
+            $('#add_item #VariationPayScheduleId').empty();
+            $('<option value="">Select...</option>').appendTo('#add_item #VariationPayScheduleId');
+            $.each(arrayData, function (i, d) {
+                $('<option value="' + d.VariationPayScheduleId + '">' + d.Description + '-Balance:' + d.Balance.toLocaleString('en') + '</option>').appendTo('#add_item #VariationPayScheduleId');
+            });
+        }
+
+          function get_items(query, item_id) {
+                                var item_id = parseInt(item_id);
+                                var form_data = {
+                                    "id": item_id,
+                                    "Prefix": query
+                                }
+                                var url = '@Url.Action("SearchItems", "Procurement")';
+                                $.ajax({
+                                    type: "POST",
+                                    url: url,
+                                    data: form_data,
+                                    success: function (data) {
+                                        if (data.response == "Success") {
+                                            var items_array = [];
+                                           $.each(data.Items, function (i, d) {
+                                               items_array.push(d.ItemDescription);
+                                            });
+
+
+                                           $('#ItemDesc').autocomplete({
+                                               source: items_array
+                                               });
+                                        }
+                                        else {
+
+                                        }
+
+                                    }
+                                });
+                            }
+
+     
+        $(document).ready(function () {
+
+        //MANAGE STEP WIZARD
+        var navListItems = $('div.setup-panel div a'),
+            allWells = $('.setup-content'),
+            allNextBtn = $('.nextBtn');
+
+        allWells.hide();
+
+        navListItems.click(function (e) {
+            e.preventDefault();
+            var $target = $($(this).attr('href')),
+                $item = $(this);
+
+            if (!$item.hasClass('disabled')) {
+                navListItems.removeClass('btn-primary').addClass('btn-default');
+                $item.addClass('btn-primary');
+                allWells.hide();
+                $target.show();
+                $target.find('input:eq(0)').focus();
+            }
+        });
+
+        allNextBtn.click(function () {
+            var curStep = $(this).closest(".setup-content"),
+                curStepBtn = curStep.attr("id"),
+                nextStepWizard = $('div.setup-panel div a[href="#' + curStepBtn + '"]').parent().next().children("a"),
+                curInputs = curStep.find("input[type='text'],input[type='url']"),
+                isValid = true;
+
+            $(".form-group").removeClass("has-error");
+            for (var i = 0; i < curInputs.length; i++) {
+                if (!curInputs[i].validity.valid) {
+                    isValid = false;
+                    $(curInputs[i]).closest(".form-group").addClass("has-error");
+                }
+            }
+
+            if (isValid)
+                nextStepWizard.removeAttr('disabled').trigger('click');
+        });
+
+        $('div.setup-panel div a.btn-primary').trigger('click');
+                            //END MANAGE STEP WIZARD
+
+
+              // START SUBMIT PAYMENT SCHEDULE
+                            $(function () { // this will be called when the DOM is ready
+                                $("#submit_schedule").click(function (e) {
+                                    var id = $("#ContractVariationId").val();
+                                    if (id > 0) {
+                                        var payment_amount = $("#PaymentAmount").val().split(",").join("");
+                                        if (!payment_amount) {
+                                            swal("Insert Amount");
+                                            return;
+                                        }
+                                        if ($("#Schedule").is(":checked")) {
+                                            var schedule_id = $("#PaymentScheduleId").val();
+                                            var form_data = {
+                                                "PaymentScheduleId": schedule_id,
+                                                "Amount": payment_amount,
+                                                "ContractId": id
+                                            }
+                                              $("#submit_schedule").prop('disabled', true);
+                                            var url = '@Url.Action("SaveScheduleDependant", "ContractVariation")';
+                                            $.ajax(
+                                                {
+                                                    type: "POST",
+                                                    url: url,
+                                                    data: form_data,
+                                                    success: function (data) {
+                                                        $("#submit_schedule").prop('disabled', false);
+                                                        if (data.response == "Success") {
+                                                            swal("Payment schedule added successfully", { icon: "success" })
+                                                                .then((value) => {
+                                                                    //$("#payment_number").text(data.total);
+                                                                    //$("#payment_balance").text(data.balance.toLocaleString('en');
+                                                                    PaymentScheduleTable(data.paymentScheduleList);
+                                                                });
+
+                                                        }
+                                                        else {
+                                                            $("#submit_schedule").prop('disabled', false);
+                                                            swal(data);
+                                                            return;
+                                                        }
+
+                                                    },
+                                                    error: function (xhr) {
+                                                        $("#submit_schedule").prop('disabled', false);
+                                                        swal("An error has occured, contact system supporter");
+
+                                                    },
+
+                                                });
+                                        } else {
+                                        var financial_year = $("#FinancialYear").val();
+                                        if (!financial_year) {
+                                            swal("Select Financial Year");
+                                            return;
+                                        }
+
+                                        var description = $("#PaymentDescription").val();
+                                        if (!description) {
+                                            swal("Insert description");
+                                            return;
+                                        }
+
+                                        var deliverable = $("#Deliverable").val();
+                                        if (payment_amount > 0) {
+                                            var form_data = {
+                                                "Description": description,
+                                                "Amount": payment_amount,
+                                                "Deliverable": deliverable,
+                                                "FinancialYear": financial_year,
+                                                "ContractId": id
+                                            }
+                                            $("#submit_schedule").prop('disabled', true);
+                                            var url = '@Url.Action("SavePaymentSchedule", "ContractVariation")';
+                                            $.ajax(
+                                                {
+                                                    type: "POST",
+                                                    url: url,
+                                                    data: form_data,
+                                                    success: function (data) {
+                                                        $("#submit_schedule").prop('disabled', false);
+                                                        if (data.response == "Success") {
+                                                            swal("Payment schedule added successfully", { icon: "success" })
+                                                                .then((value) => {
+                                                                    //$("#payment_number").text(data.total);
+                                                                    //$("#payment_balance").text(data.balance.toLocaleString('en');
+                                                                    PaymentScheduleTable(data.paymentScheduleList);
+                                                                });
+
+                                                        }
+                                                        else {
+                                                            $("#submit_schedule").prop('disabled', false);
+                                                            swal(data);
+                                                            return;
+                                                        }
+
+                                                    },
+                                                    error: function (xhr) {
+                                                        $("#submit_schedule").prop('disabled', false);
+                                                        swal("An error has occured, contact system supporter");
+
+                                                    },
+
+                                                });
+                                        } else {
+
+                                            swal("Payment Schedule must be money");
+                                        }
+                                    }
+                         } else {
+
+                                  swal("Save basic information first on step one");
+                         }
+
+                                });
+                            });
+                            // END SUBMIT PAYMENT SCHEDULE
+
+              //SUBMIT  ITEM
+                            $(function () {
+                                $("#contract_item").click(function (e) {
+                                    var contract_amount = parseFloat($("#VariationAmount").val().split(",").join(""));
+                                    if (contract_amount > 0) {
+                                        var item_class = $("#ItemClassificationId").val();
+                                        if (!item_class) {
+                                            swal("Please select Item Class !");
+                                            return
+                                        }
+                                        var itemDesc = $("#ItemDesc").val();
+                                        if (!itemDesc) {
+                                            swal("Please enter item !");
+                                            return
+                                        }
+                                        var uom = $("#UOM").val();
+                                        if (!uom) {
+                                            swal("Please select Unit of measure !");
+                                            return
+                                        }
+
+                                        var quantity = $("#Quantity").val().split(",").join("");
+                                        if (!quantity) {
+                                            swal("Please enter quantity of items !");
+                                            return
+                                        }
+                                        if (quantity == 0) {
+                                            swal("Please quantity can not be zero !");
+                                            return
+                                        }
+                                        var unitPrice = parseFloat($("#UnitPrice").val().split(",").join(""));
+                                        if (!unitPrice) {
+                                            swal("Please enter unit price !");
+                                            return
+                                        }
+                                        if (unitPrice == 0) {
+                                            swal("Please Unit price can not be zero !");
+                                            return
+                                        }
+                                        if (unitPrice < 0) {
+                                            swal("Please Unit price can not be negative !");
+                                            return
+                                        }
+                                        var paymentScheduleId = $("#VariationPayScheduleId").val();
+                                        if (!paymentScheduleId) {
+                                            swal("Please select Payment Schedule !");
+                                            return
+                                        }
+
+                                        var contractId = $("#ContractVariationId").val();
+                                        var totalAmount = parseFloat($("#TotalAmount").val().split(",").join(""));
+                                        if (totalAmount == 0) {
+                                            swal("Please Total Amount can not be zero !");
+                                            return
+                                        }
+                                        if (totalAmount < 0) {
+                                            swal("Please Total Amount can not be negative !");
+                                            return
+                                        }
+                                        if (totalAmount > 0) {
+                                            var overhead = parseFloat($("#OverheadPercentage").val());
+                                            var vat_applicable = $("#VatApplicable").val();
+
+                                        var formData = {
+                                            "ContractId": contractId,
+                                            "ItemClassificationId": item_class,
+                                            "Quantity": quantity,
+                                            "UnitPrice": unitPrice,
+                                            "UOM": uom,
+                                            "ItemDesc": itemDesc,
+                                            "OverheadPercentage": overhead,
+                                            "TotalAmount": totalAmount,
+                                            "VatApplicable": vat_applicable,
+                                            "PaymentScheduleId": paymentScheduleId
+                                        };
+                                        $("#contract_item").prop('disabled', true);
+                                        var url = '@Url.Action("SaveContractItem", "ContractVariation")';
+                                        $.ajax(
+                                        {
+                                            type: "POST", //HTTP POST Method
+                                            url: url, // Controller/View
+                                            data: formData,
+                                                success: function (data) {
+                                                    $("#contract_item").prop('disabled', false);
+
+                                                if (data.response == "Success") {
+
+                                             swal("Saved successfully", { icon: "success" })
+                                                .then((value) => {
+                                                    UpdateItemsTable(data.itemsList);
+                                                    PaymentScheduleList(data.paymentScheduleList);
+                                                });
+
+                                                }
+                                                else {
+                                                 swal(data);
+                                                }
+                                            },
+                                            error: function (xhr) {
+                                                $("#contract_item").prop('disabled', false);
+                                                swal("An error has occured, contact system support");
+
+                                            },
+
+                                        });
+                                            } else {
+                                        swal("Please Total Amount must be money");
+                                        }
+                                    } else {
+                                        swal("Please insert basic information on step one");
+                                    }
+                                });
+                            });
+                            //End of Submit  Contract Item
+                            //FINISH CONTRACT
+                            $("#finish").click(function (e) {
+                                var id = $("#ContractVariationId").val();
+                                if (id > 0) {
+
+                                    swal("Variation created successfully", { icon: "success" })
+                                                  .then((value) => {
+                                                      var url = '@Url.Action("PendingVariation", "ContractVariation")';
+                                                      window.location.replace(url);
+                                                  });
+                                } else {
+                                    swal("Click Back button");
+                                }
+
+                            });
+
+
+                               $(function () {
+                                $("#ItemCategory").change(function () {
+                                    var category = $(this).val();
+                                    if (category) {
+                                      var url = '@Url.Action("GetItemClasses", "Procurement")';
+                                    $.ajax({
+                                        type: "GET",
+                                        url: url,
+                                        data: { category : category },
+                                        success: function (data) {
+                                            if (data.response == "Success") {
+                                               $('#ItemClassificationId').empty();
+                                                $('<option value="">Select...</option>').appendTo('#ItemClassificationId');
+                                                $.each(data.itemClasses, function (i, d) {
+                                                    $('<option value="' + d.ItemClassificationId + '">' + d.ClassificationDesc + '</option>').appendTo('#ItemClassificationId');
+                                                });
+                                            }
+                                            else {
+                                               swal("Failed to fetch data due to DB Exception.Contact Technical supporter");
+                                            }
+                                        }
+                                    });
+                                    }
+
+                                });
+                            });
+
+                            $(function () { // this will be called when the DOM is ready
+                                $("#ItemDesc").keyup(function () {
+                                    var query = $(this).val();
+                                    var item_id = $("#ItemClassificationId").val();
+                                    if (!item_id) {
+                                        swal("Please select class first");
+                                        $(this).val("");
+                                        return false;
+
+                                    }
+                                    var length = query.length;
+                                    if (length > 1) {
+                                        get_items(query, item_id);
+                                    }
+
+                                });
+                            });
+
+
+
+                            $(function () { // this will be called when the DOM is ready
+                                $("#UnitPrice").keyup(function () {
+                                    var unit_price = parseFloat($(this).val().split(",").join(""));
+                                    var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                                    if (quantity > 0) {
+                                    var overhead = parseFloat($("#OverheadPercentage").val());
+                                    var total = unit_price * quantity;
+                                    var checkedValue = $("#add_item #VatStatus:checked").val();
+
+                                    if (checkedValue == "Applicable") {
+                                        var vat = parseFloat($("#VatPercentage").val());
+                                        var total_vat = total * vat / 100;
+                                        var grand_total = total_vat + total;
+                                           if (overhead > 0) {
+                                                grand_total = grand_total + total * overhead / 100;
+                                               }
+                                        var total_amount = grand_total.toFixed(2);
+                                        $("#TotalAmount").val(total_amount.toLocaleString('en'));
+
+                                    } else {
+                                             if (overhead > 0) {
+                                         total = total + total * overhead / 100;
+                                                   }
+                                        $("#TotalAmount").val(total.toLocaleString('en'));
+
+                                    }
+
+                                }
+
+                                });
+
+                            });
+                            $(function () { // this will be called when the DOM is ready
+                                $("#Quantity").keyup(function () {
+
+                                    var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                                    if (unit_price > 0) {
+                                        var quantity = parseFloat($(this).val().split(",").join(""));
+                                        var total = unit_price * quantity;
+                                        var overhead = parseFloat($("#OverheadPercentage").val());
+                                        var checkedValue = $("#add_item #VatStatus:checked").val();
+
+                                        if (checkedValue == "Applicable") {
+                                            var vat = parseFloat($("#VatPercentage").val());
+                                            var total_vat = total * vat / 100;
+                                            var grand_total = total_vat + total;
+                                            if (overhead > 0) {
+                                                grand_total = grand_total + total * overhead / 100;
+                                               }
+                                            var total_amount = grand_total.toFixed(2);
+                                            $("#TotalAmount").val(total_amount.toLocaleString('en'));
+
+                                        } else {
+                                                  if (overhead > 0) {
+                                             total = total + total * overhead / 100;
+                                                   }
+                                            $("#TotalAmount").val(total.toLocaleString('en'));
+
+                                        }
+                                    }
+
+                                });
+
+                            });
+
+                             $(function () { // this will be called when the DOM is ready
+                                 $("#OverheadPercentage").keyup(function () {
+                                     var overhead = parseFloat($(this).val());
+                                         if (overhead >= 0) {
+                                     } else {
+                                         overhead = 0;
+                                     }
+                                     var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                                     var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                                     if (unit_price > 0 && quantity > 0) {
+                                         var total = unit_price * quantity;
+                                         var checkedValue = $("#add_item #VatStatus:checked").val();
+                                         if (checkedValue == "Applicable") {
+                                             var vat = parseFloat($("#VatPercentage").val());
+                                             var total_vat = total * vat / 100;
+                                             var grand_total = total_vat + total + total * overhead / 100;
+                                             var total_amount = grand_total.toFixed(2);
+                                             $("#TotalAmount").val(total_amount.toLocaleString('en'));
+                                         } else {
+                                             total = total + total * overhead / 100;
+                                             $("#TotalAmount").val(total.toLocaleString('en'));
+
+                                         }
+                                     }
+
+                                });
+
+                            });
+
+                            $("#VatStatus").change(function (e) {
+                                 $("#VatApplicable").val(e.target.checked ? "YES" : "NO");
+                                var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                                var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                                  var overhead = parseFloat($(this).val());
+                                if ($(this).is(":checked")) {
+                                    if (unit_price >= 0 && quantity >= 0) {
+                                        var total = unit_price * quantity;
+                                        var vat = parseFloat($("#VatPercentage").val());
+                                        var total_vat = total * vat / 100;
+                                        var grand_total = total_vat + unit_price * quantity;
+                                          if (overhead > 0) {
+                                                grand_total = grand_total + total * overhead / 100;
+                                               }
+                                        var total_amount = grand_total.toFixed(2);
+                                        $("#TotalAmount").val(total_amount.toLocaleString('en'));
+
+                                    }
+
+                                } else {
+                                    if (unit_price >= 0 && quantity >= 0) {
+                                        var total = unit_price * quantity;
+                                              if (overhead > 0) {
+                                             total = total + total * overhead / 100;
+                                                   }
+                                        $("#TotalAmount").val(total.toLocaleString('en'));
+
+                                    }
+                                }
+                            });
+
+
+            //Delete Payment Schedule
+        $(document).on('click', '.removePayment', function () {
+            var id = $(this).data('id');
+            var id = $(this).data('id');
+            var desc = $(this).data('desc');
+            swal({
+                title: 'Confirmation',
+                text: "Do you what to cancel this payment schedule  " + desc + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("DeletePaySchedule", "ContractVariation")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (data) {
+                if (data.response == "Success") {
+
+                    swal("Cancelled successfully!", { icon: "success" })
+                      .then((value) => {
+                          PaymentScheduleTable(data.paymentScheduleList);
+                          UpdateItemsTable(data.itemsList);
+                      });
+
+                }
+                else {
+
+                    swal("Failed to delete,DbException");
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+//End delete Payment Schedule
+
+
+  //Delete item
+    $(document).on('click', '.removeItems', function () {
+            var id = $(this).data('id');
+            var itemdesc = $(this).data('itemdesc');
+            swal({
+                title: 'Confirmation',
+                text: "Do you what to cancel  " + itemdesc + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("DeleteItem", "ContractVariation")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (data) {
+             if (data.response == "Success") {
+
+                    swal("Item removed successfully!", { icon: "success" })
+                      .then((value) => {
+                          UpdateItemsTable(data.itemsList);
+                          PaymentScheduleList(data.paymentScheduleList);
+                      });
+
+                }
+                else {
+                    swal("Failed to cancel ,DbException");
+                }
+            },
+            error: function (xhr) {
+                //console.log(xhr.responseText);
+                swal("An error has occured, contact system support");
+
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        });
+//End delete item
+
+
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+        $("#VariationAmount").autoNumeric('init');
+        $("#PaymentAmount").autoNumeric('init');
+        $("#UnitPrice").autoNumeric('init');
+        $("#Quantity").autoNumeric('init');
+        $("#Schedule").change(function (e) {
+            $("#ScheduleAppend").val(e.target.checked ? "YES" : "NO");
+            if ($(this).is(":checked")) {
+                $(".independant").hide();
+                $("#dependant").show();
+                $("#PaymentScheduleId").prop('required', true);
+                $("#FinancialYear").prop('required', false);
+                $("#PaymentDescription").prop('required', false);
+                $("#Deliverable").prop('required', false);
+            } else {
+                $(".independant").show();
+                $("#dependant").hide();
+                $("#PaymentScheduleId").prop('required', false);
+                $("#FinancialYear").prop('required', true);
+                $("#PaymentDescription").prop('required', true);
+                $("#Deliverable").prop('required', true);
+            }
+        });
+    </script>
+}
+
+

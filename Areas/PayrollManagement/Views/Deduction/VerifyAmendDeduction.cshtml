@@ -1,0 +1,224 @@
+﻿@{
+    ViewBag.Title = "Verify Amended Deductions";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    td {
+        padding: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Employee Name</th>
+                                        <th>Check Number</th>
+                                        <th>Deduction Code</th>
+                                        <th>Initial Balance</th>
+                                        <th>Deduction Amount</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+<script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+           function actionTypes(i) {
+               return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="verify(' + i + ')">Verify</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>';
+        }
+
+        var data = []
+          $.ajax({
+            type: "get",
+            url: '@Url.Action("GetAmendDeductions", "Deduction")',
+            data:{status: 'Pending'},
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_table.fnAddData([i + 1,
+                       data[i]["Employee"]["FirstName"] + " " + data[i]["Employee"]["MiddleName"] + " " + data[i]["Employee"]["LastName"],
+                       data[i]["Employee"]["CheckNumber"],
+                       data[i]["DeductionCode2"] ?
+                       data[i]["DeductionCode2"]["DeductionCodeDescription"] : '-',
+                       data[i]["InitialBalance2"].toLocaleString(),
+                       data[i]["DeductionAmount2"].toLocaleString(),
+                       data[i]["Reason2"],
+                       data[i]["AmendOverallStatus"],
+                       data[i]["AmendCreatedAtFormatted"],
+                      actionTypes(i)
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+          });
+
+    function verify(i) {
+            swal({
+                title: 'Verify this Item?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    verifyPost(data[i]["AmendDeductionId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+    function verifyPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("VerifyAmendDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!",
+                            { icon: "success" })
+                            .then((e) => {
+                              window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+       function cancel(i) {
+            swal({
+                title: 'Cancel this Item.?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPost(data[i]["AmendDeductionId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function cancelPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("CancelAmendDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+</script>
+}

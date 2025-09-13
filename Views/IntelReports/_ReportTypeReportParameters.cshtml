@@ -1,0 +1,157 @@
+﻿@model IFMIS.Models.ReportTypeReportParametersVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "formRole" }))
+{
+
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.ReportPath)
+    <div class="form-group">
+        @Html.LabelFor(model => model.FinancialYear, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.DropDownListFor(model => model.FinancialYear, Model.FinancialYears, "Select Financial Year", new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.FinancialYear, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.ReportType, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.DropDownListFor(model => model.ReportType, Model.ReportTypes, "Select Report Type", new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.ReportType, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        <div class="col-md-offset-2 col-md-8">
+            <a href="#" class="btn btn-info" id="btnViewReport">View Report</a>
+        </div>
+    </div>
+</div>
+}
+
+<script>
+    $("#VoteCode").on("change", function () {
+        if ($(this).val() == "GOT") {
+            $("#divEntitySectors").hide();
+            $("#divEntityList").hide();
+        } else if ($(this).val() == "Entity Sub Sector") {
+            $("#divEntitySectors").show();
+            $("#divEntityList").hide();
+        } else if ($(this).val() == "Specific Entity List") {
+            $("#divEntitySectors").show();
+            $("#divEntityList").show();
+        }
+
+        if ($(this).val() == "Entity Sub Sector" || $(this).val() == "Specific Entity List") {
+            var url = '@Url.Action("GetInstitutionSectors", "InstitutionSectors")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#EntitySector option").remove();
+                        $("#EntitySector").append('<option value="">Select Sector</option>');
+                        $.each(data.sectors, function (i, sector) {
+                            $("#EntitySector").append('<option value="'
+                                + sector.SectorId + '">'
+                                + sector.SectorName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        }
+    });
+
+    $("#EntitySector").on("change", function () {
+            var sectorId = $("#EntitySector").val();
+            var url = '@Url.Action("GetInstitutionSubSectors", "InstitutionSubSectors")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    sectorId: sectorId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#EntitySubSector option").remove();
+                        $("#EntitySubSector").append('<option value="">Select Sub Sector</option>');
+                        $.each(data.subSectors, function (i, subSector) {
+                            $("#EntitySubSector").append('<option value="'
+                                + subSector.SubSectorId + '">'
+                                + subSector.SubSectorName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#EntitySubSector").on("change", function () {
+            if ($("#VoteCode").val() == "Specific Entity List")
+            {
+            var subSectorId = $("#EntitySubSector").val();
+            var url = '@Url.Action("GetInstitutions", "Institutions")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    subSectorId: subSectorId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#Entity option").remove();
+                        $("#Entity").append('<option value="">Select Institution</option>');
+                        $.each(data.institutions, function (i, institution) {
+                            $("#Entity").append('<option value="'
+                                + institution.institutionId + '">'
+                                + institution.InstitutionCode + ' - ' + institution.InstitutionName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+            }
+    });
+
+    $("#btnViewReport").on("click", function () {
+        var fy = $("#FinancialYear").val();
+        var reportType = $("#ReportType").val();
+
+        @*reportPath = "http://10.1.67.139/reportapp/@Model.ReportPath?vote_code=" + fy + "&report_type=" + reportType;*@
+        var url = "../../Areas/Gacs/Reports/@Model.ReportPath";
+        var queryString ="curr_fiscal_yr=" + fy + "&report_type=" + reportType;
+
+        /*window.open(reportPath);*/
+    });
+</script>

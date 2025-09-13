@@ -1,0 +1,161 @@
+﻿@{
+    ViewBag.Title = "Company List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<div id="content" style="margin: 5px; margin-top: 50px">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2 style="color:black;">@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateCompany", "Companies")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="companies" class="table table-bordered table-hover table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Company Code</th>
+                                        <th>Company Name</th>
+                                        <th>Reg Number</th>
+                                        <th>City</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section scripts
+{
+    <script>
+        $(document).ready(function (){
+            var counter = 1;
+            $("#companies").dataTable({
+                "autoWidth": false,
+                    ajax: {
+                        url: '@Url.Action("GetCompanies","Companies")',
+                        method: "GET",
+                        contenttype: "application/json; charset=utf-8"
+                    },
+                    columns: [
+                        {
+                            data: "CompanyId" ,
+                            render: () => counter++
+                        },
+                        { data: "CompanyCode" },
+                        { data: "CompanyName" },
+                        { data: "RegNo" },
+                        { data: "City" },
+                        {
+                            data: "IsActive",
+                            render: data => data ? "Active" : "In Active"
+                        },
+                        {
+                            data: "CompanyId",
+                            render: function(data) {
+                                return '<div class="btn-group">\
+                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                            <span class="caret"></span>\
+                                            <span class="sr-only">Toggle Dropdown</span>\
+                                        </button>\
+                                        <ul class="dropdown-menu">\
+                                            <li><a href="@Url.Action("EditCompany", "Companies")/' + data + '"><i class="fa fa-edit"></i> Edit</a></li>\
+                                            <li><a href="@Url.Action("CompanyDetails", "Companies")/' + data + '"><i class="fa fa-sliders"></i> View</a></li>\
+                                            <li><a href="#" id="cancel" cancel-data-id="'+ data +'"><i class="fa fa-remove"></i> Delete</a></li>\
+                                        </ul>\
+                                        </div>';
+                            },
+                            className: "text-center"
+                        }
+                    ]
+            });
+
+            $("#companies_wrapper .dt-toolbar").remove();
+
+            $("#search-box").on("keyup search input paste cut", function () {
+                $("#companies").DataTable().search(this.value).draw();
+                $("#companies_wrapper .dt-toolbar").remove();
+            });
+
+            $("#companies").on("click", "#cancel", function() {
+                var link = $(this);
+                swal({
+                    title: "Delete Company?",
+                    buttons: [
+                        'No',
+                        'Yes'
+                    ]
+                }).then(function (resp) {
+                        if (resp) {
+                            $.ajax({
+                                url: '@Url.Action("DeleteCompany", "Companies")',
+                                data: { id:link.attr("cancel-data-id") },
+                                method: "PUT",
+                                success: function (response) {
+                                    if (response === "success") {
+                                        swal("Deleted Successfully!", { icon: "success" })
+                                            .then(() => {                                              
+                                                window.location.reload();
+                                            });
+                                    } else {
+                                        swal(response, { icon: "info" });
+                                    }
+
+                                },
+                                failure: function(error) {
+                                    swal(error, { icon: "error" });
+                                }
+                            });
+                        }
+                });
+            });
+        });
+
+    </script>
+}

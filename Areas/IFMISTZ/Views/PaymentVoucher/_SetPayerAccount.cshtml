@@ -1,0 +1,107 @@
+﻿@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "savePayerAccount" }))
+{
+    <div class="modal-body form-horizontal">
+
+        <br />
+
+        <input type="hidden" name="Id" id="Id" value="@ViewBag.Id">
+        <div class="form-group">
+
+            <div class="col-md-12">
+                @Html.DropDownList("AccountId", ViewBag.AccountsList as SelectList, "Select payer account ", new { @class = "form-control select2", @required = "required" })
+            </div>
+        </div>
+
+    </div>
+    <div class="modal-footer">
+        <a href="#" class="btn btn-default" data-dismiss="modal" onclick="closeAccountSetup()">Cancel</a>
+        <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+        @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+    </div>
+
+}
+
+<script>
+
+
+    $("#savePayerAccount").on('submit', function (e) {
+      e.preventDefault();
+        var accountId = $("#AccountId").val();
+        if (!accountId) {
+            swal("Please select Payer Account", { icon: "warning" });
+            return;
+        }
+      swal({
+          title: 'Confirmation',
+          text: "Do you save payer account and confirm this voucher ?",
+          buttons: [
+            'No',
+            'Yes'
+          ],
+      }).then(function (isConfirm) {
+          if (isConfirm) {
+              var url = '@Url.Action("SavePayerAccount", "PaymentVoucher")';
+              var id = $("#Id").val();
+
+              var formData = {
+                  "id": id,
+                  "accountId": accountId
+              }
+              $.ajax(
+          {
+              type: "POST",
+              url: url,
+              data: formData,
+              success: function (response) {
+                  if (response == "Success") {
+                      confirmVoucher(id);
+                  }
+                  else {
+
+                      swal(response);
+                  }
+              },
+              error: function (xhr) {
+                  swal(error);
+
+              },
+
+          });
+          } else {
+              swal("Cancelled", "No change was made");
+          }
+      });
+  });
+
+    function confirmVoucher(id) {
+      var url = '@Url.Action("ConfirmVoucher", "PaymentVoucher")';
+      $.ajax({
+          type: "post",
+          url: url,
+          data: { "PaymentVoucherId": id },
+          contenttype: "application/json; charset=utf-8",
+          datatype: "json",
+          success: function (response) {
+              if (response == "Success") {
+                  swal("Confirmed Successfully!", { icon: "success" })
+                      .then((value) => {
+                          window.location.reload();
+                      });
+              }
+              else {
+
+                      swal(response);
+
+              }
+          },
+          failure: function (error) {
+              swal(error);
+          }
+      });
+
+  }
+    var closeAccountSetup = function () {
+        window.location.reload();
+    }
+</script>

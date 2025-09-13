@@ -1,0 +1,327 @@
+﻿@model IFMIS.Areas.Gacs.Models.EliminationListVM
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Elimination List </h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            @{
+                                int i = 0;
+                                int j = 0;
+                                decimal? totalAmount = 0;
+                                decimal? operationalAmountGL = 0;
+                            }
+           
+
+                            <div class="form-group" style="padding-top:30px">
+                                <div class="row">
+                                    @Html.LabelFor(model => model.FinancialYear, htmlAttributes: new { @class = "control-label col-md-1" })
+                                    <div class="col-md-2">
+                                        <select id="FinancialYear" class="form-control select2">
+                                            <option value="Select Financial Year" selected="selected">--Select Financial Year--</option>
+                                            @foreach (var financiallist in ViewBag.financialList)
+                                            {
+                                                <option value='@financiallist.fiscal_year'>
+                                                    @financiallist.fiscal_year
+                                                </option>
+                                            }
+                                        </select>
+                                    </div>
+                                    @Html.LabelFor(model => model.InstitutionCode, htmlAttributes: new { @class = "control-label col-md-1" })
+                                    <div class="col-md-2">
+                                        <select id="InstitutionCode" class="form-control select2">
+                                            <option value="Select Institution" selected="selected">--Select Institution--</option>
+                                            @foreach (var financiallist in ViewBag.institutionList)
+                                            {
+                                                <option value='@financiallist.EntityCode'>
+                                                    @financiallist.InstitutionalCodeEntityDescription
+                                                </option>
+                                            }
+                                        </select>
+
+                                    </div>
+
+                                    @Html.LabelFor(model => model.GFSCode, htmlAttributes: new { @class = "control-label col-md-1" })
+                                    <div class="col-md-2">
+                                        <select id="GFSCode" class="form-control select2">
+                                            <option value="Select Institution" selected="selected">--Select Institution--</option>
+                                            @foreach (var gfslist in ViewBag.gfsList)
+                                            {
+                                                <option value='@gfslist.GFSTransaction'>
+                                                    @gfslist.GFSTransactionItemDescription
+                                                </option>
+                                            }
+                                        </select>
+
+                                    </div>
+
+                                    <div class="col-md-2">
+                                        <button type="submit" class="btn action-btn btn btn-info" id="submit" onclick="reloadDataTable()">
+                                            <i class="fa fa-save"></i>
+                                            Search
+                                        </button>
+                                    </div>
+
+
+                                </div>
+                            </div>
+                            <br/>
+
+                            <hr />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Left List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedBankDr">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_LeftEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                          
+                                                          
+                                                            </tr>
+                                                        </thead>
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Right List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedBankCR">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_RightEliminationList" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th>#</th>
+                                                                <th>Gfs Code</th>
+                                                                <th>Gfs Code Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                             
+                                                            </tr>
+                                                        </thead>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+      //left list
+       var url = '@Url.Action("GetleftList", "Eliminations")';
+       var fnServerData = function (sSource, aoData, fnCallback) {
+            $.ajax({
+                type: "GET",
+                url: sSource,
+                data: aoData,
+                success: fnCallback
+            });
+        };
+
+        var aoColumns = [
+            {
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            { "mData": "GFSCode" },
+            { "mData": "GFSCodeDescription" },
+            { "mData": "Amount" },
+           
+        ];
+
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            $("#dt_LeftEliminationList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": fnServerData,
+                "aoColumns": aoColumns
+            });
+        };
+
+
+
+
+        var reloadDataTable = function () {
+            debugger;
+            reloadDataLeft();
+            reloadDataRight();
+        }
+
+
+
+        var reloadDataLeft = function () {
+            debugger;
+            var gfs = $("#GFSCode").val();
+            var financialYear = $("#FinancialYear").val();
+            var url = '@Url.Action("GetleftList", "Eliminations")';
+            $("#dt_LeftEliminationList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "destroy": true,
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "gfs", "value": gfs });
+                    aoData.push({ "name": "financialYear", "value": financialYear });
+                },
+                "fnServerData": fnServerData,
+                "aoColumns": aoColumns
+            });
+        }
+
+        var reloadDataRight = function () {
+            debugger;
+            var gfs = $("#GFSCode").val();
+            var url = '@Url.Action("GetRightList", "Eliminations")';
+            $("#dt_RightEliminationList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "destroy": true,
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "gfsCode", "value": gfs });
+                },
+                "fnServerData": fnServerData1,
+                "aoColumns": aoColumns1
+            });
+        }
+
+
+      //Right List
+       var url1 = '@Url.Action("GetRightList", "Eliminations")';
+       var fnServerData1 = function (sSource, aoData, fnCallback) {
+            $.ajax({
+                type: "GET",
+                url: sSource,
+                data: aoData,
+                success: fnCallback
+            });
+        };
+
+        var aoColumns1 = [
+            {
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            { "mData": "EliminGfsCode" },
+            { "mData": "EliminGfsDesc" },
+            { "mData": "EliminationAmount" },
+           
+        ];
+
+        $(function () {
+            BindDataTableRightElimination();
+        });
+
+        var BindDataTableRightElimination = function (response) {
+            $("#dt_RightEliminationList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url1,
+                "fnServerData": fnServerData1,
+                "aoColumns": aoColumns1
+            });
+        };
+
+
+    </script>
+
+}

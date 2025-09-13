@@ -1,0 +1,191 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.BeneficiaryVM>
+@{
+    ViewBag.Title = "Beneficiaries";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Beneficiary Allowances</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateBeneficiary", "Beneficiaries")'>
+                                        <i class="glyphicon glyphicon-plus"></i>Add Beneficiary Allowance
+                                    </a>
+                                </div>
+
+                            </div>
+
+                            <hr />
+                            <table class="table table-bordered table-condensed" id="tblDataList">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            #
+                                        </th>
+                                        <th>
+                                            Beneficiary Code
+                                        </th>
+                                        <th>
+                                            Beneficiary Name
+                                        </th>
+                                        <th>
+                                            Account No
+                                        </th>
+                                        <th>
+                                            Bank Name
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @{
+                                        int i = 0;
+                                    }
+
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BeneficiaryCode)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.AccountNo)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BankName)
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="@Url.Action("EditBeneficiary","Beneficiaries", new { id = item.BeneficiaryID })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Edit
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="@Url.Action("BeneficiaryDetails","Beneficiaries", new { id = item.BeneficiaryID })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Details
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" onclick="deleteBeneficiary(@item.BeneficiaryID)" class="btn-xs edit">
+                                                                <i class="fa fa-trash-o"></i>  Delete
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+<!--End of delete confirmation modal section-->
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+                "scrollX": false
+            });
+        });
+        //var deleteBeneficiary = function (id) {
+
+        //    $(".delete-confirm").click(function () {
+        //        if (id != "") {
+                    ////var url = 'Url.Action("Delete", "Beneficiaries")';
+                    //$.ajax({
+                    //    url: url,
+                    //    data: { id: id },
+                    //    type: "POST",
+        //                success: function (response) {
+        //                    if (response) {
+        //                        if (response == "Success") {
+
+        //                        }
+        //                    }
+        //                }, error: function (err) {
+
+        //                }
+        //            });
+        //        }
+        //    });
+        //};
+
+        var deleteBeneficiary = function (id) {
+            debugger
+
+            swal({
+                title: 'Delete',
+                text: "Are you sure you want to Delete this record?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                $("#responseModal").modal('hide');
+                    $("#divLoader").show();
+                    var url = '@Url.Action("DeleteConfirmed", "Beneficiaries")';
+                    $.ajax({
+                        url: url,
+                        data: { id: id },
+                        type: "POST",
+                        success: function (response) {
+                            $("#divLoader").hide();
+                            if (response == "Success") {
+                                swal("Delete successfully!", { icon: "success" })
+                                    .then((value) => {
+                                        location.reload();
+                                    });
+                            }
+                            else {
+                                swal(response, { icon: "warning" });
+                            }
+
+                        }, error: function (err) {
+                            $("#divLoader").hide();
+                            console.log('errorResp', err.responseText)
+                            swal(err.responseText, { icon: "warning" });
+                        }
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        };
+
+
+    </script>
+}

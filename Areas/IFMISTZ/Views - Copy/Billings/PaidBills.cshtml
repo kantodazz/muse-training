@@ -1,0 +1,195 @@
+﻿
+@{
+    ViewBag.Title = "UnpaidBills";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Paid Bills </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblPaidBills">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Bill Id</th>
+                                        <th>Pay Ctr Num</th>
+                                        <th>Paid Amt</th>
+                                        <th>Trx Dt Tm</th>
+                                        <th>Usd Pay Chn</th>
+                                        <th>Pyr Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody></tbody>
+
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+@section Scripts{
+    <script>
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetPaidBills", "Billings")';
+            $("#tblPaidBills").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "BillId" },
+                    { "mData": "PayCtrNum" },
+                    {
+                        data: 'PaidAmt',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        "mData": "TrxDtTm",
+                        "render": function (data, type, row) {
+                            var dt = data;
+                            var dx = new Date(parseInt(dt.substr(6)));
+                            var dd = ("0" + dx.getDate()).slice(-2);
+                            var mm = ("0" + (dx.getMonth() + 1)).slice(-2);
+                            var yy = dx.getFullYear();
+                            var HH = ("0" + dx.getHours()).slice(-2);
+                            var m = ("0" + dx.getMinutes()).slice(-2);
+                            var ss = ("0" + dx.getSeconds()).slice(-2);
+                            return dd + "-" + mm + "-" + yy;
+                        }
+                    },
+                    { "mData": "UsdPayChn" },
+                    { "mData": "PyrName" },
+                    {
+                        "mData": "GepgPmtSpInfoId",
+                        "bSortable": false,
+                        "render": function (Id, type, full, meta) {
+                            return '<a href="@Url.Action("PrintPaymentReceipt", "Billings")/' + Id + '" target="_blank"><i class="glyphicon glyphicon-print" title="Print"></i></a>'
+                        }
+                    },
+                ]
+            });
+        };
+
+        function ConvertJsonDate(inputDate) {
+            var dx = new Date(parseInt(inputDate.substr(6)));
+            //alert(dx.toDateString());
+            var dd = ("0" + dx.getDate()).slice(-2);
+            var mm = ("0" + (dx.getMonth() + 1)).slice(-2);
+            var yy = dx.getFullYear();
+            var HH = ("0" + dx.getHours()).slice(-2);
+            var m = ("0" + dx.getMinutes()).slice(-2);
+            var ss = ("0" + dx.getSeconds()).slice(-2);
+            return dd + "-" + mm + "-" + yy;
+            //return dx.toDateString() + "  " + HH + ":" + m + ":" + ss;
+        }
+    </script>
+}

@@ -1,0 +1,249 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.PaymentsBatchVerifyApprovalSummary_vw>
+@{
+    ViewBag.Title = "Payment Batch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> @ViewBag.Title </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <table id="tblDataList" class="table table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right">#</th>
+                                        <th>Batch No</th>
+                                        <th>Batch Description</th>
+                                        <th>Payment Category</th>
+                                        <th style="text-align:right">No of Beneficiary</th>
+                                        <th style="text-align:right">Total Amount</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td style="text-align:right;">@i &nbsp;</td>
+                                            <td>
+                                                @item.BatchNo
+                                            </td>
+                                            <td>
+                                                @item.BatchDesc
+                                            </td>
+                                            <td>
+                                                @item.PaymentCategory
+                                            </td>
+                                            <td style="text-align:right">
+                                                @String.Format("{0:#,0}", item.NoofBen)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @String.Format("{0:#,0.00}", item.TotalAmount)
+                                            </td>
+                                            <td>
+                                                @item.OverallStatus
+                                            </td>
+                                            <td style="text-align:center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @if (item.OverallStatus == "REJECTED" || item.OverallStatus == "Confirmed")
+                                                        {                                                         
+                                                            <li>
+                                                                <a href="#" onclick="submitPayroll(@item.PaymentBatchID)" class="btn-xs edit">
+                                                                  Submit
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                        <li>
+                                                            <a href="#" onclick="PreviewFunction('@item.PaystationID','@item.PaymentBatchID')" class="btn-xs edit">
+                                                               Details
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+            });
+        });
+   
+        var submitPayroll = function (id) {
+            swal({
+                title: 'Submission',
+                text: "Are you sure you want to Submit Payroll?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmsubmitPayroll(id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        var confirmsubmitPayroll = function (id) {
+            var url = '@Url.Action("SubmitPayroll", "Payrolls")';
+            $("#divLoader").show();
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { batchId: id },
+                success: function (response) {    
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Submitted Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "Invalid Json File") {
+                        swal("Invalid File Format!", { icon: "info" }).then((e) => {
+                        });
+                    }
+                    else if (response == "Failed to send request") {
+                        swal("Failed to send request!", { icon: "info" }).then((e) => {
+                        });
+                    }
+                },
+                error: function (err) {
+                    $("#divLoader").hide();
+                    swal(err.statusText);
+                },
+            });
+        };
+
+        function ConfirmFunction(modelvalue, modelvalue1, modelvalue2) {
+            //alert("your model value: " + modelvalue + "-" + modelvalue1);
+            var msg = confirm("Do you want to Verify Payment Batch No: " + modelvalue2 + " ?");
+            if (msg == true) {
+                $("#divLoader").show();
+                $.ajax({
+                    type: "POST",
+                    url: "VerifyPayments?PBID=" + modelvalue1 + "&PSID=" + modelvalue,
+                }).done(function (response) {
+                        if (response == "Success") {
+                            alert("Payment Batch No: " + modelvalue2 + "  Verified Successfully!");
+                            $("#divLoader").hide();
+                            window.location.href = "PaymentBatchVerification";
+                        }
+                    });
+            } else {
+                alert("Payment Batch No: " + modelvalue2 + "Not Verified!");
+                window.location.href = "PaymentBatchVerification";
+            }
+        }
+
+        function CancelFunction(modelvalue, modelvalue1, modelvalue2) {
+            //alert("your model value: " + modelvalue + "-" + modelvalue1);
+            var msg = confirm("Do you want to Cancel Payment Batch No: " + modelvalue2 + " ?");
+            if (msg == true) {
+                $("#divLoader").show();
+                $.ajax({
+                    type: "POST",
+                    url: "CancelbeforeVerifyPayments?PBID=" + modelvalue1 + "&PSID=" + modelvalue,
+                })
+                    .done(function (response) {
+                        if (response == "Success") {
+                            alert("Payment Batch No: " + modelvalue2 + "  Cancelled Successfully!");
+                            $("#divLoader").hide();
+                            window.location.href = "PaymentBatchVerification";
+                        }
+                    });
+            } else {
+                alert("Payment Batch No: " + modelvalue2 + "  not Cancelled!");
+                window.location.href = "PaymentBatchVerification";
+            }
+        }
+
+        function PreviewFunction(modelvalue, modelvalue1) {
+            $("#divLoader").show();
+            window.location.href = "PaymentBatchVerificationDetails?PBID=" + modelvalue1 + "&PSID=" + modelvalue;
+            $("#divLoader").hide();
+        }
+    </script>
+}

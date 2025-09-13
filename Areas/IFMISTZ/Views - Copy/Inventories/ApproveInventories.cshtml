@@ -1,0 +1,339 @@
+﻿@{
+    ViewBag.Title = "Approve Inventories";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Approve Inventories </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                     
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_inventories">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%"></th>
+                                        <th style="text-align:left">Inventory Number</th>
+                                        <th style="text-align:left">Item Card</th>
+                                        <th style="text-align:left">Inventory</th>
+                                        <th style="text-align:center">Quantity</th>
+                                        <th style="text-align:left">UOM</th>
+                                        <th style="text-align:right">Unit Price(Tsh)</th>
+                                        <th style="text-align:right">Total Value(Tsh)</th>
+                                        <th style="text-align:left">Source</th>
+                                        <th style="text-align:left">Status</th>
+                                        <th style="text-align:center">Action</th>
+
+                                    </tr>
+                                </thead>
+
+                            </table>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+
+<div class="modal fade" id="rejectInventory" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Reject Inventory</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "RejectReason" }))
+            {
+                <div class="modal-body form-horizontal">
+
+                    <br />
+
+                    <input type="hidden" name="Id" id="Id" value="">
+                    <div class="form-group">
+
+                        <div class="col-md-12">
+                            <textarea name="Reason" id="Reason" placeholder="Rejection reason" required rows="4" maxlength="250" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Preview
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_inventories_data = $('#dt_inventories').dataTable();
+        $(document).ready(function () {
+            GetInventories();
+
+                   $("#RejectReason").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you reject this Inventory ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("RejectApproval", "Inventories")';
+                            var id = $("#Id").val();
+                            var reason = $("#Reason").val();
+                            var formData = {
+                                "Id": id,
+                                "Reason": reason
+                            }
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (response) {
+                                if (response == "Success") {
+                            $('#rejectInventory').modal('hide');
+                                    swal("Inventory Rejected  successfully!", { icon: "success" })
+                                              .then((value) => {
+                                                  location.reload();
+                                              });
+
+
+                                }
+                                else {
+
+                                    swal(response);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+                        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+       var approveInventory = function (id) {
+
+                       swal({
+                        title: 'Approve',
+                        text: "Do you what to approve Inventory ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                   var url = '@Url.Action("ApproveInventory", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Approved successfully", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+        var rejectInventory = function (id) {
+            $(".modal-body #Id").val(id);
+            $('#rejectInventory').modal('show');
+
+        };
+
+            var previewInventory = function (id) {
+            debugger;
+            var url = '@Url.Action("PreviewInventory", "Inventories")';
+            $("#divModalBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on accessing this details, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+        };
+        function GetInventories() {
+            var status = "Confirmed";
+                var url = '@Url.Action("GetInventoriesList", "Inventories")';
+                var status_data = {
+                    "status": status
+                }
+                $.ajax({
+                    type: "get",
+                    url: url,
+                    data: status_data,
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (result) {
+                        if (result.response == "Success") {
+                            data = result.Inventories;
+                            dt_inventories_data.fnClearTable();
+                            for (var i = 0; i < data.length; i++) {
+
+                                dt_inventories_data.fnAddData([i + 1,
+                                data[i]["InventoryCode"],
+                                data[i]["ItemCard"],
+                                data[i]["ItemName"],
+                               '<div align="center">' + data[i]["Quantity"] + '</div>',
+                               data[i]["UOM"],
+                              '<div align="right">' + toLabel(data[i]["UnitPrice"] || 0) + '</div>',
+                              '<div align="right">' + toLabel(data[i]["InventoryValue"] || 0) + '</div>',
+                               SourceModule(data[i]["SourceModule"], data[i]["SourceLegalNumber"]),
+                               data[i]["OverallStatus"],
+                               ActionLinks(data[i]["InventoryDetailId"], data[i]["SourceModule"], data[i]["OverallStatus"], data[i]["AddedBy"])
+                                ]);
+
+                            }
+                        }
+                        else {
+                            swal(result);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+        }
+        function SourceModule(sourceModule,legalNumber) {
+            var data = '';
+            if (sourceModule == "External") {
+                data = sourceModule;
+            } else {
+                data = '<a href="@Url.Action("PreviewSource", "Inventories")?source=' + sourceModule + '&number=' + legalNumber + '">' + legalNumber+'</a>\
+                ';
+            }
+            return data;
+        }
+        function ActionLinks(id, sourceModule, OverallStatus, upploaded) {
+            var link = '<div align = "center"> <div class="btn-group">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                    <span class="sr-only"></span>\
+                            </button>\
+                          <ul class="dropdown-menu">\
+                <li><a href="#" onclick="previewInventory(' + id + ')"> <i class="fa fa-search-minus"></i>  Preview</a></li>\
+                <li><a href="#" onclick="approveInventory(' + id + ')"> <i class="fa fa-edit"></i> Approve</a></li>\
+                 <li><a href="#" onclick="rejectInventory(' + id + ')"> <i class="fa fa-edit"></i> Reject</a></li>\
+                    </ul>\
+                    </div> </div>\
+                      ';
+            return link;
+
+        }
+
+    </script>
+}

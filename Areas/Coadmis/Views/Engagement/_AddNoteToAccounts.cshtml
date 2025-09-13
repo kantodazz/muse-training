@@ -1,0 +1,124 @@
+﻿@model IFMIS.Areas.Coadmis.Models.EngagementVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "noteToAccount" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.HiddenFor(model => model.AuditableAreaId)
+        <div class="form-group">
+            @Html.LabelFor(model => model.AuditableAreaName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.EditorFor(model => model.AuditableAreaName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <br />
+        <table id="dt_noteToAccount" class="table table-striped table-bordered table-hover table-condensed" width="70%">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th style="display: none;">Id</th>
+                    <th>Auditable Item</th>
+                    <th>Current Year Amount</th>
+                    <th>Previous Year Amount</th>
+
+                </tr>
+            </thead>
+            @{
+                int x = 0;
+            }
+
+
+            <tbody>
+                @foreach (var item in ViewBag.NoteToAccountsList)
+                {
+                    x++;
+                    <tr>
+                        <td><span>@x</span> </td>
+                        <td style="display:none;"><span>@item.AuditableAreaAssignId</span></td>
+                        <td><span>@item.AuditableItemName</span></td>
+                        <td><span><input type="text" class="input-type-no" id="CurrentYearAmount-@item.AuditableAreaAssignId" value="@item.CurrentYearAmount" onchange="amountChanged('CurrentYearAmount',@item.AuditableAreaAssignId)" name="CurrentYearAmount" autocomplete="off" /></span></td>
+                        <td><span><input type="text" class="input-type-no" id="PreviousYearAmount-@item.AuditableAreaAssignId" value="@item.PreviousYearAmount" onchange="amountChanged('PreviousYearAmount',@item.AuditableAreaAssignId)" name="PreviousYearAmount" autocomplete="off" /></span></td>
+
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+<script>
+
+    $(function () {
+        $(".input-type-no").autoNumeric("init");
+    });
+
+
+    let notes = [];
+    let formAmounts = {}
+    function amountChanged(amountType, AuditableAreaAssignId) {
+        formAmounts[AuditableAreaAssignId] = {
+            [amountType]: $(`#${amountType}-${AuditableAreaAssignId}`).val(),
+            ...(formAmounts[AuditableAreaAssignId] || []),
+            'AuditableAreaAssignId': AuditableAreaAssignId
+        }
+    }
+
+    $("#addNewNoteToAccounts").on('click', function () {
+        debugger;
+        //var formdata = new FormData();
+        for (let AuditableAreaAssignId in formAmounts) {
+            let PreviousYearAmount = formAmounts[AuditableAreaAssignId].PreviousYearAmount
+            let CurrentYearAmount = formAmounts[AuditableAreaAssignId].CurrentYearAmount
+
+            notes.push({
+                AuditableAreaAssignId: AuditableAreaAssignId,
+                PreviousYearAmount: PreviousYearAmount,
+                CurrentYearAmount: CurrentYearAmount
+            });
+
+            console.log(notes);
+            //formdata.append("NoteToAccountDatas", notes);
+        }
+
+        var formData = {
+            "NoteToAccountDatas": notes
+        }
+        
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdateNoteToAccount", "Engagement")';
+        $.ajax({
+            url: url,
+            data: JSON.stringify(formData),
+            type: 'POST',
+            dataType: "JSON",
+            contentType: "application/json",
+            success: function (response) {
+                console.log('response', response)
+                $("#btnSaveAccountEst").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Estimate!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#btnSaveAccountEst").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

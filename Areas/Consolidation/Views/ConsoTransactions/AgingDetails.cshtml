@@ -1,0 +1,244 @@
+﻿@model IFMIS.Areas.Consolidation.Models.ConsoDataEntryVM
+@{
+    var i = 0;
+    ViewBag.Title = "Aging Details";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                @Html.DisplayNameFor(model => model.Note) :<strong>@Html.DisplayFor(model => model.Note)</strong><br />
+                                @Html.DisplayNameFor(model => model.NoteDesc) :<strong>@Html.DisplayFor(model => model.NoteDesc)</strong><br />
+                            </p>
+                            <div class="row">
+
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-hover table-condensed" id="dt_items">
+
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center">#</th>
+                                        <th style="text-align: left; width: 15%">GFSCode</th>
+                                        <th style="text-align: right">TB Amount</th>
+                                        <th style="text-align: right">ActualTotal</th>
+                                        <th style="text-align: right">@Model.AgingEntryList.Where(a => a.AgingDesc == "0-30 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: right">@Model.AgingEntryList.Where(a => a.AgingDesc == "31-60 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: right">@Model.AgingEntryList.Where(a => a.AgingDesc == "61-90 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: right">@Model.AgingEntryList.Where(a => a.AgingDesc == "91-120 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: right">@Model.AgingEntryList.Where(a => a.AgingDesc == "Above 120 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var item in Model.ConsoItems)
+                                    {
+                                        i++;
+                                        <tr id=@item.TrxID>
+                                            <td style="text-align:center">@i</td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.GFSCode)-@Html.DisplayFor(modelItem => item.GFSCodeDesc)
+                                            </td>
+                                            <td style="text-align: right">
+                                                @Html.DisplayFor(modelItem => item.Amount)
+                                            </td>
+                                            <td style="text-align: right">
+                                                @Html.DisplayFor(modelItem => item.ActualTotal)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @{
+                                                    var firstId = Model.AgingEntryList.Where(a => a.AgingDesc == "0-30 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? firstAmount = Model.AgingTransactionList.Where(a => a.ConsoTransactionId == item.TrxID && a.AgingEntryId == firstId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (firstAmount == null)
+                                                    {
+                                                        firstAmount = 0;
+                                                    }
+
+
+
+}
+                                                @if (firstAmount > 0)
+                                                {
+                                                @Convert.ToDecimal(firstAmount).ToString("#,##0/=")
+                                                }
+                                                else {
+                                                    <span>0.00</span>
+                                                }
+                                            </td>
+                                            <td style="text-align: right">
+                                                @{
+                                                    var secondId = Model.AgingEntryList.Where(a => a.AgingDesc == "31-60 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? secondAmount = Model.AgingTransactionList.Where(a => a.ConsoTransactionId == item.TrxID && a.AgingEntryId == secondId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (secondAmount == null)
+                                                    {
+                                                        secondAmount = 0;
+                                                    }
+                                                }
+                                                @if (secondAmount > 0)
+                                                {
+                                                    @Convert.ToDecimal(secondAmount).ToString("#,##0/=")
+                                                }
+                                                else
+                                                {
+                                                    <span>0.00</span>
+                                                }
+                                            </td>
+                                            <td style="text-align: right">
+                                                @{
+                                                    var thirdId = Model.AgingEntryList.Where(a => a.AgingDesc == "61-90 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? thirdAmount = Model.AgingTransactionList.Where(a => a.ConsoTransactionId == item.TrxID && a.AgingEntryId == thirdId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (thirdAmount == null)
+                                                    {
+                                                        thirdAmount = 0;
+                                                    }
+                                                }
+                                                @if (thirdAmount > 0)
+                                                {
+                                                    @Convert.ToDecimal(thirdAmount).ToString("#,##0/=")
+                                                }
+                                                else
+                                                {
+                                                    <span>0.00</span>
+                                                }
+                                            </td>
+                                            <td style="text-align: right">
+                                                @{
+                                                    var fourthId = Model.AgingEntryList.Where(a => a.AgingDesc == "91-120 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? fourthAmount = Model.AgingTransactionList.Where(a => a.ConsoTransactionId == item.TrxID && a.AgingEntryId == fourthId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (fourthAmount == null)
+                                                    {
+                                                        fourthAmount = 0;
+                                                    }
+                                                }
+                                                @if (fourthAmount > 0)
+                                                {
+                                                    @Convert.ToDecimal(fourthAmount).ToString("#,##0/=")
+                                                }
+                                                else
+                                                {
+                                                    <span>0.00</span>
+                                                }
+                                            </td>
+                                            <td style="text-align: right">
+                                                @{
+                                                    var fifthId = Model.AgingEntryList.Where(a => a.AgingDesc == "Above 120 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? fifthAmount = Model.AgingTransactionList.Where(a => a.ConsoTransactionId == item.TrxID && a.AgingEntryId == fifthId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (fifthAmount == null)
+                                                    {
+                                                        fifthAmount = 0;
+                                                    }
+                                                }
+                                                @if (fifthAmount > 0)
+                                                {
+                                                    @Convert.ToDecimal(fifthAmount).ToString("#,##0/=")
+                                                }
+                                                else
+                                                {
+                                                    <span>0.00</span>
+                                                }
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a href="@Url.Action("NoteDisclosures","ConsoTransactions",new {id=Model.ConsoTransactionSummaryId})" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+      var currentRowId = 0;
+     var dt_items_data = $('#dt_items').dataTable();
+    $("#dt_items_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_items").DataTable().search(this.value).draw();
+    });
+
+    </script>
+}

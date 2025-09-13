@@ -1,0 +1,225 @@
+﻿@{
+    ViewBag.Title = "Deductions Approval";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+ 
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                            </div>
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Employee Name</th>
+                                        <th>Check Number</th>
+                                        <th>Deduction Code</th>
+                                        <th>Initial Balance</th>
+                                        <th>Deduction Amount</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific{
+
+    <script>
+        //============ INIT DATA TABLES START =====================
+          $(function (){
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetApproveDeduction", "Deduction")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback){
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta){
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "Fullname" },
+                    { "mData": "CheckNumber" },
+                    { "mData": "DeductionCodeDescription" },
+                    {
+                        "mData": "LoanAmount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        "mData": "InstallmentAmount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "Reason" },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "EmployeeDeductionId",
+                        "bSortable": false,
+                        "render": function (EmployeeDeductionId, type, full, meta) {
+
+                            return'<div class="btn-group">\
+                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                            <span class="caret"></span>\
+                                            <span class="sr-only">Toggle Dropdown</span>\
+                                        </button>\
+                                        <ul class="dropdown-menu">\
+                                            <li><a href="#" onclick="reject(' + EmployeeDeductionId + ')"> Reject </a></li>\
+                                        </ul>\
+                                        </div>'
+                        }
+                    },
+                ]
+            });
+        };
+
+
+       function reject(i){
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(i, remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, remark) {
+            debugger
+            var url = '@Url.Action("RejectDeduction", "Deduction")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "Remark": remark, status: "Rejected By Approver" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

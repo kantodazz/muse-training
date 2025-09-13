@@ -1,0 +1,432 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.Country>
+@{
+    ViewBag.Title = "Country";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+
+                        <h2 style="color:black;">Country List.</h2>
+
+                    </header>
+                        <div>
+                        <div class="widget-body">
+
+
+                            <div style="margin-bottom: 2%">
+                                <a class="btn btn-info" href='@Url.Action("Create", "Countries")' style="width:100px;border-radius:1px;color:black">
+                                    <i class="fa fa-plus"></i>Add New
+                                </a>
+                            </div>
+                            <div class="row" style="width:100%">
+                                <div class="col-md-3">
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                                <div style="margin-left: 90%" id="dt_coasegment_wrapper" class="dataTables_wrapper">
+
+                                    <select name="pageLenth" id="pageLenth" aria-controls="dt_coasegment" class="form-control">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <div class="widget-body no-padding">
+                            <table style="width:100%">
+                                    <tr>
+                                        <td colspan="1">
+
+                                            <table id="dt_country" class="table table-bordered table-condensed table-amount">
+                                                <thead>
+                                                    <tr>
+                                                        <th style="width:100px">No</th>
+                                                        <th> Country Name</th>
+                                                        <th> Zip Code</th>
+                                                        <th>Status</th>
+                                                        <th style="width:100px">Action</th>
+                                                    </tr>
+                                                </thead>
+                                            </table>
+                                        </td>
+                                        <td colspan="1"></td>
+                                    </tr>
+                                </table>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- EDIT DIALOG ----------------->
+<div class="modal fade" id="editModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Edit Country</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:10px">
+                        <div class="row" style="padding:0% 5% 0 5%;">
+                            <div class="col-md-6 col-lg-6 col-sm-12" style="padding:1% 0 1% 25%">
+                                <table width="100%">
+                                    <tr>
+                                        <td class="form-label" width="300px">
+                                            Country Name
+                                            <i class="fa fa-times" style="color:white" id="CountryName_1"></i>
+                                        </td>
+                                        <td>
+                                            <input style="width:300px" type="text" id="CountryName">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label" width="300px">
+                                            Zip Code
+                                            <i class="fa fa-times" style="color:white" id="ZipCode_1"></i>
+                                        </td>
+                                        <td>
+                                            <input style="width:300px" type="text" id="ZipCode">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="save()" style="width:100px;">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+                      <script>
+
+                          var dt_country = $('#dt_country').dataTable();
+
+                          $("#dt_country_wrapper .dt-toolbar").remove();
+
+                          $("#searchbox").on("keyup search input paste cut", function () {
+                              dt_country.DataTable().search(this.value).draw();
+                          });
+
+    // ====================== LOAD TABLE DATA START =====================
+                          function actionTemplate(i, id) {
+                          return '<div class="btn-group">\
+                       <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                          <span class="caret"></span>\
+                                     <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                       <li><a href="@Url.Action("Edit", "Countries")/' + id + '">Edit</a></li>\
+                       <li><a href="@Url.Action("Details", "Countries")/' + id + '">Details</a></li>\
+                       <li><a href="#" onclick="Cancel(' + i + ')">Cancel</a></li>\
+                       </ul>\
+                       </div>'
+                          }
+
+                          function Cancel(i) {
+                              status = "Cancelled";
+                              swal({
+                                  title: "Are you sure?",
+                                  text: "Country will be Cancelled!",
+                                  buttons: [
+                                    'No',
+                                    'Yes'
+                                  ],
+                              }).then(function (isConfirm) {
+                                  if (isConfirm) {
+                                      ChangeCoaItemStatus(data[i]["CountryId"], status)
+                                  } else {
+                                      swal("Cancelled", "No change was made");
+                                  }
+                              });
+                          }
+
+                          function ChangeCoaItemStatus(Id, status) {
+                              var url = '@Url.Action("ChangeStatus", "Countries")';
+                              $.ajax({
+                                  type: "post",
+                                  url: url,
+                                  data: {
+                                      Status: status,
+                                      CountryId: Id
+                                  },
+                                  contenttype: "application/json; charset=utf-8",
+                                  datatype: "json",
+                                  success: function (response) {
+
+                                      if (response == "Success") {
+                                          swal("Changed Successfully!", { icon: "success" })
+                                              .then((value) => {
+                                                  window.location.reload();
+                                              });
+                                      }
+                                      else {
+                                          swal(response);
+                                      }
+
+                                  },
+                                  failure: function (error) {
+                                      swal(error);
+                                  }
+                              });
+                          }
+
+        function searchTableUpdate(search) {
+            var url = '@Url.Action("GetCountry", "Countries")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_country.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_country.fnAddData([i + 1,
+
+                           data[i]["CountryName"],
+                           data[i]["ZipCode"],
+                           data[i]["Status"],
+                           actionTemplate(i, data[i]["CountryId"])
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        function loadTableData() {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetCountry", "Countries")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    console.log(data);
+                    dt_country.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_country.fnAddData([i + 1,
+
+                           data[i]["CountryName"],
+                           data[i]["ZipCode"],
+                           data[i]["Status"],
+                          actionTemplate(i, data[i]["CountryId"])
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadTableData();
+
+        function Delete(i) {
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this Country!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteItemConfirmed(data[i]["CountryId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("DeleteCountry", "Countries")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "CountryId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var globalCountryId = 0;
+        function edit(i) {
+            globalCountryId = i;
+            $("#CountryName").val(data[i]["CountryName"]);
+            validateInputsParameters(["#CountryName"])
+            $("#editModal").modal('show');
+        }
+
+      function save() {
+            if (voucherSummaryFormValidation()) {
+                commitForm()
+            } else {
+                swal("Please fix form Errors")
+            }
+        }
+
+        function commitForm() {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("EditCountry", "Countries")',
+                data: {
+                    CountryId: data[globalCountryId]["CountryId"],
+                   Country:{
+                       CountryName: $("#CountryName").val(),
+                       ZipCode: $("#ZipCode").val(),
+
+                    }
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        function voucherSummaryFormValidation() {
+            var isNotValid = validateInputsParameters([
+                "#CountryName",
+                "#ZipCode",
+
+            ]);
+
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+        </script>
+         }
+                 

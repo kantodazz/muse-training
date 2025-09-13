@@ -1,0 +1,367 @@
+﻿@{
+    ViewBag.Title = "Automatic Earnings List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i></span>
+                        <h2>Earning(s) </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="pull-left" >
+                                    <a class="btn btn-info" href='@Url.Action("CreateEmployeeAllowance", "AutomaticEarnings")' style="margin-left:15px">
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                    <a class="btn btn-info " onclick="approveEaning()">
+                                        <i class="glyphicon glyphicon-thumbs-up"></i> Confirm
+                                    </a>
+                                </div>
+                            </div>
+                            <br />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>Employee</th>
+                                        <th>Check Number</th>
+                                        <th>Allowance</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+
+    $(function () {
+        BindDataTable();
+        $("#divLoader").show();
+    });
+
+  var BindDataTable = function () {
+    var url = '@Url.Action("GetAutomaticEarningsList", "AutomaticEarnings")';
+    $("#tblUsers").DataTable({
+        "bServerSide": true,
+        "sAjaxSource": url,
+        "fnServerData": function (sSource, aoData, fnCallback) {
+            $.ajax({
+                type: "GET",
+                url: sSource,
+                data: aoData,
+                success: function (data) {
+                    fnCallback(data);
+                    $("#divLoader").hide();
+                },
+                error: function () {
+                    $("#divLoader").hide();
+                    swal("An error occurred while fetching data.");
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        },
+        "aoColumns": [
+            {
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            {
+                "bSortable": false,
+                "render": function (data, type, row, meta) {
+                    return '<input type="checkbox" value="' + row.EmployeeEarningId + '" class="checkBoxConfirm">';
+                }
+            },
+            { "mData": "Fullname" },
+            { "mData": "CheckNumber" },
+            { "mData": "PaymentDescription" },
+            {
+                "mData": "Amount",
+                render: $.fn.dataTable.render.number(',', '.', 2),
+                className: "text-right"
+            },
+            { "mData": "OverallStatus" },
+            {
+                "mData": "EmployeeEarningId",
+                "bSortable": false,
+                "render": function (EmployeeEarningId, type, row, meta) {
+                    return '<div class="btn-group">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                    <span class="caret"></span>\
+                                    <span class="sr-only">Toggle Dropdown</span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                    <li><a href="@Url.Action("EditEarningEntry", "AutomaticEarnings")/' + EmployeeEarningId + '"> Edit </a></li>\
+                                    <li><a href="#" onclick="confirmEmployee(' + EmployeeEarningId + ')"> Confirm </a></li>\
+                                    <li><a href="#" onclick="deleteEarning(' + EmployeeEarningId + ')"> Delete </a></li>\
+                                </ul>\
+                            </div>';
+                }
+            },
+        ],
+        "drawCallback": function (settings) {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(3, { page: 'current' }).data().each(function (group, i) {
+                if (last !== group) {
+                    $(rows).eq(i).before('<tr class="group"><td style="font-weight: bold;" colspan="8">' + group + '</td></tr>');
+                    last = group;
+                }
+            });
+        }
+    });
+};
+
+var approveEaning = function (){
+            debugger
+            var csvIds = [];
+
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No record selected!");
+                return;
+            }
+
+            swal({
+                title: "Confirmation!",
+                text: "Are you sure you want to Confirm?",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirmEarning(csvIds)
+                }
+            });
+        }
+
+        function confirmEarning(csvIds) {
+
+            $('#resultLoading').show();
+
+            var url = '@Url.Action("ConfirmMultEanings", "AutomaticEarnings")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Earning Confirmed Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on confirmation!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    swal("An error has occured, contact system support");
+                },
+            });
+        };
+
+         function rejectEarning() {
+             debugger
+
+             var csvIds = [];
+
+             $("input:checkbox.checkBoxConfirm").each(function () {
+                 if ($(this).prop("checked")) {
+                     csvIds.push($(this).val());
+                 }
+             });
+
+             if (csvIds.length == 0) {
+                 swal("No record selected!");
+                 return;
+             }
+
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "Save",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    rejectPost(remark, csvIds);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+         function rejectPost(remark, csvIds) {
+            debugger
+            $('#resultLoading').show();
+            $.ajax({
+                type: "post",
+                url:  '@Url.Action("RejectEarning", "AutomaticEarnings")',
+                data: { "ids": csvIds, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else if(response == "DbException") {
+                        swal("Error on rejecting Employee!", { icon: "error" }).then((e) => {
+
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    function confirmEmployee(i, id) {
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Confirmation!",
+                text: "Are you sure you want to Confirm?",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirm(i)
+                }
+            });
+        };
+
+     var confirm = function (id) {
+            debugger;
+            var url = '@Url.Action("ConfirmAutomaticEarning", "AutomaticEarnings")/' + id;
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Confirmed Successfully!",{ icon: "success" }).then((e) =>{
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on Confirming!", { icon: "error" }).then((e) =>{
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    swal("An error has occured, contact system support");
+                },
+            });
+    };
+
+
+    function deleteEarning(i, id) {
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Deletion!",
+                text: "Are you sure you want to Delete?",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirmdeletion(i)
+                }
+            });
+        };
+
+    var confirmdeletion = function (id){
+            debugger;
+            var url = '@Url.Action("DeleteAutomaticEarning", "AutomaticEarnings")/' + id;
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Deleted Successfully!",{ icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on Delete!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    swal("An error has occured, contact system support");
+                },
+            });
+    };
+
+    </script>
+}
+
+
+
+
+
+

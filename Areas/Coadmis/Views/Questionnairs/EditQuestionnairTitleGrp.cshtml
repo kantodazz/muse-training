@@ -1,0 +1,349 @@
+﻿@model IFMIS.Areas.Coadmis.Models.QuestionnairTitleGroup
+@{
+    ViewBag.Title = "Edit Questionnaire Group";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+
+    body {
+        margin-top: 40px;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div class="row setup-content">
+                                @Html.AntiForgeryToken()
+                                <form  method="post" id="form" class="form-horizontal" encytpe="multipart/form-data">
+                                    <div class="form-horizontal">
+                                        <div class="col-xs-12">
+                                            <div class="col-md-12">
+                                                @Html.HiddenFor(model => model.QuestionnnairTitleGrpId)
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3">Questionnaire Type<span class="redStar">*</span></label>
+                                                    <div class="col-md-8">
+                                                        @if (ViewBag.QuestionnairTypleList != null)
+                                                        {
+                                                            @Html.DropDownListFor(model => model.QuestionnairTypeId, ViewBag.QuestionnairTypleList as SelectList, "Select Questionnair Type", new { @class = "form-control select2" })
+                                                            @Html.ValidationMessageFor(model => model.QuestionnairTypeId, "", new { @class = "text-danger" })
+
+                                                        }
+                                                        else
+                                                        {
+                                                            @Html.DropDownList("QuestionnairTypeId", null, "Select Questionnair Type", new { @class = "form-control select2" })
+
+                                                        }
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-3">Questionnaire Group<span class="redStar">*</span></label>
+                                                    <div class="col-md-8">
+                                                        @Html.TextBoxFor(model => model.Title, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                                                    </div>
+                                                </div>
+                                                <div class="form-group">
+                                                    <table class='table table-striped table-bordered table-hover' id="tableList">
+                                                        <thead>
+                                                            <tr>
+                                                                <td><strong>#</strong></td>
+                                                                <td><strong>Questionnaire Sub-Group</strong> </td>
+                                                                <td><strong>Action</strong></td>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions row" style="margin: 10px">
+                                        <div class="col-md-7">
+                                            <a class="btn btn-default" href='@Url.Action("QuestionnairTitleGrp", "questionnairs")'><i class="glyphicon glyphicon-arrow-left"></i> Back</a>
+                                            <button class="btn btn-info" type="submit" name="submit" id="UpdateQuestionnaireGroup">
+                                                <img src="~/Content/img/loading.gif" id="saveEditLoader" />
+                                                <i class="fa fa-save"> Save</i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("select").select2();
+        });
+
+        $("#saveEditLoader").hide();
+
+        var datatable = $("#tableList").dataTable();
+
+        $.ajax({
+            url: '@Url.Action("GetSubGroups", "Questionnairs")/?id='+ @Model.QuestionnnairTitleGrpId,
+            type: 'GET',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                var num = 0;
+                datatable.fnClearTable();
+                for (var n = 0; n < data.length; n++) {
+                    num++;
+                    datatable.fnAddData([num,
+                        data[n]["Title"],
+                        '<a href="#" onclick="Delete(' + data[n]["QuestionnnairTitleGrpId"] + ')" ><i class="glyphicon glyphicon-trash" aria-hidden="true"></i></a >',
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        $('#QuestionnairTypeId').change(function () {
+            debugger;
+            var option = [];
+            var selectedValue = $('#QuestionnairTypeId').val();
+            var url = '@Url.Action("GetGroups", "Questionnairs")/?id='+ selectedValue;
+            $.ajax({
+                url: url,
+                type: 'GET',
+                success: function (response) {
+                    option.empty;
+                    option.push('<option value="">Select Parent Type</option>');
+                    response.data.forEach(d => {
+                        option.push('<option value=' + d["ParentId"] + '>' + d["Title"] + '</option>');
+                    });
+                    option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                    $("#ParentId").html(option);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        });
+
+        $("#UpdateQuestionnaireGroup").on("click", function () {
+            $("#saveEditLoader").show();
+            var questionnairTypeId = $("#QuestionnairTypeId").val();
+            var title = $("#Title").val();
+            var Id = $("#QuestionnnairTitleGrpId").val();
+
+            if (questionnairTypeId == '') {
+                swal("Please select questionnaire type", { icon: "warning" });
+                return false;
+            }
+
+            if (title == '') {
+                swal("Please fill questionnaire group", { icon: "warning" });
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("QuestionnairTypeId", $("#QuestionnairTypeId").val());
+            formdata.append("Title", $("#Title").val());
+            formdata.append("ParentId", $("#ParentId").val());
+            formdata.append("QuestionnnairTitleGrpId", Id);
+
+            var url = '@Url.Action("EditQuestionnairTitleGroup", "Questionnairs")';
+            var urlList = '@Url.Action("QuestionnairTitleGrp", "Questionnairs")';
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#divEditModal').modal('hide');
+                    $("#saveEditLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Updated Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    } else if (response == "Duplicate") {
+                        swal("Questionnaire group already exist", { icon: "warning" });
+                        return false;
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveEditLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        function Delete(id) {
+            swal({
+                text: "Are you sure you want to delete this sub-group?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+                icon: "warning",
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    DeleteSubGroup(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function DeleteSubGroup(i) {
+            var url = '@Url.Action("DeleteSubGroup", "Questionnairs")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": i },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Answer exist") {
+                        swal("You cannot delete a questionnaire sub group with answered questions", { icon: "warning" });
+                    }
+                    else {
+                        swal("Error while deleting sub-group", { icon: "error" });
+                    }
+                },
+                failure: function (error) {
+                    swal("Error while deleting sub-group", { icon: "error" });
+                }
+            });
+        }
+    </script>
+}

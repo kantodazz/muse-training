@@ -1,0 +1,433 @@
+﻿@{
+    ViewBag.Title = "BackLog Approve";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+         var dt_table = $('#dt_table').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "targets": [1],
+                "visible": false
+            }],
+            "columns": [
+           {
+               "className": 'details-control',
+               "orderable": false,
+               "data": null,
+               "defaultContent": ''
+           },
+           { title: "Id" },
+           { title: "Payer Bank Account" },
+           { title: "Payer Bank Name" },
+           { title: "Num Trx" },
+           { title: "Total Amount" },
+           { title: "Status" },
+           { title: "Created At" },
+           { title: "" }
+            ]
+        });
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+           function actionTypes(i) {
+               return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "approve(' + i + ')">Approve</a></li>\
+                                <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\
+                    <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+        }
+
+        var data = []
+          $.ajax({
+            type: "get",
+            url: '@Url.Action("BackLogGet", "BackLog")',
+            contenttype: "application/json; charset=utf-8",
+            data: {status: "Confirmed"},
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_table.fnAddData([i + 1,
+                       data[i]["BackLogTransactionSummaryId"],
+                       data[i]["PayerBankAccount"],
+                       data[i]["PayerBankName"],
+                       data[i]["NumTrx"],
+                       toLabel(data[i]["OperationalAmount"]),
+                       data[i]["OverallStatus"],
+                       data[i]["CreatedAtFormatted"],
+                       actionTypes(i)
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+          });
+
+               function deactivate(i) {
+            swal({
+                title: 'Deactivate this Item?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    activatePost(data[i]["BankBranchId"],false);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+       function approve(i) {
+            swal({
+                title: 'Approve this Item.?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    approvePost(data[i]["BackLogTransactionSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function approvePost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("BackLogApprove", "BackLog")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+       function reject(i) {
+            swal({
+                title: 'Reject this Item.?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    rejectPost(data[i]["BackLogTransactionSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+       }
+
+       function rejectPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("BackLogReject", "BackLog")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+       function cancel(i) {
+            swal({
+                title: 'Cancel this Item.?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPost(data[i]["BankBranchId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function cancelPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("BankBranchCancel", "BankBranch")',
+                data: { "bankBranchId": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+  function initTablePaymentVoucher(i) {
+            window["dt_view_back_log" + i]
+                = $('#dt_view_back_log' + i)
+           .dataTable({
+               "sDom": 't',
+               "columns": [
+                   { title: "#" },
+                   { title: "Payee Name" },
+                   { title: "Payee Code" },
+                   { title: "ChequeNo" },
+                   { title: "Amount" },
+                   { title: "Narration" },
+                   { title: "InvoiceNo" },
+                   { title: "InvoiceDate" },
+                   { title: "ApplyDate" },
+               ]
+           });
+            $("#dt_view_back_log" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_table tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_table.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view_back_log' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initTablePaymentVoucher(row.data()[0]);
+                tr.addClass('shown');
+                //console.log(data[row.data()[0]-1])
+                getPaymentVoucher(row.data()[0], data[row.data()[0]-1]["BackLogTransactionSummaryId"]);
+            }
+        });
+
+        function getPaymentVoucher(rowId, Id) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("BackLogTransactionGet", "BackLog")',
+                data: { 'Id': Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view_back_log" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        window["dt_view_back_log" + rowId]
+                            .fnAddData([i + 1,
+                                d[i]["Payeename"],
+                                d[i]["PayeeCode"],
+                                d[i]["ChequeNo"],
+                                toLabel(d[i]["OperationalAmount"]),
+                                d[i]["Narration"],
+                                d[i]["InvoiceNo"],
+                                d[i]["InvoiceDateFormatted"],
+                                d[i]["ApplyDateFormatted"],
+                            ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

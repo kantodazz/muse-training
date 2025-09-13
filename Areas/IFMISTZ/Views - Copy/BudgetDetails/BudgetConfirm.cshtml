@@ -1,0 +1,308 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Confirm Budget";
+}
+
+<script type="text/javascript">
+    function ConfirmUpdate() {
+
+        return confirm("Do you want to Update these records.?");
+    }
+
+    function SelectedIndexChanged() {
+        $("#ApprovalStatus").val($('#SelectedApprovalStatus').val());
+    }
+
+
+</script>
+<style>
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Confirm Budget</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th data-hide="phone">S/N</th>
+                                        <th data-hide="phone,tablet">Department</th>
+                                        <th data-hide="phone,tablet">Sub Budget Class</th>
+                                        <th data-hide="phone,tablet">Amount</th>
+                                        <th data-hide="phone,tablet">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (ViewBag.InstLevel == 1)
+                                    {
+                                        int cnt = 0;
+                                        decimal CielingAmt1 = 0;
+                                        foreach (var group in Model.GroupBy(i => i.SubVote))
+                                        {
+                                            int? fy = group.Where(a => a.SubVote == group.Key).Select(a => a.FinancialYear).FirstOrDefault();
+                                            string c = group.Where(a => a.SubVote == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                            decimal? total = group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount);
+                                            string dept = group.Where(a => a.SubVote == group.Key).Select(a => a.SubVote).FirstOrDefault() + '-' + group.Where(a => a.SubVote == group.Key).Select(a => a.SubVoteDesc).FirstOrDefault();
+                                            int? busid = group.Where(a => a.SubVote == group.Key).Select(a => a.BudgetSummaryId).FirstOrDefault();
+                                            cnt = cnt + 1;
+                                            CielingAmt1 = CielingAmt1 + System.Convert.ToDecimal(group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount));
+                                            //@busid
+                                            var CostCenter = group.Where(a => a.SubVote == group.Key).Select(a => a.SubVote).FirstOrDefault();
+                                            <tr>
+                                                <td>@cnt</td>
+                                                <td>
+                                                    <a href="@Url.Action("Detailedbudget", "Budgetdetails", new { Buid = @busid, costctr = @CostCenter })">@dept</a>
+                                                </td>
+                                                @*<td>@Html.ActionLink(@dept.ToString(), "../Budgetdetails/Detailedbudget", new { Buid = busid, costctr = group.Key })</td>
+                    <td>@Html.ActionLink(@dept.ToString(), "../Budgetdetails/Detailedbudget", new { Buid = busid, costctr = group.Key })</td>*@
+                                                <td>@group.Where(a => a.SubVote == group.Key).Select(a => a.SuBbudgetClassDesc).FirstOrDefault()</td>
+                                                <td>@string.Format("{0:#,0.00}", group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount))</td>
+                                                <td>
+                                                    <div class="btn-group">
+
+                                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                                                            <span class="caret"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <input type="hidden" id="ctr-@cnt" value="@CostCenter" />
+                                                        <ul class="dropdown-menu">
+                                                            <li><a href="#" onclick="confirmDialog(@cnt,@busid)">Confirm</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+
+                                        }
+                                    }
+                                    else
+                                    {
+                                        int cnt = 0;
+                                        decimal CielingAmt2 = 0;
+
+
+                                        foreach (var group in Model.GroupBy(i => i.CostCentre))
+                                        {
+                                            int? fy = group.Where(a => a.CostCentre == group.Key).Select(a => a.FinancialYear).FirstOrDefault();
+                                            string c = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                            decimal? total = group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount);
+                                            string dept = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                            int? busid = group.Where(a => a.CostCentre == group.Key).Select(a => a.BudgetSummaryId).FirstOrDefault();
+                                            cnt = cnt + 1;
+                                            CielingAmt2 = CielingAmt2 + System.Convert.ToDecimal(group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount));
+                                            //@busid
+                                            var CostCenter = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentre).FirstOrDefault();
+                                            <tr>
+                                                <td>@cnt</td>
+                                                <td>
+                                                    <a href="@Url.Action("Detailedbudget", "Budgetdetails", new { Buid = @busid, costctr = @CostCenter })">@dept</a>
+                                                </td>
+                                                @*<td>@Html.ActionLink(@dept.ToString(), "../Budgetdetails/Detailedbudget", new { Buid = busid, costctr = group.Key })</td>
+                    <td>@Html.ActionLink(@dept.ToString(), "../Budgetdetails/Detailedbudget", new { Buid = busid, costctr = group.Key })</td>*@
+                                                <td>@group.Where(a => a.CostCentre == group.Key).Select(a => a.SuBbudgetClassDesc).FirstOrDefault()</td>
+                                                <td>@string.Format("{0:#,0.00}", group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount))</td>
+                                                <td>
+                                                    <div class="btn-group">
+
+                                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                                                            <span class="caret"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <input type="hidden" id="ctr-@cnt" value="@CostCenter" />
+                                                        <ul class="dropdown-menu">
+                                                            <li><a href="#" onclick="confirmDialog(@cnt,@busid)">Confirm</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+
+                                            </tr>
+
+                                        }
+                                    }
+
+                                </tbody>
+                            </table>
+                            @*<table class="table table-bordered table-condensed">
+                                <tr>
+                                    <td></td>
+                                    <td colspan="4">Total Departmental Amount</td>
+                                    <td>@string.Format("{0:#,0.00}", CielingAmt)</td>
+                                </tr>
+                            </table>*@
+
+                        </div>
+
+                        
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!--confirm pop up-->
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Confirm this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+        var datatable_tabletools = $('#datatable_tabletools').dataTable({
+            "autoWidth": true,
+            "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+            "bPaginate": false,
+            "info": false,
+        });
+
+        // GRAB THIS==================================
+        $("#searchbox").on("keyup search input paste cut", function () {
+            datatable_tabletools.DataTable().search(this.value).draw();
+        });
+
+        //END HERE ==========================================
+
+        
+        //=================== CONFIRM START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmDialog(cnt,id) {
+            //  if (i == 'x') i = globalPayeeId;
+            var CostCenter = $("#ctr-" + cnt).val();
+            swal({
+                title: 'Confirm this Transaction ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmPendingBudget(CostCenter,id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmPendingBudget(CostCenter, id) {
+            var url = '@Url.Action("ConfirmBudget", "BudgetDetails")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { CostCenter: CostCenter, id: id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Budget Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Confirm this record ?');
+        });
+    </script>
+}

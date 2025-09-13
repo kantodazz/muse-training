@@ -1,0 +1,349 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style type="text/css">
+    .loadingImg {
+     margin-left: auto;
+      margin-right: auto;
+       position: absolute;
+        top: 50%;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                @Html.AntiForgeryToken()
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Pending Exchequer Warrant List</h2>
+                    </header>
+                    <div>
+                        <div class="row">
+                            <div class="col-md-6" style="height:80px;font-size:14px;">
+                                <b>Recurrent Exchequer (TZS):</b>
+                                <span id="totalRecurrentExchequer">
+                                    @if (ViewBag.TotalRecurrentExchequer != 0)
+                                    {
+                                        <span>TZS:@string.Format("{0:#,0.00}", ViewBag.TotalRecurrentExchequer)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>TZS:@ViewBag.TotalRecurrentExchequer</span>
+                                    }
+                                </span><br />
+                                <b>Development Exchequer (TZS):</b>
+                                <span id="totalDevelopmentExchequer">
+                                    @if (ViewBag.TotalDevelopmentExchequer != 0)
+                                    {
+                                        <span>TZS:@string.Format("{0:#,0.00}", ViewBag.TotalDevelopmentExchequer)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>TZS:@ViewBag.TotalDevelopmentExchequer</span>
+                                    }
+                                </span><br />
+                                <b>Total Exchequer (TZS):</b>
+                                <span id="totalExchequer">
+                                    @if (ViewBag.TotalExchequer != 0)
+                                    {
+                                        <span>TZS:@string.Format("{0:#,0.00}", ViewBag.TotalExchequer)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>TZS:@ViewBag.TotalExchequer</span>
+                                    }
+                                </span><br />
+                            </div>
+                            <div class="col-md-6">
+                                <b>9921180001 – TSA Account (TZS):</b>
+                                <span id="totalExchequer">
+                                    @if (ViewBag.TotalExchequer != 0)
+                                    {
+                                        <span>TZS:@string.Format("{0:#,0.00}", ViewBag.TotalExchequer)</span>
+                                    }
+                                    else
+                                    {
+                                        <span>TZS:@ViewBag.TotalExchequer</span>
+                                    }
+                                </span><br />
+                            </div>
+                        </div>
+                       
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table class="table  table-bordered table-hover table-condensed" id="dataTableList">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%">Serial Number</th>
+                                        @*<th>Vote</th>*@
+                                        <th style="text-align:left;">Exchequer Reference</th>
+                                        <th style="text-align:left;">Exchequer Description</th>
+                                        <th>Exchequer Category</th>
+                                        <th>Exchequer Type</th>
+                                        <th>Number of Transactions</th>
+                                        <th>Amount (TZS)</th>
+                                        <th>Apply Date</th>
+                                        <th>Sent ACGEN Date</th>
+                                        <th>Created Date</th>
+                                        <th>Status</th>
+                                        <th style="text-align:center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+     $(".saveLoader").toggle(false);
+     $(".loadingImg").hide();
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+                document.getElementById("ImageLoader").style.marginRight = "auto";
+                document.getElementById("ImageLoader").style.position = "absolute";
+                document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ready(function () {
+            $(".saveLoader").toggle(false);
+            BindDataTable();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        function DateYear(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                var monthInWords = '';
+                switch ((dt.getMonth() + 1)) {
+                    case 1:
+                        monthInWords = "January";
+                        break;
+
+                    case 2:
+                        monthInWords = "February";
+                        break;
+
+                    case 3:
+                        monthInWords = "March";
+                        break;
+
+                    case 4:
+                        monthInWords = "April";
+                        break;
+
+                    case 5:
+                        monthInWords = "May";
+                        break;
+
+                    case 6:
+                        monthInWords = "June";
+                        break;
+
+                    case 7:
+                        monthInWords = "July";
+                        break;
+
+                    case 8:
+                        monthInWords = "August";
+                        break;
+
+                    case 9:
+                        monthInWords = "September";
+                        break;
+
+                    case 10:
+                        monthInWords = "October";
+                        break;
+
+                    case 11:
+                        monthInWords = "November";
+                        break;
+
+                    case 12:
+                        monthInWords = "December";
+                        break;
+                }
+                return monthInWords + " " + dt.getFullYear();
+            }
+        }
+
+        var BindDataTable = function (response) {
+            $("#dataTableList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetPendingExchequerWarrantList", "ExchequerSummaries")',
+                "iDisplayLength": 10,
+                "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "fnServerData": function (sSource, aoData, fnCallback) {
+
+                    $.ajax({
+                        type: "Get",
+                        data: aoData,
+                        url: sSource,
+                        success: fnCallback
+                    })
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    /*{
+                        "mData": "VoteCode",
+                        "render": function (VoteCode, type, full, meta) {
+                            return VoteCode + "-" + full.VoteName;
+                        }
+                    },*/
+                    { "mData": "ExchequerRef"},
+                    {
+                        "mData": "CheckDate",
+                        "render": function (CheckDate, type, full, meta) {
+                            if (CheckDate != null && CheckDate != "") {
+                                return "Exchequer of " + DateYear(CheckDate);
+                            } else {
+                                return "Details not Found";
+                            }
+                        }
+                    },
+                    { "mData": "ExchequerCategory" },
+                    {
+                        "mData": "ExchequerType",
+                        "render": function (ExchequerType, type, full, meta) {
+                            if (ExchequerType != null && ExchequerType != "") {
+                                if (ExchequerType == "Local") {
+                                    return "Local - 201";
+                                }
+                                else if (ExchequerType == "Foreign") {
+                                    return "Foreign - 202";
+                                }
+                                else if (ExchequerType == "Other Charges" || ExchequerType == "OC") {
+                                    return "Other Charges - 102";
+                                }
+                                else if (ExchequerType == "PE" || ExchequerType == "Wages and Salaries") {
+                                    return "PE - 101";
+                                } else {
+                                    return "Details Not Found";
+                                }
+                            } else {
+                                return "Details Not Found";
+                            }
+                        }
+                    },
+                    {
+                        "mData": "NumTrxs",
+                        "render": function (NumTrxs, type, full, meta) {
+                            var num = null;
+                            if (NumTrxs == null) {
+                                num = "<p align='right'>0</p>";
+                            }
+                            else {
+                                num = "<p align='right'>" + NumTrxs.toLocaleString() + "</p>";
+                            }
+                            return num;
+                        }
+                    },
+                    {
+                        "mData": "Amount",
+                        "render": function (Amount, type, full, meta) {
+                            var amount = null;
+                            if (Amount == null) {
+                                amount = "<p align='right'>0</p>";
+                            }
+                            else {
+                                amount = "<p align='right'>" + Amount.toLocaleString() + "</p>";
+                            }
+                            return amount;
+                        }
+                    },
+
+                    {
+                        "mData": "CheckDate",
+                        "render": function (CheckDate, type, full, meta) {
+                            if (CheckDate != null && CheckDate != "") {
+                                return ToJavaScriptDate(CheckDate);
+                            } else {
+                                return "Not Found";
+                            }
+                        }
+                    },
+                    {
+                        "mData": "SentToAcgenAt",
+                        "render": function (SentToAcgenAt, type, full, meta) {
+                            if (SentToAcgenAt != null && SentToAcgenAt != "") {
+                                return ToJavaScriptDate(SentToAcgenAt);
+                            } else {
+                                return "Not Found";
+                            }
+                        }
+                    },
+                    {
+                        "mData": "CreatedAt",
+                        "render": function (CreatedAt, type, full, meta) {
+                            if (CreatedAt != null && CreatedAt != "") {
+                                return ToJavaScriptDate(CreatedAt);
+                            } else {
+                                return "Not Found";
+                            }
+                        }
+                    },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "ExchequerInstructionId",
+                        "render": function (ExchequerInstructionId, type, full, meta) {
+                               return '<div class="btn-group" id="drop">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret"></span\
+                                <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu dropdown-menu-right">\
+                                    <li><a class="dropdown-item" href="@Url.Action("ExchequerSummaryDetails", "ExchequerSummaries")/?id=' + full.ExchequerInstructionId + '&&summaryId=' + full.ExchequerSummaryId+'">Details</a></li>\
+                                </ul>\
+                            </div>\ ';
+                        }
+                    },
+                ]
+            });
+        }
+    </script>
+}
+
+
+
+

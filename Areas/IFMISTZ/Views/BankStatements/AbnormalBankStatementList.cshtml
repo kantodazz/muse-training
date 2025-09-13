@@ -1,0 +1,356 @@
+﻿
+@{
+    ViewBag.Title = "Abnormal Bank Statement List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <hr class="simple" />
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_Statement_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Account Number</th>
+                                        <th>Account Name</th>
+                                        <th>Statement Date</th>
+                                        <th>PrevClose Balance</th>
+                                        <th>Opening Balance</th>
+                                        <th>Opening Balance Discrepancy</th>
+                                        <th>Total Debit</th>
+                                        <th>Total Credit</th>
+                                        <th>Closing Balance</th>
+                                        <th>Expected Closing Balance</th>
+                                        <th>Closing Balance Discrepancy</th>
+                                        <th>OverallStatus</th>
+                                        <th>OverallStatus Description</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="BankStatementSummaryId" id="BankStatementSummaryId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="ConfirmForm()" id="confirmform">
+                        <i class="fa fa-times"></i>Confirm
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        var dt_Statement_listing = $('#dt_Statement_listing').dataTable();
+        $("#dt_Statement_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Statement_listing.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetAbnormalBankStatementList", "BankStatements")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                console.log(response);
+                data = response.data;
+                dt_Statement_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_Statement_listing.fnAddData([i + 1,
+                       data[i]["BankAccountNumber"],
+                        data[i]["BankAccountName"],
+                       data[i]["StatementDateFormatted"],
+                       toLabel(data[i]["PrevCloseBalance"]),
+                       toLabel(data[i]["OpeningBalance"]),
+                       toLabel(data[i]["OpeningBalanceDiscrepancy"]),
+                       toLabel(data[i]["TotalDebit"]),
+                       toLabel(data[i]["TotalCredit"]),
+                       toLabel(data[i]["ClosingBalance"]),
+                       toLabel(data[i]["ExpectedClosingBalance"]),
+                       toLabel(data[i]["ClosingBalanceDiscrepancy"]),
+                       data[i]["OverallStatus"],
+                       data[i]["OverallStatusDescription"],
+                        action(i, data[i]["OverallStatus"], data[i]["Source"])
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+          //action
+        function action(i, overallStatus,source) {
+            if (overallStatus == "Invalid" && source !="Uploaded") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="RequestStatement(' + i + ')">Request Bank Statement</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+            if (overallStatus == "Invalid" && source == "Uploaded") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="Reject(' + i + ')">Upload Bank statement</a></li>\
+                                <li><a href="#" onclick="Request(' + i + ')">Request Bank Statement</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+        }
+
+         function Request(i) {
+           //debugger
+            let accountNumber = data[i]["BankAccountNumber"];
+            let statementDate = data[i]["StatementDateFormatted"];
+            swal({
+                title: "RequestBankStatement",
+                text: "Are you sure you want to Request Bank Statement of Statement Date  " + statementDate + " for Account Number   " + accountNumber + " ?",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    validation(i);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function validation(i) {
+           //debugger
+
+            let accountNumber = data[i]["BankAccountNumber"];
+            let statementDate = data[i]["StatementDateFormatted"];
+
+            if (accountNumber == "") {
+                swal({
+                    icon: "warning",
+                    title: "Please Select Account Number !",
+                });
+                return false;
+            }
+
+
+            if (statementDate == "") {
+
+                swal({
+                    icon: "warning",
+                    title: "Please Statement Date is Required !",
+                });
+
+                return false;
+            }
+            //debugger
+            RequestBankStatement(accountNumber, statementDate);
+        };
+
+          function RequestBankStatement(a,b) {
+          //debugger
+
+              //let account = data[i]["BankAccountNumber"];
+              //let statementDate = data[i]["StatementDate"];
+
+              let account = a;
+              let statementDate = b;
+
+              console.log(account, statementDate);
+
+                var url = '@Url.Action("RequestBankStatement", "BankStatements")';
+                $("#saveLoader").toggle(true);
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { account: account,  statementDate: statementDate },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Bank Statement Requested Successfully!", { icon: "success" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+
+                            });
+
+
+                        } else {
+                            swal(response, { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                        $("#saveLoader").toggle(false);
+                    }
+                });
+            };
+
+
+    </script>
+}

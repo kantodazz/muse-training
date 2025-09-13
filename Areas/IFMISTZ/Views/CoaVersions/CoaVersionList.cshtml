@@ -1,0 +1,464 @@
+﻿@{
+    ViewBag.Title = "Coa Versions";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+  
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div style="margin-bottom: 2%">
+                                <a class="btn btn-info" href='@Url.Action("CreateCoaVersion", "CoaVersions")'>
+                                    <i class="glyphicon glyphicon-plus"></i> Add New
+                                </a>
+                            </div>
+                            <div class="row" style="width:100%">
+                                <div class="col-md-3">
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                                <div style="margin-left: 90%" id="dt_coasegment_wrapper" class="dataTables_wrapper">
+
+                                    <select name="pageLenth" id="pageLenth" aria-controls="dt_coasegment" class="form-control">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+
+                            </div>
+
+                            <table id="dt_coaversion" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Coa Name</th>
+                                        <th>Coa Description</th>
+                                        <th>Coa Year</th>
+                                        <th>Created By</th>
+                                        <th>Created At</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- EDIT DIALOG ----------------->
+<div class="modal fade" id="editModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Edit Coa Version</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:10px">
+                        <div class="row" style="padding:0% 5% 0 5%;">
+                            <div class="col-md-6 col-lg-6 col-sm-12"style="padding:1% 0 1% 25%">
+                                <table>
+                                    <tr>
+                                        <td class="form-label">
+                                            Coa Name
+                                            <i class="fa fa-times" style="color:white" id="CoaName_1"></i>
+                                        </td>
+                                        <td>
+                                            <input style="width:300px" type="text" id="CoaName">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">
+                                            Coa Description
+                                            <i class="fa fa-times" style="color:white" id="CoaDesc_1"></i>
+                                        </td>
+                                        <td>
+                                            <textarea style="width:300px" type="text" id="CoaDesc"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">
+                                            Coa Year
+                                            <i class="fa fa-times" style="color:white" id="CoaYear_1"></i>
+                                        </td>
+                                        <td>
+                                            <input style="width:300px" type="number" id="CoaYear" min="0">
+                                        </td>
+                                    </tr>
+                                </table>
+                                <br />
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="save()" style="width:100px;">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_coaversion = $('#dt_coaversion').dataTable();
+
+        $("#dt_coaversion_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_coaversion.DataTable().search(this.value).draw();
+        });
+
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        function loadTableData() {
+
+            actionTemplate = function (i, status) {
+                return status != "Active"? 
+                        '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="edit(' + i + ')">Edit</a></li>\
+                                <li><a href="#" onclick="Activate(' + i + ')">Activate</a></li>\
+                                <li><a href="#" onclick="Cancel(' + i + ')">Cancel</a></li>\
+                             </ul>\
+                        </div>'
+                    :
+                    '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="edit(' + i + ')">Edit</a></li>\
+                                <li><a href="#" onclick="Deactivate(' + i + ')">Deactivate</a></li>\
+                                <li><a href="#" onclick="Cancel(' + i + ')">Cancel</a></li>\
+                                </ul>\
+                     </div>'
+            }
+            
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetCoaVersion", "CoaVersions")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_coaversion.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_coaversion.fnAddData([i + 1,
+                           data[i]["CoaName"],
+                           data[i]["CoaDesc"],
+                           data[i]["CoaYear"],
+                           data[i]["CreatedBy"],
+                           data[i]["CreatedAtFormatted"],
+                           data[i]["OverallStatus"],
+                           actionTemplate(i, data[i]["OverallStatus"])
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadTableData();
+    
+        function Delete(i) {
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this Coa Version!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteItemConfirmed(data[i]["CoaVersionId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("DeleteCoaVersion", "CoaVersions")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "coaVersionId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function Activate(i) {
+            status = "Active"
+            swal({
+                title: "Are you sure?",
+                text: "Coa Vesersion Status will be changed!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    changeStatusItemConfirmed(data[i]["CoaVersionId"],status)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+        function Deactivate(i) {
+            status = "Inactive"
+            swal({
+                title: "Are you sure?",
+                text: "Coa Vesersion Status will be changed!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    changeStatusItemConfirmed(data[i]["CoaVersionId"], status)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+        function Cancel(i) {
+            status = "Cancelled";
+            swal({
+                title: "Are you sure?",
+                text: "CoaSegment will be Cancelled!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    changeStatusItemConfirmed(data[i]["CoaVersionId"], status);
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function changeStatusItemConfirmed(Id, status) {
+            var url = '@Url.Action("ChangeStatusCoaVersion", "CoaVersions")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: {
+                    overallStatus: status,
+                    coaVersionId: Id
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Changed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var globalCoaId = 0;
+        function edit(i) {
+            globalCoaId = i;
+            $("#CoaName").val(data[i]["CoaName"]);
+            $("#CoaDesc").val(data[i]["CoaDesc"]);
+            $("#CoaYear").val(data[i]["CoaYear"]);
+            validateInputsParameters(["#CoaName","#CoaDesc","#CoaYear"])
+            $("#editModal").modal('show');
+        }
+
+        function save() {
+            if (voucherSummaryFormValidation()) {
+                commitForm()
+            } else {
+                swal("Please fix form Errors");
+            }
+        }
+
+        function commitForm() {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("EditCoaVersion", "CoaVersions")',
+                data: {
+                    coaVersionId: data[globalCoaId]["CoaVersionId"],
+                    coaVersion: {
+                        CoaName: $("#CoaName").val(),
+                        CoaDesc: $("#CoaDesc").val(),
+                        CoaYear: $("#CoaYear").val(),
+                    }
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        function voucherSummaryFormValidation() {
+            var isNotValid = validateInputsParameters([
+                "#CoaName",
+                "#CoaDesc",
+                "#CoaYear",
+            ]);
+
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+     
+
+
+
+
+    </script>
+}

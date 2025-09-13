@@ -1,0 +1,619 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PurchaseSummaryVM
+@{
+    ViewBag.Title = "Prepayment Items";
+}
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Legal Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PurchaseOrderNo)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Transaction Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PurchaseOrderAmount) @Html.DisplayFor(model => model.TransactionCurency)</div></div>
+
+                            <hr />
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitItem(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.SourceId)
+                                <div class="form-horizontal">
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.EntryType, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.DropDownList("EntryType", new List<SelectListItem>
+                                                {
+                                                new SelectListItem{ Text="--Select--", Value = "" },
+                                                new SelectListItem{ Text="By Form", Value = "Single",Selected=true },
+                                                new SelectListItem{ Text="By Uploading", Value = "Multiple" },
+                                                }, new { @class = "form-control select2", @id = "EntryTpye" })
+                                        </div>
+
+                                        <div class="col-md-6 forFile">
+                                            <div style="float:right;margin-right:20px">
+                                                <a href="~/Media/PrePayment/PrepaymentBOCSample.xlsx">
+                                                    <i class="fa fa-download">&nbsp;&nbsp;&nbsp;</i>Download Items Sample File
+                                                </a>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <hr />
+
+
+                                    <div class="form-group">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+
+                                                @Html.LabelFor(model => model.ItemCategoryId, htmlAttributes: new { @class = "control-label   col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    @Html.DropDownListFor(model => model.ItemCategoryId, Model.ItemCategoriesList, "Select", new { @class = "form-control select2" })
+                                                    @Html.ValidationMessageFor(model => model.ItemCategoryId, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                @Html.Label("Class", htmlAttributes: new { @class = "control-label   col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <select name="ItemClassificationId" id="ItemClassificationId" class="form-control select2"></select>
+                                                    @Html.ValidationMessageFor(model => model.ItemClassificationId, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group forForm">
+
+                                                @Html.LabelFor(model => model.ItemName, htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <div id="itemDiv">
+                                                        @Html.EditorFor(model => model.ItemName, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", maxlength = 50 } })
+                                                    </div>
+                                                    @Html.ValidationMessageFor(model => model.ItemName, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group forForm">
+                                                @Html.LabelFor(model => model.UOM, htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    @Html.DropDownListFor(model => model.UOM, Model.UOMList, "Select ", new { @class = "form-control select2" })
+                                                    @Html.ValidationMessageFor(model => model.UOM, "", new { @class = "text-danger" })
+                                                </div>
+                  
+                                            </div>
+
+                                            <div class="form-group forForm">
+                                                @Html.LabelFor(model => model.VatStatus, htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8" style="padding-top:8px">
+                                                    @*@Html.CheckBoxFor(model => model.VatStatus)*@
+                                                    <input type="checkbox" name="VatStatus" value="Applicable" id="VatStatus">
+                                                    @Html.EditorFor(model => model.VatApplicable, new { htmlAttributes = new { @style = "width:40px;font-weight:bold", @readonly = "readonly" } })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group forFile">
+                                                @Html.LabelFor(model => model.UploadFile, htmlAttributes: new { @class = "control-label   col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <input type="file" name="UploadFile" class="form-control" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group forForm">
+                                                @Html.Label("Quantity", htmlAttributes: new { @class = "control-label   col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <input type="text" name="Quantity" id="Quantity" value="" class="form-control" autocomplete="off">
+                                                    @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group forForm">
+                                                @Html.Label("Unit Price", htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <div class="input-group">
+
+                                                        <span class="input-group-addon">@Html.DisplayFor(model => model.TransactionCurency)</span>
+                                                        @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                                        @Html.ValidationMessageFor(model => model.UnitPrice, "", new { @class = "text-danger" })
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group forForm">
+                                                @Html.Label("Total Amount", htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <div class="input-group">
+
+                                                        <span class="input-group-addon">@Html.DisplayFor(model => model.TransactionCurency)</span>
+                                                        @Html.EditorFor(model => model.TotalAmount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                                                        @Html.ValidationMessageFor(model => model.TotalAmount, "", new { @class = "text-danger" })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group forForm">
+                                                @Html.LabelFor(model => model.OperationAmount, htmlAttributes: new { @class = "control-label col-md-4", @style = "text-align:left" })
+                                                <div class="col-md-8">
+                                                    <div class="input-group">
+
+                                                        <span class="input-group-addon">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                                                        @Html.EditorFor(model => model.OperationAmount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+                                                        @Html.ValidationMessageFor(model => model.OperationAmount, "", new { @class = "text-danger" })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-actions">
+                                        <div class="row">
+                                            <div class="col-md-offset-2">
+                                                <a href="@Url.Action("PrePayments","PrePayment")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                                <button type="submit" id="save_purchase_item" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                </button>
+                                                <a class="btn btn-info" style="float:left;margin-left:5px" onclick="window.history.back()">
+                                                    <i class="fa fa-save"></i>Finish
+                                                </a>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <div id="purchase-items-list">
+                                <div style="text-align:right;background-color:lightgrey;padding-right:20px">
+                                    @Html.DisplayNameFor(model => model.TotalItemAmount): <strong>@Html.DisplayFor(model => model.TotalItemAmount) @Html.DisplayFor(model => model.OperationalCurrency)</strong><br />
+                                    @Html.DisplayNameFor(model => model.Balance): <strong>@Html.DisplayFor(model => model.Balance) @Html.DisplayFor(model => model.OperationalCurrency)</strong><br />
+                                </div>
+                                @if (Model.PurchaseItemsList.Count() > 0)
+                                {
+                                    var i = 0;
+                                    <div class="accordion-body">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th scope="col">#</th>
+                                                    <th scope="col">Item</th>
+                                                    <th scope="col">Category</th>
+                                                    <th scope="col">Class</th>
+                                                    <th style="text-align: center">Quantity</th>
+                                                    <th scope="col" style="text-align: center">UOM</th>
+                                                    <th scope="col" style="text-align: right">Unit Price</th>
+                                                    <th scope="col" style="text-align:right">VAT</th>
+                                                    <th scope="col" style="text-align:right">Total Amount</th>
+                                                    <th scope="col" style="text-align:center;width:8%">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @foreach (var item in Model.PurchaseItemsList)
+                                                {
+                                                    i++;
+
+
+                                                    <tr>
+                                                        <td align="center">
+                                                            @i
+                                                        </td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemName)
+                                                        </td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemCategory)
+                                                        </td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemClass)
+                                                        </td>
+                                                        <td align="center">
+                                                            @Html.DisplayFor(modelItem => item.Quantity)
+                                                        </td>
+                                                        <td align="center">
+                                                            @Html.DisplayFor(modelItem => item.UOM)
+                                                        </td>
+                                                        <td align="right">
+                                                            @Html.DisplayFor(modelItem => item.UnitPrice)
+                                                        </td>
+                                                        <td align="right">
+                                                            @Html.DisplayFor(modelItem => item.VAT)
+                                                        </td>
+                                                        <td align="right">
+                                                            @Html.DisplayFor(modelItem => item.TotalAmount)
+                                                        </td>
+                                                        <td style="text-align: center">
+                                                            <div class="btn-group">
+                                                                <button type="button" class="btn  btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                    <span class="caret"></span><span class="sr-only">Toggle Dropdown</span>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+                                                                    <li style="text-align:left"><a href="#" onclick="editPurchaseItem(@item.PurchaseOrderDetailId)"><i class="fa fa-edit"></i> Edit</a></li>
+                                                                    <li style="text-align:left"><a href="#" onclick="cancelItem(@item.PurchaseOrderDetailId)"><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+
+
+                                                }
+                                                <tr>
+                                                    <td colspan="8" style="text-align:right">
+                                                        <strong>Total</strong>
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        <strong>@Convert.ToDecimal(Model.PurchaseItemsList.Select(a => a.TotalAmount).DefaultIfEmpty(0).Sum()).ToString("#,##0.00/=")</strong>
+                                                    </td>
+                                                    <td></td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                }
+
+                            </div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<div class="modal fade" id="purchase-item-modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Edit Item Form
+                </h4>
+            </div>
+            <div class="modal-body" id="edit-purchase-item">
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+             var ratio = @Model.ExchangeRateRatio;
+            $("#UnitPrice").autoNumeric('init');
+            $("#ItemCategoryId").change(function () {
+                var id = $(this).val();
+                var url = '@Url.Action("GetItemClassifications", "Procurement")';
+                $.ajax({
+                type: "GET",
+                url: url,
+                data: { id : id },
+                success: function (response) {
+                    $("#ItemClassificationId").empty();
+                    $("#ItemClassificationId").append(response);
+                }
+                })
+               });
+            $(function () { // this will be called when the DOM is ready
+                $("#UnitPrice").keyup(function () {
+                    var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                    var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+
+                    var total = unit_price * quantity;
+                    var checkedValue = $("#lpo #VatStatus:checked").val();
+                    var operation_amount = total * ratio;
+                    if (checkedValue == "Applicable") {
+                        var vat = @Model.VatPercentage;
+                        var total_vat = total * vat / 100;
+                        var grand_total = total_vat + unit_price * quantity;
+                        var total_amount = grand_total.toFixed(2);
+                         operation_amount = total_amount * ratio;
+                        $("#TotalAmount").val(total_amount.toLocaleString('en'));
+                        $("#OperationAmount").val(toLabel(operation_amount));
+                    } else {
+
+                        $("#TotalAmount").val(total.toLocaleString('en'));
+                        $("#OperationAmount").val(toLabel(operation_amount));
+                    }
+
+
+
+                });
+
+            });
+            $(function () { // this will be called when the DOM is ready
+                $("#Quantity").keyup(function () {
+
+            var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+              if (unit_price > 0) {
+                  var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                  var total = unit_price * quantity;
+
+                  var checkedValue = $("#lpo #VatStatus:checked").val();
+
+                  if (checkedValue == "Applicable") {
+                       var vat = parseFloat($("#VatPercentage").val().split(",").join(""));
+                      if (vat > 0) {
+                      var total_vat = total * vat / 100;
+                      var grand_total = total_vat + unit_price * quantity;
+                      var total_amount = grand_total.toFixed(2);
+                          $("#TotalAmount").val(total_amount.toLocaleString('en'));
+                      }
+                      else {
+                          swal("VAT percentage is required");
+                      }
+
+                  } else {
+                      $("#TotalAmount").val(total.toLocaleString('en'));
+
+                  }
+              }
+
+                });
+
+            });
+
+                $("#VatStatus").change(function (e) {
+                    $("#VatApplicable").val(e.target.checked ? "YES" : "NO");
+                    var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                    var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                    if ($(this).is(":checked")) {
+                        if (unit_price >= 0 && quantity >= 0) {
+                            var total = unit_price * quantity;
+                             var vat = @Model.VatPercentage;
+                            var total_vat = total * vat / 100;
+                            var grand_total = total_vat + unit_price * quantity;
+                            var total_amount = grand_total.toFixed(2);
+                            operation_amount = total_amount * ratio;
+                            $("#TotalAmount").val(total_amount.toLocaleString('en'));
+                            $("#OperationAmount").val(toLabel(operation_amount));
+                        }
+
+                    } else {
+                        if (unit_price >= 0 && quantity >= 0) {
+                            var total = unit_price * quantity;
+                            var operation_amount = total * ratio;
+                            $("#TotalAmount").val(total.toLocaleString('en'));
+                            $("#OperationAmount").val(toLabel(operation_amount));
+                        }
+                    }
+                });
+
+
+            $("#gl_inv_items_charge").on('click', function () {
+                glItemsCharges = [];
+                sum_total = 0;
+                var itemIds = [];
+                var sum = 0;
+                itemCategory = "Inventory";
+                $(".inventory input:checkbox.checkItem").each(function () {
+                    if ($(this).prop("checked")) {
+                        itemIds.push($(this).val());
+                        sum = sum + parseFloat($(this).val());
+                        //swal($(this).attr('id'));
+                        //$(this).hide();
+                    }
+
+                });
+
+                if (itemIds.length == 0) {
+
+                    swal("No Item Selected!");
+                    return;
+                } else {
+                    $("#search_gl").val("");
+                    $("#total_line_amount").val("");
+                    $("#total_items_amount").val(sum.toLocaleString('en'));
+                    $("#difference").val(sum.toLocaleString('en'));
+                    dt_search_gl_item.fnClearTable();
+                    $("#glItemsModal").modal();
+                    searchGLTableUpdate();
+
+                }
+
+            });
+
+            });
+
+        function SubmitItem(formData) {
+            $("#save_purchase_item").prop('disabled', true);
+            var url = '@Url.Action("SavePurchaseItem", "PrePayment")';
+                           var ajaxConfig = {
+                               type: "post",
+                               url: url,
+                               data: new FormData(formData),
+                               success: function (result) {
+                                   $("#save_purchase_item").prop('disabled', false);
+                                   if (result.response == "Success") {
+                                       swal("Item saved successfully", { icon: "success" })
+                                           .then((value) => {
+                                               purchaseItemsList(result.id);
+                                           });
+                                   }
+                                   else {
+                                       swal(result.response);
+                                   }
+                               },
+                               error: function (xhr) {
+                                   $("#save_purchase_item").prop('disabled', false);
+                                   swal(error);
+                               },
+                           }
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+
+    //CANCEL iTEM
+        var cancelItem = function (id) {
+            swal({
+                title: 'Confirmation',
+                text: "Do you what to cancel this item  ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("DeleteItem", "PrePayment")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (result) {
+                   if (result.response == "Success") {
+                     swal("Deleted  successfully!", { icon: "success" })
+                         .then((value) => {
+                             purchaseItemsList(result.id);
+                                              });
+
+
+                }
+                else {
+
+               swal(result.response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+       function purchaseItemsList(id) {
+                  var url = '@Url.Action("PurchaseItemsList", "PrePayment")';
+           $("#purchase-items-list").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#purchase-items-list").html("Error on displaying puchase items list, contact system support.");
+                }
+
+            });
+
+        };
+
+        function editPurchaseItem(id) {
+                  var url = '@Url.Action("PurchaseItemForm", "PrePayment")';
+            $("#edit-purchase-item").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#edit-purchase-item").html("Error on accessing this item, contact system support.");
+                }
+                $("#purchase-item-modal").modal("show");
+            });
+
+        };
+
+        function UpdateItem(formData) {
+            $("#purchase-item-modal #save_purchase_item").prop('disabled', true);
+            var url = '@Url.Action("UpdatePurchaseItem", "PrePayment")';
+                           var ajaxConfig = {
+                               type: "post",
+                               url: url,
+                               data: new FormData(formData),
+                               success: function (result) {
+                                   $("#purchase-item-modal #save_purchase_item").prop('disabled', false);
+                                   if (result.response == "Success") {
+                                       swal("Item saved successfully", { icon: "success" })
+                                           .then((value) => {
+                                               $("#purchase-item-modal").modal("hide");
+                                               purchaseItemsList(result.id);
+                                           });
+                                   }
+                                   else {
+                                       swal(result.response);
+                                   }
+                               },
+                               error: function (xhr) {
+                                   $("#purchase-item-modal #save_purchase_item").prop('disabled', false);
+                                   swal(error);
+                               },
+                           }
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+        $(".forFile").hide();
+        $(".forForm").show();
+        var selected = "Single";
+        $("#EntryTpye").change(function () {
+            selected = $("#EntryTpye").val();
+            if (selected == "Single") {
+                $(".forFile").hide();
+                $(".forForm").show();
+            } else {
+                $(".forFile").show();
+                $(".forForm").hide();
+            }
+        });
+
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

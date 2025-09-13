@@ -1,0 +1,192 @@
+﻿@model  IFMIS.Areas.IFMISTZ.Models.PaymentBatchVM
+
+@{
+    ViewBag.Title = "Payment Details";
+    var overallstatus = Model.BulkPayments.Select(a => a.OverallStatus).FirstOrDefault();
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div align="center">
+    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+</div>
+<p align="right">
+    <a href="@Url.Action("PrintBulkPayment","SalaryDeductionPayment", new {id=Model.PaymentBatchID,status=overallstatus})" class="btn btn-info">
+        <span class="glyphicon glyphicon-print"></span>&nbsp;Print
+    </a>
+</p>
+<fieldset class="scheduler-border">
+    <legend class="scheduler-border">Payment Details</legend>
+
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.BatchNo)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.BatchNo)</strong></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.PaymentCategory)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.PaymentCategory)</strong></div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.NoTrx)&nbsp;:</strong><strong>@Model.BulkPayments.Count()</strong></div>
+    </div>
+
+</fieldset>
+<div class="row">
+    <div class="col-md-6"></div>
+    <div class="col-md-6">
+        <div class="search-container" style="float:right">
+            <i class="fa fa-search"></i>
+            <input type="search" name="search" placeholder="Search..." id="search-box">
+        </div>
+    </div>
+</div>
+<table id="dt_preview_deductions" class="table table-bordered table-condensed table-amount">
+    <thead>
+        <tr>
+            <td>#</td>
+            <td>Payee Name</td>
+            <th>Account Number</th>
+            <th>Bank BIC</th>
+            <th style="text-align:right">Amount</th>
+            <th>Status</th>
+            <th>Status Description</th>
+            @if (overallstatus == "UNAPPLIED")
+            {
+                <th style="text-align:center">Action</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int i = 0;
+        }
+
+
+        @foreach (var item in Model.BulkPayments)
+        {
+            i++;
+            <tr>
+                <td>@i</td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BeneficiaryAccountNo)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BankBic)
+                </td>
+                <td align="right">@string.Format("{0:#,0.00}", item.Amount)</td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.OverallStatus)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.SettledDescription)
+                </td>
+                @if (overallstatus == "UNAPPLIED")
+                {
+                    <td align="center">
+                        <div class="btn-group">
+
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="#" onclick="trackUnapplied(@item.BulkPaymentID)">
+                                        <i class="fa fa-edit"></i>Detail
+                                    </a>
+                                </li>
+
+                            </ul>
+                        </div>
+                    </td>
+                }
+            </tr>
+        }
+
+
+    </tbody>
+</table>
+
+<div class="modal-footer">
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+</div>
+
+<script>
+    var dt_preview_deduction = $('#dt_preview_deductions').dataTable();
+    $("#dt_preview_deductions_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_preview_deductions").DataTable().search(this.value).draw();
+    });
+   /* var dt_search_payee = $('#dt_preview_deductions').dataTable();*/
+</script>
+
+
+
+

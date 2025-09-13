@@ -1,0 +1,260 @@
+﻿
+
+
+@{
+    ViewBag.Title = "Settled Mobile Payment";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Bulk Payment List</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                       
+
+                            <hr />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblJournalTypes" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Batch No</th>
+                                        <th>Reference</th>
+                                        @*<th>Code</th>*@
+                                        <th>Name</th>
+                                        <th>Account No</th>
+                                        <th>Bank Bic</th>
+                                        <th>Bank Name</th>
+                                        <th style="text-align:left">Amount</th>
+                                        <th>OverallStatus</th>
+                                        <th>Overall Description</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody></tbody>
+
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+@section Scripts{
+    <script>
+
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetMobileSettledList", "ExternalPayment")';
+
+            $("#tblJournalTypes").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "BatchNo" },
+                    { "mData": "EndtoEndID" },
+                   /* { "mData": "BeneficiaryCode" },*/
+                    { "mData": "BeneficiaryName" },
+
+                    { "mData": "BeneficiaryAccountNo" },
+                    { "mData": "BankBic" },
+                    { "mData": "BankName" },
+                    {
+                        "mData": "Amount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+
+                    { "mData": "OverallStatus" },
+                    { "mData": "BankingStatusDescription" },
+                    {
+                        "mData": "BulkPaymentID",
+                        "bSortable": false,
+                        "render": function (BulkPaymentID, type, full, meta) {
+                            //console.log(BulkPaymentID);
+                            //console.log(full);
+                            if (full.OverallStatus == "SETTLED" || full.OverallStatus == "REJECTED") {
+                                        return '<div class="btn-group">\
+                                <button type="button" class="btn btn-info btn-xs">\
+                                    Action\
+                                </button>\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret" ></span>\
+                                <span class="sr-only">Toggle Dropdown</span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                <li><a class="dropdown-item" href="@Url.Action("MobilePaymentDetails", "ExternalPayment")/' + BulkPaymentID + '">Details</a><li>\
+                                <li><a class="dropdown-item" href="#" onclick="submit('+ BulkPaymentID + ')">Submit</a><li>\
+                                </ul>'
+                            }
+                                     return '<div class="btn-group">\
+                                <button type="button" class="btn btn-info btn-xs">\
+                                    Action\
+                                </button>\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret" ></span>\
+                                <span class="sr-only">Toggle Dropdown</span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                <li><a class="dropdown-item" href="@Url.Action("MobilePaymentDetails", "ExternalPayment")/' + BulkPaymentID + '">Details</a><li>\
+                                </ul>'
+                        }
+                    },
+                ]
+            });
+        };
+
+
+
+        function submit(id) {
+
+             swal({
+                 title: "Confirmation",
+                 text: "Are you sure you want to submit this record?",
+                 buttons: [
+                     'No',
+                     'Yes'
+                 ],
+             }).then(function (isConfirm) {
+                 if (isConfirm) {
+                     $("#divLoader").show();
+                     var url = '@Url.Action("SendtoMobileOperator", "ExternalPayment")';
+                     $.ajax({
+                         type: "POST",
+                         url: url,
+                         data: { id: id },
+                         success: function (response) {
+
+                             if (response == "Success") {
+                                 swal("submitted successfully!", { icon: "success" })
+                                     .then((value) => {
+                                      window.location.reload();
+                                 });
+                             } else {
+                                 swal({
+                                     text: response,
+                                     icon: "warning",
+                                     button: "OK",
+                                 })
+                             }
+                         },
+                         error: function (error) {
+                             swal("An error occured while processing your request, contact system support", { icon: "error" });
+                         },
+                         complete: function () {
+                             $("#divLoader").hide();
+                         }
+                     });
+                 }
+             });
+         };
+    </script>
+}
+
+
+
+
+

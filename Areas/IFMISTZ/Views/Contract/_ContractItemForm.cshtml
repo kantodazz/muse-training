@@ -1,0 +1,228 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PurchaseItemVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", @id = "editForm", onsubmit = "return UpdateItem(this)" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.Id)
+    @Html.HiddenFor(model => model.SourceId)
+<div class="form-horizontal">
+
+    <div class="form-group">
+
+        @Html.LabelFor(model => model.ItemCategoryId, htmlAttributes: new { @class = "control-label   col-md-2" })
+        <div class="col-md-3">
+            @Html.DropDownListFor(model => model.ItemCategoryId, Model.ItemCategoriesList, "Select ", new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.ItemCategoryId, "", new { @class = "text-danger" })
+        </div>
+        @Html.Label("Quantity", htmlAttributes: new { @class = "control-label   col-md-2" })
+    <div class="col-md-3">
+        @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+        @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+    </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Class", htmlAttributes: new { @class = "control-label   col-md-2" })
+        <div class="col-md-3">
+ 
+            @Html.DropDownListFor(model => model.ItemClassificationId, Model.ItemClassificationsList, "Select ", new { @class = "form-control" })
+
+            @Html.ValidationMessageFor(model => model.ItemClassificationId, "", new { @class = "text-danger" })
+        </div>
+        @Html.Label("Unit Price", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.UnitPrice, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.ItemName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.ItemName, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", maxlength = 50 } })
+            @Html.ValidationMessageFor(model => model.ItemName, "", new { @class = "text-danger" })
+        </div>
+        @Html.Label("Overhead", htmlAttributes: new { @class = "control-label col-md-2" })
+
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.OverheadPercentage, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @placeholder = "Percentage" } })
+            @Html.ValidationMessageFor(model => model.OverheadPercentage, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+
+        @Html.LabelFor(model => model.UOM, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.DropDownListFor(model => model.UOM, Model.UOMList, "Select ", new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.UOM, "", new { @class = "text-danger" })
+        </div>
+        @Html.Label("Total Amount", htmlAttributes: new { @class = "control-label col-md-2" })
+
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.TotalAmount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly" } })
+            @Html.ValidationMessageFor(model => model.TotalAmount, "", new { @class = "text-danger" })
+        </div>
+
+    </div>
+    <div class="form-group">
+
+        @Html.LabelFor(model => model.VatStatus, htmlAttributes: new { @class = "control-label col-md-2" })
+
+        <div class="col-md-3">
+            @if (Model.VatStatus == "Applicable")
+            {
+                <input type="checkbox" name="VatStatus" value="Applicable" id="VatStatus" checked>
+            }
+            else
+            {
+                <input type="checkbox" name="VatStatus" value="Excempted" id="VatStatus">
+
+            }
+            @Html.EditorFor(model => model.VatApplicable, new { htmlAttributes = new { @style = "width:40px;font-weight:bold", @readonly = "readonly" } })
+        </div>
+        @Html.LabelFor(model => model.PaymentScheduleId, htmlAttributes: new { @class = "control-label col-md-2" })
+    <div class="col-md-3">
+        @Html.DropDownListFor(model => model.PaymentScheduleId, Model.PaymentScheduleList, "Select ", new { @class = "form-control" })
+
+        @Html.ValidationMessageFor(model => model.PaymentScheduleId, "", new { @class = "text-danger" })
+    </div>
+
+    </div>
+
+
+    <div class="modal-footer">
+        <button type="submit" id="save_purchase_item" class="btn btn-info" style="margin-left: 5px">
+            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+        </button>
+        <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+    </div>
+
+</div>
+}
+<div align="center">
+    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" />
+</div>
+<br />
+
+
+
+<script>
+
+    $("#editForm #UnitPrice").autoNumeric('init');
+    $("#editForm #ItemCategoryId").change(function () {
+                var id = $(this).val();
+                var url = '@Url.Action("GetItemClassifications", "Procurement")';
+                $.ajax({
+                type: "GET",
+                url: url,
+                data: { id : id },
+                success: function (response) {
+                    $("#editForm #ItemClassificationId").empty();
+                    $("#editForm #ItemClassificationId").append(response);
+                }
+                })
+               });
+
+    $("#editForm #UnitPrice").keyup(function () {
+        var unit_price = parseFloat($("#editForm #UnitPrice").val().split(",").join(""));
+        var quantity = parseFloat($("#editForm #Quantity").val().split(",").join(""));
+
+                    var total = unit_price * quantity;
+        var checkedValue = $("#editForm #VatStatus:checked").val();
+
+                    if (checkedValue == "Applicable") {
+                        var vat = @Model.VatPercentage;
+                        var total_vat = total * vat / 100;
+                        var grand_total = total_vat + unit_price * quantity;
+                        var total_amount = grand_total.toFixed(2);
+                        $("#editForm #TotalAmount").val(total_amount.toLocaleString('en'));
+
+                    } else {
+
+                        $("#editForm #TotalAmount").val(total.toLocaleString('en'));
+
+                    }
+
+
+
+                });
+
+
+    $("#editForm #Quantity").keyup(function () {
+
+        var unit_price = parseFloat($("#editForm #UnitPrice").val().split(",").join(""));
+                    if (unit_price > 0) {
+                        var quantity = parseFloat($("#editForm #Quantity").val().split(",").join(""));
+                        var total = unit_price * quantity;
+
+                        var checkedValue = $("#editForm #VatStatus:checked").val();
+
+                        if (checkedValue == "Applicable") {
+                             var vat = @Model.VatPercentage;
+                            var total_vat = total * vat / 100;
+                            var grand_total = total_vat + unit_price * quantity;
+                            var total_amount = grand_total.toFixed(2);
+                            $("#editForm #TotalAmount").val(total_amount.toLocaleString('en'));
+
+                        } else {
+                            $("#editForm #TotalAmount").val(total.toLocaleString('en'));
+
+                        }
+                    }
+
+                });
+
+
+    $("#editForm #VatStatus").change(function (e) {
+        $("#editForm #VatApplicable").val(e.target.checked ? "YES" : "NO");
+        var unit_price = parseFloat($("#editForm #UnitPrice").val().split(",").join(""));
+        var quantity = parseFloat($("#editForm #Quantity").val().split(",").join(""));
+                    if ($(this).is(":checked")) {
+                        if (unit_price >= 0 && quantity >= 0) {
+                            var total = unit_price * quantity;
+                             var vat = @Model.VatPercentage;
+                            var total_vat = total * vat / 100;
+                            var grand_total = total_vat + unit_price * quantity;
+                            var total_amount = grand_total.toFixed(2);
+                            $("#editForm #TotalAmount").val(total_amount.toLocaleString('en'));
+
+                        }
+
+                    } else {
+                        if (unit_price >= 0 && quantity >= 0) {
+                            var total = unit_price * quantity;
+                            $("#editForm #TotalAmount").val(total.toLocaleString('en'));
+
+                        }
+                    }
+    });
+
+    $(function () { // this will be called when the DOM is ready
+        $("#editForm #OverheadPercentage").keyup(function () {
+            var overhead = parseFloat($(this).val());
+            if (overhead >= 0) {
+            } else {
+                overhead = 0;
+            }
+            var unit_price = parseFloat($("#editForm #UnitPrice").val().split(",").join(""));
+            var quantity = parseFloat($("#editForm #Quantity").val().split(",").join(""));
+            if (unit_price > 0 && quantity > 0) {
+                var total = unit_price * quantity;
+                var checkedValue = $("#editForm #VatStatus:checked").val();
+                if (checkedValue == "Applicable") {
+                    var vat = parseFloat($("#editForm #VatPercentage").val());
+                    var total_vat = total * vat / 100;
+                    var grand_total = total_vat + total + total * overhead / 100;
+                    var total_amount = grand_total.toFixed(2);
+                    $("#editForm #TotalAmount").val(total_amount.toLocaleString('en'));
+                } else {
+                    total = total + total * overhead / 100;
+                    $("#editForm #TotalAmount").val(total.toLocaleString('en'));
+
+                }
+            }
+
+        });
+
+    });
+
+</script>

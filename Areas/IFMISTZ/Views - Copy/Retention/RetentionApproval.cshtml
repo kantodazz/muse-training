@@ -1,0 +1,490 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ContractVM>
+@{
+    ViewBag.Title = "Retention Payment Examination";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Retention Payment Approval</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_retention">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:3%"></th>
+                                        <th style="text-align:left;">Legal Number</th>
+                                        <th style="text-align:left">Payee Name</th>
+                                        <th style="text-align:left"> Bank Account </th>
+                                        <th style="text-align:left"> Bank Name </th>
+                                        <th style="text-align:right">Amount</th>
+                                        <th style="text-align:right"> Balance</th>
+                                        <th style="text-align:left">Status</th>
+                                        <th style="text-align:center;width:6%">Action</th>
+
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{var i = 0;}
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                        <tr>
+                                            <td style="text-align:right">
+                                                @i
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.LegalNumber)
+
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.Payeename)
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.PayeeBankAccount)
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.PayeeBankName)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.PaymentAmount)
+                                            </td>
+
+                                            <td style="text-align:right">
+
+                                                @Html.DisplayFor(modelItem => item.RemainingAmount)
+
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.OverallStatus)<br />
+                                                @if (item.Accrual == "Yes")
+                                                {
+                                                    <em>Accrual</em>
+                                                }
+                                            </td>
+
+                                            <td style="text-align:center">
+
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+
+                                                            <a href="#" onclick="showDetails(@item.RetentionPaymentId)"> <i class="fa fa-search-minus"></i>  Preview</a>
+
+                                                        <li>
+                                                        <li>
+                                                            <a href="@Url.Action("AttachmentView", "PaymentVoucherAttachments",new {groupId=item.RetentionPaymentId,sourceModule="Retention" })" class="btn-xs edit">
+                                                                <i class="fa fa-search-minus"></i>  Attachments
+                                                            </a>
+                                                        </li>
+                                                        <li id="approve"><a href="#" onclick="entryApproval(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Approve</a></li>
+                                                        <li><a href="#" onclick="approvalReject(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Reject</a></li>
+
+                                                    </ul>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<div class="modal fade" id="reject_entry" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Reject Retention Payment</h3>
+                <h4 align="center">Legal Number <span id="legal_number"></span></h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "approvalReject" }))
+            {
+                <div class="modal-body form-horizontal">
+
+                    <br />
+
+                    <input type="hidden" name="Id" id="Id" value="">
+                    <div class="form-group">
+
+                        <div class="col-md-12">
+                            <textarea name="Reason" id="Reason" placeholder="Enter short explanation why do you reject" required rows="4" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Preview
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+            $(document).ready(function () {
+                /* // DOM Position key index //
+ l - Length changing (dropdown)
+ f - Filtering input (search)
+ t - The Table! (datatable)
+ i - Information (records)
+ p - Pagination (paging)
+ r - pRocessing
+ < and > - div elements
+ <"#id" and > - div with an id
+ <"class" and > - div with a class
+ <"#id.class" and > - div with an id and class
+ Also see: http://legacy.datatables.net/usage/features
+ */
+                /* BASIC ;*/
+                var responsiveHelper_dt_retention = undefined;
+                var responsiveHelper_datatable_fixed_column = undefined;
+                var responsiveHelper_datatable_col_reorder = undefined;
+                var responsiveHelper_datatable_tabletools = undefined;
+
+                var breakpointDefinition = {
+                    tablet: 1024,
+                    phone: 480
+                };
+
+                $('#dt_retention').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_retention) {
+                            responsiveHelper_dt_retention = new ResponsiveDatatablesHelper($('#dt_retention'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_retention.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_retention.respond();
+                    }
+                });
+
+                /* END BASIC */
+
+                /* COLUMN FILTER  */
+                var otable = $('#datatable_fixed_column').DataTable({
+                    //"bFilter": false,
+                    //"bInfo": false,
+                    //"bLengthChange": false
+                    //"bAutoWidth": false,
+                    //"bPaginate": false,
+                    //"bStateSave": true // saves sort state using localStorage
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_fixed_column) {
+                            responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_fixed_column.respond();
+                    }
+                });
+
+                // custom toolbar
+                $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+                // Apply the filter
+                $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+                    otable
+                        .column($(this).parent().index() + ':visible')
+                        .search(this.value)
+                        .draw();
+                });
+                /* END COLUMN FILTER */
+
+                /* COLUMN SHOW - HIDE */
+                $('#datatable_col_reorder').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_col_reorder) {
+                            responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_col_reorder.respond();
+                    }
+                });
+
+                /* END COLUMN SHOW - HIDE */
+
+                /* TABLETOOLS */
+                $('#datatable_tabletools').dataTable({
+
+                    // Tabletools options:
+                    //   https://datatables.net/extensions/tabletools/button_options
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "oTableTools": {
+                        "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                           {
+                               "sExtends": "pdf",
+                               "sTitle": "SmartAdmin_PDF",
+                               "sPdfMessage": "SmartAdmin PDF Export",
+                               "sPdfSize": "letter"
+                           },
+                           {
+                               "sExtends": "print",
+                               "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                           }
+                        ],
+                        "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                    },
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_tabletools) {
+                            responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_tabletools.respond();
+                    }
+                });
+                /* END TABLETOOLS */
+
+
+
+                $("#approvalReject").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you reject this entry ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                             $("#approve").hide();
+                            var url = '@Url.Action("RejectEntry", "Retention")';
+                            var id = $("#Id").val();
+                            var reason = $("#Reason").val();
+                            var formData = {
+                                "Id": id,
+                                "Reason": reason
+                            }
+                            $('#reject_entry').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (response) {
+                                if (response == "Success") {
+
+                                    swal("Entry rejected  successfully!", { icon: "success" })
+                                              .then((value) => {
+                                                  location.reload();
+                                              });
+
+
+                                }
+                                else {
+
+                                 $("#approve").show();
+                                 swal(response);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+                                 $("#approve").show();
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+                        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+            var showDetails = function (id) {
+            debugger;
+            var url = '@Url.Action("Preview", "Retention")';
+            $("#divModalBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on accessing this details, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+        };
+
+                var entryApproval = function (id, legalNumber) {
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to approve entry   " + legalNumber + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                         var url = '@Url.Action("ApprovePayment", "Retention")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Approved successfully", { icon: "success" })
+                                .then((value) => {
+                                    location.reload();
+                                });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+           var approvalReject = function (id, legalNumber) {
+                    $("#legal_number").text(legalNumber);
+                    $(".modal-body #Id").val(id);
+                    $('#reject_entry').modal('show');
+             };
+
+    </script>
+}
+
+
+
+

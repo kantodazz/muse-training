@@ -1,0 +1,377 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.WithHeldExchequerVM
+
+@{
+    ViewBag.Title = "Examine Withheld Exchequer List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_withheld_instruction_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Reference No</th>
+                                        <th>Sub Budget Class</th>
+                                        <th>Component Name</th>
+                                        <th>Funding Date</th>
+                                        <th>Institution Name</th>
+                                        <th>Institution Code</th>
+                                        <th>Exchequer Amount</th>
+                                        <th>Allocated Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="RejectExchequer">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Exchequer Rejection</h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="WithHeldExchequerId" id="WithHeldExchequerId" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Description_1"> Remarks (<span style="font-weight:bold;" id="DescriptionCount">0</span>) </label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Description" name="Description"  maxlength="150" style="width:300px;"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="reject_exchequer_btn">
+                     Reject
+                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        $('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            if (count.length > 150) {
+                swal("You have Exceed Maximum Characters: (150)", { icon: "warning" });
+            }
+            $('#DescriptionCount').text(count.length);
+        });
+
+        $("#saveLoaderInstitution").toggle(false);
+        $("#saveForm").prop('disabled', false);
+        $("#LoaderText").hide();
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        var dt_withheld_instruction_list = $("#dt_withheld_instruction_list").dataTable();
+        $("#dt_withheld_instruction_list_wrapper .dt-toolbar").remove();
+
+        var dt_institutions_list = $("#dt_institutions_list").dataTable();
+        $("#dt_institutions_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_withheld_instruction_list").DataTable().search(this.value).draw();
+            $("#dt_withheld_instruction_list_wrapper .dt-toolbar").remove();
+        });
+
+        $(document).ready(function () {
+            $(".saveLoader").toggle(false);
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetWithHeldAssignedList", "Exchequer")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_withheld_instruction_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var Display = 'display:none;';
+
+                    if ('@User.IsInRole("WithHeld Examine")') {
+                        Display = '';
+                    }
+
+                    var amount = "<p align='right'>" + toLabel(data[i]["OperationalAmount"]); +"</p>"
+                    var allocatedAmount = "<p align='right'>" + toLabel(data[i]["Amount"]); +"</p>"
+
+                     dt_withheld_instruction_list.fnAddData([i + 1,
+                       data[i]["FundingRefNo"],
+                       data[i]["SubBudgetClass"],
+                       data[i]["ComponentName"],
+                       ToJavaScriptDate(data[i]["FundingDate"]),
+                       data[i]["InstitutionName"],
+                       data[i]["InstitutionCode"], 
+                       amount,
+                       allocatedAmount,
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                               <li style="' + Display + '"><a href="#" onclick="examineDialog(' + i + ')">Examine</a></li>\
+                               <li style="' + Display + '"><a href="#" onclick="rejectDialog(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        var fundReceivingId = null;
+
+        function examineDialog(i) {
+            swal({
+                title: 'Examine Withheld Exchequer ?',
+                text: "Are you sure you want to examine Withheld: " + data[i]["ComponentName"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    examineWithheld(data[i]["WithHeldExchequerId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function examineWithheld(withHeldExchequerId) {
+            var url = '@Url.Action("ExamineExchequer", "Exchequer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "withHeldExchequerId": withHeldExchequerId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Examined Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal("Error Examining Withheld Exchequer", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function rejectDialog(i) {
+            var id = data[i]["WithHeldExchequerId"];
+            var FundingRefNo = data[i]["FundingRefNo"];
+            var compName = data[i]["ComponentName"];
+            swal({
+                title: 'Exchequer Rejection',
+                text: "Do you want to Reject Exchequer: " + FundingRefNo + " of Component: " + compName + "?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isCancelled) {
+                if (isCancelled) {
+                    $('#RejectExchequer').modal('show');
+                    $('#WithHeldExchequerId').val(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        $("#reject_exchequer_btn").click(function () {
+            var withHeldExchequerId = document.getElementById("WithHeldExchequerId").value;
+            var Description = document.getElementById("Description").value;
+            if (Description == "") {
+                swal("Remarks is Required.", { icon: "warning" })
+                .then((value) => { });
+                $("#reject_exchequer_btn").prop('disabled', false);
+                return
+            }
+            var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "WithHeldExchequerId": withHeldExchequerId,
+                "Remarks": Description
+            }
+
+            var url = '@Url.Action("RejectExchequer", "Exchequer")';
+            var urlList = '@Url.Action("withheldassignedlist", "Exchequer")';
+            $("#reject_exchequer_btn").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#reject_exchequer_btn").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Exchequer Rejected Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#reject_exchequer_btn").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+    </script>
+}

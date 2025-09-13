@@ -1,0 +1,394 @@
+﻿@model IFMIS.Areas.Coadmis.Models.FieldWorkSummary
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg { 
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 27px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div id="divLoader"></div>
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-folder-o"></i> </span>
+                        <h2> Add Working Paper  </h2>
+                    </header>
+
+                    <div class="widget-body">
+                        <div class="row">
+                            @if (Model.LeadSchedules.Count > 0)
+                            {
+
+
+                                <a class="btn btn-info" onclick="ImportWP()" href="#" style="margin-left:10px">Attach WP</a>
+                                <br />
+                                <br />
+                                <table width="100%" style="margin-bottom:5px">
+                                    <tr class="alert alert-block alert-info">
+                                        <td colspan="9" style="font-weight:bold"> Client Name : @Model.ClientName <br /> </td>
+
+                                        <td colspan="9" style="font-weight:bold"> Engagement Name : @Model.EngagementName <br /> </td>
+
+                                        <td colspan="9" style="font-weight:bold"> Auditable Area : @Model.AuditableArea <br /> </td>
+                                    </tr>
+                                </table>
+                                <table class="table table-condensed table-bordered">
+                                    <thead style="display: table-header-group;">
+
+                                        <tr style="text-align:center;font-weight:bold;height:20px" bgcolor="lightgrey">
+                                            <td style="width:5%">  </td>
+                                            <td id="fungutd" style="width:30%"> Auditable Item  </td>
+                                            <td>WP</td>
+                                            <td id="fungutd" style="width: 12%;text-align: right"> Previous Amount </td>
+                                            <td id="amounttd" style="width:12%;text-align:right"> Current  Amount </td>
+                                            <td id="amounttdp" style="width:8%"> Adjustment </td>
+                                            <td id="amounttdp" style="width:12%;text-align:right"> Adjusted Amount </td>
+                                            <td id="amounttdp" style="width:12%;text-align:right"> Final Amount </td>
+                                            <td></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach (var item in Model.LeadSchedules)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    @if (item.SchRef != null)
+                                                    {
+
+                                                        <input type="checkbox" style="float:right" value="@item.FieldWorkScheduleId" class="checkItem" id="@item.FieldWorkScheduleId" disabled="disabled">
+                                                    }
+                                                    else
+                                                    {
+                                                        <input type="checkbox" style="float:right" value="@item.FieldWorkScheduleId" class="checkItem" id="@item.FieldWorkScheduleId">
+                                                    }
+                                                </td>
+                                                <td> @item.AuditableAreaItem </td>
+                                                <td style="text-align:center">
+                                                    @if (item.SchRef != null)
+                                                    {
+                                                        <a href="/Areas/Coadmis/Attachments/@item.SchRef" target="_blank"><i class="fa fa-file-pdf-o" title="Preview"></i></a>
+                                                        @*<a href="#" onclick=preview("'@item.SchRef'")><i class="fa fa-file-pdf-o" title="Preview"> </i></a>*@
+
+                                                    }
+                                                </td>
+                                                <td style="text-align:right"> @string.Format("{0:#,0.00}", item.PreviousAmount)</td>
+                                                <td style="text-align:right"> @string.Format("{0:#,0.00}", item.CurrentAmount)</td>
+                                                <td style="text-align:center"> @item.Adjustment </td>
+                                                <td style="text-align:right"> @string.Format("{0:#,0.00}", item.AdjustedAmount) </td>
+                                                <td style="text-align:right">
+                                                    @string.Format("{0:#,0.00}", item.FinalAmount)
+                                                </td>
+                                                <td>
+                                                    <a href="#" onclick="wpRemove(@item.FieldWorkScheduleId)"><i class="fa fa-trash-o" title="Delete"></i></a>
+                                                </td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+
+                                </table>
+                            }
+                            else
+                            {
+                                <table width="100%">
+                                    <tr class="alert alert-block alert-info">
+                                        <td colspan="9" style="font-weight:bold"> Client Name : @Model.ClientName <br /> </td>
+
+                                        <td colspan="9" style="font-weight:bold"> Engagement Name : @Model.EngagementName <br /> </td>
+
+                                        <td colspan="9" style="font-weight:bold"> Auditable Area : @Model.AuditableArea <br /> </td>
+                                    </tr>
+                                </table>
+                                <br />
+                                <div class="col-md-12">
+                                    <div class="alert alert-block alert-info" style="font-weight:bold;font-size:1.2em">
+                                        <center><span class="fa fa-info-circle"></span> &nbsp; Lead Schedule Not Available, Please Add Lead Schedule to Proceed.. </center>
+                                    </div>
+                                </div>
+                            }
+
+                        <div style="margin-left:10px">
+                            <a class="btn btn-default" href='../FieldWorkEdit/?fieldWorkId=@Model.FieldWorkId'><i class="glyphicon glyphicon-arrow-left"></i> Back</a>
+                         
+                        </div>
+                        </div>
+
+                        </div>
+
+                    </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+<!----------- IMPORT DIALOG ----------------->
+<div class="modal fade" id="importModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Upload Working Paper </h3>
+
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", @class = "well form-horizontal" }))
+            {
+                <div class="modal-body">
+                    <div class="row">
+
+                        <div class="col-md-4">
+                            Source Reference
+                            <input type="text" class="form-control" name="sourcereference" id="sourcereference" />
+                        </div>
+                        <div class="col-md-8">
+                            Upload File
+                            <input class="form-control" id="file2" type="file" name="postedFile" onchange="this.parentNode.nextSibling.value = this.value" required>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" id="importFile">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button type="submit" class="btn btn-info" data-dismiss="modal">
+                        <i class="glyphicon glyphicon"></i>Cancel
+                    </button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+
+
+<!------PREVIEW WORKING PAPER ---->
+<div class="modal fade" id="slipModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Working Paper </h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body" id="transferSlip_body" style="height:auto">
+
+                        <div id="detailID"><iframe height="700" id="slipImage" width="100%" src=""></iframe></div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    @*<button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                            <i class="fa fa-check"></i>Accept
+                        </button>
+                        <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                            <i class="fa  fa-times-circle"></i> Reject
+                        </button>*@<button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button><button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button><button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button><button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button><button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button><button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                        <i class="fa fa-check"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                        <i class="fa  fa-times-circle"></i>
+                    </button>
+                    <button class="btn btn-info btn-150" id="btncancel" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $(document).ready(function () {
+
+        });
+
+        function ImportWP() {
+
+            var csvIds = [];
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+
+                swal("No Item Selected, Please Select Item(s) to Add Working Paper", { icon: "info" })
+                return;
+            }
+
+            $('#importModal').modal('show');
+        }
+
+
+        $("#importFile").click(function () {
+            debugger;
+
+            var csvIds = [];
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val().replace('/', ''));
+                }
+            });
+
+            if (csvIds.length == 0) {
+
+                swal("No Item Selected, Please Select Item(s) to Add Working Paper", { icon: "info" })
+                return false;
+            }
+
+            var formData = new FormData();
+            var fieldWorkId = $('#fieldWorkId').val();
+            var remark = $('#sourcereference').val();
+            formData.append('FieldWorkId', fieldWorkId);
+            formData.append('file', $('input[type=file]')[0].files[0]);
+            for (var i = 0; i < csvIds.length; i++) {
+                formData.append("AuditScheduleDatas[" + i + "].FieldWorkScheduleId", csvIds[i]);
+                formData.append("AuditScheduleDatas[" + i + "].Adjustment", remark);
+            }
+
+            console.log(formData);
+            $("#divLoader").toggle(true);
+            $.ajax({
+                url: '@Url.Action("UploadWorkingPaper", "FieldWorks")',
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Working Paper Attached successfull!", { icon: "success" })
+                          .then((e) => {
+                              $('#attachFileModal').modal('hide');
+                              window.location.reload();
+                          });
+                    } else {
+                        swal(response)
+                         .then((e) => {
+                             $('#attachFileModal').modal('hide');
+                             window.location.reload();
+                         });
+                    }
+
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error)
+                     .then((e) => {
+                         $('#attachFileModal').modal('hide');
+                         window.location.reload();
+                     });
+                }
+            });
+        });
+
+
+
+        function wpRemove(i) {
+            debugger;
+            if (i == 'x') i = i;
+            swal({
+                title: "Are you sure?",
+                text: "Working Paper From selected Item will be Removed Permanently",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    removeWp(i)
+                }
+            });
+        }
+
+        function removeWp(id) {
+            debugger;
+              var params = {"did":  id };
+              var url = '@Url.Action("RemoveWP", "FieldWorks")';
+              $.ajax({
+                type: "Get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                  success: function (response) {
+                      if (response = "Success") {
+                          swal("Working Paper Successfully Removed", { icon: "success" });
+                          window.location.reload();
+                      }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+
+
+         function preview(slipfile) {
+            debugger;
+            var url = '@Url.Content("~/Areas/Coadmis/Attachments/")'+ slipfile;
+            document.getElementById("slipImage").src = url;
+            $('#detailID').dialog({
+                                 autoOpen: true,
+                                 width: 900,
+                                 height: 700,
+                                 position: 'center',
+                                 resizable: true,
+                                draggable: true
+                                });
+        };
+
+    </script>
+}

@@ -1,0 +1,192 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.FundTransferSummary
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    input[type=text] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 150px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    #tblDetails tr td {
+        border: 2px solid lightblue;
+        border-collapse: initial;
+    }
+</style>
+<br />
+<div class="payee-entry">
+    <div class="entry-label">Transfer Summary </div>
+    <div style="padding-left:20px">
+        <div class="row">
+            <div class="col-md-6">
+                <table>
+                    <tr>
+                        <th> Transfer Category : </th>
+                        <td id="transferCategory"> @Model.TransferCategory</td>
+                    </tr>
+                    <tr>
+                        <th> Transfer Type. : </th>
+                        <td id="transferType"> @Model.TransferType </td>
+                    </tr>
+                </table>
+            </div>
+
+            <div class="col-md-6">
+                <table>
+                    <tr>
+                        <th> Transfer Reference No. : </th>
+                        <td id="transferCategory"> @Model.TransferRefNum</td>
+                    </tr>
+                    <tr>
+                        <th> Transfer Reference No. : </th>
+                        <td id="transferType"> @Model.TransferRefNum </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table>
+                    <tr>
+                        <th>  Transfer Description : </th>
+                        <td id="description"> @Model.TransferDescription </td>
+                    </tr>
+                    <tr>
+                        <th>  Institution From : </th>
+                        <td id="institutionFrom"> @Model.InstitutionCodeFrom - @Model.InstitutionNameFrom </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table>
+                    <tr>
+                        <th> Bank Account From : </th>
+                        <td id="bankAccountFrom"> @Model.BankAccountFrom </td>
+                    </tr>
+                    <tr>
+                        <th> Bank Account To : </th>
+                        <td id="bankAccountTo"> @Model.BankAccountTo </td>
+                    </tr>
+
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table>
+                    <tr>
+                        <th> Institution To :  </th>
+                        <td id="institutionTo"> @Model.InstitutionCodeTo - @Model.InstitutionNameTo </td>
+
+                    </tr>
+                    <tr>
+                        <th> Total Amount: </th>
+                        <td id="">
+
+                            @string.Format("{0:#,0.00}", Model.TotalOperationalAmount)
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<br />
+
+@foreach (var group in ((IEnumerable<IFMIS.Areas.IFMISTZ.Models.FundTransferDetail>)ViewBag.transferDetails).GroupBy(a => a.FundTransferSummaryId))
+{
+    int i = 0;
+    decimal? totalAmount = 0;
+    <table class="table table-bordered" id="tblDetails">
+
+        @foreach (var groups in group.GroupBy(a => a.FundTransferSummaryId))
+        {
+
+            <tr style="text-align:center;font-weight:bold">
+                <td></td>
+                <td>Debit GL Account </td>
+                <td>Credit GL Account </td>
+                <td> Amount </td>
+            </tr>
+
+            foreach (var group1 in groups)
+            {
+                i++;
+                <tr>
+                    <td> @i </td>
+                    <td> @group1.DrGlAccount </td>
+                    <td> @group1.CrGlAccount </td>
+                    <td>   @string.Format("{0:#,0.00}", group1.BaseAmount)  </td>
+                </tr>
+                totalAmount = totalAmount + @group1.BaseAmount;
+            }
+
+        }
+
+        <tr>
+            <td colspan="3" style="text-align:right;font-weight:bold">Total Amount</td>
+            <td>
+                @string.Format("{0:#,0.00}", totalAmount)
+            </td>
+        </tr>
+    </table>
+}
+
+

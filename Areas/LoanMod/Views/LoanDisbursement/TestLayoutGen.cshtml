@@ -1,0 +1,249 @@
+﻿@{ViewBag.Title = "Payment Voucher Creation";}
+
+<style>
+    input[type=text],
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+    }
+
+    .flatpickr {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    label {
+        text-align: right;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 8px;
+        padding-right: 10px;
+    }
+
+    /* Table search*/
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false"
+                     data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div class="widget-body">
+                        <div>
+                            <div class="row">
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-3" for="Beneficiary">
+                                            <i class="fa fa-times" style="color:white"
+                                               id="Beneficiary_1"></i>Beneficiary
+                                        </label>
+                                        <div class="col-sm-9">
+
+                                            <a class="search-btn" onclick="alert(1)" href="#"
+                                               style="display:block;width:80%">
+                                                <i class="fa fa-search search-icon"></i>
+                                                Search...
+                                            </a>
+
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-5">
+                                    <div class="form-group">
+                                        <label class="control-label col-sm-3" for="Amount">
+                                            <i class="fa fa-times" style="color:white" id="Amount_1"></i>Amount
+                                        </label>
+                                        <div class="col-sm-9">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong class="currency">TZS</strong>
+                                                </span>
+                                                <amount-input id="Amount" style="width:78%" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-sm-2">
+                                    <a class="btn btn-info" href="#"><i class="fa fa-plus"></i>Add</a>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search_users">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_users" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th width="50">#</th>
+                                        <th>Photo</th>
+                                        <th>Applicant Name</th>
+                                        <th>Gender</th>
+                                        <th>Customer No</th>
+                                        <th>Contacts</th>
+                                        <th>Address</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <hr />
+                            <div class="row">
+                                <div class="col-sm-2">
+                                    <div></div>
+                                </div>
+                                <div class="col-sm-6">
+                                    <div>
+                                        <a class="btn btn-info" href="#" style="margin-right:5px"
+                                           onclick="window.history.back()">
+                                            <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                        </a><button class="btn btn-info" onclick="saveForm()" id="saveForm">
+                                            <i class="fa fa-save"></i>Save
+                                            <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+
+    var dt_users = $('#dt_users').dataTable();
+    $("#dt_users_wrapper .dt-toolbar").remove();
+
+    $("#search_users").on("keyup search input paste cut", function () {
+        dt_users.DataTable().search(this.value).draw();
+    });
+
+    function getData() {
+        var url = '@Url.Action("GetPayee", "PaymentVoucher")';
+        $.ajax({
+            type: "get",
+            url: url,
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                var data = response.data;
+                dt_users.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_users.fnAddData([i + 1, data[i].PhotoUrl, data[i].ApplicantName, data[i].Gender, data[i].CustomerNo, data[i].Contacts, data[i].Address,]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+    }
+
+    $("#saveLoader").toggle(false);
+
+    function saveForm() {
+        var formData = {};
+        formData['Beneficiary'] = $("#Beneficiary").val();
+        formData['Amount'] = $("#Amount").val();
+
+        if (formIsValid()) {
+            postFormData(formData);
+        }
+    }
+    function postFormData(formData) {
+        $("#saveForm").prop('disabled', true);
+        $("#saveLoader").toggle(true);
+        $.ajax({
+            url: 'www.postdata.com',
+            data: formData,
+            type: 'POST',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                $("#saveForm").prop('disabled', true);
+                $("#saveLoader").toggle(true);
+                if (response == "Success") {
+                    swal("Saved Successfully!")
+                        .then((m) => {
+                            window.location.reload();
+                        });
+                } else {
+                    swal(response)
+                }
+            },
+            failure: function (error) {
+                swal(error)
+            }
+        });
+    }
+
+    function formIsValid() {
+        var isNotValid = validateInputs(['#Beneficiary', '#Amount']);
+
+        if (isNotValid) {
+            $(isNotValid + "_1").attr("style", "color: red;");
+            return false
+        }
+
+        return true
+    }
+
+    function validateInputs(parameterList) {
+        var resetStyle = function (parameterList) {
+            for (var i = 0; i < parameterList.length; i++) {
+                $(parameterList[i] + "_1").attr("style", "color: white;");
+            }
+        }
+
+        resetStyle(parameterList);
+        for (var i = 0; i < parameterList.length; i++) {
+            if (!$(parameterList[i]).val()) {
+                return parameterList[i];
+            }
+        }
+        return null;
+    }
+
+
+    </script>
+}

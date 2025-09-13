@@ -1,0 +1,164 @@
+﻿@model IEnumerable<IFMIS.Areas.Geras.Models.ExchequerSummaryByVote>
+@{
+    ViewBag.Title = "Exchequer Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    textarea {
+        resize: none;
+        width: 100%;
+        background-color: white !important;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            @*--------------------BEGINNING OF STEP ONE-------------------------*@
+                            <div class="form-horizontal">
+                                <div class="row setup-content" id="step-1">
+                                    <div class="col-xs-12">
+                                        <div class="col-md-12">
+                                            <div class="form-horizontal">
+                                                <h5>Exchequer Reference:<b>@ViewBag.ExchequerSummary.ExchequerRef</b> For @ViewBag.ExchequerSummary.CheckDate.ToString("Y")</h5>
+                                                <table style="height:50px">
+                                                    @*<tr><td>Exchequer Reference:</td><td><b>@ViewBag.ExchequerSummary.ExchequerRef</b> For @ViewBag.ExchequerSummary.CheckDate.ToString("Y")</td></tr>*@
+                                                    <tr style="font-size:14px"><td>Exchequer Category:</td><td>@ViewBag.ExchequerSummary.ExchequerCategory</td></tr>
+                                                    <tr style="font-size:14px"><td>Exchequer Type:</td><td>@ViewBag.ExchequerType</td></tr>
+                                                    <tr style="font-size:14px">
+                                                        <td>Total Amount:</td>
+                                                        <td>
+                                                            @if (ViewBag.ExchequerSummary.Amount != 0)
+                                                            {
+                                                                <span>TZS:@string.Format("{0:#,0.00}", ViewBag.ExchequerSummary.Amount)</span>
+                                                            }
+                                                            else
+                                                            {
+                                                                <span>TZS:@ViewBag.ExchequerSummary.Amount</span>
+                                                            }
+                                                        </td>
+                                                    </tr>
+                                                    <tr style="font-size:14px">
+                                                        <td>Rejection Reasons:</td>
+                                                        <td>
+                                                            <div class="col-md-12">
+                                                                @{
+                                                                    int m = 0;
+                                                                }
+                                                                @if (ViewBag.RejectionReasonList != null)
+                                                                {
+                                                                    foreach (var item in ViewBag.RejectionReasonList)
+                                                                    {
+                                                                        m++;
+                                                                        <span>@m.  @item.Remarks by @item.CreatedBy on  @item.CreatedAt</span><br />
+                                                                    }
+                                                                }
+                                                                else
+                                                                {
+                                                                    <span>NILL</span>
+                                                                }
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table><br />
+                                                        <div class="col-xs-12">
+                                                            <a onclick="history.back()" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back</a> &nbsp;&nbsp;
+                                                            @Html.ActionLink("More Details", "ExchequerComponentDetails", "ExchequerSummaries", new { id = @ViewBag.ExchequerInstructionId, @class="btn btn-info pull-left" }, null)<br /><br />
+                                                        </div>
+                                                <hr />
+                                                <div class="col-xs-12">
+                                                    <table class="table table-bordered">
+                                                        <thead>
+                                                            <tr style="background:#f5f5f5; color:#000000">
+                                                                <td colspan="3"> </td>
+                                                                <td style="text-align:right"><b>Total Amount</b></td>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            @{
+                                                                int i = 0;
+                                                                decimal totalAmount = 0;
+                                                            }
+                                                            @foreach (var group in Model.GroupBy(a => a.ExchequerCategory))
+                                                            {
+                                                                totalAmount += (decimal)Model.Where(a => a.ExchequerCategory == group.Key).Sum(a => a.Amount);
+                                                                <tr class="group-header">
+                                                                    <td colspan="3" style="background-color:#fffdfd">
+                                                                        <b> @group.Key</b>
+                                                                    </td>
+                                                                    <td style="text-align:right">@string.Format("{0:#,0.00}", Model.Where(a => a.ExchequerCategory == group.Key).Sum(a => a.Amount))</td>
+                                                                </tr>
+                                                                foreach (var type in group.GroupBy(a => a.ExchequerType))
+                                                                {
+                                                                    <tr class="group-header">
+                                                                        <td colspan="3">
+                                                                            <b>@type.Key</b>
+                                                                        </td>
+                                                                        <td style="text-align:right"><b>@string.Format("{0:#,0.00}", type.Sum(a => a.Amount))</b></td>
+                                                                    </tr>
+                                                                    <tr style="background-color:#f5f5f5">
+                                                                        <td><b>#</b></td>
+                                                                        <td><b>Vote Code</b></td>
+                                                                        <td><b>Vote Name</b></td>
+                                                                        <td style="text-align:right"><b>Amount</b></td>
+                                                                    </tr>
+                                                                    i = 0;
+                                                                    foreach (var item in type)
+                                                                    {
+                                                                        i++;
+                                                                        <tr>
+                                                                            <td>@i</td>
+                                                                            <td><a href="@Url.Action("ExchequerDetails", "ExchequerSummaries",new {id=ViewBag.ExchequerInstructionId,mainVoteCode=item.VoteCode })"><i class="fa fa-eye"></i>&nbsp;&nbsp;@item.VoteCode</a></td>
+                                                                            <td>@item.VoteName</td>
+                                                                            <td style="text-align:right">@string.Format("{0:#,0.00}", item.Amount)</td>
+                                                                        </tr>
+                                                                    }
+                                                                }
+                                                            }
+                                                        </tbody>
+                                                        <tfoot>
+                                                            <tr style="background:#f5f5f5; color:#000000">
+                                                                <td style="text-align: right" colspan="3">
+                                                                    <b> Grand Total</b>
+                                                                </td>
+                                                                <td style="text-align:right"><b>@string.Format("{0:#,0.00}", totalAmount)</b></td>
+                                                            </tr>
+                                                        </tfoot>
+                                                    </table>
+                                                </div>
+                                                <hr />
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @*--------------------END OF STEP ONE--------------------*@
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $("#dataTableList").DataTable({});
+    </script>
+}

@@ -1,0 +1,212 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InstitutionListVm
+@{
+    ViewBag.Title = "Exhequer Release by Council";
+    ViewBag.Description = "form wizards";
+    //Layout = "~/Views/Shared/_Default.cshtml";
+
+}
+
+<style>
+    .input {
+        border-width: 1px 0 1px 1px;
+        border-color: #ccc;
+        border-style: solid;
+        width: 110px;
+        height: 32px;
+    }
+
+    span {
+        cursor: pointer;
+    }
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+
+        </div>
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Institution Code
+                                    </div>
+                                    <div class="col-md-5">
+                                        @Html.DropDownListFor(model => model.InstitutionCode, Model.InstitutionCodeList, "-- Select Institution --", new { @class = "select2 form-control padding-left-10" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Exchequer Number
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input id="ExchequerNo" name="ExchequerNo" class="form-control padding-left-10" type="text" placeholder="Search Exchequer Number" />
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Start Date
+                                    </div>
+                                    <div class="col-md-5 inputGroupContainer">
+                                        <div class="input-group">
+                                            <div class="input-group flatpickr">
+                                                <input name="StartDate" id="StartDate" placeholder="Pick Date" class="input padding-left-10" autocomplete="off" data-input />
+                                                <span class="input-group-addon" data-toggle><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        End Date
+                                    </div>
+                                    <div class="col-md-5 inputGroupContainer">
+                                        <div class="input-group">
+                                            <div class="input-group flatpickr">
+                                                <input name="EndDate" id="EndDate" placeholder="Pick Date" class="input padding-left-10" autocomplete="off" data-input />
+                                                <span class="input-group-addon" data-toggle><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <hr class="simple" />
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <button type="submit" class="btn action-btn btn btn-info" onclick="ExchequerCouncil()">
+                                            View Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+@section scripts
+{
+
+    <script>
+        GetUserInstitutionsExchequers();
+        function ExchequerCouncil() {
+            var entityCode = $("#InstitutionCode").val().trim()
+                exchNum = $("#ExchequerNo").val().trim(),
+                startDate = $("#StartDate").val().trim(),
+                endDate = $("#EndDate").val().trim(),
+                url = "@Model.UrlName" + "ExchequerCouncil.aspx";
+
+            var isNotSupplied = validateReportParameters(["#InstitutionCode","#ExchequerNo" ,"#StartDate", "#EndDate"]),
+                queryString = "inst-code=" + entityCode + "&exchequerNo=" + exchNum + "&start-date=" + startDate + "&end-date=" + endDate;
+
+            if (isNotSupplied)
+                $(isNotSupplied).attr("style", "border: 1px solid red");
+            else
+            {
+                $.ajax({
+                        type: "GET",
+                        url: '@Url.Action("ParameterEncryption", "Report")',
+                        contentType: "application/json; charset=utf-8",
+                        datatype: "json",
+                        data: { "query": queryString },
+                        success: function (response) {
+                            window.open(url + response);
+                        }
+                });
+            }
+        }
+
+
+        function validateReportParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i]).attr("style", "border: 1px solid #ccc");
+                }
+            }
+            resetStyle(parameterList);
+
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+
+        function GetUserInstitutionsExchequers() {
+            var url = "GetUserInstitutionsExchequers/";
+
+            $("#ExchequerNo").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (searchTerm) {
+                        return {
+                            searchTerm: searchTerm,
+                            institutionCode: $("#InstitutionCode").val(),
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.exchequers }; // data.vendors returning json data from Controller
+                    }
+                }
+            });
+        }
+    </script>
+}

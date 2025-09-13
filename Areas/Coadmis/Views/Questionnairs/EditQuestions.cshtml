@@ -1,0 +1,256 @@
+﻿@model IFMIS.Areas.Coadmis.Models.QuestionnairVM
+@{
+    ViewBag.Title = "Create Questionnair Assign";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+
+    body {
+        margin-top: 40px;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "addQuestionFrom" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.HiddenFor(model => model.QuestionnairTypeId)
+                                    @Html.HiddenFor(model => model.QuestionnnairTitleGrpId)
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.QuestionnairTypeName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-8">
+                                            @Html.EditorFor(model => model.QuestionnairTypeName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.QuestionnairTypeName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-8">
+                                            @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div style="margin-top: 20px;">
+                                        <table class="table table-bordered table-hover table-condensed" id="questionsList">
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align:right;width:4%">#</th>
+                                                    <th style="text-align:left;">Question Sub-Group</th>
+                                                    <th style="text-align:left; width: 50%">Question</th>
+                                                    <th style="text-align:left;">Answer Type</th>
+                                                    <th style="text-align:center">Action</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody></tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            }
+                            <div class="form-actions row" style="margin: 10px">
+                                <div class="col-md-1">
+                                    <a class="btn btn-default" href='@Url.Action("QuestionnairTitleGrp", "questionnairs")'><i class="glyphicon glyphicon-arrow-left"></i> Back</a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific {
+    <script>
+        $(document).ready(function () {
+            var datatable = $("#questionsList").dataTable();
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetQuestionByGroup", "Questionnairs")/?id=' +@Model.QuestionnnairTitleGrpId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    var num = 0;
+                    datatable.fnClearTable();
+                    for (var n = 0; n < data.length; n++) {
+                        for (var i = 0; i < data[n].length; i++) {
+                            num++;
+                            datatable.fnAddData([num,
+                                data[n][i]["SubTitle"] == null ? "N/A" : data[n][i]["SubTitle"],
+                                data[n][i]["QuestionnairName"],
+                                data[n][i]["AnswerType"],
+                                '<a href="#" onclick="Delete(' + data[n][i]["QuestionnnairSubTitleGrpId"] + ', ' + @Model.QuestionnnairTitleGrpId +', ' + data[n][i]["QuestionnairId"] +')" ><i class="glyphicon glyphicon-trash" aria-hidden="true"></i></a >',
+                            ]);
+                        }
+                    }
+                },
+                failure: function (error) {
+                    swal(error, { icon: "error" });
+                }
+            });
+        });
+
+        function Delete(subTitle, title, qnId) {
+            swal({
+                text: "Are you sure you want to delete this question?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+                icon: "warning",
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    DeleteQuestion(subTitle, title, qnId);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function DeleteQuestion(subTitle, title, qnId) {
+            var url = '@Url.Action("DeleteQuestion", "Questionnairs")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "subTitle": subTitle == null ? 0 : subTitle, "title": title, "qnId": qnId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Answer exist") {
+                        swal("You cannot delete a question with answers, please make sure you have not answered the question before deleting it!", { icon: "warning" });
+                    }
+                    else {
+                        swal("Error while deleting question", { icon: "error" });
+                    }
+                },
+                failure: function (error) {
+                    swal("Error while deleting question", { icon: "error" });
+                }
+            });
+        }
+    </script>
+}

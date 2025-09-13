@@ -1,0 +1,872 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.LoanVM>
+@{
+    ViewBag.Title = "Loan Approve";
+    decimal? amount = 0;
+    decimal? amount2 = 0;
+    decimal? deduct = 0;
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+        .loadingImg {
+        display: none;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @*<a class="btn btn-info" href='@Url.Action("CreateLoan", "Loan")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add New
+                                        </a>*@
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Loan No</th>
+                                        <th>Payee Code</th>
+                                        <th>Payee Name</th>
+                                        <th>Loan Code</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    <center><img src="~/Media/Images/ajax_loader.gif" class="loadingImg" /></center>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanNo)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.PayeeCode)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.PayeeName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanTypeDesc)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.OperationalAmount)</td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.OverAllStatus)
+                                            </td>
+
+                                            <td style="text-align:center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="#" data-toggle="modal" data-target="#confirmModal"
+                                                               data-loanid='@item.LoanId'
+                                                               data-loan='@item.LoanNo'
+                                                               data-reason='@item.Remark'
+                                                               data-description='@item.Description'
+                                                               data-payeename='@item.PayeeName'
+                                                               data-payeecode='@item.PayeeCode'
+                                                               data-payeebankname='@item.PayeeBankName'
+                                                               data-payeeaddress='@item.PayeeAddress'
+                                                               data-loantype='@item.LoanTypeDesc'
+                                                               data-applydate='@item.ApplyDateFormatted'
+                                                               data-recoveydate='@item.RecoveryPeriod'
+                                                               data-subclass='@item.SubBudgetClass'
+                                                               data-amountdue='@item.AmountDue'
+                                                               data-totaldeductedamount='@item.TotalDeductedAmount'
+                                                               data-monthded='@item.MonthlyDeduction'
+                                                               data-recoverystatus='@item.RecoveryStatus'
+                                                               data-finyear='@item.FinancialYear'
+                                                               data-payeebankacc='@item.PayeeBankAccount'
+                                                               data-intrate='@item.InterestRate'
+                                                               class="view_loan"><i class="fa fa-search-minus"></i>Preview</a>
+                                                        </li>
+
+                                                        @*@if (item.OverAllStatus.ToUpper() == "EXAMINED")
+                                                            {
+                                                                <li>
+                                                                    <a href="@Url.Action("Edit", "Loan",new {id=item.LoanId })" class="btn-xs edit">
+                                                                        <i class="fa fa-edit"></i>  Edit
+                                                                    </a>
+                                                                </li>
+                                                            }
+                                                            @if (item.OverAllStatus.ToUpper() == "EXAMINED")
+                                                            {
+                                                                <li><a href="#" data-toggle="modal" class="loanCancellation   delete" data-id=@item.LoanId data-lpo='@item.LoanNo'><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                                            }*@
+                                                        @if (item.OverAllStatus.ToUpper() == "EXAMINED")
+                                                        {
+                                                            <li><a href="#" data-toggle="modal" data-id=@item.LoanId data-lpo='@item.LoanNo' class="loanConfirmation  btn-xs edit"><i class="fa fa-edit"></i> Approve</a></li>
+                                                            <li>
+                                                                <a href="@Url.Action("AttachmentView", "PaymentVoucherAttachments",new {groupId=item.LoanId,sourceModule= IFMIS.Libraries.Constants.SOURCE_MODULE_LOAN })" class="btn-xs edit">
+                                                                    <i class="fa fa-eye"></i>View  Attachment
+                                                                </a>
+                                                            </li>
+                                                            <li><a href="#" data-toggle="modal" data-target="#rejectLoans" data-id=@item.LoanId data-lpo='@item.LoanNo' class="reject_loans  btn-xs edit"><i class="fa fa-edit"></i>Reject</a></li>
+                                                        }
+
+
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Loan Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Payee Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>1. Payee Name: </th>
+                                                <td id="payeeName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Payee Code:</th>
+                                                <td id="payeeCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>3. Payee Bank Name:</th>
+                                                <td id="payeeBankName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>4. Payee Address:</th>
+                                                <td id="payeeAddress"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry">
+                            <div class="entry-label">Loan Entries</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>1. Description: </th>
+                                                <td id="description"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Apply Date:</th>
+                                                <td id="ApplyDate1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3. Recovery Status:</th>
+                                                <td id="RecStatus"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>4. Loan Code:</th>
+                                                <td id="LoanType1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>5. Sub Budget Class:</th>
+                                                <td id="SubBudgetClass1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>6. Monthly Deduction:</th>
+                                                <td id="MonthlyDed"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>7. Financial Year: </th>
+                                                <td id="FinYear"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>8. Amount Due:</th>
+                                                <td id="AmntDue"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table></table>
+                                    </div>
+                                    <div style="padding-left:20px">
+                                        <table></table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    @*<button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="confirmDialog('x')">
+                            <i class="fa fa-check"></i>Confirm
+                        </button>
+                        <button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="Delete('x')">
+                            <i class="fa fa-trash-o"></i>Delete
+                        </button>
+                        <button class="btn btn-info" data-dismiss="modal" style="width:100px;" onclick="edit('x')">
+                            <i class="fa fa-edit"></i>Edit
+                        </button>*@
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="rejectedLoan">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Loan Number <span id="loan_number"></span></h4>
+            </div>
+
+            <div class="modal-body">
+
+
+                <span id="reason"></span>
+
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="rejectLoans">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Loan Number <span id="lpo_number"></span></h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "RejectReason" }))
+            {
+                <div class="modal-body form-horizontal">
+
+                    <br />
+
+                    <input type="hidden" name="Id" id="Id" value="">
+                    <div class="form-group">
+                        <label class="control-label col-md-3" for="Remark">Reason</label>
+                        <div class="col-md-7">
+                            <textarea name="Reason" id="Reason" required rows="4" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    @*<input class="btn btn-info" type="submit" id="btnSubmit" value="Submit" />*@
+
+                    <button type="submit" class="btn btn-info" style="margin-right:2px">
+                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                    </button>
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_payee_details = $('#dt_payee_details').dataTable({
+            "sDom": 't',
+            "autoWidth": false,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "columns": [
+                { title: "Payee Name" },
+                { title: "Payee code" },
+                { title: "Bank Name" },
+                { title: "Bank Account No" },
+                { title: "Address" }]
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Issued Amount" }
+            ]
+        });
+        // ********************** INIT DATA TABLES END **********************
+
+        $(".loanConfirmation").on('click', function () {
+
+            var id = $(this).data('id');
+            var lpo = $(this).data('lpo');
+            //alert('am heree'+id);
+            swal({
+                title: 'Approve Loan',
+                text: "Do you what to Approve Loan   " + lpo + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("ApproveLoan", "Loan")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Approved successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to Approve "+response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+        $(".loanCancellation").on('click', function () {
+            // alert('am heree');
+            var id = $(this).data('id');
+            var lpo = $(this).data('lpo');
+            swal({
+                title: 'Cancellation',
+                text: "Do you what to Cancel Loan   " + lpo + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelLoan", "Loan")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Cancelled successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to confirm ,DbException"+response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+        $(".rejected_loan").on('click', function () {
+            var reason = $(this).data('reason');
+            var loan = $(this).data('loan');
+            $("#loan_number").text(loan);
+            $("#reason").text(reason);
+        });
+
+        $(".view_loan").on('click', function () {
+            var reason = $(this).data('reason');
+            var loan = $(this).data('loan');
+            var loanId = $(this).data('loanid');
+            var description = $(this).data('description');
+            var payeeName = $(this).data('payeename');
+            var payeeCode = $(this).data('payeecode');
+            var payeeBankName = $(this).data('payeebankname');
+            var payeeAddress = $(this).data('payeeaddress');
+            var loanType = $(this).data('loantype');
+            var applyDate = $(this).data('applydate');
+            var recoveryDate = $(this).data('recoveydate');
+            var subclass = $(this).data('subclass');
+            var intrate = $(this).data('intrate');
+            var amountdue = $(this).data('amountdue');
+            var totaldeductedamount = $(this).data('totaldeductedamount');
+            var monthded = $(this).data('monthded');
+            var recoverystatus = $(this).data('recoverystatus');
+            var finyear = $(this).data('finyear');
+            var payeebankacc = $(this).data('payeebankacc');
+
+            $("#loan_number").text(loan);
+            $("#reason").text(reason);
+            $("#description").text(description);
+            $("#payeeName").text(payeeName);
+            $("#payeeCode").text(payeeCode);
+            $("#payeeBankName").text(payeeBankName);
+            $("#payeeAddress").text(payeeAddress);
+            $("#ApplyDate1").text(applyDate);
+            $("#RecoveryDate1").text(recoveryDate);
+            $("#LoanType1").text(loanType);
+            $("#SubBudgetClass1").text(subclass);
+            $("#AmntDue").text(amountdue);
+            $("#TotalDedAmount").text(totaldeductedamount);
+            $("#MonthlyDed").text(monthded);
+            $("#RecStatus").text(recoverystatus);
+            $("#FinYear").text(finyear);
+            $("#payeeBankAcc").text(payeebankacc);
+            $("#Intrate").text(intrate);
+
+        });
+
+        // =============== OPEN VIEW DIALOG START ==================
+        /**
+        * Show View Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function openViewDialog(i) {
+            globalPayeeId = i;
+
+            $("#_Payeename").text(["PayeeName"]);
+            $("#_PayeeCode").text(["PayeeCode"]);
+            //$("#_PayeeBankName").text(["PayeeBankName"]);
+            //$("#_PayeeAddress").text(["PayeeAddress"]);
+
+            dt_voucher_detail.fnClearTable();
+            var TotalAmount = 0;
+            var LoanDetailsIds = [];
+            dt_voucher_detail.fnClearTable();
+            ["LoanDetails"].forEach(row => {
+                dt_voucher_detail.fnAddData([
+                    row["ExpenditureGlAccount"].split("|").join("-"),
+                    row["ExpenditureGlAccountDesc"],
+                    row["FundingRef"],
+                    row["IssuedAmount"],
+                ]);
+                TotalAmount = TotalAmount + parseFloat(row["IssuedAmount"]);
+                LoanDetailsIds.push(row["LoanDetailId"]);
+            });
+
+            $("#Description1").text(["Description"]);
+            $("#totalAmount").text(TotalAmount.toLocaleString() + ".00");
+            $("#reasonId").text(["Remark"] ? ["Remark"] : "-");
+            $("#statusId").text("Overal:- " + ["OverallStatus"] + " | Recovery:- " + ["RecoveryStatus"]);
+            $("#InvoiceNo1").text(["InvoiceNo"]);
+            $("#total_voucher_amount1").val(["OperationalAmount"]);
+            $("#RecoveryDate1").text(["RecoveryDateFormatted"]);
+            $("#ApplyDate1").text(["ApplyDateFormatted"]);
+            $("#LoanType1").text(["LoanTypeDesc"]);
+            $("#AmntDue").text(["AmountDue"]);
+            $("#TotalDedAmount").text(["TotalDeductedAmount"]);
+            $("#MonthlyDed").text(["MonthlyDeduction"]);
+            $("#RecStatus").text(["RecoveryStatus"]);
+            $("#FinYear").text(["FinancialYear"]);
+            $("#payeeBankAcc").text(["PayeeBankAccount"]);
+            $("#Intrate").text(["InterestRate"]);
+
+            $('#confirmModal').modal('show');
+
+        }
+        // *************** END SHOW VIEW DIALOG ********************
+
+
+        // =============== OPEN EDIT DIALOG START ==================
+
+        /**
+         * Display the edit Dialog Form
+         * param  {Int} i - Id of the selected Item
+        */
+        function edit(i) {
+            if (i == 'x') i = globalPayeeId;
+            $("#ApplyDate").val('');
+            $("#RecoveryDate").val('');
+            $("#LoanId").val(data[i]["LoanId"]);
+            $("#RecoveryDateOld").text(data[i]["RecoveryDateFormatted"]);
+            $("#ApplyDateOld").text(data[i]["ApplyDateFormatted"]);
+            $("#Description").val(data[i]["Description"]);
+            $("#LoanType :selected").text(data[i]["LoanTypeDesc"]);
+            $('#confirmModal').modal('hide');
+            $('#editModal').modal('show');
+        }
+
+        /**
+        * Send Modified data to the backend
+        */
+        function postEditFormData() {
+            var url = '@Url.Action("EditLoan", "Loan")';
+            var form_data = {}
+
+            form_data['LoanId'] = $("#LoanId").val();
+            form_data['Description'] = $("#Description").val();
+            form_data['ApplyDate'] = $("#ApplyDate").val() != "" ? $("#ApplyDate").val() : $("#ApplyDateOld").text();
+            form_data['RecoveryDate'] = $("#RecoveryDate").val() != "" ? $("#RecoveryDate").val() : $("#RecoveryDateOld").text();
+            form_data['LoanTypeId'] = $("#LoanType").val();
+            form_data['LoanTypeDesc'] = $("#LoanType :selected").text();
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                             .then((value) => {
+                                 window.location.reload();
+                             });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#editModal').modal('hide');
+        }
+
+        //********************* EDIT END ***************************
+
+
+        //=================== DELETE START =========================
+
+        /**
+        * Show confirm delete Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function Delete(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this Loan!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteItemConfirmed(data[i]["LoanId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function deleteItemConfirmed(LoanId) {
+            var url = '@Url.Action("DeleteLoan", "Loan")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "LoanId": LoanId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // **************** DELETE END ******************************
+
+
+        //=================== CONFIRM START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmDialog(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm examine Loan ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+
+                if (isConfirm) {
+                    confirmPendingLoan(data[i]["LoanId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmPendingLoan(LoanId) {
+            var url = '@Url.Action("ExamineLoan", "Loan")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "LoanId": LoanId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Examined Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+        $(".reject_loans").on('click', function () {
+            var id = $(this).data('id');
+            var lpo = $(this).data('lpo');
+            $("#lpo_number").text(lpo);
+            $(".modal-body #Id").val(id);
+
+        });
+
+        $("#RejectReason").on('submit', function (e) {
+            e.preventDefault();
+            var reason = $("#Reason").val();
+            if (!reason) {
+                //alert("Please enter reason of rejection !");
+                swal("Please enter reason for rejection", { icon: "danger" })
+                                                        .then((value) => { });
+                return
+            }
+            var url = '@Url.Action("RejectLoans", "Loan")';
+            var formData = $(this).serialize();
+            $('#rejectLoans').modal('hide');
+            $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: formData,
+            success: function (response) {
+                if (response == "Success") {
+                    // alert("Pre Payment Rejected  successfully");
+                    swal("Loan Rejected Successfully", { icon: "success" })
+                                                        .then((value) => { });
+                    location.reload();
+                }
+                else {
+                    // alert("Failed to reject Pre Payment,DbException");
+                    swal("Failed to Reject Loan,DbException" + response, { icon: "danger" })
+                                                        .then((value) => { });
+                }
+            },
+            error: function (xhr) {
+                //console.log(xhr.responseText);
+                // alert("An error has occured, contact system support");
+
+                swal("An error has occured, contact system support" + response, { icon: "danger" })
+                                                        .then((value) => { });
+                $("#divLoader").hide();
+            },
+
+        });
+
+        });
+
+    </script>
+}

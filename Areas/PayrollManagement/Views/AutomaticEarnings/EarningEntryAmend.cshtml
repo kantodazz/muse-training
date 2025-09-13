@@ -1,0 +1,386 @@
+﻿@model IFMIS.Areas.PayrollManagement.Models.EmployeeAllowanceVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 5%">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2 style="color:black;">Employee Allowance</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body" style="padding-top:10px; width:100%;">
+                            @using (Html.BeginForm("", "", FormMethod.Post, new { id = "form" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.CheckNumber, "Employee", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            <input type="text" readonly id="Employee" placeholder="No Employee Selected" style="width:340px" />
+                                            <a class="search-btn" onclick="SearchEmployee()"
+                                               href="#" style="float:right">
+                                                <i class="fa fa-search search-icon"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    @Html.HiddenFor(model => model.EmployeeEarningId)
+                                    @Html.HiddenFor(model => model.EmployeeId)
+                                    @Html.HiddenFor(model => model.EarningJobCodeMapId)
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.CheckNumber, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.CheckNumber, "Check Number", new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.CheckNumber, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-5">
+                                            @Html.HiddenFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.AllowanceDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.TextAreaFor(model => model.AllowanceDescription, new { @class = "form-control", @readonly = true })
+                                            @Html.ValidationMessageFor(model => model.AllowanceDescription, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.AllowanceAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.AllowanceAmount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.AllowanceAmount, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.EarngStatus, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.EarngStatus, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.EarngStatus, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Status, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EnumDropDownListFor(model => model.Status, "Select Status", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <button type="button" class="btn btn-info" onclick="addmanualEarning()" style="float: left">
+                                                <span class="glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                                                Save
+                                            </button>
+                                            <a href="@Url.Action("EarningsList","AutomaticEarnings")" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                                Back
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="payeeModal" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Search Employee</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container " style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Enter Checknumber..." id="searchbox">
+                            <button type="button" id="searchEmployee" class=" btn btn-block btn-info">Search</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-striped table-bordered table-hover table-responsive" id="dt_search_payee">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>CheckNo</th>
+                            <th>FirstName</th>
+                            <th>Middle Name</th>
+                            <th>LastName</th>
+                            <th>Payment Code</th>
+                            <th>Amount</th>
+                            <th>EmployeeEarningId</th>
+                            <th>EarningJobCodeMapId</th>
+                            <th>Status</th>
+                            <th>Status</th>
+                            <th>EmployeeId</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <script>
+    var dt_search_payee = $('#dt_search_payee').dataTable({
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [7,8,9,11]}],
+    });
+
+    $("#dt_search_payee_wrapper .dt-toolbar").remove();
+
+    function SearchEmployee() {
+        $('#payeeModal').modal('show');
+    }
+
+    $('#searchEmployee').click(function () {
+     var search = $("#searchbox").val();
+
+     var url = '@Url.Action("GetEmployeeAuto", "AutomaticEarnings")';
+     $("#divLoader").toggle(true);
+     $.ajax({
+         type: "get",
+         url: url + "/?search=" + search + "",
+         contenttype: "application/json; charset=utf-8",
+         datatype: "json",
+         success: function (response) {
+             $("#divLoader").toggle(false);
+             data = response.data;
+             console.log(data);
+             dt_search_payee.fnClearTable();
+             for (var i = 0; i < data.length; i++) {
+                 dt_search_payee.fnAddData([i + 1,
+                 data[i]["CheckNumber"],
+                 data[i]["FirstName"],
+                 data[i]["MiddleName"],
+                 data[i]["LastName"],
+                 data[i]["PaymentCodeName"],
+                 data[i]["PaidAmount"],
+                 data[i]["EmployeeEarningId"],
+                 data[i]["EarningJobCodeMapId"],
+                 data[i]["IsActive"] == true ? "Active" : "InActive",
+                 data[i]["Status"],
+                 data[i]["EmployeeId"],
+                 '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                 ]);
+             }
+         },
+         failure: function (error) {
+         }
+     });
+ });
+
+var payeeId = null;
+function payeeClicked(rowId) {
+    var data = dt_search_payee.DataTable().rows().data();
+    var row = data[rowId];
+        console.log(row);
+        E = row[1];
+        $("#Employee").val(row[2] + " " + row[3] + " " + row[4]);
+        $("#FullName").val(row[2] + " " + row[3] + " " + row[4]);
+        $("#CheckNumber").val(row[1]);
+        $("#AllowanceDescription").val(row[5]);
+        var formattedAmount = Number(row[6]).toLocaleString("en-US");
+        $("#AllowanceAmount").val(formattedAmount);
+        $("#AllowanceAmount").val(row[6]);
+        $("#EmployeeEarningId").val(row[7]);
+        $("#EarningJobCodeMapId").val(row[8]);
+        $("#EarngStatus").val(row[10]);
+        $("#EmployeeId").val(row[11]);
+        $("#payeeModal").modal("hide");
+};
+
+$('#AllowanceAmount').autoNumeric('init');
+
+    var addmanualEarning = function () {
+            debugger
+            $.validator.unobtrusive.parse("#form");
+            if (!$("#form").valid()) {
+                return false;
+            }
+
+            var url = '@Url.Action("CreateEarningEntryAmend", "AutomaticEarnings")';
+            var url1 = '@Url.Action("EarningsList", "AutomaticEarnings")'
+
+            var model = $("#form").serialize();
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: model,
+                success: function (response) {
+                    $("#divLoader").toggle(false);
+                    if (response == "success") {
+                        swal("Earning Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = url1;
+                            })
+                    } else if (response == "Cant save the same status") {
+                        $("#divLoader").toggle(false);
+                        swal("You can not  save the same status as before!", { icon: "info" })
+                           .then((value) => {
+                           })
+                    }
+                    else if (response == "userPaystationEmployee already have this allaowance!") {
+                        $("#divLoader").toggle(false);
+                        swal("Employee already have this allaowance!!", { icon: "info" })
+                            .then((value) => {
+                            })
+                    }
+                    else {
+                        $("#saveLoader").toggle(false);
+                        swal("Error on Saving earning!", { icon: "error" })
+                            .then((value) => {
+                            })
+                    }
+                },
+                error: function (response) {
+                    $("#divLoader").toggle(false);
+                    swal("Error on Saving!")
+                }
+            });
+        };
+
+
+
+$("#btnSave").on("click", function () {
+    $("#btnSave").attr("disabled", true);
+    $.validator.unobtrusive.parse("#form");
+    if (!$("#form").valid()) {
+        $("#btnSave").attr("disabled", false);
+
+        return false;
+    }
+
+    $("#divLoader").show();
+
+    var token = $("[name='__RequestVerificationToken']").val();
+
+    var formData = new FormData();
+
+    formData.append("__RequestVerificationToken", token);
+    formData.append("EarningJobCodeMapId", $('#EarningJobCodeMapId').val());
+    formData.append("Status", $('#Status').val());
+    formData.append("EmployeeEarningId", $('#EmployeeEarningId').val());
+
+
+    var url = '@Url.Action("EditEarningEntry", "AutomaticEarnings")';
+    var url1 = '@Url.Action("AutomaticEarningsNewList", "AutomaticEarnings")';
+
+    $.ajax({
+        url: url,
+        type: "POST",
+        //data: JSON.stringify(Object.fromEntries(formData)),
+        data: formData,
+        dataType: "JSON",
+        //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+        //cache: false,
+        processData: false,
+        contentType: false,
+        success: function (response) {
+            if (response == "success") {
+                swal("Saved Successfully!", { icon: "success" })
+                    .then((value) => {
+                        window.location.href = url1;
+                    })
+            }
+            else if (response == "exist") {
+                swal("Allowance exist to this employee!", { icon: "info" })
+                    .then((value) => {
+                    })
+            }
+            else {
+                swal("Error on saving allowance!", { icon: "error" })
+                    .then((value) => {
+                    })
+            }
+        },
+        error: function () {
+            swal({
+                text: "An error occured while processing your request, please contact system support",
+                icon: "error",
+                button: "OK",
+            })
+        },
+        complete: function () {
+            $("#btnSave").attr("disabled", false);
+            $("#divLoader").hide();
+        }
+    });
+})
+
+    </script>
+}
+

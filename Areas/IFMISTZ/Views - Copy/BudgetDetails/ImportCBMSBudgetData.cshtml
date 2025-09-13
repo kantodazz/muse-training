@@ -1,0 +1,295 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+=
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .swal-button--confirm {
+        background-color: #4CAF50 !important;
+    }
+
+    .swal-button--cancel {
+        background-color: #F44336 !important;
+        color: #fff !important;
+    }
+
+    .swal-title {
+        font-size: 20px !important;
+    }
+
+    .swal-text {
+        font-size: 15px !important;
+    }
+
+    .swal-icon {
+        width: 66px !important;
+        height: 70px !important;
+    }
+
+    table, th, tr, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        border-color: gray;
+        /*border-collapse: separate;*/
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 100%;
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+        tr:not([data-level='3']) {
+            cursor: pointer;
+        }
+
+        tr.expanded .sign:after {
+            content: url(/ifmis/Content/img/budget/Minus3.png);
+        }
+
+        tr.folded .sign:after {
+            content: url(/ifmis/Content/img/budget/Collapse2.png);
+            cursor: pointer;
+        }
+
+        td:first-child {
+            padding: inherit;
+        }
+
+    /*  */
+
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+
+    thead {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    tfoot {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>MAIN Budget Importation</h2>
+                    </header>
+                    <div>
+                    @using (Html.BeginForm())
+                    {
+                        <div class="widget-body">
+                            <div class="row" style="padding:1% 5% 0 5%;">
+                                <div class="col-md-6 col-lg-6 col-sm-12 ">
+
+                                    <table>
+                                        <tr>
+                                        @if (ViewBag.Error != null)
+                                        {
+                                            <tr>
+                                                <td>
+                                                    Operation Error
+                                                </td>
+                                                <td>
+                                                    @ViewBag.Error
+                                                </td>
+                                               
+                                             </tr>
+                                          }
+   
+                                        <tr>
+                                            <td class="form-label">
+                                                Source System
+                                                <i class="fa fa-times" style="color:white" id="sourcesys_1"></i>
+                                            </td>
+                                            <td>
+                                                <select id="sourcesys" name="sourcesys" style="width:300px" required>
+                                                    <option value=''></option>
+                                                    <option value='CBMS'>CBMS</option>     
+                                                    <option value='PLANREP'>PLANREP</option>    
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="form-label">
+                                                Vote Code
+                                                <i class="fa fa-times" style="color:white;" id="votecode_1"></i>
+                                            </td>
+                                            <td>
+                                                <select id="VoteCode" name="VoteCode" style="width:300px">
+                                                    @foreach (var Vote in ViewBag.Votelist)
+                                                    {
+                                                        <option value='@Vote.VoteCode'>@Vote.VoteCode - @Vote.Level1Desc</option>}
+                                                </select>
+
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="form-label">
+                                                Financial Year
+                                                <i class="fa fa-times" style="color:white;" id="fiscalyr_1"></i>
+                                            </td>
+                                            <td>
+                                                <select id="FiscalYear" name="FiscalYear" style="width:300px" required>
+                                                    @foreach (var fy in ViewBag.FinancialYearlist)
+                                                    {
+                                                        <option value=''></option>
+                                                        <option value='@fy.FinancialYearCode'>@fy.FinancialYearDesc</option>}
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        
+                                    </table>
+                                </div>
+
+                                
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-6">
+
+                                    <a class="btn btn-info" href='@Url.Action("index", "Budgetdetails")' style="margin-right:5px">
+                                        <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                    </a>
+
+
+                                    <button type="submit" class="btn btn-info" id="form_submision">
+                                        <i class="fa fa-save"></i>Save
+                                        <!--<img src="~/Content/img/loading.gif" id="saveLoader" />-->
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                    }
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+        function ImportBudget() {
+            $('#budgetModal').modal('show');
+        }
+
+        $("#form_submision").click(function () {
+
+            var votecode = $("#VoteCode").val();
+            var fiscalyear = $("#FiscalYear").val();
+           // swal("Now Saving Data...." + votecode + " - " + fiscalyear);
+
+            /*$.ajax({
+                type: 'POST',
+                dataType: 'json',
+                url: '/BudgetDetails/ImportCBMSBudgetData',
+                data: { VoteCode: votecode, FiscalYear: fiscalyear },
+                success: function (Data) {
+                    alert(data.VoteCode);
+                    alert(data.FiscalYear);
+                },
+                error: function (XMLHttpRequest, textStatus, errorThrown) {
+
+                }
+            });*/
+
+        });
+
+        var datatable_tabletools = $('#datatable_tabletools').dataTable({
+            "autoWidth": true,
+            "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+            "bPaginate": false,
+            "info": true,
+        });
+
+        var data = [];
+        var globalPayeeId = null;
+        //EDIT RECORD
+        function edit(id) {
+            //if (i == 'x') i = globalPayeeId;
+            console.log(id);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("EditBudget", "BudgetDetails")' + "/?id="+id+"",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (data) {
+                    alert("test :" + data.subbudgetClass);
+                },
+                failure: function (error) {
+                    swal(error);
+                    console.log("error");
+                }
+            });
+            //$('#editModal').modal('show');
+            $('#confirmModal').modal('hide');
+
+
+        }
+
+
+    </script>
+}

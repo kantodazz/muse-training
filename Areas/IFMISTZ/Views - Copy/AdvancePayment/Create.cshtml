@@ -1,0 +1,770 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+    ViewBag.Title = "Create Advance Payment";
+}
+<style>
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>New Advance Payment</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div align="center">
+                                <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Contract<sup></sup></label>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+
+                                                <span class="input-group-addon" onclick="SearchContract()"><i class="fa fa-search"></i></span>
+                                                @Html.EditorFor(model => model.ContractNo, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Search", autocomplete = "off", @onclick = "SearchContract()" } })
+                                                @Html.ValidationMessageFor(model => model.ContractNo, "", new { @class = "text-danger" })
+                                                @Html.HiddenFor(model => model.SubBudgetClass)
+                                                @Html.HiddenFor(model => model.ContractId)
+                                            </div>
+                                        </div>
+                                        @Html.LabelFor(model => model.PaymentAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.PaymentAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.PaymentAmount, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.PaymentDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.PaymentDescription, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", maxlength = 250 } })
+                                            @Html.ValidationMessageFor(model => model.PaymentDescription, "", new { @class = "text-danger" })
+                                        </div>
+                                        <label class="col-md-2 control-label">GL Items<sup></sup></label>
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+
+                                                <span class="input-group-addon" onclick="SearchGL()"><i class="fa fa-search"></i></span>
+                                                @Html.EditorFor(model => model.GLAccount, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Search ", autocomplete = "off", @onclick = "SearchGL()" } })
+                                                @Html.ValidationMessageFor(model => model.GLAccount, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+                            <fieldset class="scheduler-border" style="display:none" id="contract_details">
+                                <legend class="scheduler-border">Contract details</legend>
+                                <div id="contract_data">
+
+                                </div>
+                            </fieldset>
+
+
+                            <div style="padding-top:5px">
+
+                                <table id="selected_gls" class="table table-bordered
+                                       table-hover table-condensed" width="100%"></table>
+                                <div style="padding-bottom:10px" id="infoPanel">
+                                    <div class="info-box">No GL Items Selected</div>
+                                </div>
+                            </div>
+
+                            <div class="col-md-offset-1">
+
+
+                                <a href="@Url.Action("PendingList","AdvancePayment")" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                &nbsp;
+                                <button type="submit" class="btn btn-info" id="form_submision">
+                                    <i class="fa fa-save"></i>Save
+                                </button>
+                            </div>
+                            <br />
+                            <br />
+                            <br />
+
+
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<!----------- Search  Contract----------------->
+<div class="modal fade" id="search_contracts" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Approved Contract</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+
+
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_contract">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_search_contract" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Contract Id</th>
+                                <th>Contract</th>
+                                <th>SBC</th>
+                                <th>Payee Code</th>
+                                <th>Currency</th>
+                                <th>ParentCode</th>
+                                <th>SubwarantCode</th>
+                                <th>Contract Reg#</th>
+                                <th>Contract Number</th>
+                                <th>Contract Amount</th>
+                                <th> Payee Name</th>
+                                <th> Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- Search  GL----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Gl Item(s)</h3>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding:5px">Total Items Amount</td>
+                        <td style="padding:5px">
+                            <input type="text" disabled id="total_items_amount">
+                        </td>
+
+                        <td style="padding:5px">Total Line Amount</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="total_line_amount">
+                        </td>
+
+                        <td style="padding:5px">Difference</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="difference" style="width:250px">
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_gl">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" />
+                    </div>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Expenditure Line Item</th>
+                                <th>Item Description</th>
+                                <th>Fund Balance</th>
+                                <th>Funding Reference</th>
+                                <th>SubLevelCode</th>
+                                <th>Expense Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btn_save_items_charge">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+    // SEARCH CONTRACT
+        var glItemsCharges = [];
+        var sum_total = 0;
+        var parent_code = "UNKNOWN";
+        var sub_warant_code = "UNKNOWN";
+    var dt_search_contract = $('#dt_search_contract').dataTable({
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1, 2, 3,4,5,6,7] }],
+    }
+    );
+                $("#dt_search_contract_wrapper .dt-toolbar").remove();
+               $("#search_contract").on("keyup search input paste cut", function () {
+                dt_search_contract.DataTable().search(this.value).draw();
+               });
+
+        function SearchContract() {
+            $('#search_contracts').modal('show');
+                    var url = '@Url.Action("GetContracts", "AdvancePayment")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                            if (response == "NoContract") {
+                              swal("No any contract satisfy to pay Advance Payment");
+                            }
+                            else if (response == "NotAuthorizes") {
+                          swal("You have role which restrict you to receive contract to this institution");
+                            }
+                            else if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                data = response.data;
+                                dt_search_contract.fnClearTable();
+                                for (var i = 0; i < data.length; i++) {
+
+                                    dt_search_contract.fnAddData([i + 1,
+                                    data[i]["ContractId"],
+                                    data[i]["ContractName"],
+                                    data[i]["SubBudgetClass"],
+                                    data[i]["PayeeCode"],
+                                    data[i]["Currency"],
+                                    data[i]["ParentInstitutionCode"],
+                                    data[i]["SubWarrantCode"],
+                                    data[i]["ContractNo"],
+                                    data[i]["ContractNumber"],
+                                    toLabel(data[i]["ContractAmount"]),
+                                    data[i]["Payeename"],
+                                    '<a href="#" onclick="contractClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                                    ]);
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                 }
+        function contractClicked(rowId) {
+        var data = dt_search_contract.DataTable().rows().data();
+            var row = data[rowId];
+            $("#ContractId").val(row[1]);
+            $("#ContractNo").val(row[8]);
+            $("#SubBudgetClass").val(row[3]);
+            $("#contract_details").show();
+            $('#contract_data').empty();
+            parent_code = "UNKNOWN";
+            sub_warant_code = "UNKNOWN";
+            if (row[6] != null) {
+                parent_code = row[6];
+                sub_warant_code = row[7];
+            }
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;&nbsp;&nbsp;' + row[9] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Sub Budget Class&nbsp;:</strong>&nbsp;&nbsp;&nbsp;' + row[3] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Amount&nbsp;:</strong>&nbsp;&nbsp;&nbsp;' + toLabel(row[10]) + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Code&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>&nbsp;&nbsp;&nbsp;' + row[4] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp:</strong>&nbsp;&nbsp;&nbsp;' + row[2] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Name&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>&nbsp;&nbsp;&nbsp;' + row[11] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Currency&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp:</strong>&nbsp;&nbsp;&nbsp;' + row[5] + '</div><div class="col-sm-6 col-md-6 col-lg-6"></div></div>').appendTo('#contract_data');
+            $("#search_contracts").modal("hide");
+        }
+    //END SEARCH CONTRACT
+
+
+        //=============SEARCH GL ACCOUNTS ==================
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable();
+            $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+        $("#search_gl").on("keyup search input paste cut", function () {
+            $("#search_exp_line").val("");
+            dt_search_gl_item.DataTable().search(this.value).draw();
+        });
+      function SearchGL() {
+          var contract = $("#ContractNo").val();
+          var sbc = $("#SubBudgetClass").val();
+          if (contract) {
+              var amount = $("#PaymentAmount").val();
+              if (amount) {
+                  glItemsCharges = [];
+                  sum_total = 0;
+                  var payment_amount = parseFloat(amount.split(",").join(""));
+                        $("#total_line_amount").val("");
+                        $("#total_items_amount").val(payment_amount.toLocaleString('en'));
+                        $("#difference").val(payment_amount.toLocaleString('en'));
+                  $('#glItemsModal').modal('show');
+
+              
+                  var fundBalanceParams = {
+                      "subBudgetClass": sbc,
+                      instCode: parent_code,
+                      subWarrantCode: sub_warant_code,
+                      IsAccrualVoucher: false
+                  };
+                  var url = '@Url.Action("GetFundbalance", "PaymentVoucher")';
+
+            $.ajax({
+                type: "get",
+                url: url,
+                data: fundBalanceParams,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    //=== UPDATE SEARCH GI TABLE ====
+                    data = response.data;
+                    dt_search_gl_item.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+
+                        dt_search_gl_item.fnAddData([i + 1,
+                           data[i]["GlAccount"].split("|").join("-"),
+                           data[i]["GlAccountDesc"],
+                           toLabel(data[i]["FundBalance"]),
+                            data[i]["FundingRefNo"],
+                            data[i]["SublevelCode"],
+                           '<amount-input placeholder="Amount" max="' + data[i]["FundBalance"] + '"  onkeyup="amountChanged(this)" />'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+              } else {
+    swal("Please Enter Advance Payment Amount");
+              }
+
+          } else {
+              swal("Please search and select contract first");
+          }
+        }
+          function amountChanged(e) {
+
+            var max_value = parseFloat(e.max);
+            var entered_value = parseFloat(e.value.split(",").join(""));
+            if (!entered_value) {
+                entered_value = 0;
+            }
+
+            if (entered_value >= 0) {
+                if (max_value >= entered_value) {
+
+                    sum_total = 0;
+
+                    var i = 0;
+
+                    $("#dt_search_gl_item tr").each(function () {
+
+
+                        if (i > 0) {
+                            var value = $(this).children().eq(6).find("input").val().trim().split(",").join("");
+
+                            if (value !="") {
+
+                                var expense_amount = parseFloat($(this).children().eq(3).text().split(",").join(""));
+
+                                var amount = parseFloat(value);
+
+                                //INSERT INTO ARRAY
+                                var line = "";
+                                line = $(this).children().eq(1).text().split("-").join("|");
+                                var item_description = $(this).children().eq(2).text();
+                                var expense_amount = parseFloat($(this).children().eq(3).text().split(",").join(""));
+                                var funding_ref = $(this).children().eq(4).text();
+                                var sub_level_code = $(this).children().eq(5).text();
+                                if (glItemsCharges.length > 0) {
+
+                                    //CHECK IF EXIST IN THE ARRAY
+                                    var found = false;
+                                    for (var j = 0; j < glItemsCharges.length; j++) {
+                                        if (glItemsCharges[j].GLAccount == line && glItemsCharges[j].FundingReference == funding_ref) {
+                                            glItemsCharges[j].ExpenseAmount = amount;
+                                            found = true;
+                                        }
+
+                                    }
+
+                                    if (!found) {
+
+                                        glItemsCharges.push({
+                                            "GLAccount": line,
+                                            "GLAccountDesc": item_description,
+                                            "FundingReference": funding_ref,
+                                            "ExpenseAmount": amount,
+                                            "SublevelCode": sub_level_code
+                                        });
+
+
+                                    }
+
+
+                                } else {
+
+                                    glItemsCharges.push({
+                                        "GLAccount": line,
+                                        "GLAccountDesc": item_description,
+                                        "FundingReference": funding_ref,
+                                        "ExpenseAmount": amount,
+                                        "SublevelCode": sub_level_code
+                                    });
+
+
+                                }
+
+
+
+
+                            }
+                        }
+
+
+                        i++;
+                    });
+
+                    for (var j = 0; j < glItemsCharges.length; j++) {
+
+                        sum_total = sum_total + glItemsCharges[j].ExpenseAmount;
+
+                    }
+
+                    var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+                    var balance = total_items_value - sum_total;
+                    if (balance >= 0) {
+                        $("#total_line_amount").val(sum_total.toLocaleString('en'));
+                        $("#difference").val(balance.toLocaleString('en'));
+                    }
+                    else {
+                        swal("Total Line Amount can not exceed " + total_items_value.toLocaleString('en'));
+                        e.value = "";
+
+
+                    }
+                } else {
+                    swal("Expense Amount can not exceed " + max_value.toLocaleString('en'));
+                    e.value = "";
+
+
+                }
+            }
+        }
+
+                //SAVE GL ACCOUNT(S)
+                $("#btn_save_items_charge").click(function () {
+
+                    var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+
+
+                    if (glItemsCharges.length == 0) {
+                        swal("Please Enter Amount !");
+                    }
+                    else if (total_items_value != sum_total) {
+                        swal("Please Total Line Amount must be equal to " + total_items_value.toLocaleString('en') + " !");
+                    }
+                    else {
+                        var gl_selected = glItemsCharges.length + " " + "GLs Selected";
+                        $("#GLAccount").val(gl_selected);
+                        $('#glItemsModal').modal('hide');
+                        $("#infoPanel").hide();
+                        $('#selected_gls').empty();
+                       $('<tr style="background:#f5f5f5; color:#000000"><th style="text-align: center;width:5%">No</th><th>Expenditure Line Item</th><th>Item Description</th><th>Funding Reference</th><th style="text-align:right;width:12%">Amount</th></tr>').appendTo('#selected_gls');
+                var j = 0;
+                var sum = 0;
+                         $.each(glItemsCharges, function (i, d) {
+                            j++;
+                             sum = sum + parseFloat(d.ExpenseAmount);
+                          $('<tr><td align="center">' + j + '</td><td>' + d.GLAccount.split("|").join("-") + '<td>' + d.GLAccountDesc + '</td><td>' + d.FundingReference + '</td><td align="right">' + d.ExpenseAmount.toLocaleString('en') + '</td></tr>').appendTo('#selected_gls');
+
+                         });
+                     $('<tr><td colspan="4" align="right"><strong>Total</strong></td><td align="right"><strong>' + sum.toLocaleString('en') + '/=</strong></td></tr>').appendTo('#selected_gls');
+
+
+                    }
+
+                });
+                //END SAVE GL ACCOUNT(S)
+    //END SEARCH GL
+
+        $(document).ready(function () {
+         $("#PaymentAmount").on("keyup search input paste cut", function () {
+            if (this.value) {
+                var payment_amount = parseFloat(this.value.split(",").join(""));
+                if (glItemsCharges.length > 0) {
+                              var sum = 0;
+                         $.each(glItemsCharges, function (i, d) {
+                             sum = sum + parseFloat(d.ExpenseAmount);
+                         });
+                    if (payment_amount != sum) {
+
+                                   swal({
+                                    title: 'Confirmation',
+                                    text: "Changing amount leads all GLs selected previously to be released.Do you continue?",
+                                    buttons: [
+                                      'No',
+                                      'Yes'
+                                    ],
+                                }).then(function (isConfirm) {
+                                    if (isConfirm) {
+                                        $('#selected_gls').empty();
+                                        glItemsCharges = [];
+                                        $("#GLAccount").val("");
+                                        $("#infoPanel").show();
+                                    } else {
+                                       $("#PaymentAmount").val(sum.toLocaleString('en'));
+                                    }
+                                });
+
+                      }
+                    }
+            }
+         });
+           $("#form_submision").click(function () {
+               var contract = $("#ContractNo").val();
+              if (!contract) {
+               swal("Please search and select contract first!!!");
+                return false;
+                 }
+               var amount = $("#PaymentAmount").val();
+               if (!amount) {
+               swal("Please Enter Advance Payment Amount!!!");
+                return false;
+               }
+               var description = $("#PaymentDescription").val();
+               if (!description) {
+                swal("Please Enter Description!!!!");
+                return false;
+               }
+               if (glItemsCharges.length > 0) {
+                   var contractId = $("#ContractId").val();
+                           var form_data = {
+                           "ContractId": contractId,
+                           "PaymentAmount": amount,
+                           "PaymentDescription": description,
+                           "ReceivingCoas": glItemsCharges
+                           }
+                   $("#form_submision").prop('disabled', true);
+
+                              var url = '@Url.Action("SaveAdvancePayment", "AdvancePayment")';
+                        $.ajax(
+            {
+                type: "POST",
+                url: url,
+                data: form_data,
+                success: function (response) {
+                   $("#form_submision").prop('disabled', false);
+                         if (response == "Success") {
+             	   swal("Advance Payment saved successfully", { icon: "Success" })
+                                    .then((value) => {
+                                        var url = '@Url.Action("PendingList", "AdvancePayment")';
+                                        window.location.replace(url);
+                                    });
+                           }
+                           else {
+                               swal(response);
+                            }
+                },
+                error: function (xhr) {
+                        $("#form_submision").prop('disabled', false);
+                    swal("An error has occured, contact system support");
+
+                },
+
+            });
+                      } else {
+           swal("Please search GLs Item,enter amounts and save them!!!");
+                      }
+
+           });
+
+    });
+        $("#PaymentAmount").autoNumeric('init');
+        $('#PaymentAmount').bind('copy paste cut', function (e) {
+            e.preventDefault();
+            swal('Paste option is disabled !!');
+        });
+        $('#PaymentDescription').bind('copy paste cut', function (e) {
+            e.preventDefault();
+            swal('Paste option is disabled !!');
+        });
+        $("#PaymentDescription").on('keypress', function (event) {
+            var regex = new RegExp("^[0-9a-zA-Z \b]+$");
+            var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+            if (!regex.test(key)) {
+                event.preventDefault();
+                return false;
+            }
+        });
+    //SHOW LOADER ICON
+    $(document).ajaxStart(function () {
+        $(".loadingImg").show();
+
+    });
+    //HIDE LOADER ICON
+    $(document).ajaxStop(function () {
+        $(".loadingImg").hide();
+    });
+
+    </script>
+}
+
+
+
+
+
+
+

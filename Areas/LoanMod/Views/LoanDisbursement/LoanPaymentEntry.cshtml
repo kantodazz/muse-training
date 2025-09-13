@@ -1,0 +1,567 @@
+﻿@{
+    ViewBag.Title = "Loan Payment Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    /*select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+        border-radius:5px
+    }*/
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text],select {
+        padding: 7px;
+        border: 1px solid #ccc;
+        border-radius:3px
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>PayeeName</th>
+                                        <th>PayeeAccountName</th>
+                                        <th>PayeeBankAccount</th>
+                                        <th>PayeeBankName</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- GL POPUP ----------------->
+<div class="modal fade" id="addGlAccModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Gl Item(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div style="display:flex;justify-content:space-between;padding-top:1%;padding-bottom:0.5%">
+                        <div>
+                            <select id="SubBudgetClass" style="width:300px">
+                                <option value="0" selected="selected">Please choose sub budget class</option>
+                                @foreach (var subBudgetClass in ViewBag.subBudgetClassList)
+                                {
+                                    <option value='@subBudgetClass.SubBudgetClass;
+                                                              @subBudgetClass.OperationalCurrencyCode;
+                                                              @subBudgetClass.OperationalExchangeRate;
+                                                              @subBudgetClass.BaseCurrencyCode'>
+                                        @subBudgetClass.SubBudgetClassSubBudgetClassDesc
+                                    </option>}
+                            </select>
+                        </div>
+                        <div style="display:flex">
+                            <div style="text-align:center;padding-top:8px;padding-right:10px">
+                                Total:
+                            </div>
+                            <div>
+                                <input type="text" disabled id="total">
+                            </div>
+                        </div>
+                         <div style="display:flex">
+                             <div style="text-align:center;padding-top:8px;padding-right:10px">
+                                 Balance:
+                             </div>
+                             <div>
+                                 <input type="text" disabled id="balance">
+                             </div>
+                        </div>
+                        <div>
+                            <div class="search-container ">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="searchbox2">
+                            </div>
+                        </div>
+                    </div>
+                    <details id="prevGlItems">
+                        <summary>
+                            <a href="#" onclick="toggleGlItems()">Previous Gl Items</a>
+                        </summary>
+                        <div>
+                            <table id="dt_selected_gl_item" class="table table-bordered table-condensed" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Expenditure Line Item</th>
+                                        <th>Item Description</th>
+                                        <th>Funding Reference</th>
+                                        <th>Amount</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </details>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Expenditure Line Item</th>
+                                <th>Item Description</th>
+                                <th id="BalanceTitle">Fund Balance</th>
+                                <th id="FundingRef">Funding Reference</th>
+                                <th>Expense Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="saveGlItems()">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script>
+        var detailsPane = document.getElementById("prevGlItems")
+        function toggleGlItems() {
+            if (detailsPane.getAttribute('open')) {
+                detailsPane.removeAttribute('open')
+            } else {
+                detailsPane.setAttribute('open', 'open')
+            }
+        }
+
+        var dt_selected_gl_item = $('#dt_selected_gl_item').dataTable();
+        $("#dt_selected_gl_item_wrapper .dt-toolbar").remove();
+        $("#dt_selected_gl_item_wrapper .dt-toolbar-footer").remove();
+
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+        var data = []
+        function loadData() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetLoanPayments", "LoanDisbursement")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_Loan_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_Loan_listing.fnAddData([i + 1,
+                            //data[i]["PVNo"],
+                            data[i]["Payeename"],
+                            data[i]["PayeeAccountName"],
+                            data[i]["PayeeBankAccount"],
+                            data[i]["PayeeBankName"],
+                            toLabel(data[i]["OperationalAmount"]),
+                            data[i]["OverallStatus"],
+                            '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openVoucherDialog(' + i + ')">Add Gl</a></li>\
+                                <li><a href="#" onclick= "view(' + data[i]["SourceModuleReferenceNo"] + ')">Details</a></li>\
+                                <li><a href="#" onclick= "generateVoucher(' + i + ')">Generate Voucher</a></li>\
+                                <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadData()
+        var totalAmount = 0
+        var LoanPaymentId = 0
+        function openVoucherDialog(i) {
+            dt_search_gl_item.fnClearTable();
+            allAmounts = {}
+            form_data_status = []
+            LoanPaymentId = data[i].PaymentVoucherId
+            $("#SubBudgetClass").val("0")
+            totalAmount = data[i].OperationalAmount
+            $("#balance").val(toLabel(totalAmount))
+            $("#total").val(toLabel(totalAmount))
+            getLoanVoucherDetails(i)
+            $("#addGlAccModal").modal('show')
+        }
+
+        function view(Id) {
+            var ViewUrl = '@Url.Action("ViewLoanDetails", "ViewLoanApplication")'
+            window.location.href = `${ViewUrl}/${Id}`;
+        }
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+        $("#searchbox2").on("keyup search input paste cut", function () {
+            dt_search_gl_item.DataTable().search(this.value).draw();
+            Object.keys(allAmounts).forEach((key) => {
+                $(`#_Id-${key}`).val(toLabel(allAmounts[key]))
+            });
+        });
+
+        $("#SubBudgetClass").change(function () {
+            if ($(this).val() != "0") {
+                updateSearchGITable($(this).val());
+            }
+        });
+
+        let GlData = []
+
+        function updateSearchGITable(subBudgetClassList) {
+            $("#loader").text("Loading Please Wait...")
+            subBudgetClassList = subBudgetClassList.split(";");
+            var subBudgetClass = subBudgetClassList[0].trim();
+            var url = '@Url.Action("GetFundbalance", "PaymentVoucher", new { area="ifmistz"})';
+            var fundBalanceParams = { "subBudgetClass": subBudgetClass };
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: fundBalanceParams,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response)
+                    GlData = response.data;
+                    updateGLSearchTable(GlData)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function updateGLSearchTable(GlData) {
+            dt_search_gl_item.fnClearTable();
+            for (var i = 0; i < GlData.length; i++) {
+                dt_search_gl_item.fnAddData([i + 1,
+                    GlData[i]["GlAccount"].split("|").join("-"),
+                    GlData[i]["GlAccountDesc"],
+                    toLabel(GlData[i]["FundBalance"]),
+                    GlData[i]["FundingRefNo"],
+                    `<amount-input placeholder="Amount" id="Id-${GlData[i].FundBalanceViewId}" onkeyup="amountChanged(${i})" autocomplete="off"/>`
+                ]);
+            }
+
+            if (GlData.length == 0) {
+                $("#loader").text("No Matching Record Found")
+            } else {
+                $("#loader").text("")
+            }
+        }
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+        var form_data_status = [];
+        var allAmounts = {};
+        function amountChanged(i) {
+            var fundBalance = toNumber(GlData[i].FundBalance);
+            var inputId = `#_Id-${GlData[i].FundBalanceViewId}`
+            var enteredAmount = toNumber($(inputId).val()||0);
+            allAmounts[`${GlData[i].FundBalanceViewId}`] = enteredAmount;
+            var balance = fundBalance - enteredAmount;
+            if (balance < 0) {
+                form_data_status.push(GlData[i].FundBalanceViewId);
+                $(inputId).css({ 'color': 'red' });
+            } else {
+                $(inputId).css({ 'color': 'black' });
+                remove(form_data_status, GlData[i].FundBalanceViewId);
+                computeTotalAmount();
+            }
+        }
+
+        var prevGlItemsTotalAmount = 0
+        function computeTotalAmount() {
+            let totalEnteredAmount = Object.values(allAmounts).length > 0 ? Object.values(allAmounts).reduce((a, b) => a + b) : 0
+            difference = totalAmount - totalEnteredAmount - prevGlItemsTotalAmount;
+            $('#balance').val(toLabel(difference))
+            if (difference < 0) {
+                $("#balance").css({ 'color': 'red' });
+            } else {
+                $("#balance").css({ 'color': 'black' });
+            }
+        }
+
+        function saveGlItems() {
+            if (form_data_status.length > 0
+                || toNumber($('#balance').val())<0
+                ) {
+                swal("Please Fix Invalid Amounts..!!")
+            } else if (toNumber($('#balance').val())>0) {
+                swal("Balance must be zero..!")
+            } else if (Object.keys(allAmounts).length > 0) {
+                swal({
+                    title: 'Save Gl Items?',
+                    buttons: ['No', 'Yes'],
+                }).then(function (isConfirmed) {
+                    if (isConfirmed) {
+                        postGlItems();
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+        }
+
+        function postGlItems() {
+            var glItems = Object.keys(allAmounts)
+            var subBudgetClassList = $("#SubBudgetClass").val().split(";");
+            var SubBudgetClass = subBudgetClassList[0].trim();
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("SaveGLItems", "LoanDisbursement")',
+                data: {
+                    GlItems: glItems.map(id=> {
+                        let glItem = GlData.filter(a=>a.FundBalanceViewId == id)[0];
+                        return {
+                            id,
+                            value: allAmounts[id],
+                            FundingRefNo: glItem.FundingRefNo,
+                            GlAccount: glItem.GlAccount,
+                            GlAccountDesc: glItem.GlAccountDesc
+                        }
+                    }),
+                    LoanPaymentId,
+                    SubBudgetClass
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if(response == "Success"){
+                        swal("Saved Successfully..!", { icon: "success" })
+                        .then((_) =>window.location.reload())
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var selectedVoucherDetails = []
+        function getLoanVoucherDetails(i) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetLoanVoucherDetails", "LoanDisbursement")',
+                contenttype: "application/json; charset=utf-8",
+                data:{
+                    PaymentVoucherId: data[i].PaymentVoucherId
+                },
+                datatype: "json",
+                success: function (response) {
+                    selectedVoucherDetails = response.data;
+                    prevGlItemsTableUpdate(selectedVoucherDetails)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function prevGlItemsTableUpdate(selectedVoucherDetails) {
+            prevGlItemsTotalAmount = 0
+            dt_selected_gl_item.fnClearTable();
+            for (var i = 0; i < selectedVoucherDetails.length; i++) {
+                prevGlItemsTotalAmount += selectedVoucherDetails[i].OperationalAmount
+                dt_selected_gl_item.fnAddData([i + 1,
+                    selectedVoucherDetails[i].DrGlAccount.split("|").join("-"),
+                    selectedVoucherDetails[i].DrGlAccountDesc,
+                    selectedVoucherDetails[i].FundingReferenceNo,
+                    toLabel(selectedVoucherDetails[i].OperationalAmount),
+                    '<a href="#" onclick="removeGlItem(' + selectedVoucherDetails[i].VoucherDetailId + ')"><i class="fa fa-trash-o"></i></a>'
+                ]);
+            }
+            computeTotalAmount()
+        }
+
+        function removeGlItem(Id) {
+            swal({
+                title: 'Remove this Item?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    postGlItemRemoval(Id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function postGlItemRemoval(Id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("RemoveGLItems", "LoanDisbursement")',
+                data: {Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        selectedVoucherDetails = selectedVoucherDetails.filter(a=>a.VoucherDetailId != Id)
+                        prevGlItemsTableUpdate(selectedVoucherDetails)
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function generateVoucher(i) {
+         //   getLoanVoucherDetails(i)
+            swal({
+                title: 'Generate Voucher?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    postVoucherGeneration(data[i].PaymentVoucherId)
+                    //if(toNumber($("#balance").val())==0){
+                    //    postVoucherGeneration(data[i].PaymentVoucherId)
+                    //} else {
+                    //    swal("Please Add Gl Items..!")
+                    //}
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function postVoucherGeneration(Id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("GeneratePaymentVoucher", "LoanDisbursement")',
+                data: { Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully..!", { icon: "success" })
+                        .then((_) =>window.location.reload())
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function reject(i) {
+            swal({
+                text: 'Reject this Payment?',
+                buttons: ["NO","YES"]
+            }).then(yes => {
+                if (yes) {
+                    confirmRejection(data[i]["PaymentVoucherId"]);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id) {
+            var url = '@Url.Action("RejectLoanPayment", "LoanDisbursement")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

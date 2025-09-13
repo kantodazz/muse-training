@@ -1,0 +1,175 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ManualMatchdVM>
+    <style>
+        .searchContainer {
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px;
+            padding-right: 10px;
+        }
+
+        input[type=search] {
+            padding: 4px;
+            border: hidden;
+            border-radius: 4px;
+        }
+
+        .info-box {
+            padding: 8px;
+            background-color: #ECF3F8;
+            /*padding-top:10px;*/
+            /*text-align: center;*/
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+    </style>
+    <div style="padding:1em;padding-top:1em">
+        <section id="widget-grid">
+            <div class="row">
+                <article class="col-sm-12 col-md-12 col-lg-12">
+                    <div class="table-responsive">
+                        @{
+                            int i = 0;
+                            int j = 0;
+
+                        }
+                        <div class="well" style="padding-top:20px">
+                            <div style="padding-left:10px" class="row">
+                                <div class="col-md-0"></div>
+                                <div class="col-md-6">
+                                    <button type="button" id="matchbtn3" class="btn btn-info" style="text-align:left" onclick="matching()">
+                                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                        Unmatch
+                                    </button>
+                                </div>
+                                @*<strong id="match">No Transaction(s) Selected to Match</strong>*@
+                            </div>
+                        </div>
+                        <hr />
+                        <div class="col-md-12">
+                            <section id="widget-grid">
+                                <div class="row">
+                                    <article class="col-sm-12 col-md-12 col-lg-12">
+                                        <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false">
+                                            <header>
+                                              
+                                            </header>
+                                            <div class="widget-body" style="padding-top:10px">
+                                                <div class="row">
+                                                    @*<div class="col-md-5">
+                                                        <div id="infoPanel">
+                                                            <div class="info-box">
+                                                                <label>Total:</label>
+                                                                <strong id="totalAmountSelectedGL">No Item(s) Selected</strong>
+                                                            </div>
+                                                        </div>
+                                                    </div>*@
+                                                    <div class="col-md-12">
+                                                        <div class="searchContainer" style="float:right">
+                                                            <i class="fa fa-search searchIcon"></i>
+                                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <table id="dt_basicGL" class="table table-bordered table-hover table-condensed">
+                                                    <thead>
+                                                        <tr>
+                                                            <td>#</td>
+                                                            <th><input type="checkbox" class="cbCheckAll2" /></th>
+                                                            @*<td>Date</td>*@
+                                                            <td>Reference</td>
+                                                            <td>Description</td>
+                                                            <td>Transaction Type</td>
+                                                            <td style="text-align:right">Amount</td>
+                                                            <td>Cleared Type</td>
+                                                            <td>Match Number</td>
+                                                            <td>Reconciled By</td>
+                                                            <td>Reconciliation Type</td>
+
+                                                        </tr>
+                                                        
+                                                    </thead>
+                                                   @foreach (var item in Model)
+                                                   {
+                                                       i++;
+                                                <tr>
+                                                    <td>@i</td>
+                                                    <td><input type="checkbox" value="@item.MatchNo" class="checkBox1"></td>
+                                                    @*<td>@string.Format("{0: dd/MM/yyyy}", item.TransactionDate)</td>*@
+                                                    <td>@item.LegalNumber</td>
+                                                    <td>@item.Description</td>
+                                                    <td>@item.TransactionType</td>
+                                                    <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.Amount)</td>
+                                                    <td>@item.ClearedType</td>
+                                                    <td>@item.MatchNo</td>
+                                                    <td>@item.ReconciledBy</td>
+                                                    <td>@item.ReconciliationType</td>
+                               
+
+                                                </tr>
+                                                   }
+
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </article>
+                                </div>
+                            </section>
+                        </div>
+
+
+                        
+                    </div>
+
+                </article>
+            </div>
+        </section>
+    </div>
+    <div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                        <span aria-hidden="true">&times;</span>
+                    </button>
+
+                    <h4 class="modal-title" id="lblmodal">Matching</h4>
+                </div>
+                <div class="modal-body">
+                    <p class="success-message">Are you sure you want to match the transaction.?</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info delete-confirm">Ok</button>
+                    <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script>
+        var dt_basicBank = $('#dt_basicBank').dataTable();
+        $("#dt_basicBank_filter").remove();
+        $("#dt_basicBank_length").remove();
+    $("#dt_basicBank_wrapper .dt-toolbar").remove();
+    $("#searchboxBank").on("keyup search input paste cut", function () {
+        dt_basicBank.DataTable().search(this.value).draw();
+    });
+
+    var dt_basicGL = $('#dt_basicGL').dataTable();
+    $("#dt_basicGL_filter").remove();
+    $("#dt_basicGL_length").remove();
+    $("#dt_basicGL_wrapper .dt-toolbar").remove();
+    $("#searchbox").on("keyup search input paste cut", function () {
+        dt_basicGL.DataTable().search(this.value).draw();
+    });
+
+        $(".cbCheckAll2").click(function () {
+            debugger
+            $(".checkBox1").prop('checked',
+                $(this).prop('checked'));
+        });
+
+</script>

@@ -1,0 +1,371 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PaymentScheduleVM
+@{
+    ViewBag.Title = "Payment Schedules";
+}
+@*<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+<style>
+    .pull-right {
+        margin-top: 10px;
+    }
+
+    ul .header-dropdown-list, .hidden-xs {
+        margin-top: 10px;
+    }
+</style>*@
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNo)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractAmount) @Html.DisplayFor(model => model.Currency)</div></div>
+                            <hr />
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitPaymentSchedule(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.ContractId)
+                                <div class="form-horizontal">
+
+                                    <div class="form-group">
+
+                                        @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control", autocomplete = "off", rows = "2", maxlength = 250 } })
+                                            @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                                        </div>
+                                        @Html.LabelFor(model => model.Deliverable, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.Deliverable, new { htmlAttributes = new { @class = "form-control", autocomplete = "off", rows = "2", maxlength = 250 } })
+                                            @Html.ValidationMessageFor(model => model.Deliverable, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            <div class="input-group">
+                                                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                                                @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control", autocomplete = "off" } })
+                                            </div>
+                                                @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+                                         
+                                        </div>
+                                     </div>
+
+                                        <div class="form-actions">
+                                            <div class="row">
+                                                <div class="col-md-offset-2">
+                                                    <a href="@Url.Action("PendingContract","Contract")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                                    <button type="submit" id="save_payment" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                    </button>
+                                                  
+                                                    <a href="@Url.Action("PendingContract","Contract")" class="btn btn-info" style="float:left;margin-left:5px">
+                                                        <i class="fa fa-save"></i>Finish
+                                                    </a>
+                                                    
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                            }
+                        <div id="purchase-items-list">
+                            <div style="text-align:right;background-color:aliceblue;padding-right:20px">
+                                @Html.DisplayNameFor(model => model.ConsumedAmount): <strong>@Html.DisplayFor(model => model.ConsumedAmount)</strong><br />
+                                @Html.DisplayNameFor(model => model.Balance): <strong>@Html.DisplayFor(model => model.Balance)</strong><br />
+                            </div>
+                            @if (Model.PaymentSchedulesList.Count() > 0)
+                            {
+                                var i = 0;
+                                <div class="accordion-body">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th scope="col" style="text-align: center">#</th>
+                                                <th scope="col" style="text-align: left">
+                                                    @Html.DisplayNameFor(model => model.Description)
+                                                </th>
+                                                <th scope="col" style="text-align: left">
+                                                    @Html.DisplayNameFor(model => model.Deliverable)
+                                                </th>
+                                                <th scope="col" style="text-align: right">
+                                                    @Html.DisplayNameFor(model => model.Amount)
+                                                </th>
+                                                <th scope="col" style="text-align: center">Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in Model.PaymentSchedulesList)
+                                            {
+
+                                                i++;
+                                                <tr>
+                                                    <td style="text-align: center">@i</td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => item.Description)
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => item.Deliverable)
+                                                    </td>
+                                                    <td style="text-align: right">
+                                                        @Html.DisplayFor(modelItem => item.Amount)
+                                                    </td>
+
+                                                    <td style="text-align: center">
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn  btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span><span class="sr-only">Toggle Dropdown</span></button>
+                                                        <ul class="dropdown-menu">
+                                                            <li style="text-align:left">
+                                                                <a href="#" onclick="editPaymentSchedule(@item.PaymentScheduleId)">
+                                                                    <i class="fa fa-edit"></i>Edit
+                                                                </a>
+                                                            </li>
+                                                            <li style="text-align:left">
+                                                                <a href="#" onclick="cancelEntry(@item.PaymentScheduleId)">
+                                                                    <i class="fa fa-edit"></i>Cancel
+                                                                </a>
+                                                            </li>
+
+                                                        </ul>
+                                                        </div>
+                                                    </td>
+
+                                                </tr>
+
+                                            }
+                                            <tr><td align="right" colspan="3">Grand Total</td><td align="right"><strong>@Model.PaymentSchedulesList.Select(a => a.Amount).DefaultIfEmpty(0).Sum().ToString("#,##0.00/=")</strong></td><td></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            }
+
+                        </div>
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<div class="modal fade" id="payment-modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Edit Payment Schedule
+                </h4>
+            </div>
+            <div class="modal-body" id="edit-payment-schedule">
+
+            </div>
+
+        </div>
+    </div>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+
+
+        function SubmitPaymentSchedule(formData) {
+            $("#save_payment").prop('disabled', true);
+                            var url = '@Url.Action("SavePaymentSchedule", "Contract")';
+                           var ajaxConfig = {
+                            type: "post",
+                            url: url,
+                            data: new FormData(formData),
+                               success: function (response) {
+                                if (response == "Success") {
+                                    swal("Data saved successfully", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                              });
+                                }
+                                else {
+                                    $("#save_payment").prop('disabled', false);
+                                    swal(response);
+                                }
+                               },
+                               error: function (xhr) {
+                                   $("#save_payment").prop('disabled', false);
+                                   swal(error);
+                               },
+                        }
+
+                        if ($(formData).attr('enctype') == "multipart/form-data") {
+                            ajaxConfig["contentType"] = false;
+                            ajaxConfig["processData"] = false;
+                        }
+                        $.ajax(ajaxConfig);
+                        return false;
+        }
+
+    //CANCEL iTEM
+        var cancelEntry = function (id) {
+            swal({
+                title: 'Confirmation',
+                text: "Do you what to cancel this Payment Schedule  ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelPaymentSchedule", "Contract")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                   if (response == "Success") {
+                     swal("Cancelled  successfully!", { icon: "success" })
+                         .then((value) => {
+                             location.reload();
+                                              });
+
+
+                }
+                else {
+
+               swal(response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function UpdatePaymentSchedule(formData) {
+             $("#payment-modal #save_payment").prop('disabled', true);
+                            var url = '@Url.Action("UpdatePaymentSchedule", "Contract")';
+                           var ajaxConfig = {
+                            type: "post",
+                            url: url,
+                            data: new FormData(formData),
+                               success: function (response) {
+                                if (response == "Success") {
+                                    swal("Data saved successfully", { icon: "success" })
+                                        .then((value) => {
+                                            $("#payment-modal").modal("hide");
+                                             location.reload();
+                                              });
+                                }
+                                else {
+                                    $("#payment-modal #save_payment").prop('disabled', false);
+                                    swal(response);
+                                }
+                               },
+                               error: function (xhr) {
+                                   $("#payment-modal #save_payment").prop('disabled', false);
+                                   swal(error);
+                               },
+                        }
+
+                        if ($(formData).attr('enctype') == "multipart/form-data") {
+                            ajaxConfig["contentType"] = false;
+                            ajaxConfig["processData"] = false;
+                        }
+                        $.ajax(ajaxConfig);
+                        return false;
+        }
+
+
+
+        function editPaymentSchedule(id) {
+                  var url = '@Url.Action("EditPaymentSchedule", "Contract")';
+            $("#edit-payment-schedule").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#edit-payment-schedule").html("Error on accessing this data, contact system support.");
+                }
+                $("#payment-modal").modal("show");
+            });
+
+        };
+        $('#Description').bind('copy paste cut', function (e) {
+            e.preventDefault();
+            swal('Paste option is disabled !!');
+        });
+        $("#Description").on('keypress', function (event) {
+            var regex = new RegExp("^[0-9a-zA-Z \b]+$");
+            var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+            if (!regex.test(key)) {
+                event.preventDefault();
+                return false;
+            }
+        });
+        $("#Amount").autoNumeric('init');
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

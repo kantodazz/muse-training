@@ -1,0 +1,295 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SplitApprovalViewModel
+@{
+    ViewBag.Title = "Split Approval";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .input[type="text"], select {
+        border: 1px solid lightgray;
+        width: 100%;
+        height: 35px;
+    }
+
+    .textarea {
+        border: 1px solid lightgray;
+        width: 100%;
+    }
+
+    .input[type="text"]:focus {
+        border: 1px solid lightblue;
+    }
+
+    th {
+        text-align: left;
+    }
+
+    .panel-approve {
+        border-color: #5cb85c;
+    }
+
+        .panel-approve .panel-heading {
+            background-color: #5cb85c;
+            color: white;
+        }
+
+    .panel-reject {
+        border-color: #d9534f;
+    }
+
+        .panel-reject .panel-heading {
+            background-color: #d9534f;
+            color: white;
+        }
+</style>
+<!-- widget grid -->
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2 style="color:black;">Split Approval - @Model.BatchSummary.BatchRefNo</h2>
+                    </header>
+                    <div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Batch Reference:</label>
+                                    <span>@Model.BatchSummary.BatchRefNo</span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Selected Items:</label>
+                                    <span>@Model.Items.Count</span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label>Current Status:</label>
+                                    <span class="badge @(Model.BatchSummary.Overallstatus == "Approved" ? "badge-success" : Model.BatchSummary.Overallstatus == "Rejected" ? "badge-danger" : Model.BatchSummary.Overallstatus == "Split" ? "badge-warning" : "badge-secondary")">
+                                        @Model.BatchSummary.Overallstatus
+                                    </span>
+                                </div>
+                                <div class="form-group">
+                                    <label>Created By:</label>
+                                    <span>@Model.BatchSummary.CreatedBy</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <form id="splitApprovalForm" method="post">
+                            <input type="hidden" name="batchSummaryId" value="@Model.BatchSummary.BatchSummaryId" />
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="form-group">
+                                        <label for="comment">Comments:</label>
+                                        <textarea id="comment" name="comments" class="form-control" rows="3" placeholder="Enter any comments about this decision..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="panel panel-approve">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">
+                                                <i class="fa fa-check-circle"></i> Items to Approve
+                                                <button type="button" id="moveAllToApprove" class="btn btn-xs btn-light pull-right">
+                                                    <i class="fa fa-arrow-left"></i> Move All
+                                                </button>
+                                            </h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="alert alert-info" id="approveEmptyMessage">
+                                                <i class="fa fa-info-circle"></i> Drag items here to approve
+                                            </div>
+                                            <ul id="approveList" class="list-group">
+                                                <!-- Items will be added here via JavaScript -->
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <div class="panel panel-reject">
+                                        <div class="panel-heading">
+                                            <h3 class="panel-title">
+                                                <i class="fa fa-times-circle"></i> Items to Reject
+                                                <button type="button" id="moveAllToReject" class="btn btn-xs btn-light pull-right">
+                                                    <i class="fa fa-arrow-right"></i> Move All
+                                                </button>
+                                            </h3>
+                                        </div>
+                                        <div class="panel-body">
+                                            <div class="alert alert-info" id="rejectEmptyMessage">
+                                                <i class="fa fa-info-circle"></i> Drag items here to reject
+                                            </div>
+                                            <ul id="rejectList" class="list-group">
+                                                <!-- Items will be added here via JavaScript -->
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row mt-4">
+                                <div class="col-md-12">
+                                    <a href="@Url.Action("BatchDetails", new { id = Model.BatchSummary.BatchSummaryId })" class="btn btn-default">
+                                        <i class="fa fa-arrow-left"></i> Back
+                                    </a>
+                                    <button type="button" id="submitSplitDecision" class="btn btn-primary pull-right">
+                                        <i class="fa fa-save"></i> Submit Decision
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script src="~/Scripts/jquery-ui.min.js"></script>
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Initialize items
+            var items = @Html.Raw(Json.Encode(Model.Items.Select(i => new { id = i.BatchDetailId, name = i.GfsCodeName, desc = i.GfsCodeDesc })));
+
+            // Function to check if lists are empty and show/hide messages
+            function checkEmptyLists() {
+                if ($("#approveList").children().length > 0) {
+                    $("#approveEmptyMessage").hide();
+                } else {
+                    $("#approveEmptyMessage").show();
+                }
+
+                if ($("#rejectList").children().length > 0) {
+                    $("#rejectEmptyMessage").hide();
+                } else {
+                    $("#rejectEmptyMessage").show();
+                }
+            }
+
+            // Function to create item element
+            function createItemElement(item) {
+                return $('<li class="list-group-item" data-id="' + item.id + '">' +
+                         '<strong>' + item.name + '</strong><br/>' +
+                         '<small>' + item.desc + '</small>' +
+                         '</li>');
+            }
+
+            // Add all items to reject list initially
+            $.each(items, function(index, item) {
+                var $itemElement = createItemElement(item);
+                $("#rejectList").append($itemElement);
+            });
+            checkEmptyLists();
+
+            // Make the lists sortable and draggable between them
+            $("#approveList, #rejectList").sortable({
+                connectWith: ".list-group",
+                placeholder: "list-group-item-placeholder",
+                update: function(event, ui) {
+                    checkEmptyLists();
+                }
+            }).disableSelection();
+
+            // Move all to approve
+            $("#moveAllToApprove").on("click", function() {
+                $("#rejectList").children().appendTo("#approveList");
+                checkEmptyLists();
+            });
+
+            // Move all to reject
+            $("#moveAllToReject").on("click", function() {
+                $("#approveList").children().appendTo("#rejectList");
+                checkEmptyLists();
+            });
+
+            // Submit the split decision
+            $("#submitSplitDecision").on("click", function() {
+                var approvedIds = [];
+                var rejectedIds = [];
+                var comments = $("#comment").val();
+
+                // Validate that at least one item is in each list
+                if ($("#approveList").children().length === 0 && $("#rejectList").children().length === 0) {
+                    swal("Error", "Please add at least one item to either approve or reject.", "error");
+                    return;
+                }
+
+                // If all items are in one list, suggest using regular approve/reject all
+                if ($("#approveList").children().length === 0 || $("#rejectList").children().length === 0) {
+                    swal({
+                        title: "Are you sure?",
+                        text: "All items are set to be " +
+                              ($("#approveList").children().length > 0 ? "approved" : "rejected") +
+                              ". You could use the regular Approve All or Reject All button instead.",
+                        icon: "warning",
+                        buttons: ["Cancel", "Proceed Anyway"],
+                        dangerMode: true
+                    }).then((willProceed) => {
+                        if (willProceed) {
+                            proceedWithSubmission();
+                        }
+                    });
+                } else {
+                    proceedWithSubmission();
+                }
+
+                function proceedWithSubmission() {
+                    // Gather approved IDs
+                    $("#approveList").children().each(function() {
+                        approvedIds.push($(this).data("id"));
+                    });
+
+                    // Gather rejected IDs
+                    $("#rejectList").children().each(function() {
+                        rejectedIds.push($(this).data("id"));
+                    });
+
+                    // Require comments for rejections
+                    if (rejectedIds.length > 0 && !comments.trim()) {
+                        swal("Comment Required", "Please provide comments explaining the rejection reason.", "warning");
+                        return;
+                    }
+
+                    // Submit to server
+                    $.ajax({
+                        url: '@Url.Action("ProcessBatchItems", "GfscodeSetup")',
+                        type: 'POST',
+                        data: {
+                            batchSummaryId: @Model.BatchSummary.BatchSummaryId,
+                            approvedIds: approvedIds,
+                            rejectedIds: rejectedIds,
+                            comments: comments
+                        },
+                        traditional: true,
+                        success: function(response) {
+                            if (response.success) {
+                                swal({
+                                    title: "Success!",
+                                    text: "Your decision has been processed.",
+                                    icon: "success"
+                                }).then(function() {
+                                    window.location.href = '@Url.Action("GfsCodeBatchDetails", new { id = Model.BatchSummary.BatchSummaryId })';
+                                });
+                            } else {
+                                swal("Error", response.message || "An error occurred while processing your request.", "error");
+                            }
+                        },
+                        error: function() {
+                            swal("Error", "An error occurred while communicating with the server.", "error");
+                        }
+                    });
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,707 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ExchequerWithdraw
+@{
+    ViewBag.Title = "Withdraw Exchequer Details";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    .formLabel {
+        font-weight: bold;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .form-group {
+        padding-bottom: 10px;
+    }
+
+    .col-md-5 {
+        margin-bottom: 14px;
+    }
+
+    .fontWeight {
+        font-weight: bold;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table" style="color:black"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                                <fieldset>
+                                    <div class="row">
+                                        <div class="col-md-1 col-lg-1 col-sm-1"></div>
+                                        <div class="col-md-10 col-lg-10 col-sm-10">
+                                            <table class="table  table-hover table-condensed" style="width:80%">
+
+                                                <tbody>
+                                                    <tr><td class="fontWeight">Reference Number</td><td>@Model.FundingRefNo</td></tr>
+                                                    <tr><td class="fontWeight">Vote Name</td><td>@Model.InstitutionName - @Model.VoteCode</td></tr>
+                                                    <tr><td class="fontWeight">Vote Name To</td><td>@Model.InstitutionNameTo - @Model.VoteCodeTo</td></tr>
+                                                    <tr><td class="fontWeight">Exchequer Amount</td><td>@string.Format("{0:#,0.00}", Model.ExchequerAmount)</td></tr>
+                                                   
+                                                    @if (Model.WithdrawAmount != null && Model.WithdrawAmount != 0)
+                                                    {
+                                                        <tr><td class="fontWeight">Available Amount</td><td>@string.Format("{0:#,0.00}", Model.ExchequerAmount - Model.WithdrawAmount)</td></tr>
+                                                        <tr><td class="fontWeight">Withdraw Amount</td><td>@string.Format("{0:#,0.00}", Model.WithdrawAmount)</td></tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tr><td class="fontWeight">Available Amount</td><td>@string.Format("{0:#,0.00}", Model.ExchequerAmount - 0)</td></tr>
+                                                        <tr><td class="fontWeight">Withdraw Amount</td><td>0</td></tr>
+                                                    }
+                                                  
+                                                    @*<tr><td class="fontWeight">Withdraw Date</td><td>@string.Format("{0:d/M/yyyy}", Model.CreatedAt)</td></tr>*@
+                                                    @if (Model.OverallStatus == "Processing")
+                                                    {
+                                                        <tr><td class="fontWeight">Status</td><td>@IFMIS.Libraries.Constants.PENDING</td></tr>
+                                                    }
+                                                    else
+                                                    {
+                                                        <tr><td class="fontWeight">Status</td><td>@Model.OverallStatus</td></tr>
+                                                    }
+                                                   
+                                                    <tr><td class="fontWeight">Description</td><td>@Model.ComponentDesc</td></tr>
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-1 col-lg-1 col-sm-1"></div>
+                                        </div>
+                                    <div class="row">
+                                        <div class="col-md-12 col-lg-12 col-sm-12">
+                                            @if (Model.OverallStatus == "Processing" || Model.OverallStatus == IFMIS.Libraries.Constants.PENDING || Model.OverallStatus == IFMIS.Libraries.Constants.REJECTED)
+                                            {
+                                            <table id="dt_exchequer_withdraw_list" align="center" class="table table-bordered table-condensed" style="height:auto">
+                                                <thead>
+                                                    <tr>
+                                                        <th>#</th>
+                                                        <th>Component Name</th>
+                                                        <th>Exchequer Amount</th>
+                                                        <th>Available Amount</th>
+                                                        <th>Withdraw Amount</th>
+                                                        <th>Action</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody></tbody>
+                                                <tfoot>
+                                                    <tr>
+                                                        <td colspan="2"><p align="right"><strong>Total</strong></p></td>
+                                                        <td><p align="right"><b><input type="text" id="OriginalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                        <td><p align="right"><b><input type="text" id="OperationalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                        <td><p align="right"><b><input type="text" id="WithdrawAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                        <td></td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
+                                            }
+                                            else
+                                            {
+                                                <table id="dt_exchequer_withdraw_list" align="center" class="table table-bordered table-condensed" style="height:auto">
+                                                    <thead>
+                                                        <tr>
+                                                            <th>#</th>
+                                                            <th>Component Name</th>
+                                                            <th>Exchequer Amount</th>
+                                                            <th>Available Amount</th>
+                                                            <th>Withdraw Amount</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody></tbody>
+                                                    <tfoot>
+                                                        <tr>
+                                                            <td colspan="2"><p align="right"><strong>Total</strong></p></td>
+                                                            <td><p align="right"><b><input type="text" id="OriginalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                            <td><p align="right"><b><input type="text" id="OperationalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                            <td><p align="right"><b><input type="text" id="WithdrawAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                        </tr>
+                                                    </tfoot>
+                                                </table>
+
+                                            }
+                                        </div>
+                                    </div>
+                                    <br />
+                                    <div class="form-group btnSubmit">
+                                        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"></label>
+                                        <div class="col-md-6">
+                                            <a href="@Request.UrlReferrer" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        </div>
+                                    </div>
+                                </fieldset>
+
+                        </div>
+
+                    </div>
+                    </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="WithdrawModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Exchequer withdraw</h3>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Amount </div>
+                        <div class="col-md-8">
+                            <input type="hidden" name="FundReceivingId" id="FundReceivingId" /> 
+                            <input type="hidden" name="OperationalAmount" id="OperationalAmount" />
+                            <amount-input name="WithdrawAmount" id="WithdrawAmount" maxlength="20" onkeyup="validateWithdrawAmount()" style="width:100%;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Description (<span style="font-weight:bold;" id="DescriptionCount">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Description" name="Description" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-info" onclick="saveWithdrawExchequer()" id="exchequerStatus">Submit</button>
+                        <img src="~/Content/img/loading.gif" class="saveLoader2" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="RejectModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <center><h3 class="modal-title">Cancellation of Exchequer Withdrawal</h3></center>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Remarks (<span style="font-weight:bold;" id="Remarks3Count">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Remarks3" name="Remarks3" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <input type="submit" value="Submit" class="btn btn-info" onclick="cancelExchequerForm()" id="exchequerStatus" />
+                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        $(".saveLoader2").toggle(false);
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount').text(parseInt(numChars));
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+        });
+
+        function WithdrawModelForm() {
+            $('#WithdrawModel').modal('show');
+        }
+
+        var dt_exchequer_withdraw_list = $("#dt_exchequer_withdraw_list").dataTable();
+        $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_exchequer_withdraw_list").DataTable().search(this.value).draw();
+            $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+        });
+        var exchequerAmount = '@Model.ExchequerAmount';
+        var availableAmount = '@Model.AvailableAmount';
+        var withdrawAmount = '@Model.WithdrawAmount';
+        if (withdrawAmount == null || withdrawAmount == 0){
+            withdrawAmount = 0;
+        }
+        var difference = 0;
+        var amt = parseFloat(exchequerAmount).toLocaleString();
+        if (parseFloat('@Model.WithdrawAmount') != null && parseFloat('@Model.WithdrawAmount') != 0 && '@Model.WithdrawAmount' != '') {
+            difference = parseFloat(exchequerAmount) - parseFloat(withdrawAmount);
+            amt = difference.toLocaleString()
+        }
+
+        document.getElementById("OriginalAmount").value = parseFloat(exchequerAmount).toLocaleString();
+        document.getElementById("OperationalAmount").value = amt;
+        document.getElementById("WithdrawAmount").value = parseFloat(withdrawAmount).toLocaleString();
+
+        var data = [];
+        if ('@Model.OverallStatus' == "Processing" || '@Model.OverallStatus' == '@IFMIS.Libraries.Constants.PENDING' || '@Model.OverallStatus' == '@IFMIS.Libraries.Constants.REJECTED')
+        {
+            $.ajax({
+                url: '@Url.Action("GetExchequerLists", "ExchequerWithdraw")?id='+@Model.ExchequerWithdrawId,
+                type: 'Get',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_exchequer_withdraw_list.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var ExchequerAmount = 0;
+                        var AvailableAmount = 0;
+                        var WithdrawAmount = 0;
+                        var Display = 'display:none;';
+                        var DisplayGeneral = 'display:none;';
+                        var DisplayCancellation = 'display:none;';
+
+                        if (data[i]["OriginalAmount"] != null) {
+                            ExchequerAmount = "<p align='right'>" + data[i]["OriginalAmount"].toLocaleString() +"</p>";
+                        } else {
+                            ExchequerAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["OperationalAmount"] != null) {
+                            AvailableAmount = "<p align='right'>" + data[i]["OperationalAmount"].toLocaleString() + "</p>";
+                        } else {
+                            AvailableAmount =  "<p align='right'> 0 </p>";
+                        }
+
+                        if (parseFloat(data[i]["OperationalAmount"]) != 0 && data[i]["OperationalAmount"] != null && ('@Model.OverallStatus' == '@IFMIS.Libraries.Constants.PENDING' || '@Model.OverallStatus' == 'Processing' || '@Model.OverallStatus' == '@IFMIS.Libraries.Constants.REJECTED')) {
+                            Display = '';
+                            DisplayGeneral = '';
+                        }
+
+                        if (data[i]["WithdrawAmount"] != null) {
+                            WithdrawAmount = "<p align='right'>" + data[i]["WithdrawAmount"].toLocaleString() + "</p>";
+                        }else{
+                            WithdrawAmount =  "<p align='right'> 0 </p>";
+                        }
+
+                        if ((data[i]["WithdrawAmount"] != null && parseFloat(data[i]["WithdrawAmount"]) != 0) || (parseFloat(data[i]["OperationalAmount"]) != 0 && data[i]["WithdrawAmount"] != null && parseFloat(data[i]["WithdrawAmount"]) != 0 ) ) {
+                            DisplayCancellation = '';
+                            DisplayGeneral = '';
+                        }
+
+                        dt_exchequer_withdraw_list.fnAddData([i + 1,
+                           data[i]["ComponentName"],
+                           ExchequerAmount,
+                           AvailableAmount,
+                           WithdrawAmount,
+                           '<div  style = "' + DisplayGeneral + '" class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li style = "' + Display + '"><a href="#" onclick="withdrawDialog(' + i + ')">Withdraw</a></li>\
+                                <li style = "' + DisplayCancellation + '"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                        ]);
+
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }else{
+            $.ajax({
+                url: '@Url.Action("GetExchequerLists", "ExchequerWithdraw")?id='+@Model.ExchequerWithdrawId,
+                type: 'Get',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_exchequer_withdraw_list.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var ExchequerAmount = 0;
+                        var AvailableAmount = 0;
+                        var WithdrawAmount = 0;
+                        var Display = 'display:none;';
+                        if (data[i]["OriginalAmount"] != null) {
+                            ExchequerAmount = "<p align='right'>" + data[i]["OriginalAmount"].toLocaleString() +"</p>";
+                        } else {
+                            ExchequerAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["OperationalAmount"] != null) {
+                            AvailableAmount = "<p align='right'>" + data[i]["OperationalAmount"].toLocaleString() + "</p>";
+                        } else {
+                            AvailableAmount =  "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["OperationalAmount"] != 0 && data[i]["OperationalAmount"] != null && ('@Model.OverallStatus' == '@IFMIS.Libraries.Constants.PENDING' || '@Model.OverallStatus' == 'Processing' || '@Model.OverallStatus' == '@IFMIS.Libraries.Constants.REJECTED')) {
+                            Display = '';
+                        }
+
+                        if (data[i]["WithdrawAmount"] != null) {
+                            WithdrawAmount = "<p align='right'>" + data[i]["WithdrawAmount"].toLocaleString() + "</p>";
+                        }else{
+                            WithdrawAmount =  "<p align='right'> 0 </p>";
+                        }
+
+                        dt_exchequer_withdraw_list.fnAddData([i + 1,
+                           data[i]["ComponentName"],
+                           ExchequerAmount,
+                           AvailableAmount,
+                           WithdrawAmount
+                        ]);
+
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function withdrawDialog(i) {
+            swal({
+                title: 'Exchequer Withdraw',
+                text: "Are you sure you want to Withdraw?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false);
+                    document.getElementById("FundReceivingId").value = data[i]["FundReceivingId"];
+                    document.getElementById("OperationalAmount").value = data[i]["OperationalAmount"];
+                    WithdrawModelForm();
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function validateWithdrawAmount() {
+            var WithdrawAmount = $("#WithdrawAmount").val();
+            var OperationalAmount = $("#OperationalAmount").val();
+
+            var withdrawAmountValue = $("#_WithdrawAmount").val();
+            withdrawAmountValue = withdrawAmountValue.split(',').join('');
+
+            if (parseFloat(withdrawAmountValue) <= 0) {
+                swal("Amount should not be Zero or Negative", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            else if (parseFloat(withdrawAmountValue) > parseFloat(OperationalAmount)) {
+                swal("Amount Entered Exceed Available Amount", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+            else {
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+            }
+        }
+        function saveWithdrawExchequer() {
+            var WithdrawExchequerId = '@Model.ExchequerWithdrawId';
+            var OperationalAmount = $("#OperationalAmount").val();
+            var WithdrawAmount = $("#WithdrawAmount").val();
+            var FundReceivingId = $("#FundReceivingId").val();
+            var Description = $("#Description").val();
+
+            if (WithdrawAmount == "") {
+                swal("Please Enter Amount to Withhdraw", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            var withdrawAmountValue = $("#_WithdrawAmount").val();
+            withdrawAmountValue = withdrawAmountValue.split(',').join('');
+
+            if (parseFloat(withdrawAmountValue) <= 0) {
+                swal("Amount should not be Zero or Negative", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            if (parseFloat(withdrawAmountValue) > parseFloat(OperationalAmount)) {
+                swal("Amount Entered Exceed Available Amount", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            if (Description == "") {
+                swal("Please Enter Description", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('FundReceivingId', FundReceivingId);
+            formData.append('WithdrawExchequerId', WithdrawExchequerId);
+            formData.append('OperationalAmount', parseFloat(OperationalAmount));
+            formData.append('WithdrawAmount', parseFloat(withdrawAmountValue));
+            formData.append('ComponentDesc', Description);
+            postFormData(formData);
+        }
+
+        function postFormData(formData) {
+            $(".loadingImg").show();
+            $("#exchequerStatus").prop('disabled', true);
+            $(".saveLoader2").toggle(true);
+            var url = '@Url.Action("saveWithdrawExchequerItem", "ExchequerWithdraw")';
+            @*var urlList = window.location.href = '@Request.Url.ToString()';*@
+            var urlList = '@Url.Action("WithdrawExchequerList", "ExchequerWithdraw")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader2").toggle(true);
+                    if (response == "Success") {
+                        swal("Exchequer Withdraw Successfully", { icon: "success" })
+                            .then((m) => {
+                                window.location.replace(urlList);
+                            });
+                    } else {
+                        $("#exchequerStatus").prop('disabled', false);
+                        $(".saveLoader2").toggle(false);
+                        swal("An Error Occur on Saving Exchequer Withdrawal" + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader2").toggle(false);
+                    swal("An Error has Occured, Please Contact Administrator", { icon: "warning" });
+                }
+            });
+        }
+
+        var FundReceivingId = null;
+        function cancelDialog(i) {
+            $('#RejectModel').modal('show');
+            $("#saveLoader-" + i + "").toggle(true)
+            $("#drop-" + i + "").toggle(false)
+            FundReceivingId = data[i]["FundReceivingId"];
+        }
+
+        $('#Remarks3').on("keyup", function () {
+            var count = $('#Remarks3').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#Remarks3Count').text(parseInt(numChars));
+        });
+
+        function cancelExchequerForm() {
+            var Remarks = $("#Remarks3").val();
+
+            successMessage = "Exchequer Withdrawal Cancelled Successfully";
+            failureMessage = "Error in Cancelling Exchequer Withdrawal";
+
+            if (Remarks == '') {
+                swal("Please Add Remarks");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('FundReceivingId', FundReceivingId);
+            formData.append('ComponentDesc', Remarks);
+
+            swal({
+                text: "Cancel Exchequer Withdrawal?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postCancelFormData(formData);
+                } else {
+                    swal("Cancelled", "No change was made");
+                    $("#exchequerStatus").prop('disabled', false);
+                }
+            });
+        }
+
+        function postCancelFormData(formData) {
+            $(".loadingImg").show();
+            $("#exchequerStatus").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("CancelItem", "ExchequerWithdraw")';
+            var urlList = '@Url.Action("WithdrawExchequerList", "ExchequerWithdraw")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#RejectModel').modal('hide');
+                    $("#exchequerStatus").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal(successMessage, { icon: "success" })
+                            .then((m) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        $("#exchequerStatus").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(failureMessage, { icon: "warning" });
+                }
+            });
+        }
+
+    </script>
+}
+

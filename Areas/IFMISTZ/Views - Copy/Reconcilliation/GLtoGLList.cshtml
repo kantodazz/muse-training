@@ -1,0 +1,559 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.GLtoGLVM
+@{
+    ViewBag.Title = "";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Cash Book to Cash Book Manual Matching</h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            @{
+                                int i = 0;
+                                int j = 0;
+
+                            }
+                            <div class="well" style="padding-top:20px">
+                                <div style="padding-left:10px" class="row">
+                                    <div class="col-md-0"></div>
+                                    <div class="col-md-6">
+                                        @*<a href="@Url.Action("ReconcilliationStatus","Reconcilliation")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                            Back
+                                        </a>*@
+                                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>Back
+                                        </a>
+                                        <button type="button" id="matchbtn3" class="btn btn-info" style="text-align:left" onclick="matching()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            Match
+                                        </button>
+                                    </div>
+                                    <strong id="match">No Transaction(s) Selected to Match</strong>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>DR Cash Book Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedDr">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_GLDR" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th>Date</th>
+                                                                <th>Legal Number</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                        @foreach (var item in ViewBag.GLOutoStandingListDR)
+                                                   {
+                                                    <tr>
+                                                        <td>@item.TransactionType</td>
+                                                        @*<td><input type="checkbox" value="@item.GeneralLadgeID" id="row2-@i" onchange="rowChecked2(@i)" class="checkBox1"></td>*@
+                                                        <td><input type="checkbox" value="@item.GeneralLadgeID" id="row-@item.GeneralLadgeID" onchange="rowCheckedDR(@item.GeneralLadgeID,@item.OperationalAmountGL)" class="checkBox1"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item.TransactionDate)</td>
+                                                        <td>@item.LegalNumber</td>
+                                                        <td style="font-size:9px">@item.DescriptionGL</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.OperationalAmountGL)</td>
+                                                    </tr>
+                                                      i++;
+                                                    }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>CR Cash Book Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedCr">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_GLCR" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th>Date</th>
+                                                                <th>Legal Number</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                 @foreach (var item2 in ViewBag.GLOutoStandingListCR)
+                                                  {
+                                                    <tr>
+                                                        <td>@item2.TransactionType</td>
+                                                        @*<td><input type="checkbox" value="@item2.GeneralLadgeID" id="row-@j" onchange="rowChecked(@j)" class="checkBoxBank"></td>*@
+                                                        <td><input type="checkbox" value="@item2.GeneralLadgeID" id="row2-@item2.GeneralLadgeID" onchange="rowCheckedCR(@item2.GeneralLadgeID,@item2.OperationalAmountGL)" class="checkBoxBank"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item2.TransactionDate)</td>
+                                                        <td>@item2.LegalNumber</td>
+                                                        <td style="font-size:9px">@item2.DescriptionGL</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item2.OperationalAmountGL)</td>
+                                                    </tr>
+                                                      j++;
+                                                    }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+</div>
+                    </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Matching</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to match the transaction.?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+    <script>
+        $("#matchbtn3").attr('disabled', true);
+        var dt_GLCR = $('#dt_GLCR').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+
+        $("#dt_GLCR_wrapper .dt-toolbar").remove();
+        $("#searchboxBank").on("keyup search input paste cut", function () {
+            dt_GLCR.DataTable().search(this.value).draw();
+        });
+
+
+        var dt_GLDR = $('#dt_GLDR').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+
+        $("#dt_GLDR_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_GLDR.DataTable().search(this.value).draw();
+        });
+
+
+
+        $(document).ready(function () {
+            $('#CheckDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                prevText: '<i class="fa fa-chevron-left"></i>',
+                nextText: '<i class="fa fa-chevron-right"></i>',
+                onSelect: function (selectedDate) {
+                    $('#CheckDate').datepicker('option', selectedDate);
+                }
+            });
+        });
+
+
+        var checkedRows = [];
+        var checkedRows2 = [];
+        var search = function () {
+            checkedRows = [];
+            checkedRows2 = [];
+            var AccountNumber = $("#BankAccount").val();
+            var chkDate = $("#CheckDate").val();
+            var url = '@Url.Action("GLtoGLOutStanding", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { AccountNumber: AccountNumber, chkDate: chkDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                }
+            });
+        };
+
+
+        $(document).on("click", ".cbCheckAll1", function () {
+            $(".checkBox1").prop('checked',
+              $(this).prop('checked'));
+        });
+
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkBoxBank").prop('checked',
+              $(this).prop('checked'));
+        });
+
+
+        @*var matching = function () {
+            debugger
+            //var bankIds1 = [];
+            //var bankIds2 = [];
+            var bankIds = [];
+
+            $("input:checkbox.checkBox1").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                }
+            });
+
+
+            $("input:checkbox.checkBoxBank").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                }
+            });
+
+
+            //bankIds1.push(checkedRowsGlDr.map(v => v.rowId));
+            //bankIds2.push(checkedRowsGlCR.map(v => v.rowId));
+            //bankIds = bankIds1.concat(bankIds2);
+
+            console.log(bankIds);
+
+            if (bankIds.length <= 0) {
+                alert("Select transaction to Match!");
+                return;
+            }
+
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                var url = '@Url.Action("GLtoGLMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { bankIds: bankIds },
+                    success: function (response) {
+                        if (response == "Success") {
+                            if ($('.modal-header').hasClass('alert-info')) {
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                            }
+                            $('.success-message').html('Matched successfully');
+                        }
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    },
+                });
+            })
+        };*@
+
+
+
+
+
+        //=================== NEW MUANDIKO ================
+
+        var checkedRowsGlDr = []
+        var checkedRowsGlCR = []
+
+        function rowCheckedDR(rowId, amount) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRowsGlDr.push({ rowId, amount });
+            } else {
+                checkedRowsGlDr = checkedRowsGlDr.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+        function rowCheckedCR(rowId, amount) {
+            if ($("#row2-" + rowId).is(":checked")) {
+                checkedRowsGlCR.push({ rowId, amount });
+            } else {
+                checkedRowsGlCR = checkedRowsGlCR.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+
+        $("#matchbtn3").attr('disabled', true);
+        function matchx() {
+        //debugger
+            var GLTotalAmountCR = 0
+            var GLTotalAmountDR = 0
+            checkedRowsGlDr.forEach(v => {
+                GLTotalAmountDR += v.amount
+            })
+            checkedRowsGlCR.forEach(v => {
+                GLTotalAmountCR += v.amount
+            })
+
+            $("#totalAmountSelectedDr").text(toLabel(GLTotalAmountDR))
+            $("#totalAmountSelectedCr").text(toLabel(GLTotalAmountCR))
+           // debugger
+            var GLTotalAmountCR1 = GLTotalAmountCR * -1;
+           //debugger
+            if (GLTotalAmountDR.toFixed(2) == GLTotalAmountCR1.toFixed(2) && GLTotalAmountDR.toFixed(2) != 0) {
+                $("#match").text("Matched Amount");
+                $("#matchbtn3").attr('disabled', false);
+            } else {
+
+                $("#matchbtn3").attr('disabled', true);
+                $("#match").text("Unmatched Amount");
+            }
+
+        }
+
+
+         function matching() {
+
+            swal({
+                title: "Matching",
+                text: "Are you sure you want to match the transaction.? ",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    GLGLMatch();
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function GLGLMatch() {
+            //debugger
+            var bankIds1 = [];
+            var bankIds2 = [];
+
+            bankIds1 = checkedRowsGlDr.map(v => v.rowId);
+            bankIds2 = checkedRowsGlCR.map(v => v.rowId);
+            
+            var ledgerIds = [...bankIds1, ...bankIds2]
+
+            //console.log(bankIds);
+
+            if (ledgerIds.length <= 0) {
+                swal("Select transaction to Match!");
+                return;
+            }
+
+                var url = '@Url.Action("GLtoGLMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { ledgerIds: ledgerIds },
+                        success: function (response) {
+                        if (response == "Success") {
+                            swal("Matched Successfully!", { icon: "success" }).then((e) => {
+                                window.location.reload();
+                            });
+                        } else {
+                            swal(response, { icon: "warning" }).then((e) => {
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+
+                    }
+                });
+
+            };
+
+
+        ////===GL CR====
+        //function rowChecked(rowId) {
+
+        //    if ($("#row-" + rowId).is(":checked")) {
+        //        checkedRows.push(rowId);
+        //    } else {
+        //        remove(checkedRows, rowId);
+        //    }
+        //    totalAmountSelectedCr();
+        //    match();
+        //}
+
+        //$("#matchbtn3").attr('disabled', true);
+        //function match() {
+        //    var x = $("#totalAmountSelectedGL").text();
+        //    var y = $("#totalAmountSelectedBank").text();
+
+        //    x = parseFloat(x.split(",").join(""));
+        //    y = parseFloat(y.split(",").join(""));
+
+        //    if (x == y && y != 0) {
+        //        $("#match").text("Matched Amount");
+        //        $("#matchbtn3").attr('disabled', false);
+        //    } else {
+
+        //        $("#matchbtn3").attr('disabled', true);
+        //        $("#match").text("Unmatched Amount");
+        //    }
+        //}
+
+        //function totalAmountSelectedCr() {
+        //    var TotalAmount = 0;
+        //    if (checkedRows.length > 0) {
+        //        var data = dt_GLCR.DataTable().rows().data();
+        //        checkedRows.forEach(rowId=> {
+        //            var row = data.rows(rowId).data()[0];
+        //            TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+        //        });
+        //        $("#totalAmountSelectedBank").text(TotalAmount.toLocaleString());
+        //    } else {
+        //        $("#totalAmountSelectedBank").text(0);
+        //    }
+        //}
+
+        //function remove(array, val) {
+        //    var found = array.indexOf(val);
+        //    while (found !== -1) {
+        //        array.splice(found, 1);
+        //        found = array.indexOf(val);
+        //    }
+        //}
+
+        ////=====END GL CR====//
+
+
+        ////===GL DR====
+        //function rowChecked2(rowId) {
+        //    debugger
+        //    if ($("#row2-" + rowId).is(":checked")) {
+        //        checkedRows2.push(rowId);
+        //    } else {
+        //        remove2(checkedRows2, rowId);
+        //    }
+        //    totalAmountSelectedDr();
+        //    match();
+        //}
+
+        //function totalAmountSelectedDr() {
+        //    debugger
+        //    var TotalAmount = 0;
+        //    if (checkedRows2.length > 0) {
+        //        var data = dt_GLDR.DataTable().rows().data();
+        //        checkedRows2.forEach(rowId=> {
+        //            var row = data.rows(rowId).data()[0];
+        //            TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+        //        });
+
+        //        $("#totalAmountSelectedGL").text(TotalAmount.toLocaleString());
+        //    } else {
+
+        //        $("#totalAmountSelectedGL").text(0);
+        //    }
+        //}
+
+        //function remove2(array, val) {
+        //    var found = array.indexOf(val);
+        //    while (found !== -1) {
+        //        array.splice(found, 1);
+        //        found = array.indexOf(val);
+        //    }
+        //}
+
+
+
+
+    </script>
+
+}

@@ -1,0 +1,579 @@
+﻿@{
+    ViewBag.Title = "Meridian Voucher Tracker";
+}
+
+<style>
+    .swift-message {
+        border-left: 2px solid #0077cc;
+        padding: 15px;
+        white-space: pre-wrap;
+    }
+
+    .tag {
+        font-weight: bold;
+        color: #0077cc;
+    }
+
+    .value {
+        color: #333;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 150px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div style="display: flex;justify-content:space-between">
+                                <div>
+                                    From: <input type="date" id="FromDate">
+                                </div>
+                                <div class="col-md-3">
+                                    From: <input type="date" id="ToDate">
+                                </div>
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>ID</th>
+                                        <th>MsgID</th>
+                                        <th>PVNo</th>
+                                        <th>Payee Bank Account</th>
+                                        <th>Payee Bank Name</th>
+                                        <th>Amount</th>
+                                        <th>Creditor Account</th>
+                                        <th>Creditor Account Name</th>
+                                        <th>Voucher Status</th>
+                                        <th>Instruction Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Debt Details</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label"></div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Creditor Account No: </th>
+                                                <td id="CreditorAccNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Creditor Account Name:</th>
+                                                <td id="CreditorAccName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Due Date:</th>
+                                                <td id="DueDate"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Creditor BIC:</th>
+                                                <td id="CreditorBIC"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Swift Code:</th>
+                                                <td id="SwiftCode"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Reference No:</th>
+                                                <td id="ReferenceNo"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Paid Voucher No</th>
+                                                <td id="PaidVoucherNo"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <br />
+                        <div class="payee-entry">
+                            <div class="entry-label">Swift Message</div>
+                            <div id="swiftMessage" class="swift-message"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div id="assignmodal" class="modal fade" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 60%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Edit</h4>
+            </div>
+            <div id="modal-body-assign" class="modal-body" style="padding:5px">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" id="btnSave">Save</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+        var dt_accrual = $('#dt_accrual').dataTable()
+        $("#dt_accrual_wrapper .dt-toolbar").remove();
+        $("#dt_accrual_wrapper .dt-toolbar-footer").remove();
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+         var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Base Amount" },
+                { title: "Operational Amount" }
+            ]
+         });
+
+        var data = [];
+
+        function viewAttachment(i) {
+            window.location.href =
+                '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentVoucherId"] + '&&sourceModule=' + data[i]["SourceModule"];
+        }
+
+        function searchPayment() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetMeridianVoucher", "PaymentTracker")' + "/?OverrallStatus=" + $("#overallstatus").val() + "&&FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_voucher_listing.fnAddData([i + 1,
+                            data[i]["SourceModuleReferenceNo"],
+                            data[i].InstructionMsgId || "-",
+                            data[i]["PaidVoucherNo"],
+                            data[i]["PayeeBankAccount"],
+                        data[i]["PayeeBankName"],
+                        data[i]["BaseAmount"] ? toLabel(data[i]["BaseAmount"]) : data[i]["BaseAmount"],
+                        data[i]["CreditorAccNumber"],
+                        data[i]["CreditorAccName"],
+                        data[i]["OverallStatus"],
+                        data[i]["InstructionStatus"],
+                        actions(i)
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        searchPayment()
+        function actions(i) {
+            if (data[i].OverallStatus == "Cancelled") {
+                return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                                <li><a href="#" onclick="viewAttachment(' + i + ')">Attachments</a></li>\
+                            </ul>\
+                          </div>'
+            }
+            if (data[i].InstructionStatus == "ACCEPTED" || data[i].InstructionStatus == "SETTLED" || data[i].InstructionStatus == "PROCESSED") {
+                return '<div class="btn-group">\
+                      <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                         <span class="caret"></span\
+                         <span class="sr-only"></span>\
+                       </button>\
+                          <ul class="dropdown-menu">\
+                              <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                              <li><a href="#" onclick="viewAttachment(' + i + ')">Attachments</a></li>\
+                              <li><a href="#" onclick="PrintRemittance(' + i + ')">Print Remittance</a></li>\
+                              <li><a href="#" onclick="SendFeedBackToMeridian(' + i + ')">Send Feedback To Meridian</a></li>\
+                          </ul>\
+                   </div>'
+            }
+
+            return '<div class="btn-group">\
+                      <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                         <span class="caret"></span\
+                         <span class="sr-only"></span>\
+                       </button>\
+                          <ul class="dropdown-menu">\
+                               <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                               <li><a href="#" onclick="viewAttachment(' + i + ')">Attachments</a></li>\
+                               <li><a href="#" onclick="editSignatory(' + data[i].MeridianVoucherId + ')">Edit Signatory</a></li>\
+                          </ul>\
+                   </div>'
+        }
+
+         function SendFeedBackToMeridian(i) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ReSendFeedBackToMeridian", "MeridianVouchers")',
+                data: { id: data[i].PaymentVoucherId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        /**
+        * opens remittance report
+        */
+        function PrintRemittance(i) {
+            pvno = data[i]["PVNo"];
+            queryString = "pvno=" + pvno;
+            $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("ParameterEncryption", "Report")',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    data: { "query": queryString },
+                    success: function (response) {
+                        window.open("../../Areas/IFMISTZ/Reports/RemittanceLetterAbroad.aspx" + response);
+                    }
+            });
+        }
+
+
+        function undoCancel(i) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("UndoVoucherCancellation", "PaymentTracker")',
+                data: { id: data[i].PaymentVoucherId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+      function openViewDialog(i) {
+            globalPayeeId = i;
+
+           $("#CreditorAccName").text(data[i]["CreditorAccName"]);
+           $("#CreditorAccNumber").text(data[i]["CreditorAccNumber"]);
+           $("#SwiftCode").text(data[i]["SwiftCode"]);
+           $("#CreditorBIC").text(data[i]["CreditorBIC"]);
+           $("#DueDate").text(data[i]["DueDateFormatted"]);
+           $("#ReferenceNo").text(data[i]["ReferenceNo"]);
+           $("#PaidVoucherNo").text(data[i]["PaidVoucherNo"]);
+
+           dt_voucher_detail.fnClearTable();
+           var totalBaseAmount = 0;
+           var totalOpAmount = 0;
+           var tableRows = []
+           data[i]["MeridianDetails"].forEach(row => {
+               tableRows.push([
+                   row["DrGlAccount"].split("|").join("-"),
+                   `${data[i].BaseCurrency} ${toLabel(row["BaseAmount"])}`,
+                   `${data[i].OperationalCurrency} ${toLabel(row["OperationalAmount"])}`,
+               ])
+               totalOpAmount = totalOpAmount + parseFloat(row["OperationalAmount"]);
+               totalBaseAmount = totalBaseAmount + parseFloat(row["BaseAmount"]);
+           });
+
+           dt_voucher_detail.fnAddData([
+               '<strong style="text-align: right">TOTAL</strong>',
+               `<strong>${data[i].BaseCurrency} ${toLabel(totalBaseAmount)}</strong>`,
+               `<strong>${data[i].OperationalCurrency} ${toLabel(totalOpAmount)}</strong>`]);
+
+           tableRows.forEach(row => {
+               dt_voucher_detail.fnAddData(row);
+           })
+
+
+          // $("#totalAmount").text(`${data[i].OperationalCurrency} ${toLabel(totalAmount)}`);
+          parseSwiftXML(data[i].InstructionBOTResponse)
+            $('#confirmModal').modal('show');
+
+        }
+
+       function computeTotalAmount() {
+            var total_amount = 0;
+            var difference = 0;
+            var amount = "";
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var obj = [];
+
+            for (var i = 0; i < data.length; i++) {
+                var amount = all_amounts["Id-" + i];
+
+                if (amount == undefined) {
+                    amount = "";
+                }
+                if (amount) {
+                    total_amount = toNumber(total_amount) + toNumber(amount);
+                }
+            }
+
+            try {
+                difference = toNumber($('#total_voucher_amount2').val()) - toNumber(total_amount);
+                $('#difference').val(toLabel(difference));
+                if (difference < 0) {
+                    $("#difference").css({ 'color': 'red' });
+                } else {
+                    $("#difference").css({ 'color': 'black' });
+                }
+            } catch (e) { }
+            $("#total_line_amount").val(toLabel(total_amount));
+        }
+
+        function GetAccrualPayed(i) {
+            $(".accrual").toggle(false)
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetAccrualPayed", "PaymentVoucher")',
+                data: { PVNo: data[i].PVNo },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var ac = response.data
+                    dt_accrual.fnClearTable();
+                    for (var i = 0; i < ac.length; i++) {
+                        dt_accrual.fnAddData([i + 1,
+                           ac[i]["PVNo"],
+                           toLabel(ac[i]["OperationalAmount"]),
+                           ac[i]["OverallStatus"],
+                        ]);
+                        $(".accrual").toggle(true)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function fetchSummaryAndPaymentFile(Id) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetPaymentVoucherDetails", "PaymentTracker")',
+                data: { Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {//
+                    var _date = response.paymentFile.SentToBotAtFormatted
+                    _date = _date == "01/01/0001" ? "-" : _date
+                    $("#PaymentSummaryNo").text(response.paymentSummary.PaymentNo || "-");
+                    $("#PaymentSummaryStatus").text(response.paymentSummary.OverallStatus || "-");
+                    $("#PaymentFileNo").text(response.paymentFile.MsgId || "-");
+                    $("#PaymentFileStatus").text(response.paymentFile.OverallStatus || "-");
+                    $("#PaymentFileSubmitedAt").text(_date);
+                    $("#PaymentFileSubmitedBy").text(response.paymentFile.SentToBotBy || "-");
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function editSignatory(id) {
+            var url = '@Url.Action("EditSignatory", "MeridianVouchers")/' + id;
+            $("#modal-body-assign").load(url, function () {
+                $("#assignmodal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+
+                $("#divLoader").hide();
+            });
+        }
+
+
+        function parseSwiftXML(xmlInput) {
+            const outputDiv = document.getElementById("swiftMessage");
+
+            if (!xmlInput || !xmlInput.trim()) {
+                outputDiv.innerHTML = "<em>No SWIFT message found!</em>";
+                return;
+            }
+
+            try {
+                // Parse XML String into a DOM Document
+                const parser = new DOMParser();
+                const xmlDoc = parser.parseFromString(xmlInput, "text/xml");
+
+                // Extract the SWIFT message from <Description>
+                let swiftMessage = xmlDoc.getElementsByTagName("Description")[0]?.textContent.trim() || "";
+
+                if (!swiftMessage) {
+                    outputDiv.innerHTML = "<em>No SWIFT message found!</em>";
+                    return;
+                }
+
+                outputDiv.innerHTML = swiftMessage;
+            } catch (error) {
+                outputDiv.innerHTML = "<em>Could not parse SWIFT message correctly.</em>";
+            }
+        }
+
+    </script>
+}

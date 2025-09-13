@@ -1,0 +1,187 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.Ministers>
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+}
+
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Ministers</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateMinister","Ministers")'>
+                                        <i class="glyphicon glyphicon-plus"></i>Add Minister
+                                    </a>
+                                </div>
+
+                            </div>
+
+                            <hr />
+                            <table class="table table-bordered table-condensed" id="tblDataList">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.BeneficiaryCode)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.BeneficiaryName)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PayrollStatus)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.SalaryAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PayrollSource)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.BeneficiaryCategory)
+                                        </th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BeneficiaryCode)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PayrollStatus)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.SalaryAmount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PayrollSource)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BeneficiaryCategory)
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="#" onclick="deleteMinister(id = @item.BeneficiaryID)" class="btn-xs edit">
+                                                                <i class="fa fa-trash-o"></i>  Cancel
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var responsiveHelper_tblDataList = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+            $('#tblDataList').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_tblDataList) {
+                        responsiveHelper_tblDataList = new ResponsiveDatatablesHelper($('#tblDataList'), breakpointDefinition);
+                    }
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+
+            }); 
+        });
+
+        var deleteMinister = function (id) {
+            debugger
+            
+            swal({
+                title: 'Cancel',
+                text: "Are you sure you want to cancel this record?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                $("#responseModal").modal('hide');
+                    $("#divLoader").show();
+                    var url = '@Url.Action("DeleteMinister", "Ministers")';
+                    $.ajax({
+                        url: url,
+                        data: { id: id },
+                        type: "POST",
+                        success: function (response) {
+                            $("#divLoader").hide();
+                            if (response == "Success") {
+                                swal("Cancel successfully!", { icon: "success" })
+                                    .then((value) => {
+                                        location.reload();
+                                    });
+                            }
+                            else {
+                                swal(response, { icon: "warning" });
+                            }
+                                
+                        }, error: function (err) {
+                            $("#divLoader").hide();
+                            console.log('errorResp', err.responseText)
+                            swal(err.responseText, { icon: "warning" });
+                        }
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        };
+        
+    </script>
+}

@@ -1,0 +1,373 @@
+﻿@{
+    ViewBag.Title = "Exchequer Withdraw Entry";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+        width: 40px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        /*flex: 1 1 300px;*/
+        position: relative;
+        overflow: hidden;
+        border: 1px solid #ccc;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div style="display:flex;justify-content:space-between;margin-bottom:5px">
+                                <div>
+                                    <input type="text" id="FundingRefNo" 
+                                           class="form-control" 
+                                           placeholder="Select Exchequer"
+                                           style="width:300px"
+                                            />
+                                </div>
+                                <div>
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Funding Ref</th>
+                                        <th>Institution Code</th>
+                                        <th>Released Amount</th>
+                                        <th>Balance</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <hr />
+                            <div>
+                                <a class="btn btn-info" href='@Url.Action("ExchWithdrawList", "ExchequerWithdraw")' style="margin-right:5px">
+                                    <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- Details ----------------->
+<div class="modal fade" id="detailsModal" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Withdraw from Components</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row" style="border-bottom:10px">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container" style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" 
+                                   placeholder="Search..." 
+                                   id="searchbox_details">
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered table-condensed" id="dt_details">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Funding Ref</th>
+                            <th>Institution Code</th>
+                            <th>Component Name</th>
+                            <th>Released Amount</th>
+                            <th>Balance</th>
+                            <th>Withdraw Amount</th>
+                        </tr>
+                    </thead>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" onclick="partialWithdraw()">
+                    <i class="fa  fa-save"></i>Withdraw
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+    <script>
+
+        function zoomExchequer() {
+            $('#searchModal').modal('show');
+        }
+
+        var dt_table = $('#dt_table').dataTable()
+        $("#dt_table_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        var dt_details = $('#dt_details').dataTable()
+        $("#dt_details_wrapper .dt-toolbar").remove();
+        $("#searchbox_details").on("keyup search input paste cut", function () {
+            dt_details.DataTable().search(this.value).draw();
+        });
+        var partialIndex = 0
+        var partialData = null
+        function openViewDialog(i) {
+            partialIndex = i
+            partialData = data[i].map(v=>({...v,WithdrawAmount: 0}))
+            updateDetailsTable(data[i])
+            $("#detailsModal").modal('show')
+        }
+
+            function amountChanged(i) {
+            if(toNumber($("#_Id-"+i).val())>
+                data[partialIndex][i].OperationalAmount) {
+                $("#_Id-" + i).prop('style', 'color:red;')
+                form_data_status.push(i)
+            } else {
+                if (parseFloat($("#_Id-" + i).val()) > 0) {
+                    partialData[i].WithdrawAmount = toNumber($("#_Id-" + i).val())
+                }
+                $("#_Id-" + i).prop('style', 'color:black;')
+                remove(form_data_status,i)
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var form_data_status = [];
+
+        function updateDetailsTable(d) {
+            dt_details.fnClearTable();
+            for (var i = 0; i < d.length; i++) {
+                var disabled = d[i].OperationalAmount == 0?'disabled':''
+                dt_details.fnAddData([i + 1,
+                   d[i].FundingRefNo,
+                   d[i].InstitutionCode,
+                   d[i].ComponentName,
+                   (d[i].OriginalAmount||0).toLocaleString(),
+                   (d[i].OperationalAmount||0).toLocaleString(),
+                   '<amount-input id="Id-' + i + '" \
+                      onkeyup="amountChanged(' + i + ')"'+disabled+'/>'
+                ]);
+            }
+        }
+
+        var data = []
+        function getExchequerDetails(FundingRefNo) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetExchData", "ExchequerWithdraw")",
+                data: { FundingRefNo },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    updateGLSearchTable(data)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function updateGLSearchTable(data) {
+            dt_table.fnClearTable();
+            for (var i = 0; i < data.length; i++) {
+                let releasedAmount = sum(data[i], 'OriginalAmount')
+                let balanceAmount = sum(data[i], 'OperationalAmount')
+                dt_table.fnAddData([i + 1,
+                   data[i][0].FundingRefNo,
+                   data[i][0].InstitutionCode,
+                   releasedAmount.toLocaleString(),
+                   balanceAmount.toLocaleString(),
+                  balanceAmount==0 ?
+                  '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">Details</a></li>\
+                            </ul>\
+                        </div>':
+                         '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="fullWithdraw(' + i + ')">Full Withdraw</a></li>\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">Partial Withdraw</a></li>\
+                            </ul>\
+                        </div>'
+                ]);
+            }
+        }
+
+        function fullWithdraw(i) {
+            swal({
+                title: 'Are you sure?',
+                buttons: ['NO','YES'],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postFullWithDraw(i)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function postFullWithDraw(i) {
+                $.ajax({
+                    type: "POST",
+                    url: "@Url.Action("FullExchWithdraw", "ExchequerWithdraw")",
+                    data: { vm: data[i] },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if(response == "Success"){
+                        swal("Saved Successfully..!", { icon: 'success' })
+                        .then((_) => {
+                            window.location.href = "@Url.Action("ExchWithdrawList", "ExchequerWithdraw")"
+                        })
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function partialWithdraw() {
+            if (form_data_status.length > 0) {
+                swal("Please Fix Invalid Amounts")
+            } else {
+                swal({
+                    title: 'Are you sure?',
+                    buttons: ['NO', 'YES'],
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        postPartialWithDraw()
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+        }
+
+        function postPartialWithDraw(i) {
+            var amountCounter = 0
+            partialData.forEach(v=>amountCounter+=v.WithdrawAmount)
+            if(amountCounter>0){
+               $.ajax({
+                type: "POST",
+                url: "@Url.Action("PartialExchWithdraw", "ExchequerWithdraw")",
+                data: { vm: partialData },
+                contenttype: "application/json; charset=utf-8",
+               datatype: "json",
+               success: function (response) {
+                if(response == "Success"){
+                    swal("Saved Successfully..!", { icon: 'success' })
+                    .then((_) => {
+                        window.location.href = "@Url.Action("ExchWithdrawList", "ExchequerWithdraw")"
+                    })
+                } else {
+                    swal(response)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }else{
+                swal("There is nothing to with draw..!")
+        }
+        }
+
+        function sum(arrayObj,key){
+            var total = 0
+            arrayObj.forEach((a) => {
+                total += a[key] || 0
+            });
+            return total;
+        }
+
+        $("#FundingRefNo").select2({
+            minimumInputLength: 2,
+            width: 'resolve',
+            ajax: {
+                url: "@Url.Action("GetExchequerRef", "ExchequerWithdraw")",
+                type: "GET",
+                dataType: 'json',
+                data: function (term) {
+                    return {
+                        term: term
+                    };
+                },
+                results: function (data, page) {
+                    return { results: data.list };
+                }
+            }
+        });
+
+        $("#FundingRefNo").change(function(){
+            getExchequerDetails($("#select2-chosen-1").text())
+        })
+    </script>
+}

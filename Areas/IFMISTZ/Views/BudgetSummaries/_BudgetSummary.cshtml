@@ -1,0 +1,77 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.BudgetTrackerVM
+
+<table class="table table-bordered table-condensed table-hover table-responsive table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Institution Code</th>
+            <th>Institution Name</th>
+            <th>Financial Year</th>
+            <th>Staging Amount</th>
+            <th>Muse Amount</th>
+            <th>Status</th>
+            <th>Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>1</td>
+            <td>@Model.MuseInstitutionCode</td>
+            <td>@Model.MuseInstitutionName</td>
+            <td>@Model.MuseFinancialYear</td>
+            <td>@Html.DisplayFor(model => model.StagingAmount, "_DecimalThousands")</td>
+            <td>@Html.DisplayFor(model => model.MuseAmount, "_DecimalThousands")</td>
+            <td>
+                @if (Model.StagingAmount == Model.MuseAmount)
+                {
+                    <span style="color: green">Balanced</span>
+                }
+                else
+                {
+                    <span style="color: red">Not Balanced</span>
+                }
+            </td>
+            <td style="text-align: center">
+                <!-- Split button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info btn-xs">Action</button>
+                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a href="#" onclick="cancelBudget('@Model.MuseInstitutionCode', '@Model.MuseFinancialYear')">Cancel</a></li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    </tbody>
+</table>
+
+<script>
+
+    var cancelBudget = function (museInstitutionCode, museFinancialYear) {
+
+        $("#divLoader").show();
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("DeleteBudgetV2", "BudgetSummaries")',
+                data: { museInstitutionCode: museInstitutionCode, museFinancialYear: museFinancialYear },
+                success: function (response, status, jqXHR) {
+                    if (response == "Success") {
+                        swal("Budget successfully removed");
+                    } else {
+                        swal(response);
+                    }
+                },
+                error: function () {
+                    swal("Error on deleting budget");
+                    $("#divLoader").hide();
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            })
+    };
+</script>

@@ -1,0 +1,921 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ReconciliationStatusVM>
+
+@{
+    ViewBag.Title = "Reconciliation Status";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Reconcilliation Status </h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body" style="padding-top:10px">
+
+                            <form name="reconcilliation" class="form-inline " action="~/ifmistz/reconcilliation/reconcilliationstatus" onsubmit="return searchReco()">
+                                <div>
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <label class="select">
+                                                <select id="month" name="month" style="height:28px;padding-right:10px;">
+                                                    <option value="0" selected="" disabled="">Month</option>
+                                                    <option value="01">January</option>
+                                                    <option value="02">February</option>
+                                                    <option value="03">March</option>
+                                                    <option value="04">April</option>
+                                                    <option value="05">May</option>
+                                                    <option value="06">June</option>
+                                                    <option value="07">July</option>
+                                                    <option value="08">August</option>
+                                                    <option value="09">September</option>
+                                                    <option value="10">October</option>
+                                                    <option value="11">November</option>
+                                                    <option value="12">December</option>
+                                                </select> <i></i>
+                                            </label>
+                                            &nbsp;
+                                            <label class="input">
+                                                <input type="text" id="year" name="year" placeholder="Year" data-mask="2099" style="height:28px">
+                                            </label>
+                                            &nbsp;
+                                            <span>
+                                                <button class="btn btn-info" style="height:28px;" type="submit">
+                                                    <span class="glyphicon glyphicon-search" aria-hidden="true">Search</span>
+                                                </button>
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <table id="dt_basic" class="table table-bordered table-hover table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>Account Number</th>
+                                        <th>Account Name</th>
+                                        <th>Date</th>
+                                        <th>Auto Matched</th>
+                                        <th>Manual Matched</th>
+                                        <th>GL Outstanding</th>
+                                        <th>Bank Outstanding</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                    @foreach (var item in Model)
+                                    {
+                                        <tr>
+                                            <td>
+                                                <div class="pull-left">
+                                                    @Html.DisplayFor(modelItem => item.BankAccount)
+                                                </div>
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.AccountName)
+                                            </td>
+                                            <td>
+                                                @*@Html.DisplayFor(modelItem => item.CheckDate)*@
+                                                @string.Format("{0: dd/MM/yyyy}", item.CheckDate)
+                                            </td>
+                                            <td>
+                                                @*<a href="#" onclick="matched('@item.BankAccount','@item.CheckDate')" title="Click to View Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.AutoMatched) </b></a>*@
+                                                <a href="#" onclick="autoMatched('@item.BankAccount','@item.CheckDate','@item.AccountName')" title="Click to View Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.AutoMatched) </b></a>
+                                                @*<a href="@Url.Action("MatchedListDt","Reconcilliation",new { BankAcct = item.BankAccount,checkDate = item.CheckDate})" title="Click to View Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.AutoMatched)</b></a>*@
+                                            </td>
+                                            <td>
+                                                @*<a href="#" onclick="manualmatched('@item.BankAccount','@item.CheckDate')" title="Click to View Manual Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.ManualMatched) </b></a>*@
+                                                <a href="#" onclick="manualmatched('@item.BankAccount','@item.CheckDate','@item.AccountName')" title="Click to View Manual Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.ManualMatched) </b></a>
+                                                @*<a href="@Url.Action("MatchedList","Reconcilliation",new { BankAcct = item.BankAccount,checkDate = item.CheckDate})" title="Click to View Matched List" data-toggle="tooltip"><b class="badge bg-color-green" style="margin-left:10px">@Html.DisplayFor(modelItem => item.AutoMatched)</b></a>*@
+                                            </td>
+                                            <td>
+                                                @*<a href="#" onclick="glOutStanding('@item.BankAccount','@item.CheckDate')" title="Click to View GL OutStanding List" data-toggle="tooltip"><b class="badge bg-color-warning" style="margin-left:10px">@Html.DisplayFor(modelItem => item.GLOutostanding) </b></a>*@
+                                                <a href="#" onclick="cashbookOutStanding('@item.BankAccount','@item.CheckDate','@item.AccountName')" title="Click to View GL OutStanding List" data-toggle="tooltip"><b class="badge bg-color-warning" style="margin-left:10px">@Html.DisplayFor(modelItem => item.GLOutostanding) </b></a>
+                                                @*<a href="@Url.Action("GLOutStandingList","Reconcilliation",new { BankAcct = item.BankAccount,checkDate = item.CheckDate})" title="Click to View GL OutStanding List" data-toggle="tooltip"><b class="badge bg-color-red" style="margin-left:10px">@Html.DisplayFor(modelItem => item.GLOutostanding) </b></a>*@
+                                            </td>
+                                            <td>
+                                                @*<a href="#" onclick="bankOutStanding('@item.BankAccount','@item.CheckDate')" title="Click to View Bank OutStanding List" data-toggle="tooltip"><b class="badge bg-color-warning" style="margin-left:10px">@Html.DisplayFor(modelItem => item.BankOutostanding) </b></a>*@
+                                                <a href="#" onclick="bankStaOutStanding('@item.BankAccount','@item.CheckDate','@item.AccountName')" title="Click to View Bank OutStanding List" data-toggle="tooltip"><b class="badge bg-color-warning" style="margin-left:10px">@Html.DisplayFor(modelItem => item.BankOutostanding) </b></a>
+                                                @*<a href="@Url.Action("BankOutStandingList","Reconcilliation",new { BankAcct = item.BankAccount,checkDate = item.CheckDate})" title="Click to View BankStanding List" data-toggle="tooltip"><b class="badge bg-color-warning" style="margin-left:10px">@Html.DisplayFor(modelItem => item.BankOutostanding)</b></a>*@
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs">Action</button>
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li><a href="@Url.Action("OutStandingList", "Reconcilliation", new {AccountNumber = item.BankAccount, chkDate = item.CheckDate })">Cash Book to Bank Matching</a></li>
+                                                        <li><a href="@Url.Action("GLtoGLList", "Reconcilliation", new {AccountNumber = item.BankAccount, chkDate = item.CheckDate })">Cash Book to Cash Book Matching</a></li>
+                                                        <li><a href="@Url.Action("BanktoBankList", "Reconcilliation", new {AccountNumber = item.BankAccount, chkDate = item.CheckDate })">Bank to Bank Matching</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    }
+
+                                </tbody>
+                            </table>
+
+                        </div>
+                        <!-- end widget content -->
+
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+</div>
+
+
+<!-- Auto Matched-->
+<div class="modal fade" id="matched" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:95%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Auto Matched Transaction List(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+
+                        <div class="payee-entry">
+                            <div class="entry-label"></div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Account Number: </th>
+                                                <td id="AccountNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Account Name:</th>
+                                                <td id="AccountName"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_matched" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Apply Date</th>
+                                    <th>Legal Number</th>
+                                    <th>Document Number</th>
+                                    <th>Operational Amount</th>
+                                    <th>Trans.Type</th>
+                                    <th>Statement Date</th>
+                                    <th>Bank Reference</th>
+                                    <th>Related Ref</th>
+                                    <th>TransactionAmount</th>
+                                    <th>Trans.Type</th>
+                                    <th>Match Number</th>
+                                    <th>Matched Date</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Matched -->
+<!-- GlOutstanding-->
+<div class="modal fade" id="CashBookOutStanding" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:95%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Cash Book Outstanding List(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+
+                        <div class="payee-entry">
+                            <div class="entry-label"></div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Account Number: </th>
+                                                <td id="AccountNumber1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Account Name:</th>
+                                                <td id="AccountName1"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchCashView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_GLoutstanding" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+
+                                    <th>#</th>
+                                    <th>Apply Date</th>
+                                    <th>Legal Number</th>
+                                    <th>Document Number</th>
+                                    <th>Description</th>
+                                    <th>Operational Amount</th>
+                                    <th>Trans.Type</th>
+                                    <th>Check Date</th>
+                                    <th>Reconcillation Status</th>
+                                    <th>Age(Days)</th>
+
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- END GlOutstanding -->
+<!-- Bank Outstanding-->
+<div class="modal fade" id="BankOutStandingView" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:95%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Bank Outstanding List(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+
+                        <div class="payee-entry">
+                            <div class="entry-label"></div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Account Number: </th>
+                                                <td id="AccountNumber2"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Account Name:</th>
+                                                <td id="AccountName2"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchbankView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_Bankoutstanding" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+
+                                    <th>#</th>
+                                    <th>Statement Date</th>
+                                    <th>Transaction Ref</th>
+                                    <th>Related Ref</th>
+                                    <th>Description</th>
+                                    <th>Transaction Amount</th>
+                                    <th>Trans.Type</th>
+                                    <th>Check Date</th>
+                                    <th>Reconcillation Status</th>
+                                    <th>Age(Days)</th>
+
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End BankOutstanding -->
+<!-- Manual Matched-->
+<div class="modal fade" id="ManualMatchedView" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:95%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Manual Matched Transaction List(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+
+                        <div class="payee-entry">
+                            <div class="entry-label"></div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Account Number: </th>
+                                                <td id="AccountNumber3"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Account Name:</th>
+                                                <td id="AccountName3"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxManualView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_manualMatched" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Transaction Date</th>
+                                    <th>Reference</th>
+                                    <th>Description</th>
+                                    <th>TransactionType</th>
+                                    <th>Amount</th>
+                                    <th>ClearedType</th>
+                                    <th>Match Number</th>
+                                    <th>Check Date</th>
+                                    <th>Matched Date</th>
+                                    <th>Source</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Manual Matched-->
+
+
+<!-- Manual Matched -->
+<div class="modal fade" id="manualmatched" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:85%;">
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif;background-color:#D6DDE7">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">
+                    Manual Matched List
+                </h3>
+            </div>
+            <div class="modal-body" id="manualmatchedBody" style="padding-top:1px;margin-top:1px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Manual Matched -->
+<!-- GlOutstanding -->
+<div class="modal fade" id="GlOutStanding" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:85%;">
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif;background-color:#D6DDE7">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">
+                    GL OutStanding List
+                </h3>
+            </div>
+            <div class="modal-body" id="GlOutStandingBody" style="padding-top:1px;margin-top:1px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End GlOutstanding-->
+<!-- BankOutstanding -->
+<div class="modal fade" id="BankOutStanding" style="left:4%">
+    <div class="modal-dialog modal-lg" style="width:85%;">
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif;background-color:#D6DDE7">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">
+                    Bank OutStanding List
+                </h3>
+            </div>
+            <div class="modal-body" id="BankOutStandingBody" style="padding-top:1px;margin-top:1px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End BankOutstanding-->
+@section pagespecific{
+    <script>
+                $(document).ready(function () {
+                    var responsiveHelper_dt_basic = undefined;
+                    var breakpointDefinition = {
+                        tablet: 1024,
+                        phone: 480
+                    };
+
+                    $('#dt_basic').dataTable({
+                        "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                        "autoWidth": true,
+                        "preDrawCallback": function () {
+                            // Initialize the responsive datatables helper once.
+                            if (!responsiveHelper_dt_basic) {
+                                responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                            }
+                        },
+                        "rowCallback": function (nRow) {
+                            responsiveHelper_dt_basic.createExpandIcon(nRow);
+                        },
+                        "drawCallback": function (oSettings) {
+                            responsiveHelper_dt_basic.respond();
+                        }
+                    });
+
+                })
+
+
+                //----Display Matched Details---//
+                var matched = function (BankAcct, checkDate) {
+
+                    var url = '@Url.Action("MatchedList", "Reconcilliation")';
+
+                    $("#matchedBody").load(url, { BankAcct: BankAcct, checkDate: checkDate }, function (response, status, xhr) {
+                        if (status == "error") {
+                            if (!$(".modal-header").hasClass("alert-danger")) {
+                                $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                            }
+                            $("#matchedBody").html("Error on accessing this details, contact system support.");
+                        }
+                        $("#matched").modal("show");
+                    });
+                };
+                //function to reset bootstrap modal popups
+                $("#matched").on("hidden.bs.modal", function () {
+                    $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+                    $("#matchedBody").html("");
+                });
+                //--End Display Matched Details---//
+
+
+                //----Display Manual Matched Details---//
+                var manualmatched2 = function (BankAcct, checkDate) {
+
+                    var url = '@Url.Action("ManualMatchingList2", "Reconcilliation")';
+
+                    $("#manualmatchedBody").load(url, { BankAcct: BankAcct, checkDate: checkDate }, function (response, status, xhr) {
+                        if (status == "error") {
+                            if (!$(".modal-header").hasClass("alert-danger")) {
+                                $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                            }
+                            $("#matchedBody").html("Error on accessing this details, contact system support.");
+                        }
+                        $("#manualmatched").modal("show");
+                    });
+                };
+                //function to reset bootstrap modal popups
+                $("#manualmatched").on("hidden.bs.modal", function () {
+                    $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+                    $("#manualmatchedBody").html("");
+                });
+                //--End Display Manual Matched Details---//
+
+
+
+                //---Display OutStanding Details---//
+                var glOutStanding = function (BankAcct, checkDate) {
+                    var url = '@Url.Action("GLOutStandingList", "Reconcilliation")';
+
+                    $("#GlOutStandingBody").load(url, { BankAcct: BankAcct, checkDate: checkDate }, function (response, status, xhr) {
+                        if (status == "error") {
+                            if (!$(".modal-header").hasClass("alert-danger")) {
+                                $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                            }
+                            $("#GlOutStandingBody").html("Error on accessing this details, contact system support.");
+                        }
+                        $("#GlOutStanding").modal("show");
+                    });
+                };
+                //function to reset bootstrap modal popups
+                $("#GlOutStanding").on("hidden.bs.modal", function () {
+                    $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+                    $("#GlOutStandingBody").html("");
+                });
+                //---End Display OutStanding Details---//
+
+                //----Display Bank OutStanding Details---//
+                var bankOutStanding = function (BankAcct, checkDate) {
+
+                    var url = '@Url.Action("BankOutStandingList", "Reconcilliation")';
+
+                    $("#BankOutStandingBody").load(url, { BankAcct: BankAcct, checkDate: checkDate }, function (response, status, xhr) {
+                        if (status == "error") {
+                            if (!$(".modal-header").hasClass("alert-danger")) {
+                                $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                            }
+                            $("#BankOutStandingBody").html("Error on accessing this details, contact system support.");
+                        }
+                        $("#BankOutStanding").modal("show");
+                    });
+                };
+                //function to reset bootstrap modal popups
+                $("#BankOutStanding").on("hidden.bs.modal", function () {
+                    $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+                    $("#BankOutStandingBody").html("");
+                });
+                //--End Display Bank OutStanding Details---//
+
+
+                function searchReco() {
+                    var month = document.forms["reconcilliation"]["month"];
+                    var year = document.forms["reconcilliation"]["year"];
+
+                    if (year.value == "") {
+                        swal({
+                            //text: "Please select Year!",
+                            icon: "warning",
+                            title: "Please Select Year !",
+                        });
+                        year.focus();
+                        return false;
+                    }
+
+                    if (month.selectedIndex < 1) {
+                        swal({
+
+                            icon: "warning",
+                            title: "Please Select Month !",
+                        });
+                        month.focus();
+                        return false;
+                    }
+
+                    return true;
+        }
+
+
+
+       //Auto Matched
+
+        var dt_matched = $('#dt_matched').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        //var dt_view = $('#dt_view').dataTable();
+        $("#dt_matched_wrapper .dt-toolbar").remove();
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_matched.DataTable().search(this.value).draw();
+        });
+
+        function autoMatched(account, checkdate,accountName) {
+            viewData(account, checkdate, accountName);
+            $("#matched").modal("show");
+        }
+
+        function viewData(account, checkdate, accountName) {
+            $("#AccountNumber").text(account);
+            $("#AccountName").text(accountName);
+
+            $("#loader").text("Loading Please Wait...");
+            //debugger;
+            //var date = checkdate.toISOString().substring(0, 10)
+            var date = checkdate.substr(0, 10);
+            //30/09/2021
+            console.log(date);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("AutoMatchedList", "Reconcilliation")' + "/?BankAcct="+ account + '&&transactionDate='+date,
+
+                @*url: '@Url.Action("MatchedList", "Reconcilliation")',
+                data: {
+                    BankAcct: account,
+                    checkDate: checkdate
+                },*@
+
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    dm = response.data;
+                    console.log(dm);
+                    dt_matched.fnClearTable();
+                    for (var i = 0; i < dm.length; i++) {
+                        dt_matched.fnAddData([i + 1,
+                            dm[i]["TransactionDateFormatted"],
+                            dm[i]["LegalNumber"],
+                            dm[i]["DocumentNo"],
+                            toLabel(dm[i]["OperationalAmountGL"]),
+                            dm[i]["TransactionTypeGL"],
+                            dm[i]["BankDateFormatted"],
+                            dm[i]["RefBank"],
+                            dm[i]["RelatedRefBank"],
+                            toLabel(dm[i]["AmountBank"]),
+                            dm[i]["TransactionTypeBK"],
+                            dm[i]["BankMatchedNo"],
+                            dm[i]["MatchedDateBKFormatted"]
+                        ]);
+                    }
+                    if (dm.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        //End to Auto Matched
+
+        //GL Outstanding
+        var dt_GLoutstanding = $('#dt_GLoutstanding').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loadergl" style="color:green">No records found</strong>',
+                "zeroRecords": "No  transaction found"
+            },
+        });
+
+        $("#dt_GLoutstanding_wrapper .dt-toolbar").remove();
+        $("#searchCashView").on("keyup search input paste cut", function () {
+            dt_GLoutstanding.DataTable().search(this.value).draw();
+        });
+
+        function cashbookOutStanding(account, checkdate, accountName) {
+
+            viewGLoutstanding(account, checkdate, accountName);
+            $("#CashBookOutStanding").modal("show");
+        }
+
+        function viewGLoutstanding(account, checkdate, accountName) {
+
+            $("#AccountNumber1").text(account);
+            $("#AccountName1").text(accountName);
+            dt_GLoutstanding.fnClearTable();
+            $("#loadergl").text("Loading Please Wait...");
+            var date = checkdate.substr(0, 10);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GLOutStandingList", "Reconcilliation")' + "/?BankAcct="+ account + '&&transactionDate='+date,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    d = response.datagl;
+                    console.log(d);
+                    dt_GLoutstanding.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_GLoutstanding.fnAddData([i + 1,
+                            d[i]["TransactionDateFormatted"],
+                            d[i]["LegalNumber"],
+                            d[i]["DocumentNo"],
+                            d[i]["DescriptionGL"],
+                            toLabel(d[i]["OperationalAmountGL"]),
+                            d[i]["TransactionType"],
+                            d[i]["CheckDateFormatted"],
+                            d[i]["ReconciliationStatus"],
+                            d[i]["Age"],
+                        ]);
+                    }
+
+                    if (d.length == 0) {
+                        $("#loadergl").text("No records found")
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        //End Gloutstanding
+
+
+        //Bank Outstanding
+        var dt_Bankoutstanding = $('#dt_Bankoutstanding').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loaderbk" style="color:green">No records found</strong>',
+                "zeroRecords": "No  transaction found"
+            },
+        });
+
+        $("#dt_Bankoutstanding_wrapper .dt-toolbar").remove();
+        $("#searchbankView").on("keyup search input paste cut", function () {
+            dt_Bankoutstanding.DataTable().search(this.value).draw();
+        });
+
+        function bankStaOutStanding(account, checkdate, accountName) {
+
+            viewBank(account, checkdate, accountName);
+            $("#BankOutStandingView").modal("show");
+        }
+
+        function viewBank(account, checkdate, accountName) {
+
+            $("#AccountNumber2").text(account);
+            $("#AccountName2").text(accountName);
+            dt_Bankoutstanding.fnClearTable();
+            $("#loaderbk").text("Loading Please Wait...");
+            var date = checkdate.substr(0, 10);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("BankOutStandingList", "Reconcilliation")' + "/?BankAcct="+ account + '&&transactionDate='+date,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    bank = response.databank;
+                    console.log(bank);
+                    dt_Bankoutstanding.fnClearTable();
+                    for (var i = 0; i < bank.length; i++) {
+                        dt_Bankoutstanding.fnAddData([i + 1,
+                            bank[i]["StatementDateFormatted"],
+                            bank[i]["BankReference"],
+                            bank[i]["RelatedReference"],
+                            bank[i]["TransactionDescription"],
+                            toLabel(bank[i]["Amount"]),
+                            bank[i]["TransactionType"],
+                            bank[i]["CheckDateFormatted"],
+                            bank[i]["ReconciliationStatus"],
+                            bank[i]["Age"],
+                        ]);
+                    }
+
+                    if (bank.length == 0) {
+                        $("#loaderbk").text("No records found")
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        //End Bankoutstanding
+
+        //Manual Matching
+        var dt_manualMatched = $('#dt_manualMatched').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loaderManual" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+
+        $("#dt_manualMatched_wrapper .dt-toolbar").remove();
+        $("#searchboxManualView").on("keyup search input paste cut", function () {
+            dt_manualMatched.DataTable().search(this.value).draw();
+        });
+
+        function manualmatched(account, checkdate,accountName) {
+            manualViewData(account, checkdate, accountName);
+            $("#ManualMatchedView").modal("show");
+        }
+
+        function manualViewData(account, checkdate, accountName) {
+
+            $("#AccountNumber3").text(account);
+            $("#AccountName3").text(accountName);
+
+            $("#loaderManual").text("Loading Please Wait...");
+            var date = checkdate.substr(0, 10);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("ManualMatchedList", "Reconcilliation")' + "/?BankAcct="+ account + '&&transactionDate='+date,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    d = response.datamanual;
+                    console.log(d);
+                    dt_manualMatched.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_manualMatched.fnAddData([i + 1,
+                            d[i]["TransactionDateFormatted"],
+                            d[i]["Reference"],
+                            d[i]["Description"],
+                            d[i]["TransactionType"],
+                            toLabel(d[i]["Amount"]),
+                            d[i]["ClearedType"],
+                            d[i]["MatchNumber"],
+                            d[i]["CheckDateFormatted"],
+                            d[i]["MatchedDateFormatted"],
+                            d[i]["Source"],
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loaderManual").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}
+
+

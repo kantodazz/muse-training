@@ -1,0 +1,117 @@
+﻿@{
+    ViewBag.Title = "Employer Contribution Tracker";
+}
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                   
+                                </div>
+                                <div class="col-md-6" style="display: flex; justify-content: flex-end;">
+                                    <div>CheckDate: <input type="date" style="margin-right: 10px;" id="checkDate"/></div>
+                                    <div><button class="btn btn-info" onclick="loadData()" id="loadData">SEARCH</button></div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Claim Reference</th>
+                                        <th>Check Date</th>
+                                        <th>ContributionCode</th>
+                                        <th>NumTrx</th>
+                                        <th>TotalEmployerContribution</th>
+                                        <th>ReconciliationStatus</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        var dt_table = $('#dt_table').dataTable();
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        var data = [];
+        function loadData() {
+            var checkDate = $("#checkDate").val()
+            if (!checkDate) {
+                swal("Invalid check date");
+                return;
+            }
+
+            $("#loadData").text("LOADING...");
+            $("#loadData").prop('disabled', true);
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("SearchPsssfContribution", "SalaryDeductionPayment")',       
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+                data: { checkDate },
+                success: function (response) {
+                    $("#loadData").text("SEARCH");
+                    $("#loadData").prop('disabled', false);
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    var id = data[i].Id
+                    dt_table.fnAddData([i+1,
+                        data[i].ClaimRef,
+                        data[i].CheckDateFormatted,
+                        data[i].ContributionCode,
+                        data[i].NumTrx,
+                        toLabel(data[i].TotalEmployerContribution),
+                        (`<div>
+                          ${data[i].ReconciliationStatus || 'Pending'}<br>
+                          <strong>${data[i].OverallStatusDescription || ''}</strong>
+                        </div>`),
+                        data[i].OverallStatus,
+                       `<div class="btn-group" id="drop-${id}">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span><span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "viewDetails(${id})">Details</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-${id}" class="loading-gif"/>`
+                    ]);
+                    $("#saveLoader-" + id + "").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }
+
+        function viewDetails(id) {
+            url = '@Url.Action("PsssfContributionDetails", "SalaryDeductionPayment")';
+            window.location.href = `${url}/?id=${id}`
+        }
+
+    </script>
+}

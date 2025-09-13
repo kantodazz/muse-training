@@ -1,0 +1,301 @@
+﻿@{
+    ViewBag.Title = "Amend Deductions Approval";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+   td {
+        padding: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                            </div>
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Employee Name</th>
+                                        <th>Check Number</th>
+                                        <th>Deduction Code</th>
+                                        <th>Initial Balance From</th>
+                                        <th>Initial Balance To</th>
+                                        <th>Deduction Amount From</th>
+                                        <th>Deduction Amount To</th>
+                                        <th>Active Status From</th>
+                                        <th>Active Status To</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific{
+    <script>
+        // ============ INIT DATA TABLES START =====================
+          $(function (){
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response){
+            var url = '@Url.Action("GetAmendDeductions", "Deduction")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback){
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta){
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "FullName" },
+                    { "mData": "CheckNumber" },
+                    { "mData": "DeductionCode2" },
+                    {
+                        "mData": "InitialBalance",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        "mData": "InitialBalance2",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        "mData": "DeductionAmount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        "mData": "DeductionAmount2",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "IsActiveNew" },
+                    { "mData": "IsActiveNew2" },
+                    { "mData": "Reason2" },
+                    { "mData": "AmendOverallStatus" },
+                    {
+                        "mData": "AmendDeductionId",
+                        "bSortable": false,
+                        "render": function (AmendDeductionId, type, full, meta) {
+
+                            return'<div class="btn-group">\
+                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                            <span class="caret"></span>\
+                                            <span class="sr-only">Toggle Dropdown</span>\
+                                        </button>\
+                                        <ul class="dropdown-menu">\
+                                            <li><a href="#" onclick="reject(' + AmendDeductionId + ')"> Reject </a></li>\
+                                        </ul>\
+                                        </div>'
+                        }
+                    },
+                ]
+            });
+        };
+
+        function approve(i){
+            swal({
+                title: 'Approve this Item?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    approvePost(i);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function approvePost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("ApproveAmendDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!",
+                            { icon: "success" })
+                            .then((e) => {
+                              window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+       function cancel(i) {
+            swal({
+                title: 'Cancel this Item.?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPost(i);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function cancelPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("CancelAmendDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+         }
+
+        function cancel(i) {
+            swal({
+                title: 'Cancel this Item.?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPost(i);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("CancelAmendDeduction", "Deduction")',
+                data: { "Id": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function reject(i) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "Save",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    rejectPost(i, remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function rejectPost(Id, remark){
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("RejectAmendDeduction", "Deduction")',
+                data: { "Id": Id, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}

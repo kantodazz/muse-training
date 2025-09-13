@@ -1,0 +1,428 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+     .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budget Ceiling</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                           
+                            <div class="row">
+                                <div class="col-md-6">
+                                    
+                                    <a class="btn btn-info" href='@Url.Action("budgetcieling", "budgetsummaries")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                    
+                                </div>
+                               
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th data-hide="phone">S/N</th>
+                                        <th data-hide="phone,tablet">Legal Number</th>
+                                        <th data-hide="phone,tablet">Financial Year</th>
+                                        <th data-hide="phone,tablet">Budget Type</th>
+                                        <th data-hide="phone,tablet">Sub Budget Class</th>
+                                        <th data-hide="phone,tablet">Fund Source</th>
+                                        <th data-hide="phone,tablet">Amount</th>
+                                        <th data-hide="phone,tablet">Status</th>
+                                        <th data-hide="phone,tablet">Comments</th>
+                                        <th data-hide="phone,tablet">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int cnt = 0;
+                                        foreach (var item in Model)
+                                        {
+                                            cnt = cnt + 1;
+                                            decimal? opamt = 0;
+
+                                            <tr>
+                                                <td>@cnt</td>
+                                                <td>@item.LegalNumber</td>
+                                                <td>@item.FinancialYearDesc</td>
+                                                <td>@item.JournalTypeDesc</td>
+                                                <td>@item.SubBudgetClass - @item.SuBbudgetClassDesc</td>
+                                                <td>@item.FundingSource - @item.FundingSourceDesc</td>
+                                                <td align="right">
+                                                @if(item.UpdatedAmount == 0){
+                                                    opamt = item.OperationalAmount;
+                                                }
+                                                else
+                                                {
+                                                    opamt = item.UpdatedAmount;
+                                                }
+                                                @string.Format("{0:#,0.00}", opamt) </td>
+                                                <td>@item.OverAllStatus</td>
+                                                <td>@item.Comments</td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        @if (item.OverAllStatus != "Approved")
+                                                        {
+                                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                <span class="caret">
+                                                                </span>
+                                                                <span class="sr-only"></span>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+
+                                                                <li><a href="#" onclick="confirmDialog(@item.BudgetSummaryId)">Confirm</a></li>
+                                                                <li>@Html.ActionLink("Edit", "Edit", new { id = item.BudgetSummaryId })</li>
+                                                                <li><a href="#" onclick="cancellDialog(@item.BudgetSummaryId)">Cancel</a></li>
+                                                            </ul>
+                                                        }
+
+                                                    </div>
+
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Confirm this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+        function SearchPayee() {
+            $('#payeeModal').modal('show');
+        }
+
+
+    var datatable_tabletools = $('#datatable_tabletools').dataTable({
+        "autoWidth": true,
+        "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+        "bPaginate": false,
+        "info": true,
+    });
+
+    // GRAB THIS==================================
+    $("#searchbox").on("keyup search input paste cut", function () {
+        datatable_tabletools.DataTable().search(this.value).draw();
+    });
+
+
+    function Delete(id) {
+        //if (i == 'x') i = globalPayeeId;
+        console.log(id)
+        swal({
+            title: "Are you sure?",
+            text: "Once deleted, you will not be able to recover this Entry!",
+            buttons: [
+              'No',
+              'Yes'
+            ],
+        }).then(function (isConfirm) {
+            if (isConfirm) {
+                deleteItemConfirmed(id)
+            } else {
+                swal("Cancelled", "No change was made");
+            }
+        });
+        $('#confirmModal').modal('hide');
+    }
+
+    function deleteItemConfirmed(id) {
+        var url = '@Url.Action("DeleteBudget", "BudgetSummaries")';
+        $.ajax({
+            type: "post",
+            url: url,
+            data: { "budgetsummaryid": id },
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+
+                if (response == "Success") {
+                    swal("Record Cancelled!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                }
+                else {
+                    swal(response);
+                }
+
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+    }
+
+        var ConfirmBudget = function (id) {
+
+            $("#responseModal").modal('show');
+
+
+
+            $(".delete-confirm").click(function () {
+                // if (CostCenter != "") {
+                var url = '@Url.Action("ConfirmBudg", "BudgetSummaries")';
+                $.ajax({
+                    url: url,
+                    data: { id: id },
+                    type: "POST",
+                    success: function (response) {
+                        if (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show success message.
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-info')) {
+                                    //$('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Confirmed successfully');
+                            }
+                        }
+                    }, error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-danger')) {
+                            $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                            $('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+                //}
+            });
+        };
+
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Confirm this record ?');
+        });
+    //END HERE ==========================================
+    $(function () {
+            $("#cboAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w3-check").prop('checked', true);
+                }
+                else {
+                    $(".w3-check").prop('checked', false);
+                }
+            });
+        })
+        $(function () {
+            $("#cboApprAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w4-check").prop('checked', true);
+                }
+                else {
+                    $(".w4-check").prop('checked', false);
+                }
+            });
+        })
+
+        //=================== CONFIRM START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmDialog(id) {
+          //  if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Transaction ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmPendingBudget(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmPendingBudget(id) {
+           var url = '@Url.Action("ConfirmBudg", "BudgetSummaries")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Budget Ceilling Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+        //=================== CANCELLATION START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function cancellDialog(id) {
+            //  if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Cancell this Transaction ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    cancellPendingBudget(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function cancellPendingBudget(id) {
+            var url = '@Url.Action("CancellBudg", "BudgetSummaries")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Budget Ceilling !", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CANCELL END **************************
+    </script>
+}

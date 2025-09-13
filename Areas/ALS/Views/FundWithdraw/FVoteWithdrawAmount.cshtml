@@ -1,0 +1,252 @@
+﻿@*@model IFMIS.Areas.ALS.Models.ALS_CreateFundAllocationVM*@
+@model IFMIS.Areas.ALS.Models.ALS_CreateFundWithDrawVM
+@{
+    ViewBag.Title = "Fund WithDraw Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var i = 0;
+}
+
+<div id="content">
+    <div id="widget-grid">
+        <div class="row">
+
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2> @ViewBag.Title </h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div id="exTab2" class="container" style="margin-left:2px;margin-top:5px">
+                                <ul class="nav nav-tabs">
+                                    <li class="active">
+                                        <a href="#1" data-toggle="tab"> Receiving Fund Details</a>
+                                    </li>
+                                    @*<li>
+                                        <a href="#2" data-toggle="tab">
+                                            Vote Allocation Details
+                                            <span class="badge inbox-badge">@ViewBag.VoteAllocationCount</span>
+                                        </a>
+                                    </li>*@
+                                <li>
+                                    <a href="#2" data-toggle="tab">
+                                        Comments
+                                        <span class="badge  inbox-badge">  @ViewBag.FundWithdrawRemarkCount </span>
+                                    </a>
+                                </li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="1">
+                                        <div class="col-md-6" style="padding-top:20px">
+                                            <dl class="dl-horizontal">
+                                                <dt>Funding Source Name:</dt>
+                                                <dd>@Html.DisplayFor(model => model.ComponentName)</dd>
+                                                <dt>Funding Receiving Source:</dt>
+                                                <dd>@Html.DisplayFor(model => model.SubBudgetClass) - @Html.DisplayFor(modal => modal.FundingSource)</dd>
+                                                <dt>Allocation Desc:</dt>
+                                                <dd>@Html.DisplayFor(model => model.AllocationDesc)</dd>
+                                                <dt>OverAllStatus:</dt>
+                                                <dd>@Html.DisplayFor(model => model.OverallStatus)</dd>
+                                                <dt>Allocated Vote Detail:</dt>
+                                                <dd>@Html.DisplayFor(model => model.AllocInstitutionName)</dd>
+                                                <dt>Total Amount Allocated:</dt>
+                                                <dd>TZs: @Html.DisplayFor(model => model.AllocationAmount)</dd>
+                                                <dt>Withdraw Amount:</dt>
+                                                <dd>TZs: @Html.DisplayFor(model => model.WithdrawAmount)</dd>
+
+                                            </dl>
+
+                                        </div>
+                                    </div>
+
+                                   <div class="tab-pane" id="2">
+                                        <div class=" col-md-5" style="margin:15px 0px 0px -20px;float:left">
+                                            <div class="smart-timeline">
+                                                <ul class="smart-timeline-list">
+                                                    @{
+                                                        int r = 0;
+                                                        foreach (var item in ViewBag.FundWithdrawRemarks)
+                                                        {
+                                                            r++;
+                                                            <li>
+                                                                <div class="smart-timeline-icon">
+                                                                    <i class="fa fa-user"></i>
+                                                                </div>
+                                                                <div class="smart-timeline-content">
+                                                                    <p>
+                                                                        <a href="javascript:void(0);"><strong>@item.CreatedBy <br /> @item.RemarkLevel </strong></a> &nbsp;&nbsp; <small>@item.CreatedAt</small>
+                                                                    </p>
+
+                                                                    <p>@item.Remark</p>
+
+                                                                    <ul class="list-inline">
+                                                                        <li>
+                                                                            @if (@item.AttachmentRef == null && @item.AttachmentName == null)
+                                                                            {
+                                                                                string msg = "No Attachment";
+                                                                                @msg;
+
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <a href="#" onclick="preview('@item.AttachmentName')"> <i class="fa fa-paperclip search-icon"></i> Preview </a>
+                                                                            }
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </li>
+                                                        }
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        <div style="border:1px solid #efeaea;width:520px;height:auto;float:left;margin:30px 0px 0px 0px">
+                                            <iframe height="1000" id="attachmentImage" width="100%" src=""></iframe>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            @{
+                                if (Model.OverallStatus == "Approved")
+                                {
+
+                                <div class="panel-footer">
+                                    <a href="@Url.Action("FundWithdrawList", "FundWithdraw")" class="btn btn-info">
+                                        <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                        Back
+                                    </a>
+                                    <button id="decisionbtn" onclick="Withdraw(@Model.FundAllocDetailId)" value="withdraw" class="btn btn-info">
+                                        <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                        Withdraw
+                                    </button>
+                                </div>
+                                }
+                               
+                            }
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+
+<!--My partial view for withdraw Amount start here-->
+<div id="withdrawVoteModal" class="modal fade" tabindex="-1" role="dialog">
+    <div class="modal-dialog" style="width:80%;background-color:#b3e5fc;">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Withdraw Summary Amount</h3>
+            </div>
+            <div class="modal-body" id="withdrawFundBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-info" id="saveWithdrawData">
+                    <i class="fa fa-save">Save</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times">Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- end here-->
+@section Scripts {
+
+    <script>
+
+        function Withdraw(id) {
+            var url = '@Url.Action("GetAllocationVoteDetail", "FundWithdraw")/' + id;
+            $("#withdrawFundBody").load(url, function () {
+                $("#withdrawVoteModal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        function ConfirmFundWithdrawDetails(id) {
+            var url = '@Url.Action("ConfirmFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("fundWithdrawList", "FundWithdraw")';
+             $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { "id": id },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Successfully Confirmed!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+        }
+
+        //Approve FundAllocation after confirmed
+         function ApproveFund(id) {
+            swal({
+                title: "You're About to Approve the Fund Allocation?",
+                text: "Once You Approve the Fund Allocation Details You can't Update Data!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isCofirm) {
+                if (isCofirm) {
+                    ApproveFundWithdrawDetails(id);
+                }
+                else {
+                    swal("Cancelled", "You have not Confirm the Fund Allocation");
+                }
+            });
+        }
+
+        function ApproveFundWithdrawDetails(id) {
+            var url = '@Url.Action("ApproveFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")';
+            $.ajax({
+                    type: "post",
+                    url: url,
+                    data: { "id": id },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Successfully Approved!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                         else if (response == "Error") {
+                            swal("You have insufficient Amount for withdraw!", { icon: "warning" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+            });
+
+        }
+
+    </script>
+}

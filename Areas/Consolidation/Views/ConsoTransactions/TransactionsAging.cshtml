@@ -1,0 +1,301 @@
+﻿@model IFMIS.Areas.Consolidation.Models.ConsoDataEntryVM
+@{
+ var i=0;
+ViewBag.Title="Note Items Aging";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                @Html.DisplayNameFor(model => model.Note) :<strong>@Html.DisplayFor(model => model.Note)</strong><br />
+                                @Html.DisplayNameFor(model => model.NoteDesc) :<strong>@Html.DisplayFor(model => model.NoteDesc)</strong><br />
+                            </p>
+         
+                            <div class="row">
+
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="table table-bordered table-hover table-condensed" id="dt_items">
+
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center;width:4%">#</th>
+                                        <th style="text-align:left;width:15%">GFSCode</th>
+                                        <th style="text-align: center; width: 13%">Amount</th>
+                                        <th style="text-align: center;width:13%">Balance</th>
+                                        <th style="text-align: center; display: none">Total</th>
+                                        <th style="text-align: center; width: 11%">@Model.AgingEntryList.Where(a => a.AgingDesc == "0-30 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: center; width: 11% ">@Model.AgingEntryList.Where(a => a.AgingDesc == "31-60 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: center; width: 11% ">@Model.AgingEntryList.Where(a => a.AgingDesc == "61-90 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: center; width: 11%">@Model.AgingEntryList.Where(a => a.AgingDesc == "91-120 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                        <th style="text-align: center; width: 11%">@Model.AgingEntryList.Where(a => a.AgingDesc == "Above 120 Days").Select(a => a.AgingDesc).FirstOrDefault()</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @foreach (var item in Model.ConsoItems)
+                                    {
+                                        i++;
+                                        <tr id=@item.TrxID class=@item.TrxID>
+                                            <td style="text-align:center">@i</td>
+                                            <td style="text-align:left">
+                                                @if (item.GFSCode != null)
+                                                {
+                                                    <span>@Html.DisplayFor(modelItem => item.GFSCode)-@Html.DisplayFor(modelItem => item.GFSCodeDesc)</span>
+                                                }
+                                                else
+                                                {
+                                            <span>@Html.DisplayFor(modelItem => item.GFSCodeDesc)</span>
+                                                }
+
+                                            </td>
+                                            <td style="text-align: center;">
+                                                @Html.EditorFor(modelItem => item.Amount, new { htmlAttributes = new { @class = "form-control amount", @readonly = "readonly", @style = "width:100%" } })
+                                            </td>
+                                            <td style="text-align: center">
+                                                @Html.EditorFor(modelItem => item.Balance, new { htmlAttributes = new { @class = "form-control amount", @readonly = "readonly", @style = "width:100%" } })
+                                            </td>
+                                            <td style="text-align: center; display: none">
+
+                                                @Html.EditorFor(modelItem => item.ActualTotal, new { htmlAttributes = new { @readonly = "readonly" } })
+                                            </td>
+                                            <td style="text-align:center">
+                                                @{
+                                                    var firstId = Model.AgingEntryList.Where(a => a.AgingDesc == "0-30 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? firstAmount = Model.AgingTransactionList.Where(a => a.AgingTransactionSummaryId == item.TrxID && a.AgingEntryId == firstId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (firstAmount == null)
+                                                    {
+                                                        firstAmount = 0;
+                                                    }
+                                                    string firstField = item.TrxID.ToString() + firstId.ToString();
+                                                }
+                                                <input type="text" name="@firstField" id="@firstField" class="form-control amount" onkeyup="amountEntry(this)" onfocusout="saveEntry(this,@item.TrxID,@firstId)" autocomplete="off" value="@firstAmount" style="width:100%" />
+                                                @*@Html.Editor(@firstField, new { htmlAttributes = new { @class = "form-control amount", @onfocusout = "saveEntry(this," + @item.TrxID + "," + @firstId + ")", @autocomplete = "off", value = "@firstAmount", @style = "width:100%" } })*@
+                                            </td>
+                                            <td style="text-align:center">
+                                                @{
+                                                    var secondId = Model.AgingEntryList.Where(a => a.AgingDesc == "31-60 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? secondAmount = Model.AgingTransactionList.Where(a => a.AgingTransactionSummaryId == item.TrxID && a.AgingEntryId == secondId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (secondAmount == null)
+                                                    {
+                                                        secondAmount = 0;
+                                                    }
+                                                    string secondField = item.TrxID.ToString() + secondId.ToString();
+                                                }
+                                                <input type="text" name="@secondField" id="@secondField" class="form-control amount" onkeyup="amountEntry(this)" onfocusout="saveEntry(this,@item.TrxID,@secondId)" autocomplete="off" value="@secondAmount" style="width:100%" />
+                                            </td>
+                                            <td style="text-align:center">
+                                                @{
+                                                    var thirdId = Model.AgingEntryList.Where(a => a.AgingDesc == "61-90 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? thirdAmount = Model.AgingTransactionList.Where(a => a.AgingTransactionSummaryId == item.TrxID && a.AgingEntryId == thirdId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (thirdAmount == null)
+                                                    {
+                                                        thirdAmount = 0;
+                                                    }
+                                                    string thirdField = item.TrxID.ToString() + thirdId.ToString();
+                                                }
+                                                <input type="text" name="@thirdField" id="@thirdField" class="form-control amount" onkeyup="amountEntry(this)" onfocusout="saveEntry(this,@item.TrxID,@thirdId)" autocomplete="off" value="@thirdAmount" style="width:100%" />
+                                            </td>
+                                            <td style="text-align:center">
+                                                @{
+                                                    var fourthId = Model.AgingEntryList.Where(a => a.AgingDesc == "91-120 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? fourthAmount = Model.AgingTransactionList.Where(a => a.AgingTransactionSummaryId == item.TrxID && a.AgingEntryId == fourthId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (fourthAmount == null)
+                                                    {
+                                                        fourthAmount = 0;
+                                                    }
+                                                    string fourthField = item.TrxID.ToString() + fourthId.ToString();
+                                                }
+                                                <input type="text" name="@fourthField" id="@fourthField" class="form-control amount" onkeyup="amountEntry(this)" onfocusout="saveEntry(this,@item.TrxID,@fourthId)" autocomplete="off" value="@fourthAmount" style="width:100%" />
+                                            </td>
+                                            <td style="text-align:center">
+                                                @{
+                                                    var fifthId = Model.AgingEntryList.Where(a => a.AgingDesc == "Above 120 Days").Select(a => a.AgingEntryId).FirstOrDefault();
+                                                    decimal? fifthAmount = Model.AgingTransactionList.Where(a => a.AgingTransactionSummaryId == item.TrxID && a.AgingEntryId == fifthId).Select(a => a.OperationalAmount).FirstOrDefault();
+                                                    if (fifthAmount == null)
+                                                    {
+                                                        fifthAmount = 0;
+                                                    }
+                                                    string fifthField = item.TrxID.ToString() + fifthId.ToString();
+                                                }
+                                                <input type="text" name="@fifthField" id="@fifthField" class="form-control amount" onkeyup="amountEntry(this)" onfocusout="saveEntry(this,@item.TrxID,@fifthId)" autocomplete="off" value="@fifthAmount" style="width:100%" />
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a href="@Url.Action("NoteDisclosures","ConsoTransactions",new {id=Model.ConsoTransactionSummaryId})" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        <a href="@Url.Action("NoteDisclosures","ConsoTransactions",new {id=Model.ConsoTransactionSummaryId})" class="btn btn-info" id="finish" style="float:left;margin-left:5px">
+                                            <i class="fa fa-save"></i>Finish
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+      var currentRowId = 0;
+     var dt_items_data = $('#dt_items').dataTable();
+    $("#dt_items_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_items").DataTable().search(this.value).draw();
+    });
+
+        $(".amount").autoNumeric('init');
+
+
+        function amountEntry(e) {
+            $("#" + e.id).autoNumeric('init');
+        }
+
+        function saveEntry(e, rowId, colId) {
+
+            var id = rowId;
+            var $row = $("#" + rowId);
+
+            var value = parseFloat(e.value.split(",").join(""));
+            if (value >= 0) {
+                //Valid
+            }
+            else {
+                value = 0;
+            }
+            //var balance = parseFloat(($row.find('input[name="item.Balance"]').val()).split(",").join(""));
+            //if (balance > 0) {
+            //    if (value > balance) {
+            //        e.value = "";
+            //        return;
+            //    }
+            //}
+            var form_data = {
+                "TrxID": id,
+                "AgingEntryId": colId,
+                "Amount": value
+            };
+             var url = '@Url.Action("SaveAging", "ConsoTransactions")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form_data,
+                success: function (result) {
+                    if (result.response == "Success") {
+                        $row.find('input[name="item.Balance"]').val(result.balance.toLocaleString('en'));
+                        $row.find('input[name="item.ActualTotal"]').val(result.total.toLocaleString('en'));
+                    }
+                    else {
+                        e.value = "";
+                        swal(result.response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    }
+
+                }
+            });
+
+        }
+
+       // When the user clicks on div, open the popup
+//   function rowId(id) {
+//  var popup = document.getElementById("myPopup");
+//  popup.classList.toggle("show");
+//}
+
+        //SHOW LOADER ICON
+        //$(document).ajaxStart(function () {
+        //    $("#divLoader").show();
+        //});
+        ////HIDE LOADER ICON
+        //$(document).ajaxStop(function () {
+        //    $("#divLoader").hide();
+        //});
+
+    </script>
+}

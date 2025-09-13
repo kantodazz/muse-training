@@ -1,0 +1,512 @@
+﻿
+@{
+    ViewBag.Title = "Payee Tracker";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select style="width:150px" id="overallstatus">
+                                        <option value="Pending">Pending</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                        <option value="Confirmed">Confirmed</option>
+                                        <option value="Approved">Approved</option>
+                                       
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>From</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="start_date">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>To</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="end_date">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayee()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Payee Name</th>
+                                        <th>Payee Code</th>
+                                        <th>Address</th>
+                                        <th>Payee Status</th>
+                                        <th>Approval Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Payee Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Payee Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> Payee Name: </th>
+                                                <td id="_PayeeName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Payee Code:</th>
+                                                <td id="_PayeeCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> Payee Address1:</th>
+                                                <td id="_Address1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Payee Address2:</th>
+                                                <td id="_Address2"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Phone Number1:</th>
+                                                <td id="_PhoneNumber1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>  Phone Number2:</th>
+                                                <td id="_PhoneNumber2"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th> City:</th>
+                                                <td id="_City"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Country:</th>
+                                                <td id="_Country"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Zip:</th>
+                                                <td id="_Zip"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Fax:</th>
+                                                <td id="_Fax"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Telephone:</th>
+                                                <td id="_Telephone"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Email Address:</th>
+                                                <td id="_EmailAddress"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Payee status:</th>
+                                                <td id="_OverallStatus"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Approval status:</th>
+                                                <td id="_ApprovalStatus"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Created By:</th>
+                                                <td id="_CreatedBy"></td>
+                                            </tr>
+                                            <tr>
+                                                <th> Created At:</th>
+                                                <td id="_CreatedAt"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Cancelled By:</th>
+                                                <td id="_CancelledBy"></td>
+                                            </tr>
+                                            @*<tr>
+                                                <th> Cancelledt At:</th>
+                                                <td id="_CancelledAt"></td>
+                                            </tr>*@
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <br />
+                       
+                        <div>
+                            <div colspan="5"><strong>Payee Bank Information:</strong></div>
+                        </div>
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Payee Type" },
+                { title: "Bank Account" },
+                { title: "Bank Account Name" },
+                { title: "BIC" },
+                { title: "Account Status" }
+            ]
+        });
+
+        Date.prototype.toDateInputValue = (function () {
+            var local = new Date(this);
+            local.setMinutes(this.getMinutes() - this.getTimezoneOffset());
+            return local.toJSON().slice(0, 10);
+        });
+
+        $(function () {
+            $('#FromDate').val(new Date().toDateInputValue());
+            $('#ToDate').val(new Date().toDateInputValue());
+        });
+        // ********************** INIT DATA TABLES END **********************
+
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPayee", "Payees")' + "/?OverallStatus=Pending&&start_date=" + $('#start_date').val() + "&&end_date=" + $('#end_date').val() + "&&keywords=0",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_voucher_listing.fnAddData([i + 1,
+                       
+                       data[i]["PayeeName"],
+                       data[i]["PayeeCode"],
+                       //data[i]["TIN"],
+                       data[i]["Address1"],
+                       data[i]["OverallStatus"],
+                       data[i]["ApprovalStatus"],
+                      
+                         '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+                }
+
+                if(data.length == 0){
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchPayee() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetPayee", "Payees")' + "/?OverallStatus=" + $("#overallstatus").val() + "&&start_date=" + $('#start_date').val() + "&&end_date=" + $('#end_date').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response)
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_voucher_listing.fnAddData([i + 1,
+                         
+                           data[i]["PayeeName"],
+                           data[i]["PayeeCode"],
+                           //data[i]["TIN"],
+                           data[i]["Address1"],
+                           data[i]["OverallStatus"],
+                           data[i]["ApprovalStatus"],
+                             '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // *************** LOAD TABLE DATA END *********************
+
+
+        // =============== OPEN VIEW DIALOG START ==================
+        /**
+        * Show View Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function openViewDialog(i) {
+            globalPayeeId = i;
+
+            console.log(data[i])
+            $("#_PayeeName").text(data[i]["PayeeName"]);
+            $("#_PayeeCode").text(data[i]["PayeeCode"]);
+            $("#_Address1").text(data[i]["Address1"]);
+            $("#_Address2").text(data[i]["Address2"]);
+            $("#_PhoneNumber1").text(data[i]["PhoneNumber1"]);
+            $("#_PhoneNumber2").text(data[i]["PhoneNumber2"]);
+            $("#_City").text(data[i]["City"]);
+            $("#_Country").text(data[i]["Country"]);
+            $("#_Zip").text(data[i]["Zip"]);
+            $("#_Fax").text(data[i]["Fax"]);
+            $("#_Telephone").text(data[i]["Telephone"]);
+            $("#_EmailAddress").text(data[i]["_EmailAddress"]);
+            $("#_OverallStatus").text(data[i]["OverallStatus"]);
+            $("#_ApprovalStatus").text(data[i]["ApprovalStatus"]);
+            $("#_CreatedBy").text(data[i]["CreatedBy"]);
+            $("#_CreatedAt").text(data[i]["CreatedAtFormatted"]);
+            $("#_CancelledBy").text(data[i]["CancelledByFormatted"]);
+            //$("#_CancelledAt").text(data[i]["CancelledAtFormatted"]);
+
+
+
+
+            dt_voucher_detail.fnClearTable();
+            var totalAmount = 0;
+            data[i]["PayeeDetails"].forEach(row => {
+                dt_voucher_detail.fnAddData([
+                    row["PayeeType"].split("|").join("-"),
+                    row["Accountnumber"],
+                    row["AccountName"],
+                    row["BIC"],
+                     row["OverallStatus"],
+                ]);
+                
+            });
+
+            $("#totalAmount").text(totalAmount.toLocaleString()+".00");
+            $("#Description1").text(data[i]["PaymentDesc"]);
+            $("#reasonId").text(data[i]["OverallStatusDesc"] ? data[i]["OverallStatusDesc"] : "-");
+            $("#statusId").text(data[i]["OverallStatus"]);
+            $("#InvoiceNo1").text(data[i]["InvoiceNo"]);
+            $("#total_voucher_amount1").val(data[i]["OperationalAmount"]);
+            $("#ApplyDate1").text(data[i]["ApplyDateFormatted"]);
+            $("#Comments1").text(data[i]["Narration"]);
+            $("#PaymentMethod1").text(data[i]["PaymentMethod"]);
+            $("#ControlNumber1").text(data[i]["ControlNumber"] ? data[i]["ControlNumber"] : "-");
+            $("#SubBudgetClass1").text(data[i]["SubBudgetClass"]);
+            $('#confirmModal').modal('show');
+
+        }
+        // *************** END SHOW VIEW DIALOG ********************
+    </script>
+}

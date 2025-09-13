@@ -1,0 +1,144 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.MeridianVoucherSignatoryVM
+<style>
+    #formAssignTask label {
+        text-align: right;
+    }
+</style>
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "formAssignTask" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.MeridianVoucherId)
+        @*@Html.HiddenFor(model => model.SignatoryA)
+            @Html.HiddenFor(model => model.SignatoryB)*@
+        <div class="form-group row">
+            @Html.LabelFor(model => model.SignatoryA, htmlAttributes: new { @class = "control-label col-md-offset-2 col-md-2" })
+            <div class="col-md-5">
+                @Html.DropDownListFor(model => model.SignatoryA, Model.SignatoryAList, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.SignatoryA, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group row">
+            @Html.LabelFor(model => model.SignatoryB, htmlAttributes: new { @class = "control-label col-md-offset-2 col-md-2" })
+            <div class="col-md-5">
+                @Html.DropDownListFor(model => model.SignatoryB, Model.SignatoryBList, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.SignatoryB, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group row">
+            @Html.LabelFor(model => model.DemandNotesRef, "Demand Notes Ref", htmlAttributes: new { @class = "control-label col-md-offset-2 col-md-2" })
+            <div class="col-md-5">
+                @Html.TextBoxFor(model => model.DemandNotesRef, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.DemandNotesRef, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group row">
+            @Html.LabelFor(model => model.DemandNotesDate, "Demand Notes Date", htmlAttributes: new { @class = "control-label col-md-offset-2 col-md-2" })
+            <div class="col-md-5">
+                @Html.TextBoxFor(model => model.DemandNotesDate, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.DemandNotesDate, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+
+    $("#btnSave").on("click", function () {
+        debugger;
+                    $("#btnSave").prop("disabled", true);
+
+                    $.validator.unobtrusive.parse("#formAssignTask");
+                    if (!$("#formAssignTask").valid()) {
+                        $("#btnSave").prop("disabled", false);
+                        return false;
+                    }
+
+        var formData = new FormData();
+        formData.append("MeridianVoucherId", $('#MeridianVoucherId').val());
+        formData.append("SignatoryA", $('#SignatoryA').val());
+        formData.append("SignatoryB", $('#SignatoryB').val());
+        formData.append("DemandNotesRef", $('#DemandNotesRef').val());
+        formData.append("DemandNotesDate", $('#DemandNotesDate').val());
+
+                  var url = '@Url.Action("SaveSignatoryRedemption", "MeridianVouchers")';
+
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: formData,
+                        processData: false,
+                        contentType: false,
+                        success: function(response) {
+                            if (response == "Success") {
+                                $('#assignmodal').modal('hide');
+                                swal({
+                                    text: "Signatories Assigned successfuly!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function() {
+                                    location.reload();
+                                });
+                            } else {
+                                swal({
+                                    text: "An error occured while processing your request, please contact system support",
+                                    icon: "warning",
+                                    button: "OK",
+                                })
+                            }
+                        },
+                        error: function() {
+                            swal({
+                                text: "An error occured while processing your request, please contact system support",
+                                icon: "error",
+                                button: "OK",
+                            })
+                        },
+                        complete: function() {
+                            $("#btnSaveAssignment").prop("disabled", false);
+                        }
+                    });
+    });
+
+
+    $("#DemandNotesDate")
+            .wrap('<div class="input-group">')
+            .datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true,
+                showOn: "both",
+                buttonImage: '@Url.Content("~/Content/img/calendar.gif")',
+                maxDate: "+0D"
+            })
+            .next("button").button({
+                icons: { primary: "ui-icon-calendar" },
+                label: "Select Date",
+                text: false
+            })
+            .addClass("btn btn-default")
+            .wrap('<span class="input-group-btn">')
+            .find('.ui-button-text')
+            .css({
+                'visibility': 'hidden',
+                'display': 'inline'
+            });
+
+        function ConvertJsonDate(inputDate) {
+            var dx = new Date(parseInt(inputDate.substr(6)));
+            //alert(dx.toDateString());
+            var dd = ("0" + dx.getDate()).slice(-2);
+            var mm = ("0" + (dx.getMonth() + 1)).slice(-2);
+            var yy = dx.getFullYear();
+            var HH = ("0" + dx.getHours()).slice(-2);
+            var m = ("0" + dx.getMinutes()).slice(-2);
+            var ss = ("0" + dx.getSeconds()).slice(-2);
+            return yy + "-" + mm + "-" + dd;
+            //return dx.toDateString() + "  " + HH + ":" + m + ":" + ss;
+        }
+
+</script>
+
+

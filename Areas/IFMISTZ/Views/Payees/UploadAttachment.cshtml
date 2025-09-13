@@ -1,0 +1,118 @@
+﻿
+@model IFMIS.Areas.IFMISTZ.Models.UploadPayeeAttachmentVM
+
+@{
+    ViewBag.Title = "Upload Payee Attachment";
+}
+
+<div id="content">
+    <div class="panel panel-default">
+        <div class="panel-heading">Upload Payee Attachment</div>
+        <div class="panel-body">
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="form-horizontal">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    @Html.HiddenFor(model => model.PayeeId)
+
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-flat btn-default" onclick="upload()">
+                                <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                Upload
+                            </button>
+
+                            <a href="@Url.Action("PayeeList","Payees")" class="btn btn-default btn-flat">
+                                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                Back
+                            </a>
+                        </div>
+
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        <!-- Start of div loader-->
+        <div id="divLoader" style="text-align: center; display: none">
+            <img src="~/Media/Images/ajax_loader.gif" />
+        </div>
+        <!-- End of div loader-->
+
+    </div>
+</div>
+
+@section Scripts{
+
+    <script>
+
+        var upload = function () {
+
+            if (window.FormData !== undefined) {
+
+                debugger
+
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length == 0) {
+                    return;
+                }
+
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                    data.append("PayeeId", $("#PayeeId").val());
+                }
+
+                $("#divLoader").show();
+
+                var url = '@Url.Action("PayeeList", "Payees")';
+
+                $.ajax({
+                    url: "UploadPayeeAttachment",
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data
+                }).done(function (response) {
+                    if (response == "Success") {
+                        $("#divLoader").hide();
+                        alert("Successfully uploaded!");
+                        window.location = '@Url.Action("PayeeList", "Payees")';
+                    } else if (response == "InvalidFormat") {
+                        alert("Invalid file format, file format should be PDF!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    } else if (response == "InvalidSize") {
+                        alert("Invalid file size, file size should be less than 2MB!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    }
+                    else {
+                        alert("Unknown error, contact system admin!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    };
+                }).error(function (response) {
+                    alert(response);
+                    $("#divLoader").hide();
+                    location.reload();
+                });
+
+            };
+
+        };
+
+    </script>
+}
+
+
+

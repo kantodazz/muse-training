@@ -1,0 +1,328 @@
+﻿@{
+    ViewBag.Title = "Notifications";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-envelope-o"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            @*<button class="btn btn-info MarkReadBtn" id="MarkBtn" onclick="MarkAsReadFunction()">
+                               Mark As Read
+                            </button>*@
+                            <table id="dt_notification_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        @*<th style="width:35px !important;"><input type="checkbox" onchange="checkAll()" id="checkall" /></th>*@
+                                        <th style="width:35px !important;"></th>
+                                        <th>Message</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(".MarkReadBtn").attr('disabled', true);
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_notification_list = $('#dt_notification_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+        //$("#dt_notification_list_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_notification_list.DataTable().search(this.value).draw();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear()+" "+dt.getHours()+":"+dt.getMinutes()+":"+dt.getSeconds();
+            }
+        }
+
+        var data = [];
+        var LoanApplicationId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetNotificationList", "Notification")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_notification_list.fnClearTable();
+                var n = 1;
+                for (var i = 0; i < data.length; i++) {
+                    if (data[i]["NotificationNo"] != null) {
+                        dt_notification_list.fnAddData([n,
+                         '<div id="Notification-' + i + '"> <p style="font-color:black"><b><a href="@Url.Action("PreviewTicketDetails", "Tickets", new { area = "IFMISTZ" })/?notificationNo=' + data[i]["NotificationNo"] + '"><i class="fa fa-eye"></i>' + data[i]["Title"] + '</a></b>&nbsp;&nbsp;<span class="pull-right">' + ToJavaScriptDate(data[i]["CreatedAt"]) + '</span></p><a href="@Url.Action("PreviewTicketDetails", "Tickets", new { area = "IFMISTZ" })/?notificationNo=' + data[i]["NotificationNo"] + '">' + data[i]["Message"] + '</a></div>'
+                        ]);
+                    } else {
+                        dt_notification_list.fnAddData([n,
+                       '<div id="Notification-' + i + '"> <p style="font-color:black"><b><i class="fa fa-eye"></i>' + data[i]["Title"] + '</b>&nbsp;&nbsp;<span class="pull-right">' + ToJavaScriptDate(data[i]["CreatedAt"]) + '</span></p>' + data[i]["Message"] + '</div>'
+                        ]);
+
+                    }
+                    n++;
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        /*IT WAS THIS BEFORE CHANGE*/
+        @*dt_notification_list.fnAddData([
+                          '<input style="width:35px !important;" type="checkbox" id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',
+                       '<div id="Notification-' + i + '"> <p style="font-color:black"><b><a href="@Url.Action("PreviewTicketDetails", "Tickets", new { area = "IFMISTZ" })/?notificationNo=' + data[i]["NotificationNo"] + '"><i class="fa fa-eye"></i>' + data[i]["Title"] + '</a></b>&nbsp;&nbsp;<span class="pull-right">' + ToJavaScriptDate(data[i]["CreatedAt"]) + '</span></p><a href="@Url.Action("PreviewTicketDetails", "Tickets", new { area = "IFMISTZ" })/?notificationNo=' + data[i]["NotificationNo"] + '">' + data[i]["Message"] + '</a><p class="pull-right" style="color:green;font-weight:bold;"><a href="#"  onclick="markAsRead(' + i + ')">Mark As Read</a></p></div>'
+        ]);*@
+        //END
+
+        /* END BASIC */
+        function markAsRead(i) {
+            $(`#Notification-${i}`).attr({ 'style': 'background-color:#D3D3D3' });
+
+            swal({
+                title: 'Mark as Read ?',
+                text: "Are you sure you want to Mark selected : " + data[i]["Title"] + " as Read, This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    markRead(data[i]["NotificationId"]);
+                } else {
+                    $(`#Notification-${i}`).attr({ 'style': 'background-color:white' });
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleConfirmButton();
+        }
+
+        function checkAll() {
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    var Id = data[i].a.NotificationId
+                    checkedRows.push(Id);
+                    $("#row-" + Id).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    var Id = data[i].a.NotificationId
+                    $("#row-" + Id).prop('checked', false);
+                }
+            }
+            toggleConfirmButton();
+        }
+        function toggleConfirmButton() {
+            if (checkedRows.length > 0) {
+                var data = dt_notification_list.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                });
+                $("#MarkBtn").attr('disabled', false);
+            } else {
+                $("#MarkBtn").attr('disabled', true);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var NotificationIds = [];
+        function MarkAsReadFunction() {
+            swal({
+                text: "Mark Selected Message as Read ?",
+                buttons: ["NO", "YES"],
+            }).then((mark) => {
+                if (mark) {
+                    postMarkAsRead();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postMarkAsRead() {
+            checkedRows.forEach(rowId => {
+                NotificationIds.push(data[rowId]['NotificationId']);
+            });
+
+            var url = '@Url.Action("MarkAsReadFunction", "Notification")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "NotificationIds": NotificationIds, "__RequestVerificationToken": $("[name=__RequestVerificationToken]").val()},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Operation Completed successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.href = '@Url.Action("NotificationList", "Notification")';
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function markRead(notificationId) {
+            var url = '@Url.Action("ReadNotification", "Notification")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": notificationId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Operation Completed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        //swal(response);
+                        swal("Error Marking as Read", { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Marking as Read", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+    </script>
+}

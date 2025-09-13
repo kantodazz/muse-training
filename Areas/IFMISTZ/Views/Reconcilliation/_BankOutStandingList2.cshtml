@@ -1,0 +1,90 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BankOutoStandingVw>
+
+    <div class="table-responsive table-condensed">
+        @{
+            int i = 0;
+            decimal? totalAmount = 0;
+        }
+        <table style="width:50%">
+            <tr>
+                <td>
+                    <strong>ACCOUNT NUMBER:</strong>
+                    @Model.Select(a => a.BankAccount).FirstOrDefault()
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>ACCOUNT NAME  :</strong>
+                    @Model.Select(a => a.AccountName).FirstOrDefault()
+                </td>
+            </tr>
+        </table>
+        <br />
+
+        @{ 
+            var groupKey = "";
+        }
+        @foreach (var group in Model.GroupBy(a => a.TransactionType))
+        {
+                if (group.Key.Trim() == "DR")
+                {
+
+                    groupKey = "Payment";
+                }
+                else
+                {
+                    groupKey = "Receipt";
+                }
+            <div class="group-header">               
+                @groupKey
+            </div>
+
+                                    <table class="table table-bordered table-condensed">
+
+                                        <thead>
+                                            <tr>
+                                                @*<th>Account Number</th>
+                                                    <th>Account Name</th>*@
+                                                <th>Date</th>
+                                                <th>RelatedReference</th>
+                                                <th>Description</th>
+                                                <th>type</th>
+                                                <th style="text-align:right">Amount</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var item in group)
+                                            {
+                                                i++;
+                                                totalAmount += item.Amount;
+                                                <tr>
+                                                    @*<td>@item.BankAccount</td>
+                                                        <td>@item.AccountName</td>*@
+                                                    <td>@string.Format("{0: dd/MM/yyyy}", item.StatementDate)</td>
+                                                    <td>@item.RelatedReference</td>
+                                                    <td>@item.TransactionDescription</td>
+                                                    <td>@group.Key</td>
+                                                    <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.Amount)</td>
+                                                </tr>
+                                            }
+                                            <tr class="group-footer" style="background:#f5f5f5; color:#000000">
+                                                <td colspan="3" style="text-align:right">Total</td>
+                                                <td style="text-align:right">
+                                                    @string.Format("{0:#,#.00;(#,#.00)}", group.Sum(x => x.Amount))
+                                                </td>
+                                            </tr>
+                                        </tbody>
+
+
+                                    </table>
+                    }
+    </div>
+
+                    }
+                    else
+                    {
+                        <p class="alert alert-info">
+                            No Bank Oustanding
+                        </p>
+                    }
+

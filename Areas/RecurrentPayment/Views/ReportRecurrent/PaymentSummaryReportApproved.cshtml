@@ -1,0 +1,108 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.PaymentSummaryReportApproved>
+
+@{
+    ViewBag.Title = "Payment Summary Approved Status Report";
+}
+
+
+<div id="content">
+
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">
+            <h3 class="panel-title">@ViewBag.OverallStatus -PAYMENT REPORT</h3>
+        </div>
+        <hr />
+
+        @using (Html.BeginForm(null, null, FormMethod.Post))
+        {
+            <table>
+
+                <tr>
+                    <td></td>
+                </tr>
+                <tr>
+
+                    <td>
+                        <p>
+                            <label for="StartDate">Start Date:</label>
+                            @Html.TextBox("StartDate")
+
+                            <label for="StartDate">To Date:</label>
+                            @Html.TextBox("EndDate")
+
+                            &nbsp;&nbsp;
+                            <button class="btn btn-default" type="button" onclick="search()">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                            &nbsp;&nbsp;
+                            <button type="submit" class="btn btn-default btn-flat btn-sm" formaction="PaymentSummaryApproved" formmethod="post">
+                                <span class="glyphicon glyphicon-print"></span>
+                            </button>
+                            &nbsp;&nbsp;
+                            <button type="submit" class="btn btn-default btn-flat btn-sm" formaction="PaymentSummaryApprovedExport" formmethod="post">
+                                <span class="glyphicon glyphicon-export"></span>
+                            </button>
+                        </p>
+
+                    </td>
+                </tr>
+
+            </table>
+        }
+        <div id="divLoader" style="text-align: center; display: none">
+            <img src="~/Media/Images/ajax_loader.gif" />
+        </div>
+
+        <div id="searchResults" style="margin-top: 20px; display: none"></div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $('#StartDate').datepicker();
+            $('#EndDate').datepicker();
+        });
+
+        var search = function () {
+            var startDate = $("#StartDate").val();
+            var endDate = $("#EndDate").val();
+
+
+            if (startDate == "" && endDate == "") {
+
+                alert("Please! Select Date Range")
+                return true;
+            }
+
+            var url = '@Url.Action("GetDateRangeReportApproved", "Report")';
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { startDate: startDate, endDate: endDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+
+                    if (response == "No Data Available") {
+                        alert("Sorry! No Data Available for the Given Range");
+                        location.reload();
+                    }
+                    else {
+                        $("#divLoader").hide();
+                    };
+
+                }
+            });
+        };
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+}

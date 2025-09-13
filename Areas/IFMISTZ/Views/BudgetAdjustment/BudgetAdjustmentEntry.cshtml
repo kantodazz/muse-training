@@ -1,0 +1,640 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+        input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+        width:250px;
+    }
+    table, th, tr, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        border-color: gray;
+        /*border-collapse: separate;*/
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 100%;
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+        tr:not([data-level='4']) {
+            cursor: pointer;
+        }
+
+        tr.expanded .sign:after {
+            content: url(/Media/Images/Minus3.png);
+        }
+
+        tr.folded .sign:after {
+            content: url(/Media/Images/Collapse2.png);
+            cursor: pointer;
+        }
+
+        td:first-child {
+            padding: inherit;
+        }
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+
+    thead {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    tfoot {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budget Adjustment - Entry</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                @if (ViewBag.ErrorMsgList != null)
+                                {
+                                    <div class="well form-horizontal">
+
+                                        <h4 style="color:red">Error/Warning List: </h4>
+                                        @foreach (string errorMessage in ViewBag.ErrorMsgList)
+                                        {
+                                            if (ViewBag.ErrorMsgList.Count == 1)
+                                            {
+                                                <h5 style="color:red">@errorMessage </h5>
+                                            }
+                                            else
+                                            {
+                                                <p>
+                                                    @errorMessage
+                                                </p>
+                                            }
+
+                                        }
+                                    </div>
+                                }
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <hr />
+
+                            @if (Model.Count() > 0)
+                            {
+                                <table border="0">
+                                    <thead>
+                                        <tr style="background:#f5f5f5; color:#000000">
+                                            <td colspan="3">Budget Type</td>
+                                            <td style="text-align: right">Ceiling Amount</td>
+                                            <td style="text-align: right">Budget Amount</td>
+                                            <td style="text-align: right">Balance Amount</td>
+                                            <td style="text-align: right">-</td>
+                                            <td style="text-align: right">-</td>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int i = 0;
+                                            decimal? grandTotal = 0;
+                                            decimal? balance = 0;
+                                            decimal? itemAmount = 0;
+                                            decimal ceilingAmount = 0;
+                                            decimal balanceAmount = 0;
+                                        }
+                                        @foreach (var group in Model.GroupBy(a => a.JournalType))
+                                        {
+                                            ceilingAmount = 0;
+                                            balanceAmount = 0;
+                                            List<int> budgetSummaryIdLIst = new List<int>();
+                                            budgetSummaryIdLIst.Add(-1);
+                                            foreach (var budgetEntry in group)
+                                            {
+                                                if (!budgetSummaryIdLIst.Contains((int)budgetEntry.BudgetSummaryId))
+                                                {
+                                                    ceilingAmount += (decimal)budgetEntry.CielingAmount;
+                                                    balanceAmount += (decimal)budgetEntry.BudgetBalance;
+                                                    budgetSummaryIdLIst.Add((int)budgetEntry.BudgetSummaryId);
+                                                }
+
+                                            }
+
+                                            grandTotal += group.Where(a => a.JournalType == group.Key).Sum(a => a.OperationalAmount);
+                                            itemAmount = (decimal)group.Where(a => a.JournalType == group.Key).Sum(a => a.OperationalAmount);
+
+                                            <tr data-level='1'>
+                                                <td colspan="3">
+                                                    <span class="sign"></span>
+                                                    @group.Key - @group.Where(a => a.JournalType == group.Key).Select(a => a.JournalTypeDesc).FirstOrDefault()
+                                                </td>
+                                                <td style="text-align:right">@string.Format("{0:#,0.00}", ceilingAmount)</td>
+                                                <td style="text-align:right">@string.Format("{0:#,0.00}", group.Where(a => a.JournalType == group.Key).Sum(a => a.OperationalAmount))</td>
+                                                <td style="text-align:right">@string.Format("{0:#,0.00}", balanceAmount)</td>
+                                                <td style="text-align:right">-</td>
+                                                <td style="text-align:right">-</td>
+                                             </tr>
+                                            foreach (var group1 in group.GroupBy(a => a.SubBudgetClass))
+                                            {
+                                                ceilingAmount = 0;
+                                                balanceAmount = 0;
+                                                budgetSummaryIdLIst = new List<int>();
+                                                budgetSummaryIdLIst.Add(-1);
+                                                foreach (var budgetEntry in group1)
+                                                {
+                                                    if (!budgetSummaryIdLIst.Contains((int)budgetEntry.BudgetSummaryId))
+                                                    {
+                                                        ceilingAmount += (decimal)budgetEntry.CielingAmount;
+                                                        balanceAmount += (decimal)budgetEntry.BudgetBalance;
+                                                        budgetSummaryIdLIst.Add((int)budgetEntry.BudgetSummaryId);
+                                                    }
+
+                                                }
+                                                grandTotal += group1.Where(a => a.SubBudgetClass == group1.Key).Sum(a => a.OperationalAmount);
+                                                itemAmount = (decimal?)group1.Where(a => a.SubBudgetClass == group1.Key).Sum(a => a.OperationalAmount);
+
+                                                <tr data-level='2'>
+                                                    <td colspan="3">
+                                                        <span class="sign"></span>
+                                                        @group1.Key - @group1.Where(a => a.SubBudgetClass == group1.Key).Select(a => a.SuBbudgetClassDesc).FirstOrDefault()
+                                                    </td>
+                                                    <td style="text-align:right">@string.Format("{0:#,0.00}", ceilingAmount)</td>
+                                                    <td style="text-align:right">@string.Format("{0:#,0.00}", group1.Where(a => a.SubBudgetClass == group1.Key).Sum(a => a.OperationalAmount))</td>
+                                                    <td style="text-align:right">@string.Format("{0:#,0.00}", balanceAmount)</td>
+                                                    <td style="text-align: right">-</td>
+                                                    <td style="text-align: right">-</td>
+
+                                                </tr>
+                                                foreach (var group2 in group1.GroupBy(a => a.FundingSource))
+                                                {
+                                                    ceilingAmount = 0;
+                                                    balanceAmount = 0;
+                                                    budgetSummaryIdLIst = new List<int>();
+                                                    budgetSummaryIdLIst.Add(-1);
+                                                    foreach (var budgetEntry in group2)
+                                                    {
+                                                        if (!budgetSummaryIdLIst.Contains((int)budgetEntry.BudgetSummaryId))
+                                                        {
+                                                            ceilingAmount += (decimal)budgetEntry.CielingAmount;
+                                                            balanceAmount += (decimal)budgetEntry.BudgetBalance;
+                                                            budgetSummaryIdLIst.Add((int)budgetEntry.BudgetSummaryId);
+                                                        }
+
+                                                    }
+
+                                                    grandTotal += group2.Where(a => a.FundingSource == group2.Key).Sum(a => a.OperationalAmount);
+                                                    itemAmount = (decimal?)group2.Where(a => a.FundingSource == group2.Key).Sum(a => a.OperationalAmount);
+                                                    // ceilingAmount = (decimal?)group2.Where(a => a.FundingSource == group2.Key).Select(a => a.CielingAmount).FirstOrDefault();
+                                                    balance = ceilingAmount - itemAmount;
+                                                    <tr data-level='3'>
+                                                        <td colspan="3">
+                                                            <span class="sign"></span>
+                                                            @group2.Key- @group2.Where(a => a.FundingSource == group2.Key).Select(a => a.FundingSourceDesc).FirstOrDefault()
+                                                        </td>
+                                                        <td style="text-align:right">@string.Format("{0:#,0.00}", ceilingAmount)</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,0.00}", group2.Where(a => a.FundingSource == group2.Key).Sum(a => a.OperationalAmount))</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,0.00}", balanceAmount)</td>
+                                                        <td style="text-align: right">-</td>
+                                                        <td style="text-align: right">-</td>
+                                                     </tr>
+                                                    foreach (var group3 in group2.GroupBy(a => a.CostCentre))
+                                                    {
+                                                        grandTotal += (decimal)group3.Where(a => a.CostCentre == group3.Key).Sum(a => a.OperationalAmount);
+                                                        <tr data-level='4'>
+                                                            <td colspan="3">
+                                                                <span class="sign"></span>
+                                                                @group3.Key- @group3.Where(a => a.CostCentre == group3.Key).Select(a => a.CostCentreDesc).FirstOrDefault()
+                                                            </td>
+                                                            <td style="text-align:right"> - </td>
+                                                            <td style="text-align:right">@string.Format("{0:#,0.00}", group3.Where(a => a.CostCentre == group3.Key).Sum(a => a.OperationalAmount))</td>
+                                                            <td style="text-align:right"> - </td>
+                                                            <td style="text-align: right">-</td>
+                                                            <td style="text-align: right">-</td>
+
+                                                        </tr>
+                                                        <tr data-level='5' style="background:#f5f5f5; color:#000000">
+                                                            <td>#</td>
+                                                            <td><b>GLAccount</b></td>
+                                                            <td><b>Description</b></td>
+                                                            <td><b>Overall Status</b></td>
+                                                            <td><b>Adjusted Status</b></td>
+                                                            <td style="text-align: right"><b>Total Amount</b></td>
+                                                            <td style="text-align: right"><b>Adjusted Amount</b></td>
+                                                            <td><b>Action</b></td>
+                                                        </tr>
+                                                        i = 0;
+                                                        foreach (var item in group3)
+                                                        {
+                                                            i++;
+                                                            <tr data-level='5'>
+                                                                <td>@i</td>
+                                                                <td>@item.GlAccount.Replace("|", "-")</td>
+                                                                <td>@item.GlAccountDesc</td>
+                                                                <td>@item.OverAllStatus</td>
+                                                                <td>@item.AdjustedStatus</td>
+                                                                <td style="text-align: right">
+                                                                    @string.Format("{0:#,0.00}", item.OperationalAmount)
+                                                                </td>
+                                                                <td style="text-align: right">
+                                                                    @string.Format("{0:#,0.00}", item.AdjustedOperationalAmount)
+                                                                </td>
+                                                                <td>
+                                                                    <div class="btn-group" id="cont-@item.BudgetDetailId">
+                                                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                            <span class="caret">
+                                                                            </span>
+                                                                            <span class="sr-only"></span>
+
+                                                                        </button>
+                                                                        <ul class="dropdown-menu">
+                                                                            <li><a href="#" onclick="Edit(@item.BudgetDetailId)">Edit</a></li>
+                                                                            @if (item.AdjustedStatus != "Approved" && item.AdjustedOperationalAmount != null)
+                                                                            {
+                                                                                <li><a href="#" onclick="Confirm(@item.BudgetDetailId)">Confirm</a></li>
+                                                                            }
+                                                                            <li><a href="#" onclick="Cancel(@item.BudgetDetailId)">Cancel</a></li>
+                                                                        </ul>
+                                                                    </div>
+                                                                    <img src="~/Content/img/loading.gif" 
+                                                                         id="saveLoader-@item.BudgetDetailId" 
+                                                                         style="visibility:hidden"
+                                                                         />
+                                                                </td>
+                                                            </tr>
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    </tbody>
+
+                                </table>
+                                            }
+
+                                            else
+                                            {
+                                                <div class="alert alert-info" role="alert">
+                                                    No Records!
+                                                </div>
+                                            }
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- Edit DIALOG ----------------->
+<div class="modal fade" id="editModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Enter a new amount</h4>
+            </div>
+                <div class="modal-body">
+                   <div class="row">
+                       <div class="col-md-2">
+                           <select id="ajustType">
+                               <option value="+">Dr(+)</option>
+                               <option value="-">Cr(-)</option>
+                           </select>
+                       </div>
+                       <div class="col-md-6">
+                           <amount-input id="amount"></amount-input>
+                       </div>
+                       <div class="col-md-4">
+                           <button class="btn btn-info" style="float:left" onclick="editItemConfirmed()">
+                               <i class="fa fa-save"></i>Save
+                           </button>
+                       </div>
+                   </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info delete-cancel" style="float:left" data-dismiss="modal">Cancel</button>
+                </div>
+        </div>
+
+    </div>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        function ImportBudget() {
+            $('#budgetModal').modal('show');
+        }
+
+
+        var datatable_tabletools = $('#datatable_tabletools').dataTable({
+            "autoWidth": true,
+            "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+            "bPaginate": false,
+            "info": true,
+        });
+
+        // GRAB THIS==================================
+        $("#searchbox").on("keyup search input paste cut", function () {
+            datatable_tabletools.DataTable().search(this.value).draw();
+        });
+
+        //END HERE ==========================================
+        $(function () {
+            $("#cboAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w3-check").prop('checked', true);
+                }
+                else {
+                    $(".w3-check").prop('checked', false);
+                }
+            });
+        })
+        $(function () {
+            $("#cboApprAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w4-check").prop('checked', true);
+                }
+                else {
+                    $(".w4-check").prop('checked', false);
+                }
+            });
+        })
+        var data = [];
+        var globalId = null;
+
+        //EDIT RECORD
+        function Edit(id) {
+            globalId = id;
+            $('#editModal').modal('show')
+        }
+        //=================== DELETE START =========================
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function editItemConfirmed() {
+            console.log(toNumber($("#_amount").val()))
+            if(toNumber($("#_amount").val()) != NaN){
+                var url = '@Url.Action("SaveBudgetAdjustment", "BudgetAdjustment")';
+                var amount = $("#ajustType").val() == "+" ? +toNumber($("#_amount").val()) : -toNumber($("#_amount").val())
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: { "BudgetDetailId": globalId, "Amount": amount },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }
+        }
+
+
+        function Confirm(id) {
+            swal({
+                title: 'Confirm this Adjustment?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    confirmed(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function confirmed(id) {
+
+            $("#saveLoader-" + id + "").css({ 'visibility': 'visible' })
+            $("#cont-" + id + "").toggle(false);
+            $("#saveLoader-" + id + "").toggle(true);
+            var url = '@Url.Action("Confirm", "BudgetAdjustment")';
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "BudgetDetailId": id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+   
+        function Cancel(id) {
+            swal({
+                title: 'Cancel this Budget?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    cancelled(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function cancelled(id) {
+            var url = '@Url.Action("Cancel", "BudgetAdjustment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "BudgetDetailId": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        $(document).ready(function () {
+
+            $("tbody > tr:not([data-level='1'])").hide();
+            $("tbody > tr:not([data-level='5'])").addClass("expandable sign folded");
+            $("tbody > tr")
+                .css("padding-left", function (index) {
+                    return 10 * parseInt($(this).data("level"), 10) + "px";
+                });
+
+            function range(lowEnd, highEnd) {
+                // assert lowEnd >= 0 and highEnd < 100
+                var validation = (lowEnd <= highEnd) && (lowEnd >= 0) && (highEnd < 10000);
+                if (!(validation)) {
+                    console.assert(validation,
+                                   'Function "range" received unlikely values: ' +
+                                   lowEnd + ' and ' + highEnd + "...");
+                } else {
+                    var arr = [];
+                    while (lowEnd <= highEnd) {
+                        arr.push(lowEnd++);
+                    }
+                    return arr;
+                }
+            }
+
+            function name_range(fun, lowEnd, highEnd) {
+                var arr = range(lowEnd, highEnd);
+                jQuery.each(arr, function (index, value) {
+                    arr[index] = fun(value);
+                });
+                return arr;
+            }
+
+            function create_selector(level) {
+                return "[data-level='" + level + "']";
+            }
+
+            $("tr.expandable").click(function () {
+                var this_level = parseInt($(this).data("level"), 10);
+                var this_level_selector = create_selector(this_level);
+                var next_level_selector = create_selector(this_level + 1);
+                var next_or_lower = name_range(create_selector,
+                this_level + 1, 10); // TODO: find last level
+                var this_or_higher = name_range(create_selector, 0, this_level);
+                var node = $(this).nextUntil(this_or_higher.join(","));
+                // different behaviour according to state (expanded / folded):
+                if ($(this).hasClass("expanded")) {
+                    $(node).filter(next_or_lower.join(",")).hide();
+                    $(node).not("expanded").removeClass("expanded").addClass('folded');
+                    $(this).removeClass("expanded").addClass('folded');
+
+
+                } else {
+                    $(node).filter(next_level_selector).show();
+                    $(this).addClass("expanded").removeClass('folded');
+
+
+                }
+            });
+        });
+
+        $("#ApplyDate").on("keyup search input paste cut", function () {
+            $("#ApplyDate_tween").val(this.value);
+        });
+    </script>
+}

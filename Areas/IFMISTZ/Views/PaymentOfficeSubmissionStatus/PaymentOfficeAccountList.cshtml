@@ -1,0 +1,264 @@
+﻿
+@{
+    ViewBag.Title = "Accounts Status";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 5px;
+        padding-left: 5px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        flex-direction: row;
+    }
+
+    .searchIcon {
+        margin-top: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    table td:nth-child(7) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .row-align {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body" style="padding-top:10px">
+                            <div class="row-align">
+                                <div>
+                                    <button class="btn btn-info" id="ChangeStatusBtn" onclick="ChangeOfficeStatus(this)">
+                                        <i class="fa fa-file-text-o"></i> <span id="ChangeStatusText">Activate</span>
+                                    </button>
+                                </div>
+                                <div>
+                                    <strong>Account Status: </strong>
+                                    <select id="PaymentOfficeStatus" style="background-color:#ECF3F8" class="filters">
+                                        <option value="Active">Active</option>
+                                        <option value="Inactive">Inactive</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_paymentOffice" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Account No</th>
+                                        <th>Account Name</th>
+                                        <th>Bank Name</th>
+                                        <th>BIC</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        var dt_paymentOffice = $('#dt_paymentOffice').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_paymentOffice_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_paymentOffice.DataTable().search(this.value).draw();
+        });
+
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPaymentAccountList", "PaymentOfficeSubmissionStatus")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                $("#PaymentOfficeStatus").trigger('change');
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        $(".filters").change(function () {
+            if ($("#PaymentOfficeStatus").val() == "Active") {
+                $("#ChangeStatusText").text("Deactivate");
+            }
+            else {
+                $("#ChangeStatusText").text("Activate");
+            }
+            filterTableData();
+            checkedRows = [];
+        })
+
+        function filterTableData() {
+            let _data = data.filter((row) => row.OverallStatus == $("#PaymentOfficeStatus").val());
+            displayData(_data)
+        }
+
+        function displayData(_data) {
+            console.log({_data})
+            dt_paymentOffice.fnClearTable();
+            for (var i = 0; i < _data.length; i++) {
+                var PaymentAccountSubmissionStatusId = _data[i].PaymentAccountSubmissionStatusId
+                    dt_paymentOffice.fnAddData([i + 1,
+                        _data[i]["AccountNumber"],
+                        _data[i]["AccountName"],
+                        _data[i]["BankName"],
+                        _data[i]["BIC"],
+                        _data[i]["OverallStatus"],
+                        '<input  type="checkbox" id="row-' + PaymentAccountSubmissionStatusId + '" onchange="rowChecked(' + PaymentAccountSubmissionStatusId + ')"/>'
+                    ]);
+            }
+        }
+
+        var checkedRows = [];
+        function rowChecked(PaymentAccountSubmissionStatusId) {
+            if ($("#row-" + PaymentAccountSubmissionStatusId).is(":checked")) {
+                checkedRows.push(PaymentAccountSubmissionStatusId);
+            } else {
+                remove(checkedRows, PaymentAccountSubmissionStatusId);
+            }
+        }
+
+        function ChangeOfficeStatus() {
+            var url = '@Url.Action("ChangeOfficeAccountStatus", "PaymentOfficeSubmissionStatus")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "accountIdz": checkedRows, "status": $("#PaymentOfficeStatus").val() },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Account status changed successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+    </script>
+}
+
+

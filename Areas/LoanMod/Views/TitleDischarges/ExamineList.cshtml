@@ -1,0 +1,713 @@
+﻿
+@{
+    ViewBag.Title = "Confirmation List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <hr class="simple" />
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Customer Name</th>
+                                        <th>Application Number</th>
+                                        <th>Loan Purpose</th>
+                                        <th>Applied Amount</th>
+                                        <th>Approved Amount</th>
+                                        <th>Disbursed Amount</th>
+                                        <th>OverAllStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="Remarks1" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachment" id="Attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="ExamineForm()" id="examineform">
+                        <i class="fa fa-times"></i>Verify
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="SubmitModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="Remarks2" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachment" id="Attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="SubmittedForm()" id="submittedform">
+                        <i class="fa fa-times"></i>Submit
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="RejectModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Reject</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="Remarks1" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                           
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="RejectForm()" id="rejectform">
+                        <i class="fa fa-times"></i>Reject
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="attachModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Attachment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachment" id="fileAttachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                        <br/>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="AttachForm()" id="attachform">
+                        <i class="fa fa-times"></i>Save
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("getConfirmationList", "TitleDischarges")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                console.log(response);
+                data = response.data;
+                dt_Loan_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_Loan_listing.fnAddData([i + 1,
+                       data[i]["CustomerName"],
+                       data[i]["ApplicationNo"],
+                       data[i]["LoanPurpose"],
+                       data[i]["AppliedLoanAmount"],
+                       data[i]["LoanApprovedAmount"],
+                       data[i]["DisbursedAmount"],
+                       data[i]["OverAllStatus"],
+                       action(i, data[i]["OverAllStatus"])
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+       function LoanExamine(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#commentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function ExamineForm() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remarks = $("#Remarks1").val();
+            var Attachment = $("#Attachment").val();
+
+            if (LoanApplicationId == '' || Remarks == '') {
+                var url = '@Url.Action("ExamineList", "TitleDischarges")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('ModuleId', LoanApplicationId);
+            formData.append('Remarks', Remarks);
+            formData.append('Attachment', $("#Attachment")[0].files[0]);
+
+            Examined(formData);
+        }
+
+        function Examined(formData) {
+            $(".loadingImg").show();
+            $("#examineform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Examination", "TitleDischarges")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#examineform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Record Verified successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#examineform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    $("#examineform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        function Reject(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#RejectModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function RejectForm() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remarks = $("#Remarks").val();
+            var Attachment = $("#Attachment").val();
+
+            if (LoanApplicationId == '' || Remarks == '') {
+                var url = '@Url.Action("ExamineList", "TitleDischarges")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('ModuleId', LoanApplicationId);
+            formData.append('Remarks', Remarks);
+            formData.append('Attachment', $("#Attachment")[0].files[0]);
+
+            rejected(formData);
+        }
+
+        function rejected(formData) {
+            $(".loadingImg").show();
+            $("#rejectform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("RejectionExamination", "TitleDischarges")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#rejectedform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Record Rejected successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#rejectform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    $("#rejectform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+       
+
+        function action(i, overallStatus) {
+            debugger
+            if (overallStatus == "Confirmed in Title Discharge" || overallStatus =="Rejected by Approval in TitleDischarge") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ViewLoanDetails","ViewLoanApplication")/?id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                                <li><a href="#" onclick="LoanExamine(' + i + ')">Verify</a></li>\
+                                <li><a href="#" onclick= "Reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+            if (overallStatus == "Verified in TitleDischarge") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ViewLoanDetails","ViewLoanApplication")/?id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                                <li><a href="#" onclick="printTitleDischarge('+ i +')">Print Discharge Form</a></li>\
+                                <li><a href="#" onclick="fileAttach(' + i + ')">Attach</a></li>\
+                                <li><a href="#" onclick= "Reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+
+            }
+
+            if (overallStatus == "Discharge Form Uploaded in TitleDischarge") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ViewLoanDetails","ViewLoanApplication")/?id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                                <li><a href="#" onclick="LoanExamine(' + i + ')">Print Discharge Form </a></li>\
+                                <li><a href="#" onclick="fileAttach(' + i + ')">Attach</a></li>\
+                                <li><a href="#" onclick="Submission(' + i + ')">Submission</a></li>\
+                                <li><a href="#" onclick= "Reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+
+            }
+        }
+
+
+        function fileAttach(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#attachModal').modal('show');
+        }
+        function AttachForm() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var fileattachment = $("#fileAttachment").val();
+
+            if (fileattachment == '') {
+                var url = '@Url.Action("ExamineList", "TitleDischarges")';
+                swal("Please Select File to Upload", { icon: "warning" }).then((e) => {
+
+                });
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#fileAttachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format", { icon: "warning" }).then((e) => {
+
+                    });
+                    return false;
+                }
+            }
+            debugger
+            //var form_data = {
+            //    "Attachment": $("#fileAttachment")[0].files[0],
+            //    "LoanApplicationId": $("#LoanApplicationId").val(),
+            //}
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('LoanApplicationId', LoanApplicationId);
+            formData.append('Attachment', $("#fileAttachment")[0].files[0]);
+
+            fileAttched(formData);
+        }
+
+        function fileAttched(formData) {
+            debugger
+            $(".loadingImg").show();
+            $("#attachform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("fileAttachment", "TitleDischarges")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#attachform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("File Attached successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#attachform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    $("#attachform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        function Submission(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#SubmitModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function SubmittedForm() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remarks = $("#Remarks2").val();
+            var Attachment = $("#Attachment").val();
+
+            if (LoanApplicationId == '' || Remarks == '') {
+                var url = '@Url.Action("ExamineList", "TitleDischarges")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('ModuleId', LoanApplicationId);
+            formData.append('Remarks', Remarks);
+            formData.append('Attachment', $("#Attachment")[0].files[0]);
+
+            Submitted(formData);
+        }
+
+        function Submitted(formData) {
+            $(".loadingImg").show();
+            $("#examineform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Submission", "TitleDischarges")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#examineform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Record Submitted successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#examineform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    $("#examineform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        function printTitleDischarge(i) {
+            var TitleDischargeId = data[i]["TitleDischargeId"],
+                reportUrl = "@ViewBag.reportUrlName" + "PrintTitleDischarge.aspx",
+                queryString = "titleDischargeId=" + TitleDischargeId;
+                $.ajax({
+                        type: "GET",
+                        url: '@Url.Action("ParameterEncryption", "LoanReport", new {area = "LoanMod"})',
+                        contentType: "application/json; charset=utf-8",
+                        datatype: "json",
+                        data: { "query": queryString },
+                        success: function (response) {
+                            window.open(reportUrl + response);
+                        }
+                });
+        }
+
+    </script>
+}

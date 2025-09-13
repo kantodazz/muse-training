@@ -1,0 +1,203 @@
+﻿@{
+    ViewBag.Title = "Payees";
+}
+
+<!-- MAIN CONTENT -->
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <section id="widget-grid" class="">
+
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Approved Payees </h2>
+
+                    </header>
+                    <div>
+
+                        <div class="jarviswidget-editbox">
+
+                        </div>
+                        <div class="widget-body">
+                            <hr />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Payee Code</th>
+                                        <th>Payee Name</th>
+                                        <th>Created by</th>
+                                        <th>Institution Name</th>
+                                        <th>Phone Number</th>
+                                        <th>Payee Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+
+                                <tbody></tbody>
+
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+<div id="divLoader"></div>
+@section Scripts{
+    <script>
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+           /* $("#divLoader").show();*/
+            var url = '@Url.Action("GetApprovedPayees","Payees")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "PayeeCode" },
+                    { "mData": "PayeeName" },
+                    { "mData": "CreatedBy" },
+                    { "mData": "InstitutionName" },
+                    { "mData": "PhoneNumber2" },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "PayeeId",
+                        "bSortable": false,
+                        "render": function (PayeeId, type, full, meta) {
+                           /* $("#divLoader").hide();*/
+                            @*return '<a href="@Url.Action("UserDetails", "Manage")/' + Id + '"><i class="glyphicon glyphicon-eye-open"></i></a>'*@
+                            return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("PayeeDetails", "Payees")/' + PayeeId + '">Details</a></li><span>\</span>\
+                                @if (User.IsInRole("Payee Entry"))
+                                  {
+                                 <li><a href="#" onclick="checkTIN(' + PayeeId + ')">Add Payee Account</a></li>{ <span>\</span> }
+                                  }\
+                                @if (User.IsInRole("Payee Verification") )
+                                 {
+                                 <li><a href="#" onclick="verifyPayee(' + PayeeId + ')">Verify</a></li>{ <span>\</span> }
+                                 }\
+                                 <li><a href="@Url.Action("EditPayeeType", "Payees")/' + PayeeId + '">Edit Payee Type</a></li><span>\</span>\
+                            </ul>\
+                        </div>'
+                        }
+                    },
+                ]
+            });
+        };
+        var verifyPayee = function (id) {
+            swal({
+                text: "Are you sure you want to verify this Payee?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    $("#divLoader").show();
+                    var url = '@Url.Action("verifyPayee", "Payees")';
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            $("#divLoader").hide();
+                            if (response == "Success") {
+                                swal({
+                                    text: "verified successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                            else {
+                                swal({
+                                    text: response,
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (response) {
+                            swal({
+                                text: response,
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        }
+                    });
+                }
+            });
+        }
+        function checkTIN(payeeId) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("CheckTraPayee", "Payees")',
+                data: { payeeId},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (data) {
+                    if (data.success) {
+                        swal("You can't add account to this payee!");
+                    } else {
+
+                        //swal("You can add account!");
+                        window.location = '@Url.Action("AddPayeeAccount", "Payees")/?payeeId=' + payeeId + '';
+                    }
+                    $("#saveLoaderTIN").toggle(false);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,85 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.EFTPaymentHistoryVM
+
+
+@{
+    ViewBag.Title = "";
+}
+
+
+<div id="content">
+
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">
+            <h3 class="panel-title">EFT PAYMENT HISTORY.</h3>
+        </div>
+        <hr />
+        <div class="panel-body">
+            @using (Html.BeginForm(null, null, FormMethod.Post))
+            {
+                <div class="form-horizontal">
+                    <div class="form-group">
+                        @Html.LabelFor(model => model.PrefundingRef, htmlAttributes: new { @class = "control-label col-md-2" })
+                        <div class="col-md-3">
+                            @Html.TextBoxFor(model => model.PrefundingRef, new { @class = "form-control", @placeholder = "Enter Prefunding Reference.." })
+                        </div>
+
+                        <button class="btn btn-default" type="button" onclick="search()">
+                            <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                        </button>
+                    </div>
+                </div>
+            }
+            <div id="divLoader" style="text-align: center; display: none">
+                <img src="~/Media/Images/ajax_loader.gif" />
+            </div>
+
+            <div id="searchResults" style="margin-top: 20px; display: none"></div>
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $('#PrefundingRef').val();
+        });
+
+        var search = function () {
+            var prefundingReference = $("#PrefundingRef").val();
+
+            if (prefundingReference == "") {
+
+                alert("Enter Prefunding Reference.")
+                return false;
+            }
+
+            var url = '@Url.Action("GetEFTPaymentsHistory", "Report")';
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { prefundingReference: prefundingReference },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+
+                    if (response == "No Data Available") {
+                        alert("Sorry! Entered Prefunding Reference Does not Exist.Try Again");
+                        location.reload();
+                    }
+                    else {
+                        $("#divLoader").hide();
+                    };
+                }
+            });
+        };
+
+        function goBack() {
+            window.history.back();
+        }
+    </script>
+
+}

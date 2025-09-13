@@ -1,0 +1,260 @@
+﻿@model IFMIS.Areas.LoanMod.Models.LoanCustomerVM
+@{
+    ViewBag.Title = "Create Collateral Info";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .backgroundColor {
+        background: #ff0000;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadLoanForm" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="row" style="padding:1% 5% 0 5%;">
+                                    <div class="col-lg-3 col-sm-12 "></div>
+                                    <div class="col-md-6 col-lg-6 col-sm-12 ">
+                                        <table>
+                                            <tr>
+                                                <td class="form-label">
+                                                    Collateral Information
+                                                    <i class="fa fa-times" style="color:white"></i>
+                                                </td>
+                                                <td>
+                                                    <div class="name-input-container submit-btn">
+                                                        <input type="file" required id="ExcelFileName" name="ExcelFileName" placeholder="Upload Customer Info" style="width:260px" />
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr><td>Sample File</td><td><a href="">Download</a></td></tr>
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <a class="btn btn-info" href='@Url.Action("LoanApplicationList", "LoanApplication")' style="margin-right:5px">
+                                                        <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                                    </a>
+                                                    <button type="button" onclick="upload()" class="btn btn-info">
+                                                        <i class="fa fa-save"></i>Save
+                                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-lg-3 col-sm-12 "></div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $("#saveLoader").toggle(false);
+        var uploadLoanForm = function () {
+            if (window.FormData !== undefined) {
+                if (!$("#uploadLoanForm").valid()) {
+                    return false;
+                }
+                var data = new FormData();
+                var file = $("#ExcelFileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("ExcelFileName", file[0]);
+                    data.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+                }
+                var url = '@Url.Action("UploadLoanCollateral", "LoanBackLog")';
+                $("#saveLoader").toggle(true);
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        } else if (response == "InvalidFormat") {
+                            swal("Invalid file format, file format should be MS Excel 2007 !", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        } else if (response == "LoanNoFail") {
+                            swal("Loan does not exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+
+                        else if (response == "CollateralTypeFail") {
+                            swal("Collateral Type  does not exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+
+                        else if (response == "CollateralExist") {
+                            swal("Some Collateral Already Exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+                        
+                        else if (response == "WardFail") {
+                            swal("Ward does not exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+                        else {
+                            swal(response + " An error has occured, contact system support", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                        $("#saveLoader").toggle(false);
+                    }
+                });
+            };
+        };
+
+        function upload() {
+
+            swal({
+                title: "Upload",
+                text: "Are you sure you want to Upload Loan Collateral Information? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    uploadLoanForm();
+                }
+            });
+        }
+    </script>
+}

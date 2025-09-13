@@ -1,0 +1,827 @@
+﻿@{
+    ViewBag.Title = "Debt Collector list";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+
+                                <div class="col-md-3">
+
+                                </div>
+                                <div class="col-md-3">
+
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Customer Name</th>
+                                        <th>Application Number</th>
+                                        <th>Loan Purpose</th>
+                                        <th>Applied Amount</th>
+                                        <th>Approved Amount</th>
+                                        <th>Disbursed Amount</th>
+                                        <th>OverAllStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div id="display">
+                            <fieldset class="scheduler-border">
+                                <legend class="scheduler-border">Debt Collector Information</legend>
+                                <div style="padding-left:20px">
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <table>
+                                                <tr>
+                                                    <th>1. Start Date: </th>
+                                                    <td id="StartDate"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>2.Debt Collector:</th>
+                                                    <td id="Collector"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>3.Remark:</th>
+                                                    <td id="Remark"></td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <table>
+                                                <tr>
+                                                    <th>4.End Date:</th>
+                                                    <td id="EndDate"></td>
+                                                </tr>
+                                                <tr>
+                                                    <th>5.Rate of Payment:</th>
+                                                    <td id="Rate"></td>
+                                                </tr>
+
+
+
+
+                                            </table>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        </div>
+                        <fieldset class="scheduler-border">
+                            <legend class="scheduler-border">Loan Information</legend>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>1.Customer Name: </th>
+                                                <td id="CustomerName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2.Application Number:</th>
+                                                <td id="ApplicationNumber"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3.Approved Amount:</th>
+                                                <td id="ApprovedAmount"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>4.Apply Date:</th>
+                                                <td id="ApplyDate"></td>
+                                            </tr>
+
+                                        </table>
+
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>5.Loan Purpose:</th>
+                                                <td id="LoanPurpose"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>6.Applied Amount:</th>
+                                                <td id="AppliedAmount"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>7.Disbursed Amount:</th>
+                                                <td id="DisbursedAmount"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>8.OverallStatus:</th>
+                                                <td id="OverAllStatus"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </fieldset>
+                        <br />
+                        <fieldset class="scheduler-border">
+                            <legend class="scheduler-border">Attachment</legend>
+                            <table id="dt_bulkyPayment_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>File</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </fieldset>
+
+                        <fieldset class="scheduler-border">
+                            <legend class="scheduler-border">Remark(s)</legend>
+                            <table id="dt_remark_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>ModuleId</th>
+                                        <th>ModuleName</th>
+                                        <th>OverAllStatus</th>
+                                        <th>Remarks</th>
+                                        <th>Attachment</th>
+                                        <th>Destination</th>
+                                        <th>Created At</th>
+                                        <th>CreatedBy</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </fieldset>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="UpdateModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Update Status</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Monitoring Status:
+                                    <i class="fa fa-times" style="color:white" id="Status1"></i>
+                                </td>
+                                <td>
+                                    <select id="Status" style="width:300px">
+                                        <option value="Please choose Status" selected="selected">Select Status</option>
+                                        @foreach (var status in ViewBag.Status)
+                                        {
+                                            <option value='@status.LoanStatusName'>@status.LoanStatusName</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+
+
+                            <tr id="Reschedule1">
+                                <td class="form-label">
+                                    Rescheduling Type:
+                                    <i class="fa fa-times" style="color:white" id="ReschedulingTypeName1"></i>
+                                </td>
+                                <td>
+                                    <select id="ReschedulingTypeName" style="width:300px">
+                                        <option value="Please choose Status" selected="selected">Select Status</option>
+                                        @foreach (var rescheduleType in ViewBag.RescheduleType)
+                                        {
+                                            <option value='@rescheduleType.ReschedulingTypeName'>@rescheduleType.ReschedulingTypeName</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+
+                            <tr id="Reschedule2">
+                                <td class="form-label">
+                                    Start Date:
+                                    <i class="fa fa-times" style="color:white" id="StartDate1"></i>
+                                </td>
+                                <td>
+                                    <div class="flatpickr date-group">
+                                        <input type="text" placeholder="Select Date.."
+                                               data-input
+                                               style="width:262px;padding-left:10px;border:none"
+                                               autocomplete="off" id="StartDate">
+                                        <a class="input-button" title="open" data-toggle href="#">
+                                            <span class="input-group-addon" style="height:32px"><i class="fa fa-calendar"></i></span>
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+
+
+                            @*<tr>
+                                <td class="form-label">
+                                    Reasons:
+                                    <i class="fa fa-times" style="color:white" id="Reasons1"></i>
+                                </td>
+                                <td>
+                                    <textarea style="width:300px" rows="2" id="Reason" maxlength="350"></textarea><br />
+                                </td>
+                            </tr>*@
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="Remarks1" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachment" id="Attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                            <br/>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="btnSave()" id="Verifiedform">
+                        <i class="fa fa-times"></i>Save
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="FeeModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Create Fee</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Amount:
+                                    <i class="fa fa-times" style="color:white" id="Amount1"></i>
+                                </td>
+                                <td>
+                                    <input id="Amount" style="width:300px;" type="text">
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Description:
+                                    <i class="fa fa-times" style="color:white" id="Description1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="Description" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                            <br />
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="btnSaveFee()" id="btnSaveform">
+                        <i class="fa fa-times"></i>Save
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("getLoanCollectorList", "DebtCollectors")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_Loan_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_Loan_listing.fnAddData([i + 1,
+                       data[i]["CustomerName"],
+                       data[i]["ApplicationNo"],
+                       data[i]["LoanPurpose"],
+                       data[i]["AppliedLoanAmount"],
+                       data[i]["LoanApprovedAmount"],
+                       data[i]["DisbursedAmount"],
+                       data[i]["OverAllStatus"],
+                         '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">View Loan</a></li>\
+                                <li><a href="@Url.Action("AddCollectorInfo", "DebtCollectors")/?id=' + data[i]["LoanApplicationId"] + '">Add</a></li>\
+                                <li><a href="#" onclick="Update(' + i + ')">Update Status</a></li>\
+                                <li><a href="#" onclick="CreateFee(' + i + ')">Create Fee</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+                }
+
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        var dt_bulkyPayment_detail = $('#dt_bulkyPayment_detail').dataTable();
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_bulkyPayment_detail.DataTable().search(this.value).draw();
+        });
+        $("#dt_bulkyPayment_detail_wrapper .dt-toolbar").remove();
+
+
+        var dt_remark_detail = $('#dt_remark_detail').dataTable();
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_remark_detail.DataTable().search(this.value).draw();
+        });
+        $("#dt_remark_detail_wrapper .dt-toolbar").remove();
+
+
+        function openViewDialog(i) {
+            globalPayeeId = i;
+
+            //*******************************//
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("getCollectorInfoList", "DebtCollectors")' + "/?applicationid=" + data[i]["LoanApplicationId"],
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    ldata = response.ldata;
+                    $("#StartDate").text(ldata.StartDate);
+                    $("#EndDate").text(ldata.EndDate);
+                    $("#Collector").text(ldata.NameDebtCollector);
+                    $("#Rate").text(ldata.Rate);
+                    $("#Remark").text(ldata.Remark);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+            //********************************8
+            $("#CustomerName").text(data[i]["CustomerName"]);
+            $("#ApplicationNumber").text(data[i]["ApplicationNo"]);
+            $("#LoanPurpose").text(data[i]["LoanPurpose"]);
+            $("#DisbursedAmount").text(data[i]["DisbursedAmount"]);
+            $("#AppliedAmount").text(data[i]["AppliedLoanAmount"]);
+            $("#ApprovedAmount").text(data[i]["LoanApprovedAmount"]);
+            $("#ApplyDate").text(data[i]["ApplyDate"]);
+            $("#OverAllStatus").text(data[i]["OverAllStatus"]);
+
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetAttachmentList", "LoanMonitoring")' + "/?applicationid=" + data[i]["LoanApplicationId"] + "&&source=" + data[i]["MonitoringStatus"],
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    _data = response._data;
+                    dt_bulkyPayment_detail.fnClearTable();
+                    for (var i = 0; i < _data.length; i++) {
+                        dt_bulkyPayment_detail.fnAddData([i + 1,
+                           _data[i]["AttachmentTitle"],
+                           _data[i]["SourceModule"],
+                           '<a href="/Content/uploads/' + _data[i]["AttachmentName"] + '"target="_blank"><i class="fa fa-file-pdf-o"></i></a>',
+                           _data[i]["FCreatedAt"],
+
+                        ]);
+                    }
+
+                    if (_data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+            //Remark
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetRemarkList", "LoanMonitoring")' + "/?applicationid=" + data[i]["LoanApplicationId"] + "&&source=" + data[i]["MonitoringStatus"],
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    _datar = response._datar;
+                    dt_remark_detail.fnClearTable();
+                    for (var i = 0; i < _datar.length; i++) {
+                        dt_remark_detail.fnAddData([i + 1,
+                           _datar[i]["ModuleId"],
+                           _datar[i]["ModuleName"],
+                           _datar[i]["OverAllStatus"],
+                           _datar[i]["Remarks"],
+                           '<a href="/Content/uploads/monitoring/' + _datar[i]["Attachment"] + '" target="_blank"><i class="fa fa-file-pdf-o"></i></a>',
+                           _datar[i]["Destination"],
+                           _datar[i]["FCreatedAt"],
+                           _datar[i]["CreatedBy"],
+                        ]);
+                    }
+
+                    if (_datar.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+            $('#confirmModal').modal('show');
+        }
+
+
+      function Update(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#UpdateModal').modal('show');
+        }
+
+        $('#Reschedule1').toggle(false)
+        $('#Reschedule2').toggle(false)
+        $('#auctioneer1').toggle(false)
+        $('#auctioneer2').toggle(false)
+        $('#auctioneer3').toggle(false)
+        $('#auctioneer4').toggle(false)
+        $('#auctioneer5').toggle(false)
+        $('#debtCollector1').toggle(false)
+        $('#case1').toggle(false)
+
+        $("#Status").change(function () {
+            var status = $("#Status").val();
+            if (status == "Reschedule") {
+                $('#Reschedule1').toggle(true)
+                $('#Reschedule2').toggle(false)
+                $('#auctioneer1').toggle(false)
+                $('#auctioneer2').toggle(false)
+                $('#auctioneer3').toggle(false)
+                $('#auctioneer4').toggle(false)
+                $('#auctioneer5').toggle(false)
+                $('#debtCollector1').toggle(false)
+                $('#case1').toggle(false)
+            } else if (status == "Auction") {
+                $('#auctioneer1').toggle(true)
+                $('#auctioneer2').toggle(true)
+                $('#auctioneer3').toggle(true)
+                $('#auctioneer4').toggle(true)
+                $('#auctioneer5').toggle(true)
+                $('#Reschedule1').toggle(false)
+                $('#Reschedule2').toggle(false)
+                $('#debtCollector1').toggle(false)
+                $('#case1').toggle(false)
+            } else if (status == "Debt Collector") {
+                $('#debtCollector1').toggle(true)
+                $('#auctioneer1').toggle(true)
+                $('#auctioneer2').toggle(true)
+                $('#auctioneer3').toggle(false)
+                $('#auctioneer4').toggle(false)
+                $('#auctioneer5').toggle(true)
+                $('#Reschedule1').toggle(false)
+                $('#Reschedule2').toggle(false)
+            } else if (status == "Legal") {
+                $('#Reschedule1').toggle(false)
+                $('#Reschedule2').toggle(false)
+                $('#auctioneer1').toggle(false)
+                $('#auctioneer2').toggle(false)
+                $('#auctioneer3').toggle(false)
+                $('#auctioneer4').toggle(false)
+                $('#auctioneer5').toggle(false)
+                $('#debtCollector1').toggle(false)
+                $('#case1').toggle(true)
+            }
+        });
+
+        $("#ReschedulingTypeName").change(function () {
+            var status = $("#ReschedulingTypeName").val();
+            if (status == "Advance") {
+                $('#Reschedule2').toggle(true)
+                $('#auctioneer1').toggle(false)
+                $('#auctioneer2').toggle(false)
+                $('#auctioneer3').toggle(false)
+                $('#auctioneer4').toggle(false)
+                $('#auctioneer5').toggle(false)
+                $('#debtCollector1').toggle(false)
+                $('#case1').toggle(false)
+            } else {
+                $('#Reschedule2').toggle(false)
+                $('#auctioneer1').toggle(false)
+                $('#auctioneer2').toggle(false)
+                $('#auctioneer3').toggle(false)
+                $('#auctioneer4').toggle(false)
+                $('#auctioneer5').toggle(false)
+                $('#debtCollector1').toggle(false)
+                $('#case1').toggle(false)
+            }
+        });
+
+        $(".saveLoader").toggle(false);
+        function btnSave() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remark = $("#Remarks1").val();
+            var Attachment = $("#Attachment").val();
+            var LifeStatus = $("#LifeStatus").val();
+            var Status= $("#Status").val();
+            var StartDate = $("#StartDate").val();
+            var LoanReschedulingType = $("#ReschedulingTypeName").val();
+
+            if (LoanApplicationId == '' || Remark == '') {
+                var url = '@Url.Action("DebtCollectorList", "DebtCollectors")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+            var form_data = {
+                "LifeStatus": $("#LifeStatus").val(),
+                "Status": $("#Status").val(),
+                "StartDate": $("#StartDate").val(),
+                "LoanReschedulingType": $("#ReschedulingTypeName").val(),
+                "Remark": $("#Remarks1").val(),
+                "LoanApplicationId": $("#LoanApplicationId").val(),
+                "Attachment":$("#Attachment").val(),
+              }
+
+            $(".loadingImg").show();
+            $("#Verifiedform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("UpdateStatus", "DebtCollectors")';
+            var urlList = '@Url.Action("DebtCollectorList", "DebtCollectors")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#Verifiedform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        $("#Verifiedform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#Verifiedform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        function CreateFee(i) {
+            $("#LoanApplicationId").text(data[i]["LoanApplicationId"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#FeeModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function btnSaveFee() {
+            debugger
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Amount = $("#Amount").val();
+            var description = $("#Description")
+
+            if (LoanApplicationId == '' || Amount == '') {
+                var url = '@Url.Action("DebtCollectorList", "DebtCollectors")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            var form_data = {
+                "FeeAmount": $("#Amount").val(),
+                "LoanApplicationId": $("#LoanApplicationId").val(),
+                "FeeDescription": $("#Description").val(),
+            }
+
+            $(".loadingImg").show();
+            $("#btnSaveform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("CreateFee", "DebtCollectors")';
+            var urlList = '@Url.Action("DebtCollectorList", "DebtCollectors")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#btnSaveform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        $("#btnSaveform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#btnSaveform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,1199 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Edit Inventory";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .row-align {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br/>
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Edit Inventory </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                       
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitInventory(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.InventoryDetailId)
+                                @Html.HiddenFor(model => model.CoaId)
+                            <div class="form-horizontal">
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.MonetaryEntry, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownList("MonetaryEntry", new List<SelectListItem>
+                                            {
+                                            new SelectListItem{ Text="--Select--", Value = "" },
+                                            new SelectListItem{ Text="Monetary", Value = "Monetary" },
+                                            new SelectListItem{ Text="Non Monetary", Value = "NonMonetary" },
+                                            }, new { @class = "form-control select2" })
+                                    </div>
+                                    @Html.LabelFor(model => model.ApplyDate, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.ApplyDate, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.ApplyDate, "", new { @class = "text-danger" })
+                                    </div>
+
+                                </div>
+
+                                <div class="form-group">
+
+                                    @Html.LabelFor(model => model.InventorySBCSetupId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+
+                                        @Html.DropDownListFor(model => model.InventorySBCSetupId, Model.SubBudgetClassList, "Select ", new { @class = "form-control select2", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.InventorySBCSetupId, "", new { @class = "text-danger" })
+
+                                    </div>
+                                    @Html.LabelFor(model => model.ItemCard, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        <div class="input-group">
+                                            <span class="input-group-addon" onclick="SearchInventoryCard()"><i class="fa fa-search"></i></span>
+                                            @Html.EditorFor(model => model.ItemCard, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Search", autocomplete = "off", @onclick = "SearchInventoryCard()" } })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+
+                                    @Html.LabelFor(model => model.ItemCategory, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownListFor(model => model.ItemCategory, Model.ItemCategoriesList, "Select ", new { @class = "form-control", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.ItemCategory, "", new { @class = "text-danger" })
+                                    </div>
+                                    @Html.Label("Class", htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownList("ItemClassificationId", Model.ItemClassificationsList, "Select ", new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.ItemClassificationId, "", new { @class = "text-danger" })
+
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.ItemName, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.ItemName, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.ItemName, "", new { @class = "text-danger" })
+                                    </div>
+
+                                    @Html.LabelFor(model => model.Manufacturer, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.Manufacturer, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.Manufacturer, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Currency, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownListFor(model => model.Currency, Model.CurrenciesList, "Select ", new { @class = "form-control", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.Currency, "", new { @class = "text-danger" })
+                                    </div>
+
+                                    @Html.LabelFor(model => model.UOM, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownListFor(model => model.UOM, Model.UOMList, "Select ", new { @class = "form-control", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.UOM, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Quantity, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+                                    </div>
+                                    @Html.LabelFor(model => model.Condition, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownListFor(model => model.Condition, Model.ConditionList, "Select ", new { @class = "form-control", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.Condition, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+
+                                    @Html.LabelFor(model => model.UnitPrice, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.UnitPrice, "", new { @class = "text-danger" })
+                                    </div>
+                                    @Html.LabelFor(model => model.InventoryValue, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.InventoryValue, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                                        @Html.ValidationMessageFor(model => model.InventoryValue, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div id="InventoryForSale" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.UnitSalePrice, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.UnitSalePrice, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.UnitSalePrice, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        @Html.LabelFor(model => model.TotalAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.TotalAmount, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.TotalAmount, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="EngeneInventory" style="display:none">
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Model, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.Model, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.Model, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        @Html.LabelFor(model => model.Capacity, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.Capacity, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.Capacity, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.BodyType, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.BodyType, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.BodyType, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        @Html.LabelFor(model => model.ManufactureYear, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.ManufactureYear, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @min = "1995" } })
+                                            @Html.ValidationMessageFor(model => model.ManufactureYear, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.Description, new { htmlAttributes = new { @class = "form-control", @required = "required", rows = "3", maxlength = 250 } })
+
+                                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+
+                                    </div>
+                                    @Html.LabelFor(model => model.BatchNo, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.BatchNo, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                        @Html.ValidationMessageFor(model => model.BatchNo, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Stored, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4" style="padding-top:8px">
+
+                                        Yes :@Html.RadioButtonFor(m => m.Stored, "Yes") &nbsp;&nbsp;&nbsp;
+                                        No:@Html.RadioButtonFor(m => m.Stored, "No")
+                                    </div>
+                                    <div class="store">
+                                        @Html.LabelFor(model => model.StoreId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.DropDownListFor(model => model.StoreId, Model.StoresList, "Select ", new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.StoreId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.CanExpire, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4" style="padding-top:8px">
+
+                                        Yes :@Html.RadioButtonFor(m => m.CanExpire, "Yes") &nbsp;&nbsp;&nbsp;
+                                        No:@Html.RadioButtonFor(m => m.CanExpire, "No")
+                                    </div>
+
+                                </div>
+                                <div class="form-group">
+                                    <div class="expire">
+                                        @Html.LabelFor(model => model.ManufactureDate, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.ManufactureDate, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.ManufactureDate, "", new { @class = "text-danger" })
+                                        </div>
+                                        @Html.LabelFor(model => model.ExpireDate, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @Html.EditorFor(model => model.ExpireDate, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.ExpireDate, "", new { @class = "text-danger" })
+                                        </div>
+
+                                    </div>
+                                </div>
+                                @if (Model.IsST)
+                                {
+                                <div class="form-group">
+                                    @Html.Label("Is ST Payment ?", htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+                                    <div class="col-md-4">
+
+
+                                        @if (Model.IsStPayment==true)
+                                        {
+                                        <input type="checkbox" checked style="width:30px" id="IsStPayment">
+                                        <input id="StPayment" name="StPayment" style="width:40px;font-weight:bold" type="text" readonly value="YES">
+
+                                        }
+                                        else
+                                        {
+                                        <input type="checkbox" style="width:30px" id="IsStPayment">
+                                        <input id="StPayment" name="StPayment" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+                                        }
+
+                                    </div>
+                                    <div class="IsStPayment">
+                                        @Html.LabelFor(model => model.ParentInstitutionCode, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                        <div class="col-md-4">
+                                            @if (Model.StPaymentFlag==true)
+                                            {
+                                            @Html.DropDownList("ParentInstitutionCode", Model.ParentInstitutionsList, "Select ---", new { @class = "form-control select2" })
+                                            }
+                                            else
+                                            {
+                                            <select name="ParentInstitutionCode" id="ParentInstitutionCode" class="form-control select2"></select>
+                                            }
+
+                                            @Html.ValidationMessageFor(model => model.ParentInstitutionCode, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                </div>
+                                }
+
+                               
+
+                            <div class="form-group">
+                                <label class="col-md-2 control-label" , style="text-align:left">GL Items<sup></sup></label>
+                                <div class="col-md-4">
+                                    <a class="search-btn" onclick="SearchGL()" href="#" style="display:block;width:230px">
+                                        <i class="fa fa-search search-icon"></i>
+                                        Search...
+                                    </a>
+                                </div>
+                                @if (Model.IsST)
+                                {
+                                    if (Model.StPaymentFlag == true)
+                                    {
+                                        <div class="IsStPayment">
+                                            @Html.LabelFor(model => model.SubWarrantCode, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                            <div class="col-md-4">
+                                                @Html.DropDownListFor(model => model.SubWarrantCode, Model.SubWarrantsList, "Select ---", new { @class = "form-control select2", @required = "required" })
+
+                                                @Html.ValidationMessageFor(model => model.SubWarrantCode, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <div class="IsStPayment">
+                                            @Html.LabelFor(model => model.SubWarrantCode, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+                                            <div class="col-md-4">
+                                                <select name="SubWarrantCode" id="SubWarrantCode" class="form-control select2"></select>
+                                                @Html.ValidationMessageFor(model => model.SubWarrantCode, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                            </div>
+                                <div style="padding-top:5px">
+
+                                    <table id="selected_gls" border="1" class="table table-bordered
+                                       table-hover table-condensed" width="100%">
+                                        @if (Model.InventoryCoa != null)
+                                        {
+                                        <tr style="background:#f5f5f5; color:#000000"><th>GL Account</th><th>GL Account Desc</th><th>SBC</th><th>GFS Code</th></tr>
+                                        }
+                                        @{var j = 0;}
+                                        @if (Model.InventoryCoa != null)
+                                        {
+
+                                        j++;
+                                        <tr>
+                                            <td>
+                                                @Html.DisplayFor(model => model.InventoryCoa.GLAccount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(model => model.InventoryCoa.GLAccountDesc)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(model => model.InventoryCoa.SubBudgetClass)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(model => model.InventoryCoa.GfsCode)
+                                            </td>
+
+                                        </tr>
+                                        }
+                                    </table>
+                                    @if (Model.InventoryCoa == null)
+                                    {
+                                    <div style="padding-bottom:10px" id="infoPanel">
+                                        <div class="info-box">No GL Items Selected</div>
+                                    </div>
+                                    }
+                                </div>
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-2">
+                                            <a href="@Url.Action("PendingInventories","Inventories")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                            <button type="submit" class="btn btn-info" id="save_button" style="float: left; margin-left: 5px">
+                                                <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            }
+
+
+                          
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<!----------- Search  Item Card----------------->
+<div class="modal fade" id="search_item_card" style="left:4%">
+
+    <div class="modal-dialog" style="width:60%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Item Card</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-8">
+
+                        </div>
+                        <div class="col-md-4">
+                            <div class="input-group" style="float:right">
+                                <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                <input type="search" name="search" class="form-control" autocomplete="off" placeholder="Search..." id="search_card">
+                            </div>
+                        </div>
+                    </div>
+                
+                    <table id="dt_search_item_card" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Item Card</th>
+                                <th>Description</th>
+                                <th>UOM</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- Search  GL----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Gl Item(s)</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_gl">
+                            </div>
+                        </div>
+                    </div>
+
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>CoaId</th>
+                                <th>GlAccount</th>
+                                <th>GlAccount Desc</th>
+                                <th>SBC</th>
+                                <th>GfsCode</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var uom = "";
+              var dt_search_item_card = $('#dt_search_item_card').dataTable();
+                $("#dt_search_item_card_wrapper .dt-toolbar").remove();
+               $("#search_item_card").on("keyup search input paste cut", function () {
+                dt_search_item_card.DataTable().search(this.value).draw();
+               });
+        function SearchInventoryCard() {
+            dt_search_item_card.fnClearTable();
+            $('#search_item_card').modal('show');
+            if ($("#ItemName").val()) {
+                var searchDesc = $("#ItemName").val();
+                var stringLength = searchDesc.length;
+                var desc = "";
+                if (stringLength == 1) {
+                   desc=searchDesc.substr(0, 1);
+                } else if (stringLength == 2) {
+                   desc=searchDesc.substr(0, 2);
+                } else if (stringLength >= 3) {
+                   desc=searchDesc.substr(0, 3);
+                }
+                SearchItemCards(desc);
+            }
+
+            }
+                 function ItemCardClicked(rowId) {
+                    var data = dt_search_item_card.DataTable().rows().data();
+                        var row = data[rowId];
+                     $("#ItemCard").val(row[1]);
+                     $("#search_item_card").modal("hide");
+                       uom = row[3];
+                     var selected_uom = $("#UOM").val();
+                     if (selected_uom) {
+                         if (selected_uom !=uom) {
+                        $("#UOM").prop('selectedIndex',0);
+                            }
+                         }
+                    }
+                    $("#search_card").on("keyup search input paste cut", function () {
+                            if (!this.value) {
+                                dt_search_item_card.fnClearTable();
+                            } else {
+                                SearchItemCards(this.value);
+                            }
+                    });
+                  $("#search_item_card .new_card").on('click', function () {
+                              var inventory_name = $("#ItemName").val();
+                                $("#new_item_card #ItemDescription").val(inventory_name);
+                    });
+                 function SearchItemCards(search) {
+                             var formData = { "ItemName": search };
+            var url = '@Url.Action("GetItemCard", "Inventories")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: formData,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                           if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                data = response.data;
+                                dt_search_item_card.fnClearTable();
+                                for (var i = 0; i < data.length; i++) {
+
+                                    dt_search_item_card.fnAddData([i + 1,
+                                    data[i]["ItemCard"],
+                                    data[i]["ItemDescription"],
+                                    data[i]["UOM"],
+                                    '<a href="#" onclick="ItemCardClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                                    ]);
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                        }
+
+
+        function SubmitInventory(formData) {
+            var monetary = $("#MonetaryEntry").val();
+            if (!monetary) {
+                swal("Please select Type Monetay or Non-Monetary!!!");
+                return false;
+            }
+                $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("EditExternalInventory", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                      $("#save_button").prop('disabled', false);
+                    if (result == "Success") {
+                        swal("Data saved successfully", { icon: "Success" })
+                                    .then((value) => {
+                                       var url = '@Url.Action("PendingInventories", "Inventories")';
+                                        window.location.replace(url);
+                                });
+                    }
+                    else {
+                        swal(result);
+                    }
+                }
+            }
+
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Inventory ====================
+            $(document).ready(function () {
+
+                //$('#ManufactureDate').datepicker({
+                //    dateFormat: 'yy-mm-dd',
+                //    prevText: '<i class="fa fa-chevron-left"></i>',
+                //    nextText: '<i class="fa fa-chevron-right"></i>',
+                //    onSelect: function (selectedDate) {
+                //        $('#ManufactureDate').datepicker('option', 'minDate', selectedDate);
+                //    }
+                //});
+                //$('#ExpireDate').datepicker({
+                //    dateFormat: 'yy-mm-dd',
+                //    prevText: '<i class="fa fa-chevron-left"></i>',
+                //    nextText: '<i class="fa fa-chevron-right"></i>',
+                //    onSelect: function (selectedDate) {
+                //        $('#ExpireDate').datepicker('option', 'minDate', selectedDate);
+                //    }
+                //});
+         $(function(){
+              $('input[type="radio"][name="Stored"]').click(function(){
+                if ($(this).is(':checked'))
+                {
+                    if ($(this).val()=="Yes") {
+                        $(".store").show();
+                    } else {
+                           $(".store").hide();
+                    }
+                }
+              });
+            });
+
+            $(function(){
+              $('input[type="radio"][name="CanExpire"]').click(function(){
+                if ($(this).is(':checked'))
+                {
+                  if ($(this).val()=="Yes") {
+                        $(".expire").show();
+                    } else {
+                        $(".expire").hide();
+                    }
+                }
+              });
+             });
+
+                //MANAGE SELECTED DATE
+                $(function () {
+                    $("#ExpireDate").change(function () {
+                        var expire_date = $(this).val();
+                        var manufacture_date = $("#ManufactureDate").val();
+                        if (manufacture_date) {
+                            if (expire_date) {
+                                if (manufacture_date > expire_date) {
+                                    swal("Please select date which is greater than the manufacture date");
+                                    $("#ExpireDate").val("");
+                                }
+
+                            }
+                        }
+
+
+                    });
+                });
+                $(function () {
+                    $("#ManufactureDate").change(function () {
+                        var manufacture_date = $(this).val();
+                        var expire_date = $("#ExpireDate").val();
+                        if (expire_date) {
+                            if (manufacture_date) {
+                                if (manufacture_date > expire_date) {
+                                    swal("Please select date which is less than the expire date");
+                                    $("#ManufactureDate").val("");
+                                }
+
+                            }
+                        }
+
+
+                    });
+                });
+
+               $(function () {
+                   $("#UOM").change(function () {
+                       var selected_uom = $(this).val();
+                       if (uom) {
+                       if (selected_uom != uom) {
+                           $(this).prop('selectedIndex', 0);
+                           swal("Please unit of measure must match with that of item card.Otherwise create new item card with UOM of " + selected_uom + ' !');
+                       }
+                              }
+                    });
+                });
+
+                              $(function () { // this will be called when the DOM is ready
+                                $("#UnitPrice").keyup(function () {
+
+                                    var quantity = parseFloat($("#Quantity").val());
+                                    if (quantity > 0) {
+                                   var unit_price = parseFloat($(this).val().split(",").join(""));
+                                        var total = unit_price * quantity;
+                                        $("#InventoryValue").val(total.toLocaleString('en'));
+                                    }
+
+                                });
+
+                              });
+                        $(function () { // this will be called when the DOM is ready
+                                $("#UnitSalePrice").keyup(function () {
+
+                                    var quantity = parseFloat($("#Quantity").val());
+                                    if (quantity > 0) {
+                                   var unit_sale_price = parseFloat($(this).val().split(",").join(""));
+                                        var total = unit_sale_price * quantity;
+                                        $("#TotalAmount").val(total.toLocaleString('en'));
+                                    }
+
+                                });
+
+                            });
+                            $(function () { // this will be called when the DOM is ready
+                                $("#Quantity").keyup(function () {
+
+                                    var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                                    if (unit_price > 0) {
+                                        var quantity = parseFloat($(this).val());
+                                        var total = unit_price * quantity;
+                                            $("#InventoryValue").val(total.toLocaleString('en'));
+                                    }
+
+                                         var unit_sale_price = parseFloat($("#UnitSalePrice").val().split(",").join(""));
+                                    if (unit_sale_price > 0) {
+                                        var quantity = parseFloat($(this).val());
+                                        var total = unit_sale_price * quantity;
+                                            $("#TotalAmount").val(total.toLocaleString('en'));
+                                        }
+
+                                });
+
+                            });
+
+                        });
+           var itemCategory = '@(Model.InventoryType)';
+            if (itemCategory=="Inventory for Sale") {
+                   $("#InventoryForSale").show();
+            }
+
+          $(function () {
+            $("#ItemCategory").change(function () {
+                var category = $(this).val();
+                if (category == "Inventory for Sale") {
+                    $("#InventoryForSale").show();
+                }
+                else {
+                    $("#InventoryForSale").hide();
+                    $("#EngeneInventory").hide();
+                }
+                if (category) {
+                  var url = '@Url.Action("GetItemClasses", "Procurement")';
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    data: { category : category },
+                    success: function (data) {
+                        if (data.response == "Success") {
+                           $('#ItemClassificationId').empty();
+                            $('<option value="">Select...</option>').appendTo('#ItemClassificationId');
+                            $.each(data.itemClasses, function (i, d) {
+                                $('<option value="' + d.ItemClassificationId + '">' + d.ClassificationDesc + '</option>').appendTo('#ItemClassificationId');
+                            });
+                        }
+                        else {
+                           swal("Failed to fetch data due to DB Exception.Contact Technical supporter");
+                        }
+                    }
+                });
+                }
+
+            });
+          });
+          $(function () { // this will be called when the DOM is ready
+            $("#ItemName").keyup(function () {
+                var query = $(this).val();
+                var item_id = $("#ItemClassificationId").val();
+                if (!item_id) {
+                    swal("Please select class first");
+                    $(this).val("");
+                    return false;
+
+                }
+                var length = query.length;
+                if (length >1 ){
+                    get_items(query, item_id);
+                }
+
+            });
+        });
+
+             var itemClass = $("#ItemClassificationId").find('option:selected').text();
+                 if (itemClass == "Motor Vehicle") {
+                    $("#EngeneInventory").show();
+                }
+                else if (itemClass == "Motor Cycle") {
+                    $("#EngeneInventory").show();
+                 }
+                 else if (itemClass == "Plants") {
+                    $("#EngeneInventory").show();
+                 }
+                  else if (itemClass == "Machinery") {
+                    $("#EngeneInventory").show();
+                }
+                else {
+                    $("#EngeneInventory").hide();
+                }
+
+
+          $(function () {
+              $("#ItemClassificationId").change(function () {
+
+                  var monetaryEntry = $("#MonetaryEntry").val();
+                  if (!monetaryEntry) {
+                      $("#ItemClassificationId").prop('selectedIndex', 0);
+                      swal("Please select either Monetary or Non Monetary first");
+                      return
+                  }
+
+                  var sbcId = $("#InventorySBCSetupId").val();
+                  if (!sbcId) {
+                      $("#ItemClassificationId").prop('selectedIndex', 0);
+                      swal("Please select Sub Budget Class");
+                      return
+                  }
+
+                  var itemClass = $(this).find('option:selected').text();
+                 if (itemClass == "Motor Vehicle") {
+                    $("#EngeneInventory").show();
+                }
+                else if (itemClass == "Motor Cycle") {
+                    $("#EngeneInventory").show();
+                 }
+                 else if (itemClass == "Plants") {
+                    $("#EngeneInventory").show();
+                 }
+                  else if (itemClass == "Machinery") {
+                    $("#EngeneInventory").show();
+                }
+                else {
+                    $("#EngeneInventory").hide();
+                }
+              });
+              var id = $(this).val();
+              checkDrCoaIfExist(id, sbcId)
+          });
+
+        function checkDrCoaIfExist(id, sbcId) {
+           var url = '@Url.Action("CheckGFSCode", "Inventories")';
+           $.ajax({
+               type: "GET",
+               url: url,
+               data: { id: id, sbcId: sbcId },
+               success: function (response) {
+                   if (response != "Success") {
+                       $("#ItemClassificationId").prop('selectedIndex', 0);
+                       swal(response);
+                   }
+
+               }
+           });
+
+        }
+
+
+        $("#UnitPrice").autoNumeric('init');
+        $("#UnitSalePrice").autoNumeric('init');
+            $("#ItemName").on('keypress', function (event) {
+                var regex = new RegExp("^[0-9a-zA-Z \b]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                if (!regex.test(key)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+            $("#Description").on('keypress', function (event) {
+                var regex = new RegExp("^[0-9a-zA-Z \b]+$");
+                var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+                if (!regex.test(key)) {
+                    event.preventDefault();
+                    return false;
+                }
+            });
+
+        function get_items(query, item_id) {
+            var item_id = parseFloat(item_id);
+            var form_data = {
+                "id": item_id,
+                "Prefix": query
+            }
+            var url = '@Url.Action("SearchItems", "Procurement")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form_data,
+                success: function (data) {
+                    if (data.response == "Success") {
+                        var items_array = [];
+                       $.each(data.Items, function (i, d) {
+                           items_array.push(d.ItemDescription);
+                        });
+
+
+                       $('#ItemName').autocomplete({
+                           source: items_array
+                           });
+                    }
+                    else {
+
+                    }
+
+                }
+            });
+        }
+
+
+        //=============SEARCH GL ACCOUNTS ==================
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable(
+            {
+                "aoColumnDefs": [{ "bVisible": false, "aTargets": [1] }],
+            });
+        $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+        $("#search_gl").on("keyup search input paste cut", function () {
+            $("#search_exp_line").val("");
+            dt_search_gl_item.DataTable().search(this.value).draw();
+        });
+                function SearchGL() {
+
+            var id = $("#InventorySBCSetupId").val();
+            if (!id) {
+                swal("Please select Sub Budget Class");
+                return
+               }
+
+       
+                    var params = { "id": id };
+            var url = '@Url.Action("GetCoas", "Inventories")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (result) {
+                    //=== UPDATE SEARCH GI TABLE ====
+
+                    if (result.response == "Success") {
+                        $('#glItemsModal').modal('show');
+                        data = result.data;
+                        dt_search_gl_item.fnClearTable();
+                        for (var i = 0; i < data.length; i++) {
+
+                            dt_search_gl_item.fnAddData([i + 1,
+                            data[i]["CoaId"],
+                            data[i]["GlAccount"].split("|").join("-"),
+                            data[i]["GlAccountDesc"],
+                            data[i]["SubBudgetClass"],
+                            data[i]["GfsCode"],
+                            '<a href="#" onclick="CoaSelected(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                            ]);
+                        }
+                    }
+                    else {
+                        swal(result,{ icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+
+
+        }
+        function CoaSelected(rowId) {
+            $('#selected_gls').empty();
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var row = data[rowId];
+            $("#CoaId").val(row[1]);
+            $("#glItemsModal").modal("hide");
+            $("#infoPanel").hide();
+            $('<tr style="background:#f5f5f5; color:#000000"><th>GL Account</th><th>GL Account Desc</th><th>SBC</th><th>GFS Code</th></tr>').appendTo('#selected_gls');
+            $('<tr><td>' + row[2].split("|").join("-") + '</td><td>' + row[3] + '<td>' + row[4] + '</td><td>' + row[5] + '</td></tr>').appendTo('#selected_gls');
+        }
+
+
+       $(function () {
+              $("#MonetaryEntry").change(function () {
+                  var monetaryEntry = $(this).val();
+                  $("#InventorySBCSetupId").prop('selectedIndex', 0);
+                  loadSubBudgetClass(monetaryEntry);
+
+            });
+          });
+
+
+
+        function loadSubBudgetClass(type) {
+          $.ajax({
+              type: "GET",
+              url: "@Url.Action("GetSubBudgetClass", "Inventories")",
+              data: { type },
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+              success: function (response) {
+              if (response.data) {
+                  $('#InventorySBCSetupId').empty();
+                  $('<option value="">Select...</option>').appendTo('#InventorySBCSetupId');
+                    $.each(response.data, function (i, d) {
+                        $('<option value="' + d.InventorySBCSetupId + '">' + d.SubBudgetClass+ '</option>').appendTo('#InventorySBCSetupId');
+                      });
+              }
+          },
+          failure: function (error) {
+              swal(error);
+          }
+      });
+        }
+
+        $("#IsStPayment").change((e) => {
+            $("#StPayment").val(e.target.checked ? "YES" : "NO")
+            if (e.target.checked) {
+                $(".IsStPayment").toggle(true)
+                GetParentInstitutions();
+            } else {
+                $(".IsStPayment").toggle(false)
+            }
+        });
+        $("#ParentInstitutionCode").change(function () {
+            var institutionCode = $(this).val();
+            if (institutionCode) {
+                GetSubWarrants(institutionCode);
+            }
+
+        });
+
+
+        function GetParentInstitutions() {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetParentInstitutions", "PaymentVoucher")",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.data) {
+                        $('#ParentInstitutionCode').empty();
+                        $('<option value="">Select...</option>').appendTo('#ParentInstitutionCode');
+                        $.each(response.data, function (i, d) {
+                            $('<option value="' + d.ParentInstitutionCode + '">' + d.ParentInstitutionCode + '-' + d.ParentInstitutionName + '</option>').appendTo('#ParentInstitutionCode');
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function GetSubWarrants(institutionCode) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetSubWarrants", "PaymentVoucher")",
+                data: { institutionCode },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.data) {
+                        $('#SubWarrantCode').empty();
+                        $('<option value="">Select...</option>').appendTo('#SubWarrantCode');
+                        $.each(response.data, function (i, d) {
+                            $('<option value="' + d.SubWarrantCode + '">' + d.SubWarrantCode + '-' + d.SubWarrantDescription + '</option>').appendTo('#SubWarrantCode');
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}
+
+

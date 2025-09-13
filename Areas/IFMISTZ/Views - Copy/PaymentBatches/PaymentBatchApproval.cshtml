@@ -1,0 +1,802 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PaymentBatchVM>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                   
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Payment Batch Approval</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                
+                            <hr class="simple" />
+                          
+                            <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr style="background-color: #f5f5f5; color:black">
+                                        <th>#</th>
+
+                                        <th>
+                                            Batch Number
+                                        </th>
+                                        <th>
+                                            Batch Description
+                                        </th>
+                                        <th>
+                                            Institution Code
+                                        </th>
+                                        <th>
+                                            Payment Category
+                                        </th>
+                                        <th>
+                                            Payer Account
+                                        </th>
+                                        <th style="text-align: center">
+                                            Number of Transaction
+                                        </th>
+                                        <th style="text-align: center">
+                                            Total Batch Amount
+                                        </th>
+                                        <th style="text-align: center">
+                                            Overall Status
+                                        </th>
+                                        <th></th>
+                                        <th>Action</th>
+
+                                    </tr>
+                                </thead>
+                                @{int i = 0;}
+                                @foreach (var item in Model)
+                                {
+                                    i++;
+                            <tr>
+                                <td>@i</td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.BatchNo)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.BatchDesc)
+                                </td>
+                                <td style="text-align: center">
+                                    @Html.DisplayFor(modelItem => item.InstitutionCode)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.PaymentCategory)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.PayerBankAccount)
+                                </td>
+                                <td style="text-align: center">
+                                    @string.Format("{0:#,0}", item.NoTrx)
+                                </td>
+                                <td style="text-align: right">
+                                    @string.Format("{0:#,0.00}", item.TotalAmount)
+                                </td>
+                                <td>
+                                    @Html.DisplayFor(modelItem => item.OverallStatus)
+                                </td>
+                                <td>
+                                    <a href="@Url.Action("AttachmentView", "PaymentVoucherAttachments",new { groupId = item.PaymentBatchID, sourceModule = "bulkpayment" })"><i class="fa fa-file-pdf-o"></i></a>
+                                </td>
+                                <td style="text-align: center">
+                                    <!-- Split button -->
+                                    <div class="btn-group">
+
+                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                            <span class="caret"></span>
+                                            <span class="sr-only">Toggle Dropdown</span>
+                                        </button>
+                                        <ul class="dropdown-menu">
+                                            @if (item.OverallStatus == "Verified" || item.OverallStatus == "Rejected in Submission" || item.OverallStatus == "Rejected in Payment Voucher")
+                                            {
+
+                                                <li><a href="@Url.Action("PaymentApprovalDetails", "PaymentBatches", new { id = item.PaymentBatchID })"><i class="fa fa-eye fa-fw"></i>View Paylist</a></li>
+                                                <li><a href="#" onclick="rejectpaymentBatch(@item.PaymentBatchID)"><i class="fa fa-check-square fa-fw"></i>Reject</a></li>
+                                                @*<li><a href="#" onclick="batchapproval(id=@item.PaymentBatchID,sbc=@item.SubBudgetClass,account='@item.PayerBankAccount',TotalAmount=@item.TotalAmount)"><i class="fa fa-check-square fa-fw"></i>Approve</a></li>*@
+                                                <li><a href="#" onclick="batchapproval(id=@item.PaymentBatchID,sbc=@item.SubBudgetClass,account='@item.SourceAccountNo',TotalAmount=@item.TotalAmount)"><i class="fa fa-check-square fa-fw"></i>Approve</a></li>
+                                            }
+
+                                            @if (item.OverallStatus == "Approved" && item.UploadSlip != "Slip Uploaded")
+                                            {
+                                                <li><a href="#" onclick="rejectpaymentBatch(@item.PaymentBatchID)"><i class="fa fa-check-square fa-fw"></i>Reject</a></li>
+                                                <li><a target="_blank" href="@Url.Action("PrintPaymentSlip","PaymentBatches",new { id=item.PaymentBatchID })"><i class="fa fa-print"></i>Print Slip</a></li>
+                                                <li><a href="#" data-toggle="modal" data-target="#fileAttachModal" data-id=@item.PaymentBatchID class="fileAttachModal"><i class="fa fa-cloud-upload fa-fw"></i>Upload</a></li>
+                                            }
+                                            @if (item.OverallStatus == "Slip Uploaded")
+                                            {
+                                                <li><a href="#" data-toggle="modal" data-target="#fileAttachModal" data-id=@item.PaymentBatchID class="fileAttachModal"><i class="fa fa-cloud-upload fa-fw"></i>Upload</a></li>
+                                                <li><a href="@Url.Action("DownloadPaymentSummary","PaymentBatches",new { id=item.PaymentBatchID })"><i class="fa fa-send"></i>Priview Slip</a></li>
+                                                <li><a href="#" onclick="sentTopayment(@item.PaymentBatchID)"><i class="fa fa-send"></i>Send To Payment Office</a></li>
+                                            }
+
+                                        </ul>
+                                    </div>
+                                </td>
+                            </tr>
+                                }
+
+                            </table>
+
+                      
+                       
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+<!--Start of delete confirmation modal section-->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-danger" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm Delete</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p class="success-message">Are you sure you want to delete this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info confirm-confirm">Yes</button>
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+<!--Start of details modal section-->
+<div class="modal fade" id="modal-details" tabindex="-1" role="dialog" aria-labelledby="lbl-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lbl-modal-details">Payment Batch Details</h4>
+            </div>
+            <div class="modal-body" id="modal-details-body" style="padding: 0px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of details modal section-->
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Rejection Reason</h4>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("RejectpaymentBatch", "PaymentBatches", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <div class="col-md-8">
+                                    <textarea class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button value="Save" class="btn btn-info pull-left"><i class="fa fa-save"></i> Save </button>
+                <button class="btn btn-default delete-cancel pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="fileAttachModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+
+            </div>
+            @using (Html.BeginForm("AttachSlip", "PaymentBatches", FormMethod.Post, new { encType = "multipart/form-data" }))
+            {   <div class="modal-body">
+                            @Html.AntiForgeryToken()
+
+                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                            <br />
+
+                            <div class='form-group'>
+                                <div class="input-group input-file" name="FileName">
+                                    <span class="input-group-btn">
+                                       
+                                    </span>
+                                    <input type="text" name="FileName" id="FileName" class="form-control" placeholder='Upload file in PDF Format ...' />
+                                    <span class="input-group-btn">
+                                        
+                                        <button class="btn btn-default btn-choose" id="button1" type="button">Browse</button>
+                                    </span>
+                                </div>
+                            </div>
+                            <input type="hidden" name="PaymentBatchID" id="PaymentBatchID" value="" />
+
+                        </div>
+                        <div class="modal-footer">
+                            <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                            <input type="submit" value="Submit" class="btn btn-default" id="btnSubmit" />
+
+                        </div>
+            }
+
+        </div>
+    </div>
+</div>
+
+
+
+@section Scripts{
+    <script>
+        $(document).on("click", ".fileAttachModal", function () {
+            var transfer_id = $(this).data('id');
+            $(".modal-body #PaymentBatchID").val(transfer_id);
+        });
+        //$("#divLoader").hide();
+        $(document).ready(function () {
+            var success = '@(ViewBag.Message)';
+            if (success == "Success") {
+
+                swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                    $("#divLoader").hide();
+                     window.location.href = '@Url.Action("PaymentBatchApproval", "PaymentBatches")';
+                });
+              
+            }
+            else if (success == "Failed") {
+
+                swal("Failed to Upload,Please try again", { icon: "success" });
+                window.location.reload();
+            }
+            function bs_input_file() {
+                $(".input-file").before(
+                    function () {
+                        if (!$(this).prev().hasClass('input-ghost')) {
+                            var element = $("<input type='file' class='input-ghost' style='visibility:hidden; height:0'>");
+                            element.attr("name", $(this).attr("name"));
+                            element.change(function () {
+                                element.next(element).find('input').val((element.val()).split('\\').pop());
+                            });
+                            $(this).find("button.btn-choose").click(function () {
+                                element.click();
+                            });
+                            $(this).find("button.btn-reset").click(function () {
+                                element.val(null);
+                                $(this).parents(".input-file").find('input').val('');
+                            });
+                            $(this).find('input').css("cursor", "pointer");
+                            $(this).find('input').mousedown(function () {
+                                $(this).parents('.input-file').prev().click();
+                                return false;
+                            });
+                            return element;
+                        }
+                    }
+                );
+            }
+            $(function () {
+                bs_input_file();
+            });
+
+
+        });
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        $(document).ready(function () {
+
+            /* // DOM Position key index //
+
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+
+            Also see: http://legacy.datatables.net/usage/features
+            */
+
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                    "copy",
+                    "csv",
+                    "xls",
+                       {
+                           "sExtends": "pdf",
+                           "sTitle": "SmartAdmin_PDF",
+                           "sPdfMessage": "SmartAdmin PDF Export",
+                           "sPdfSize": "letter"
+                       },
+                       {
+                           "sExtends": "print",
+                           "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                       }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+        });
+
+        @*var approvepaymentBatch = function (id) {
+
+            if ($('.modal-header').hasClass('alert-danger')) {
+                $('.modal-header').removeClass('alert-danger').addClass('alert-info');
+            }
+            $('.success-message').html('').html('Are you sure you want to Approve this record ?');
+            $('.delete-confirm').css('display', 'none');
+            $('.confirm-confirm').css('display', 'inline');
+            $("#modal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $(".confirm-confirm").click(function () {
+                if (id != "") {
+                    var url = '@Url.Action("PaymentBatchApproval","PaymentBatches")';
+                    $.ajax({
+                        url: url,
+                        data: { id: id },
+                        type: "POST",
+                        success: function (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show info message.
+                                //hide ok button as it is not necessary
+                                $('.confirm-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                                $('.success-message').html('Record Verified successfully');
+                            }
+                            else {
+                                //hide ok button as it is not necessary
+                                $('.delete-confirm').css('display', 'none');
+                                $('.confirm-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                                $('.success-message').html(response);
+                            }
+                        }, error: function (err) {
+                            if (!$('.modal-header').hasClass('alert-danger')) {
+                                $('.modal-header').removeClass('alert-info').addClass('alert-danger');
+                                $('.delete-confirm').css('display', 'none');
+                            }
+                            $('.success-message').html(err.statusText);
+                        }
+                    });
+                }
+            });
+        };*@
+
+
+
+        function batchapproval(id, sbc, account, TotalAmount) {
+            //debugger
+           // if (i == 'x') i = id;
+            swal({
+                title: "Approve",
+                text: "Are you sure you want to Approve? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made", "error");
+                } else {
+                    GetCashBookBalance(id, sbc, account, TotalAmount);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        let CashBookBalance = 0
+        let CashCommitment = 0
+        let AvailableBalance = 0
+        let Balance = 0
+      
+        function GetCashBookBalance(id, sbc, account, TotalAmount) {
+            //debugger
+            $("#divLoader").show();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCashBookBalance", "PaymentVoucher")',
+                data: {
+                    accountNo: account,
+                    SBC: sbc
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.data) {
+                        CashBookBalance = response.data.CashBookBalance
+                        CashCommitment = response.data.CommittedAmount
+                        AvailableBalance = response.data.AvailableBalance
+                        Balance = AvailableBalance - TotalAmount
+                       // debugger;
+                        if (Balance < 0) {
+                            paymentBatchApproved(sbc, account, TotalAmount)
+                        } else {
+                            paymentBatchApproved1(id, sbc, account, TotalAmount)
+                        }
+                    } else {
+                        swal("Please contact system admin")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function paymentBatchApproved22(id, sbc, account, TotalAmount) {
+            swal({
+                title: "Generate Selected Item(s)?",
+                text: `Acc:account  SBC:sbc
+                       CashBook Balance  : ${CashBookBalance.toLocaleString()}\n
+                       Committed Amount  : ${CashCommitment.toLocaleString()}\n
+                       Available Balance: ${AvailableBalance.toLocaleString()}\n
+                       Amount to be Expensed: ${TotalAmount.toLocaleString()}\n
+                       Balance       : ${Balance.toLocaleString()}\n`,
+                buttons: ["NO", "YES"],
+            }).then((willGenerate) => {
+                if (willGenerate) {
+                    ApproveBatchPayment(id, TotalAmount);
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function paymentBatchApproved1(id, sbc, account, TotalAmount) {
+            //debugger
+            swal({
+                title:"CashBook Balance for Account " + account + " in Sub Budget Class " + sbc,
+                text: `CashBook Balance: ${CashBookBalance.toLocaleString()}\n
+                       Committed Amount  : ${CashCommitment.toLocaleString()}\n
+                       Available Balance: ${AvailableBalance.toLocaleString()}\n
+                       Amount to be Expensed: ${TotalAmount.toLocaleString()}\n
+                       Balance       : ${Balance.toLocaleString()}\n`,
+                buttons: ["NO", "YES"],
+                closeOnClickOutside: false,
+
+            }).then(function(willApproved) {
+                if (willApproved) {
+                   // debugger
+                    $("#divLoader").hide();
+                    ApproveBatchPayment(id, TotalAmount);
+                } else {
+                    $("#divLoader").hide();
+                    swal("Cancelled", "No change was made", "error");
+                }
+            });
+        }
+
+        function paymentBatchApproved(sbc, account, TotalAmount) {
+            $("#divLoader").hide();
+            swal({
+                title: "Payment Exceeds CashBook Balance for Account " + account + " in Sub Budget Class  " + sbc,
+                text: `CashBook Balance  : ${CashBookBalance.toLocaleString()}\n
+                       Committed Amount  : ${CashCommitment.toLocaleString()}\n
+                       Available Balance: ${AvailableBalance.toLocaleString()}\n
+                       Amount to be Expensed: ${TotalAmount.toLocaleString()}\n
+                       Balance       : ${Balance.toLocaleString()}\n`,
+                buttons: "OK",
+            })
+        }
+
+        function ApproveBatchPayment(id) {
+           // debugger
+            var url = '@Url.Action("PaymentBatchApproval", "PaymentBatches")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response, { icon: "warning" }).then((e) =>{
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+
+
+        function SendtoPaymentOffice(id) {
+            var url = '@Url.Action("SendtoPaymentOffice", "PaymentBatches")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Sent Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal(response + "An error has occured, contact system support");
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+        function sentTopayment(i, id) {
+            if (i == 'x') i = id;
+            swal({
+                title: "Send",
+                text: "Are you sure you want to Send the File to Payment Office? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    SendtoPaymentOffice(i);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function rejectpaymentBatch(i, id) {
+            swal({
+                title: "Rejection Reason",
+                closeOnClickOutside: false,
+                content: "input",
+                buttons: [
+                  'Cancel',
+                  'Save'
+                ],
+            }).then((value) => {
+                var inputValue = `${value}`;
+                if (inputValue == "null") {
+                    swal("Cancelled");
+                }
+                else {
+                    rejectReasons(i, `${value}`)
+                }
+            });
+        }
+
+        var rejectReasons = function (id, reason) {
+            var rejectionReason = reason;
+            $.ajax({
+                type: "POST",
+                url: "RejectApproval",
+                data: { ids: id, reason: rejectionReason },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Rejection Successfully Saved", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else if (response == "emptyreason") {
+                        swal("Rejection Reason is Required", { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else if (response == "DbException") {
+
+                        swal(response + "An error has occured, contact system support");
+
+                    } else {
+
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    swal("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        };
+
+    </script>
+}

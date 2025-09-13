@@ -1,0 +1,127 @@
+﻿@model IFMIS.Areas.Coadmis.Models.EditAccountEstimateVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "editiAccountEstPerFy" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.EngagementId)
+    @Html.HiddenFor(model => model.AccountEstimatePerFyId)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.EditAccountEstimateId, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.DropDownListFor(model => model.EditAccountEstimateId, Model.accountEstimateList, "Select Estimate Name", new { @class = "form-control form-control select2", @autocomplete = "off" })
+            @Html.ValidationMessageFor(model => model.EditAccountEstimateId, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.EditOverallAssessement, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.DropDownListFor(model => model.EditOverallAssessement, Model.overallEstimateList, "Select Estimate ", new { @class = "form-control form-control select2", @autocomplete = "off" })
+            @Html.ValidationMessageFor(model => model.EditOverallAssessement, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.EditPreYearAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.EditPreYearAmount, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.EditPreYearAmount, "", new { @class = "text-danger" })
+        </div>
+
+        @Html.LabelFor(model => model.EditCurYearAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.EditCurYearAmount, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.EditCurYearAmount, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.EditAuditApproach, htmlAttributes: new { @class = "control-label col-md-2 required" })
+        (<span style="font-weight:bold;" id="AuditApproachCount">250</span>)
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.EditAuditApproach, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+            @Html.ValidationMessageFor(model => model.EditAuditApproach, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.EditDegreeOfestimationncertainty, htmlAttributes: new { @class = "control-label col-md-2 required" })
+        (<span style="font-weight:bold;" id="UncertintyCount">250</span>)
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.EditDegreeOfestimationncertainty, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+            @Html.ValidationMessageFor(model => model.EditDegreeOfestimationncertainty, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Method<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.TextBoxFor(model => model.EditMethod, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+        </div>
+    </div>
+</div>
+}
+<script>
+    $(document).ready(function () {
+
+        $(function () {
+            $('#AccountEstimateId, #OverallAssessement, #EditAccountEstimateId, #EditOverallAssessement').select2({
+                dropdownParent: $('#editiAccountEstPerFy')
+            });
+
+        });
+    });
+
+    $("#updateByEditAccountEstimate").click(function () {
+        debugger;
+        ///$.validator.unobtrusive.parse("#updateByEdit");
+        //if (!$("#updateByEdit").valid()) {
+        //    return false;
+        //}
+
+        var accountEstimateId = $("#EditAccountEstimateId").val();
+        var overallRiskAssessment = $("#EditOverallRiskAssessment").val();
+        var preYearAmount = $("#EditPreYearAmount").val();
+        var curYearAmount = $("#EditCurYearAmount").val();
+        var auditApproach = $("#EditAuditApproach").val();
+        var estUncert = $("#EditDegreeOfestimationncertainty").val();
+        var editMethod = $("#EditMethod").val();
+
+
+        if (accountEstimateId == '' || overallRiskAssessment == '' || preYearAmount == ''
+            || curYearAmount == '' || auditApproach == '' || estUncert == '' || editMethod=='') {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formData = new FormData();
+        formData.append("AccountEstimatePerFyId", $('#AccountEstimatePerFyId').val());
+        formData.append("EditAccountEstimateId", $('#EditAccountEstimateId').val());
+        formData.append("EditOverallAssessement", $('#EditOverallAssessement').val());
+        formData.append("EditPreYearAmount", $('#EditPreYearAmount').val());
+        formData.append("EditCurYearAmount", $('#EditCurYearAmount').val());
+        formData.append("EditAuditApproach", $('#EditAuditApproach').val());
+        formData.append("EditDegreeOfestimationncertainty", $('#EditDegreeOfestimationncertainty').val());
+        formData.append("EditMethod", $('#EditMethod').val());
+
+        for (const value of formData.values()) {
+            console.log(value);
+        }
+        var urlList = '@Url.Action("UpdateAccountEstimatePerYr", "Engagement")';
+
+        $.ajax({
+            url: urlList,
+            type: "POST",
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (response) {
+                if (response == "Success") {
+                    swal("Estimate  Update Successfully!", { icon: "success" })
+                        .then((_) => window.location.reload());
+                }
+                else {
+                    swal(response, {icon: "warning"});
+                }
+            },
+            error: function () {
+                swal('Error Please try again', {icon:"info"});
+                $('#btnSave').val('Save');
+            }
+        });
+    });
+</script>

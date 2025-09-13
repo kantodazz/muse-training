@@ -1,0 +1,584 @@
+﻿@*@model IFMIS.Areas.ALS.Models.ALS_CreateFundAllocationVM*@
+@model IFMIS.Areas.ALS.Models.ALS_CreateFundWithDrawVM
+@{
+    ViewBag.Title = "Fund WithDraw Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var i = 0;
+}
+
+<div id="content">
+    <div id="widget-grid">
+        <div class="row">
+
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2> @ViewBag.Title </h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div id="exTab2" class="container" style="margin-left:2px;margin-top:5px">
+                                <ul class="nav nav-tabs">
+                                    <li class="active">
+                                        <a href="#1" data-toggle="tab"> Receiving Fund Details</a>
+                                    </li>
+
+                                    <li>
+                                        <a href="#2" data-toggle="tab">
+                                            Comments
+                                            <span class="badge  inbox-badge">  @ViewBag.FundWithdrawRemarkCount </span>
+                                        </a>
+                                    </li>
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="1">
+                                        <div class="col-md-6" style="padding-top:20px">
+                                            <dl class="dl-horizontal">
+                                                <dt>Funding Source Name:</dt>
+                                                <dd>@Html.DisplayFor(model => model.ComponentName)</dd>
+                                                <dt>Funding Receiving Source:</dt>
+                                                <dd>@Html.DisplayFor(model => model.SubBudgetClass) - @Html.DisplayFor(modal => modal.FundingSource)</dd>
+                                                <dt>Fund Ref No:</dt>
+                                                <dd>@Html.DisplayFor(model => model.FundingRefNo)</dd>
+                                                <dt>Allocation Desc:</dt>
+                                                <dd>@Html.DisplayFor(model => model.AllocationDesc)</dd>
+                                                <dt>Withdraw Desc:</dt>
+                                                <dd>@Html.DisplayFor(model => model.WithdrawDesc)</dd>
+                                                <dt>OverAllStatus:</dt>
+                                                <dd>@Html.DisplayFor(model => model.OverallStatus)</dd>
+                                                <dt>Vote Details:</dt>
+                                                <dd>@Html.DisplayFor(model => model.VoteDetails)</dd>
+                                                <dt>Total Amount Allocated:</dt>
+                                                <dd>@Html.DisplayFor(model => model.AllocationAmount)</dd>
+                                                <dt>WithDraw Amount:</dt>
+                                                <dd>@Html.DisplayFor(model => model.WithdrawAmount)</dd>
+                                                <dt>Balance Amount</dt>
+                                                <dd>@Html.DisplayFor(model => model.BalanceAmount) </dd>
+
+                                            </dl>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="tab-pane" id="2">
+                                        <div class=" col-md-5" style="margin:15px 0px 0px -20px;float:left">
+                                            <div class="smart-timeline">
+                                                <ul class="smart-timeline-list">
+                                                    @{
+                                                        int r = 0;
+                                                        foreach (var item in ViewBag.FundWithdrawRemarks)
+                                                        {
+                                                            r++;
+                                                            <li>
+                                                                <div class="smart-timeline-icon">
+                                                                    <i class="fa fa-user"></i>
+                                                                </div>
+                                                                <div class="smart-timeline-content">
+                                                                    <p>
+                                                                        <a href="javascript:void(0);"><strong>@item.CreatedBy <br /> @item.RemarkLevel </strong></a> &nbsp;&nbsp; <small>@item.CreatedAt</small>
+                                                                    </p>
+
+                                                                    <p>@item.Remark</p>
+
+                                                                    <ul class="list-inline">
+                                                                        <li>
+                                                                            @if (@item.AttachmentRef == null && @item.AttachmentName == null)
+                                                                            {
+                                                                                string msg = "No Attachment";
+                                                                                @msg;
+
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                <a href="@Url.Action("DownloadAttachment", "FundWithdraw", new { filename = item.AttachmentName})"> <i class="fa fa-paperclip search-icon"></i> Download File </a>
+                                                                            }
+                                                                        </li>
+                                                                    </ul>
+                                                                </div>
+                                                            </li>
+                                                        }
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        @*<div style="border:1px solid #efeaea;width:520px;height:auto;float:left;margin:30px 0px 0px 0px">
+                                                <iframe height="1000" id="attachmentImage" width="100%" src=""></iframe>
+                                            </div>*@
+                                    </div>
+                                </div>
+                            </div>
+                            @{
+                                if (Model.OverallStatus == "Pending")
+                                {
+
+                                    <div class="panel-footer">
+                                        <a href="@Url.Action("FundPendingWithdrawList", "FundWithdraw")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                            Back
+                                        </a>
+                                        <button id="decisionbtn" onclick="ConfirmFund(@Model.FundWithdrawSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                            Confirm
+                                        </button>
+                                    </div>
+                                }
+
+                                if (Model.OverallStatus == "Rejected")
+                                {
+                                    <div class="panel-footer">
+                                        <a href="@Url.Action("FundPendingWithdrawList", "FundWithdraw")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                            Back
+                                        </a>
+                                        <button id="decisionbtn" onclick="ConfirmFund(@Model.AllocationSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                            Confirm
+                                        </button>
+                                    </div>
+                                }
+
+                                if (Model.OverallStatus == "Confirmed" || Model.OverallStatus == "RejectedAtApprove")
+                                {
+
+                                    <div class="panel-footer">
+                                        <a href="@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                            Back
+                                        </a>
+                                        <button id="decisionbtn" onclick="RejectedFund(@Model.FundWithdrawSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
+                                            Reject
+                                        </button>
+                                        <button id="decisionbtn" onclick="VerifyFund(@Model.FundWithdrawSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                            Verify
+                                        </button>
+                                    </div>
+                                }
+                                if (Model.OverallStatus == "Verified")
+                                {
+
+                                    <div class="panel-footer">
+                                        <a href="@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                            Back
+                                        </a>
+                                        <button id="decisionbtn" onclick="RejectedFund(@Model.FundWithdrawSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-export" aria-hidden="true"></span>
+                                            Reject
+                                        </button>
+                                        <button id="decisionbtn" onclick="ApproveFund(@Model.FundWithdrawSummaryId)" value="approve" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                            Approve
+                                        </button>
+                                    </div>
+                                }
+
+                                if (Model.OverallStatus == "Approved")
+                                {
+                                    <div class="panel-footer">
+                                        <a href="@Url.Action("ApprovedFundWithdrawList","FundWithdraw")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                            Back
+                                        </a>
+                                    </div>
+                                }
+                            }
+                        </div>
+
+                        <div class="model fade" id="modalAction" style="left:4%">
+                            <div>
+                                <h3>Are you sure you need to Confirm!</h3>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </div>
+</div>
+<!--Attachment and Remark-->
+<div class="modal fade" id="remarkDialog" style="left:4%;">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Remark and Comments</h3>
+            </div>
+            <div class="modal-body">
+                <div class="widget-body ">
+                    <div style="display:flex;justify-content:center;align-content:center">
+                        <div>
+                            @Html.HiddenFor(model => model.FundWithdrawSummaryId)
+                            <table>
+                                <tr style="border:none">
+                                    <td class="form-label" style="border:none">
+                                        Remarks
+                                        <i class="fa fa-times" style="color:white" id="Remarks_1"></i>
+                                    </td>
+                                    <td style="border:none">
+                                        <div class="name-input-container">
+                                            <textarea type="text" id="Remarks" style="width:300px" rows="2" maxlength="350" /></textarea>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr style="border:none">
+                                    <td class="form-label" style="border:none">Attachment</td>
+                                    <td style="border:none">
+                                        <div class="name-input-container">
+                                            <input type="file" class="col-sm-8" id="RemarkAttachment" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <br />
+                </div>
+                <div class="modal-footer">
+                    @if (Model.OverallStatus == "Pending")
+                    {
+                        <button class="btn btn-info btn-size" style="width:100px;" onclick="SaveRemark()">
+                            <i class="fa fa-save ico"></i>Save
+                        </button>
+                    }
+                    @if (Model.OverallStatus == "Confirmed")
+                    {
+                        <button class="btn btn-info btn-size" style="width:100px;" onclick="SaveRemarkVerify()">
+                            <i class="fa fa-save ico"></i>Save
+                        </button>
+                    }
+                    @if (Model.OverallStatus == "Verified")
+                    {
+                        <button class="btn btn-info btn-size" style="width:100px;" onclick="SaveRemarkConfirmed()">
+                            <i class="fa fa-save ico"></i>Save
+                        </button>
+                    }
+                    <button class="btn btn-info btn-size" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times ico"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Rejection Model Start here-->
+<div class="modal fade" id="rejctDialog" style="left:4%;">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Reject and Comments</h3>
+            </div>
+            <div class="modal-body">
+                <div class="widget-body ">
+                    <div style="display:flex;justify-content:center;align-content:center">
+                        <div>
+                            @*@Html.HiddenFor(model=>model.AllocationSummaryId)*@
+                            <table>
+                                <tr style="border:none">
+                                    <td class="form-label" style="border:none">
+                                        Comments
+                                        <i class="fa fa-times" style="color:white" id="Remarks_1"></i>
+                                    </td>
+                                    <td style="border:none">
+                                        <div class="name-input-container">
+                                            <textarea type="text" id="RejectRemarks" style="width:300px" rows="2" maxlength="350" /></textarea>
+                                            <input type="hidden" id="fundWithdrawSummaryId" name="fundWithdrawSummaryId" />
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <br />
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info btn-size" style="width:100px;" onclick="SaveRejectionRemark()">
+                        <i class="fa fa-eject ico"></i>Reject
+                    </button>
+                    <button class="btn btn-info btn-size" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times ico"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section Scripts {
+
+    <script>
+
+        //$(document).ready(function () {
+        //    $("#BalanceAmount").autoNumeric('init');
+        //    $("#WithdrawAmount").autoNumeric('init');
+        //    $("#AllocationAmount").autoNumeric('init');;
+        //});
+
+        function ConfirmFund(id) {
+            swal({
+                title: "You're About to Confirm the Fund Withdraw?",
+                text: "Once You confirm  You can't Update Details!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isCofirm) {
+                if (isCofirm) {
+                    $('#remarkDialog').modal('show');
+                    //ConfirmFundWithdrawDetails(id);
+                }
+                else {
+                    swal("Cancelled", "You have not Confirm the Fund Withdraw");
+                }
+            });
+            //$$(".modal-title").modal('hide');
+        }
+
+         function SaveRemark() {
+              if ($("#Remarks").val() == "") {
+                  $("#Remarks").attr("style", "border-color: red;");
+              }
+              else {
+                  var id = $("#FundWithdrawSummaryId").val();
+                   ConfirmFundWithdrawDetails(id);
+              }
+        }
+
+        function ConfirmFundWithdrawDetails(id) {
+            var url = '@Url.Action("ConfirmFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("fundWithdrawList", "FundWithdraw")';
+             $.ajax({
+                    type: "POST",
+                    url: url,
+                    //data: { "id": id },
+                    //contenttype: "application/json; charset=utf-8",
+                    //datatype: "json",
+                     data: CreateForm({
+                         id: id,
+                         remarks: $("#Remarks").val(),
+                         file: $("#RemarkAttachment")[0].files[0]
+                    }),
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Successfully Confirmed!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+        }
+
+        //Verify FundAllocation after confirmed
+         function VerifyFund(id) {
+            swal({
+                title: "Verify the Fund Allocation?",
+                text: "Are you sure?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isCofirm) {
+                if (isCofirm) {
+                      $('#remarkDialog').modal('show');
+                    //VerifyFundWithdrawDetails(id);
+                }
+                else {
+                    swal("Cancelled", "You have not Confirm the Fund Allocation");
+                }
+            });
+         }
+
+        function SaveRemarkVerify() {
+            var remark = $("#Remarks").val();
+              if (remark == "") {
+                  $("#Remarks").attr("style", "border-color: red;");
+              }
+              else {
+                  var id = $("#FundWithdrawSummaryId").val();
+                   VerifyFundWithdrawDetails(id);
+              }
+         }
+
+        function VerifyFundWithdrawDetails(id) {
+            var url = '@Url.Action("VerifyFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")';
+            @*var url1 = '@Url.Action("#", "FundWithdraw")';*@
+            $.ajax({
+                    type: "post",
+                    url: url,
+                    //data: { "id": id },
+                    //contenttype: "application/json; charset=utf-8",
+                    //datatype: "json",
+                    data: CreateForm({
+                         id: id,
+                         remarks: $("#Remarks").val(),
+                         file: $("#RemarkAttachment")[0].files[0]
+                    }),
+                     contentType: false,
+                     processData: false,
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Successfully Verified!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                         else if (response == "Error") {
+                            swal("You have insufficient Amount for withdraw!", { icon: "warning" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+            });
+
+        }
+
+         //Reject Withdraw Fund
+        function RejectedFund(id) {
+            debugger;
+            swal({
+                title: "Are you sure?",
+                text: "You need to reject the Withdraw to Deskofficer!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isCofirm) {
+                if (isCofirm) {
+                    var id = $("#FundWithdrawSummaryId").val();
+                    $('#rejctDialog').modal('show');
+                     $(".modal-body #fundWithdrawSummaryId").val(id);
+                    //ApproveFundAllocationDetails(id);
+                }
+                else {
+                    swal("Cancelled", "You have not Rejected the Fund Allocation");
+                }
+            });
+         }
+
+         function SaveRejectionRemark() {
+            debugger;
+            var remark = $("#RejectRemarks").val();
+            if (remark == "") {
+                $("#RejectRemarks").attr("style", "border-color: red;");
+            }
+            else {
+                var id = $("#fundWithdrawSummaryId").val();
+                saveRejectionFn(id);
+            }
+        }
+
+         ///Rejection Method
+        function saveRejectionFn(id) {
+            debugger;
+             var url = '@Url.Action("RejectFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")';
+            $.ajax({
+                 type: "POST",
+                 url: url,
+                 data: CreateForm({
+                     id: id,
+                     remarks: $("#RejectRemarks").val(),
+                     //file: $("#RemarkAttachment")[0].files[0]
+                 }),
+                 contentType: false,
+                 processData: false,
+                 success: function (response) {
+                     if (response == "Success") {
+                         swal("Rejected Successfully!", { icon: "success" })
+                             .then((e) => window.location.href = url1
+                             );
+                     }
+                     else {
+                         swal(response);
+                     }
+                 },
+                 failure: function (error) {
+                     swal(error);
+                 }
+            });
+        }
+
+        //Approve FundAllocation after confirmed
+         function ApproveFund(id) {
+            swal({
+                title: "Approve the Fund Allocation?",
+                text: "Are you sure!",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isCofirm) {
+                if (isCofirm) {
+                    ApproveFundWithdrawDetails(id);
+                }
+                else {
+                    swal("Cancelled", "You have not Confirm the Fund Allocation");
+                }
+            });
+        }
+
+        function ApproveFundWithdrawDetails(id) {
+            var url = '@Url.Action("ApproveFundWithdrawDetails", "FundWithdraw")';
+            var url1 = '@Url.Action("ConfirmedFundWithdrawList", "FundWithdraw")';
+            $.ajax({
+                    type: "post",
+                    url: url,
+                    data: { "id": id },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Successfully Approved!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                         else if (response == "Error") {
+                            swal("You have insufficient Amount for withdraw!", { icon: "warning" })
+                                .then((value) => {
+                                    window.location.href = url1;
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+            });
+
+        }
+
+          function CreateForm(form) {
+            let _form = new FormData();
+            for (let key in form) {
+                _form.append(key, form[key])
+            }
+            return _form
+        }
+
+    </script>
+}

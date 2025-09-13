@@ -1,0 +1,538 @@
+﻿@{
+    ViewBag.Title = "Unpaid Salary Tracker";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>From</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="FromDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>To</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="ToDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-2"></div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Reference Number</th>
+                                        <th>Total Net Amount</th>
+                                        <th>Total AtSource Amount</th>
+                                        <th>Total AtEmployer Amount</th>
+                                        <th>Total Overall Amount</th>
+                                        <th>OverallStatus</th>
+                                        <th>Overallstatus Description</th>
+                                        @*<th>Action</th>*@
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="viewModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Summary of Net Pay by Vote</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <input type="hidden" name="unpaidId2" id="unpaidId2" value="" />
+                                <button class="btn btn-info PrintBtn" id="Print" onclick="printSlip()">
+                                    <span class="glyphicon glyphicon-print"></span>
+                                    Preview Report
+                                </button>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+
+                        <br />
+                        <table id="dt_view" class="table table-bordered table-condensed"></table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!------------------------- END VIEW DIALOG ---------------------->
+
+@section pagespecific{
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetUnpaidPaymentSummaryTrackerList", "UnpaidPaymentSummaryTracker")' + "/?FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=0",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var totalNetAmount = data[i]["TotalNetAmount"];
+                    if (totalNetAmount != null) {
+                        totalNetAmount = "<p align='right'>" + toLabel(data[i]["TotalNetAmount"]); +"</p>"
+                    } else {
+                        totalNetAmount = "<p align='right'>" + data[i]["TotalNetAmount"]; +"</p>"
+                    }
+
+                    var totalAtSourceAmount = data[i]["TotalAtSourceAmount"];
+                    if (totalAtSourceAmount != null) {
+                        totalAtSourceAmount = "<p align='right'>" + toLabel(data[i]["TotalAtSourceAmount"]); +"</p>"
+                    } else {
+                        totalAtSourceAmount = "<p align='right'>" + data[i]["TotalAtSourceAmount"]; +"</p>"
+                    }
+
+                    var totalAtEmployerAmount = data[i]["TotalAtEmployerAmount"];
+                    if (totalAtEmployerAmount != null) {
+                        totalAtEmployerAmount = "<p align='right'>" + toLabel(data[i]["TotalAtEmployerAmount"]); +"</p>"
+                    } else {
+                        totalAtEmployerAmount = "<p align='right'>" + data[i]["TotalAtEmployerAmount"]; +"</p>"
+                    }
+
+
+                    dt_voucher_listing.fnAddData([i + 1,
+                        data[i]["ReferenceId"],
+                        `<a href="#" onClick=openViewDialog(${data[i].UnpaidInstructionId})>${totalNetAmount}</a>`,
+                        `<a href="#" onClick=detailsAtSource(${data[i].UnpaidInstructionId})>${totalAtSourceAmount}</a>`,
+                        `<a href="#" onClick=detailsAtEmployer(${data[i].UnpaidInstructionId})>${totalAtEmployerAmount}</a>`,
+                       toLabel(data[i]["TotalOverallAmount"]),
+                       data[i]["OverallStatus"],
+                       data[i]["OverallStatusDesc"],
+                       /*action(i, data[i]["OverallStatus"])*/
+                    ]);
+
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+
+                if(data.length == 0){
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchPayment() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetUnpaidPaymentSummaryTrackerList", "UnpaidPaymentSummaryTracker")' + "/?FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+
+
+                        var totalNetAmount = data[i]["TotalNetAmount"];
+                        if (totalNetAmount != null) {
+                            totalNetAmount = "<p align='right'>" + toLabel(data[i]["TotalNetAmount"]); +"</p>"
+                        } else {
+                            totalNetAmount = "<p align='right'>" + data[i]["TotalNetAmount"]; +"</p>"
+                        }
+
+                        var totalAtSourceAmount = data[i]["TotalAtSourceAmount"];
+                        if (totalAtSourceAmount != null) {
+                            totalAtSourceAmount = "<p align='right'>" + toLabel(data[i]["TotalAtSourceAmount"]); +"</p>"
+                        } else {
+                            totalAtSourceAmount = "<p align='right'>" + data[i]["TotalAtSourceAmount"]; +"</p>"
+                        }
+
+                        var totalAtEmployerAmount = data[i]["TotalAtEmployerAmount"];
+                        if (totalAtEmployerAmount != null) {
+                            totalAtEmployerAmount = "<p align='right'>" + toLabel(data[i]["TotalAtEmployerAmount"]); +"</p>"
+                        } else {
+                            totalAtEmployerAmount = "<p align='right'>" + data[i]["TotalAtEmployerAmount"]; +"</p>"
+                        }
+
+
+                        dt_voucher_listing.fnAddData([i + 1,
+                            data[i]["ReferenceId"],
+                            `<a href="#" onClick=openViewDialog(${data[i].UnpaidInstructionId})>${totalNetAmount}</a>`,
+                            `<a href="#" onClick=detailsAtSource(${data[i].UnpaidInstructionId})>${totalAtSourceAmount}</a>`,
+                            `<a href="#" onClick=detailsAtEmployer(${data[i].UnpaidInstructionId})>${totalAtEmployerAmount}</a>`,
+                            toLabel(data[i]["TotalOverallAmount"]),
+                            data[i]["OverallStatus"],
+                            data[i]["OverallStatusDesc"],
+                            /*action(i, data[i]["OverallStatus"])*/
+                        ]);
+
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        // *************** LOAD TABLE DATA END *********************
+          function action(i, overallStatus) {
+
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("Details","UnpaidPaymentSummaryTracker")/?id=' + data[i]["UnpaidInstructionId"] + '">Details</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+
+        }
+
+
+        var dt_view = $('#dt_view').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "targets": [1],
+                "visible": false
+            }
+
+            ],
+            "columns": [
+                {
+                    "className": 'details-control',
+                    "orderable": false,
+                    "data": null,
+                    "defaultContent": ''
+                },
+                { title: "UnpaidInstructionId" },
+                { title: "Vote Code" },
+                { title: "Vote Desc" },
+                { title: "Num Trx" },
+                { title: "Total Amount" }
+            ]
+        });
+
+        $("#dt_view_wrapper .dt-toolbar").remove();
+
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_view.DataTable().search(this.value).draw();
+        });
+
+        function openViewDialog(id) {
+            viewData(id);
+            $("#viewModal").modal("show");
+        }
+
+        var unpaidInstrId;
+        function viewData(id) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetNetAmountSummaryByVote", "UnpaidPaymentSummary")' + "/?id=" + id,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    dt_view.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+
+                        unpaidInstrId = d[i]["UnpaidInstructionId"];
+
+                        dt_view.fnAddData([i + 1,
+                           d[i]["UnpaidInstructionId"],
+                           d[i]["VoteCode"],
+                           d[i]["VoteDesc"],
+                           d[i]["NoofEmployees"],
+                           toLabel(d[i]["TotalAmount"])
+
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function initTableEmployeeDetail(i) {
+            window["dt_view_employee_detail" + i]
+                = $('#dt_view_employee_detail' + i)
+                    .dataTable({
+                        //"sDom": 't',
+                        "columns": [
+                            { title: "#" },
+                            { title: "Check Number" },
+                            { title: "Full Name" },
+                            { title: "Bank Name" },
+                            { title: "Account Number" },
+                            { title: "Check Date" },
+                            { title: "Amount" },
+                            { title: "OverallStatus" },
+                        ]
+                    });
+            $("#dt_view_employee_detail" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_view tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_view.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view_employee_detail' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initTableEmployeeDetail(row.data()[0]);
+                tr.addClass('shown');
+                debugger;
+                getEmployeeDetails(row.data()[0], row.data()[1], row.data()[2], row.data()[4]);
+
+
+            }
+        });
+
+          debugger;
+        function getEmployeeDetails(rowId, id, votecode) {
+            $.ajax({
+                type: "get",
+
+                url: '@Url.Action("GetNetAmountDetails", "UnpaidPaymentSummary")' + "/?id=" + id + "&&votecode=" + votecode + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view_employee_detail" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+
+                        if (d[i]["Checkdate"] != "" && d[i]["Checkdate"] != null) {
+                            checkDate = ToJavaScriptDate(d[i]["Checkdate"]);
+                        }
+                        else {
+
+                            checkDate = "NULL";
+                        }
+
+                        window["dt_view_employee_detail" + rowId]
+                            .fnAddData([i + 1,
+                                d[i]["CheckNo"],
+                                d[i]["FullName"],
+                                d[i]["BankName"],
+                                d[i]["AccountNumber"],
+                                checkDate,
+                                toLabel(d[i]["NetAmount"]),
+                                d[i]["OverallStatus"]
+                            ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function printSlip() {
+
+            PriviewSlip(unpaidInstrId);
+        };
+
+        var PriviewSlip = function (ids) {
+            debugger;
+            $("#divLoader").show();
+            window.location = '@Url.Action("PreviewReportEmployeeDetails", "UnpaidPaymentSummary")/?ids=' + ids
+        };
+
+
+
+        var detailsAtSource = function (id) {
+            $("#divLoader").show();
+            window.location = '@Url.Action("UnpaidAtSourceDetail", "UnpaidPaymentSummary")/' + id;
+        };
+
+       var detailsAtEmployer = function (id) {
+            $("#divLoader").show();
+            window.location = '@Url.Action("UnpaidAtEmployerDetail", "UnpaidPaymentSummary")/' + id;
+        };
+
+
+
+        function ToJavaScriptDate(value) {
+
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+
+
+
+    </script>
+}
+

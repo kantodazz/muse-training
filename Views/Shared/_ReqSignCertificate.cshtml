@@ -1,0 +1,243 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SignCertificateVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "commentForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.ModuleId)
+        @Html.HiddenFor(model => model.ModuleName)
+        @Html.HiddenFor(model => model.ModuleLevel)
+        @Html.HiddenFor(model => model.OverallStatus)
+        @Html.HiddenFor(model => model.Source)
+        @Html.HiddenFor(model => model.Destination)
+        @Html.HiddenFor(model => model.PreviewDestination)
+        @Html.HiddenFor(model => model.StepNo)
+        @Html.HiddenFor(model => model.StepName)
+        @Html.HiddenFor(model => model.IsSigned)
+
+        @if (!Model.IsSigned)
+        {
+            <div class="form-group">
+                <div class="col-md-offset-2 col-md-8">
+                    @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label" })
+
+                    <div class="input-group">
+                        @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "form-control" } })
+                        <span class="input-group-addon">
+                            <button type="button" id="btnSign">Sign</button>
+                        </span>
+                    </div>
+
+                    @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+                </div>
+                @*@Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-offset-1 col-md-7" })
+        <div class="col-md-offset-2 col-md-8">
+            <div class='input-group'>
+                @Html.EditorFor(model => model.Password, new { htmlAttributes = new { @class = "form-control" } })
+                <span class="input-group-addon">
+                    <button type="button"  id="btnSign">Sign</button>
+                </span>
+            </div>
+            @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+        </div>*@
+            </div>
+        }
+        @*<div class="form-group">
+            <div class="col-md-offset-2 col-md-8" style="text-align:center">
+                <button class="btn btn-default" onclick="printCertificate(event)" id="btnSigned" >
+                    View Signed Document
+                </button>
+            </div>
+        </div>*@
+    </div>
+}
+
+<script>
+    $(function () {
+        if ("@Model.IsSigned" == "True") {
+            $("#Remarks").prop("readonly", false);
+            $("#FileName").prop("disabled", false);
+            $("#btnSaveComment").prop("disabled", false);
+            $("#btnSigned").hide();
+            $("#btnViewApproval").prop("disabled", false);
+        } else {
+            $("#Remarks").prop("readonly", true);
+            $("#FileName").prop("disabled", true);
+            $("#btnSaveComment").prop("disabled", true);
+            $("#btnViewApproval").prop("disabled", true);
+            $("#btnSigned").hide();
+        }
+    });
+
+    $("#btnSign").on("click", function () {
+        debugger
+        $("#divLoader").show();
+        $("#btnSign").prop("disabled", true);
+        var module = $("#ModuleName").val();
+        var id = $('#ModuleId').val();
+        var destination = $("#Destination").val();
+        var password = $("#Password").val();
+        var stepName = $("#StepName").val();
+
+        if (password == "") {
+            swal({
+                text: "Please put password first!",
+                icon: "warning",
+                button: "OK",
+            });
+            $("#divLoader").hide();
+            $("#btnSign").prop("disabled", false);
+            return false;
+        }
+
+        //var url = '/IFMISTZ/' + module + '/' + destination+ '/' ;
+        var url = destination;
+
+        //var token = $("[name='__RequestVerificationToken']").val();
+
+        var formData = new FormData();
+        formData.append("id", id);
+        formData.append("password", password);
+        formData.append("stepName", stepName);
+
+        //formData.append("__RequestVerificationToken", token);
+
+        $.ajax({
+                type: "POST",
+                url: url,
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal({
+                            text: "Signed successfully",
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            $("#IsSigned").val(true);
+                            $("#btnSign").prop("disabled", true);
+                            $("#Password").prop("readonly", true)
+                           // $("#Remarks").prop("readonly", false);
+                           // $("#FileName").prop("disabled", false);
+                            $("#btnSaveComment").prop("disabled", false);
+                            $("#btnViewApproval").prop("disabled", false);
+                            $("#btnSigned").show();
+                            location.reload();
+                        });
+                    } else {
+                        swal({
+                            text: response,
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                })
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                    $("#btnSign").prop("disabled", false);
+                }
+            });
+    });
+
+    $('#Remarks').on("keyup", function () {
+        var count = $('#Remarks').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#RemarkCount').text(parseInt(numChars));
+    });
+
+    function printCertificate(event) {
+        event.preventDefault();
+        var module = $("#ModuleName").val();
+        var destination = $("#Destination").val();
+        var previewDestination = $("#PreviewDestination").val();
+        var id = $("#ModuleId").val();
+        var stepName = $("#StepName").val();
+        var url = previewDestination;
+        //var url = 'Url.Action("GetSignedCertificate", "Madai")/?id=' + id +'&&stage=verifierOfficer';
+        window.open(url, '_blank');
+    }
+
+
+    @*$("#btnSaveComment").on("click", function () {
+            $("#divLoader").show();
+            $("#btnSaveComment").prop("disabled", true);
+
+            $.validator.unobtrusive.parse("#commentForm");
+            if (!$("#commentForm").valid()) {
+                $("#divLoader").hide();
+                $("#btnSaveComment").prop("disabled", false);
+                return false;
+            }
+
+            var formData = new FormData();
+
+            formData.append("ModuleId", $('#ModuleId').val());
+            formData.append("ModuleName", $('#ModuleName').val());
+            formData.append("ModuleLevel", $('#ModuleLevel').val());
+            formData.append("OverallStatus", $('#OverallStatus').val());
+            formData.append("Source", $('#Source').val());
+            formData.append("SourceRole", $('#SourceRole').val());
+            formData.append("Destination", $('#Destination').val());
+            formData.append("DestinationRole", $('#DestinationRole').val());
+            formData.append("Remarks", $('#Remarks').val());
+            formData.append("IsRejected", $('#IsRejected').val());
+            formData.append("StepNo", $('#StepNo').val());
+            formData.append("StepName", $('#StepName').val());
+            formData.append("FileName", $("#FileName").get(0).files[0]);
+
+            var url = '@Url.Action("SaveComment", "StandingImprests")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function (response) {
+                    let msg = "Standing imprest confirmed successfuly!";
+                    if ($("#IsRejected").val() == "True") {
+                        msg = "Standing imprest rejected successfuly!";
+                    }
+                    if ($("#IsSigned").val() == "True") {
+                        msg = "Standing imprest approved successfuly!";
+                    }
+
+                    if (response == "Success") {
+                        swal({
+                            text: msg,
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response.status == "Invalid") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                })
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                    $("#btnSaveComment").prop("disabled", false);
+                }
+            });
+        });*@
+</script>

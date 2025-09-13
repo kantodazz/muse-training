@@ -1,0 +1,406 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InstitutionWrapperVm
+
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { id = "institution-form" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.InstitutionSelected, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div>
+            <select id="InstitutionSelected" name="InstitutionSelected[]" multiple="multiple" class="col-md-6" data-val="true" data-val-required="The Funding Source field is required."></select>
+            <span class="field-validation-valid text-danger" data-valmsg-for="InstitutionSelected" data-valmsg-replace="true"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.SubInstitutionSelected, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div>
+            <select id="SubInstitutionSelected" name="SubInstitutionSelected[]" multiple="multiple" class="col-md-6" data-val="true" data-val-required="The Funding Source field is required."></select>
+            <span class="field-validation-valid text-danger" data-valmsg-for="SubInstitutionSelected" data-valmsg-replace="true"></span>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.FundSourceSelected, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.FundSourceSelected, Model.FundSources, "Select Fund Source", new { @class = "form-control  form-group" })
+            @Html.ValidationMessageFor(model => model.FundSourceSelected, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.FundReferenceSelected, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.TextBoxFor(model => model.FundReferenceSelected, new { @class = "form-control  form-group", @placeholder = "Search Fund Reference" })
+            @Html.ValidationMessageFor(model => model.FundReferenceSelected, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.FundCategory, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.FundCategory, new { htmlAttributes = new { @class = "form-control  form-group", @autocomplete = "off", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.FundCategory, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.SubBudgetClass, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.EditorFor(model => model.SubBudgetClass, new { htmlAttributes = new { @class = "form-control  form-group", @autocomplete = "off", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.SubBudgetClass, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-10">
+            @Html.TextAreaFor(m => m.Description, 3, 40, new { @class = "form-control form-group", @value = "Tft.WebRole.Properties.Settings.Default.DefaultLanguage" })
+            @Html.ValidationMessageFor(m => m.Description, "", new { @class = "text-danger" })
+        </div>
+    </div>
+</div>
+}
+
+    <script>
+        $("#btnSave").on("click", function () {
+            $("#btnSave").attr("disabled", true);
+            $.validator.unobtrusive.parse("#institution-form");
+
+            if (!$("#institution-form").valid()) {
+                $("#btnSave").attr("disabled", false);
+                return false;
+            }
+
+            $("#divLoader").show();
+            var token   = $("[name='__RequestVerificationToken']").val();
+            var InstObj = { "ListOfInstitution"    : convertArrayToArrayOfObject($("#InstitutionSelected").val(), "ListOfInstitution")};
+            var SubInst = { "ListOfSubInstitution" : convertArrayToArrayOfObject($("#SubInstitutionSelected").val(), "ListOfSubInstitution")};
+            var url      = '@Url.Action("GenerateAndDownloadTemplateExcelFile", "BulkyTransfer")';
+
+            var data = {
+                "__RequestVerificationToken":   token,
+                "InstitutionSelected":          InstObj.ListOfInstitution,
+                "SubInstitutionSelected":       SubInst.ListOfSubInstitution,
+                "FundSourceSelected":           $("#FundSourceSelected").val(),
+                "FundReferenceSelected":        $("#FundReferenceSelected").val(),
+                "FundCategory":                 $("#FundCategory").val(),
+                "SubBudgetClass":               $("#SubBudgetClass").val(),
+                "Description":                  $("#Description").val()
+                //"ApplyDate":                    $("#ApplyDate").val()
+            };
+
+            $.ajax({
+                url:         url,
+                type:        "POST",
+                data:        JSON.stringify(data),
+                dataType:    "JSON",
+                contentType: "application/json",
+                success:     function (response) {
+                    console.log(response);
+                    if (!response.error) {
+                        window.location.href = "@Url.RouteUrl(new { Controller = "BulkyTransfer", Action = "DownloadExcelTemplateV2" })/?fileName=" + response.fileName;
+                    } else {
+                        swal({
+                            text:    response.message,
+                            icon:    "warning",
+                            button:  "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text:   "An error occured while processing your request, please contact system support",
+                        icon:   "error",
+                        button: "OK",
+                    })
+                },
+                complete: function () {
+                    $("#btnSave").attr("disabled", false);
+                    $("#divLoader").hide();
+                }
+            });
+        });
+
+        $("#FundReferenceSelected").change(function () {
+                var valueSelected = $("#select2-chosen-1").text();
+                console.log(valueSelected);
+                if (valueSelected !== null || valueSelected !== "") {
+                    var index = valueSelected.indexOf(":");
+                    if ((index === 0) || (index < 0)) {
+                        console.log(index);
+                        $("#SubBudgetClass").val(null);
+                        throw new Error('Selected value is null or empty');
+                    }
+                    console.log(index);
+                    //add one step to clear semi colon left
+                    index = index + 1;
+                    var sbc = valueSelected.substr(index);
+                    console.log(sbc);
+                    //trim the result found to clear all space around
+                    var trimmedValue = sbc.trim();
+                    //check if the value is non-null or not empty
+                    if (trimmedValue === null || trimmedValue === "") {
+                        $("#SubBudgetClass").val(null);
+                        throw new Error('Selected value is null or empty');
+                    } else {
+                        var index1 = trimmedValue.indexOf(":");
+
+                        if ((index1 === 0) || (index1 < 0)) {
+                            console.log(index1);
+                            $("#SubBudgetClass").val(trimmedValue.split(":")[0]);
+                            $("#FundCategory").val(null);
+                            throw new Error('Selected value is null or empty');
+                        }
+
+                        console.log(index1);
+                        //add one step to clear semi colon left
+                        index1 = index1 + 1;
+                        var sbc1 = trimmedValue.substr(index1);
+                        console.log(sbc1);
+                        //trim the result found to clear all space around
+                        var trimmedValue1 = sbc1.trim();
+
+                        if (trimmedValue1 === null || trimmedValue1 === "") {
+                            $("#FundCategory").val(null);
+                            throw new Error('Selected value is null or empty');
+                        } else {
+
+                            var fundCtgry = null;
+                            fundCtgry = trimmedValue1.substring(0, trimmedValue1.indexOf(':'));
+                            console.log("-------------||-------------");
+                            console.log(fundCtgry);
+                            console.log("-------------||-------------");
+
+                            $("#FundCategory").val(fundCtgry);
+                            $("#SubBudgetClass").val(trimmedValue.split(":")[0]);
+                        }
+                    }
+                } else {
+                    $("#SubBudgetClass").val(null);
+                    throw new Error('Selected value is null or empty');
+                }
+            });
+
+
+        $(function () {
+            var url = '@Url.Action("GetFundReferences", "BulkyTransfer")';
+            $("#FundReferenceSelected").select2({
+                minimumInputLength  : 2,  // minimumInputLength for sending ajax request to server
+                width               : 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder         : 'Select Fund Receivings',
+                allowClear          : false,
+                initSelection       : function (element, callback) {
+                    var id = $(element).val();
+                    if (id !== "") {
+                        var urlData   = '@Url.Action("GetSelectedFundReference", "BulkyTransfer")';
+                        $.ajax(urlData,{
+                            data      : { id: id },
+                            dataType  : "json"
+                        }).done(function (data) {
+                            //console.log(data);
+                            callback(data);
+                        });
+                    }
+                },
+                ajax: {
+                    url       : url,
+                    type      : "GET",
+                    dataType  : 'json',
+                    data      : function (term) {
+                        return { term: term };
+                    },
+                    results: function (data, page) {
+                        //console.log(data);
+                        return { results: data };
+                    }
+                }
+            });
+        });
+
+        $(document).ready(function () {
+            var url = '@Url.Action("RetrieveInstitutionNamesList", "BulkyTransfer")';
+            $.ajax({
+                type:        "GET",
+                url:         url,
+                contentType: "JSON",
+                success:     function (response) {
+                    var mySelect = $('#InstitutionSelected');
+                    try {
+                        //console.log(response.list.length);
+                        if (!response.error && (response.list.length > 0)) {
+                            $.each(response.list, function (key, object) {
+                                mySelect.append('<option value="' + object.Value + '">' + object.Text + '</option>');
+                            });
+                            mySelect.multiselect({
+                                buttonClass: 'btn btn-default',
+                                buttonWidth: '400px',
+                                maxHeight: 200,
+                                enableFiltering: true,
+                                numberDisplayed: 1,
+                                enableCaseInsensitiveFiltering: true,
+                                filterPlaceholder: 'Search Here..',
+                                includeSelectAllOption: true,
+                                onChange: function (option, checked, select) {
+                                    var values = mySelect.val();
+                                    //console.log(values);
+                                    //populate cost center according to option changes
+                                    populateCostcenter(values);
+                                },
+                                onSelectAll: function () {
+                                    var values = mySelect.val();
+                                    console.log(values);
+                                    //populate cost center according to option changes
+                                    populateCostcenter(values);
+                                },
+                                buttonText: function (options, select) {
+                                    if (options.length === 0) {
+                                        return 'No Institution selected';
+                                    }
+                                    else if (options.length > 1) {
+                                        return 'More than 1 Institutions selected!';
+                                    }
+                                    else {
+                                        var labels = [];
+                                        options.each(function () {
+                                            if ($(this).attr('label') !== undefined) {
+                                                labels.push($(this).attr('label'));
+                                            }
+                                            else {
+                                                labels.push($(this).html());
+                                            }
+                                        });
+                                        return labels.join(', ') + '';
+                                    }
+                                }
+                            });
+                            $("ul.multiselect-container.dropdown-menu").css("background-color", "#FFFFFF");
+                        } else {
+                            displayComponent(mySelect);
+                        }
+                    }
+                    catch (Error) {
+                        displayComponent(mySelect);
+                    }
+                }
+            })
+        });
+
+        function displayComponent(mySelect) {
+            mySelect.multiselect({
+                buttonClass:                     'btn btn-default',
+                buttonWidth: '400px',
+                maxHeight: 200,
+                enableFiltering:                 true,
+                enableCaseInsensitiveFiltering:  true,
+                filterPlaceholder:               'Search Here..',
+                includeSelectAllOption:          true
+            });
+        }
+
+        function populateCostcenter(values) {
+            var url        = '@Url.Action("RetrieveAllCostcenterAccordingly", "BulkyTransfer")';
+            var send       = { data: { selected: values } };
+            $.ajax({
+                type:        "POST",
+                url:         url,
+                contentType: "application/json",
+                dataType:    "JSON",
+                data:        JSON.stringify(send),
+                success:     function (response) { respnseBlockCatcher(response); }
+            })
+        }
+
+        function respnseBlockCatcher(response) {
+            var mySelect1 = $('#SubInstitutionSelected');
+            try {
+                //console.log("DATA");
+                //console.log(response);
+                if (!response.error && (response.list.length > 0)) {
+                    //$('#SubInstitutionSelected option').remove();
+                    //alert("preparing");
+                    mySelect1.empty();
+                    console.log(response.list);
+                    $.each(response.list, function (key, object) {
+                        var opt = null;
+                        opt     = '<option value="' + object.Value + '">' + object.Text + '</option>';
+                        //console.log(/*opt*/);
+                        mySelect1.append(opt);
+                        //$('#SubInstitutionSelected').multiSelect('addOption', { value: object.Value, text: object.Text });
+                    });
+                    mySelect1.multiselect({
+                        buttonClass: 'btn btn-default',
+                        buttonWidth: '400px',
+                        maxHeight: 200,
+                        enableFiltering: true,
+                        enableCaseInsensitiveFiltering: true,
+                        filterPlaceholder: 'Search Here..',
+                        includeSelectAllOption: true,
+                        onChange: function (option, checked, select) {
+                            var values = mySelect1.val();
+                            console.log(values);
+                            //populate cost center according to option changes
+                            //populateCostcenter(values);
+                        },
+                        onSelectAll: function () {
+                            var values = mySelect1.val();
+                            console.log(values);
+                            //populate cost center according to option changes
+                            //populateCostcenter(values);
+                        },
+                        buttonText: function (options, select) {
+                            if (options.length === 0) {
+                                return 'No Cost Center selected ...';
+                            }
+                            else if (options.length > 1) {
+                                return 'More than 1 Cost Center selected!';
+                            }
+                            else {
+                                var labels = [];
+                                options.each(function () {
+                                    if ($(this).attr('label') !== undefined) {
+                                        labels.push($(this).attr('label'));
+                                    }
+                                    else {
+                                        labels.push($(this).html());
+                                    }
+                                });
+                                return labels.join(', ') + '';
+                            }
+                        }
+                    });
+                    $("ul.multiselect-container.dropdown-menu").css("background-color", "#FFFFFF");
+                    mySelect1.multiselect('rebuild');
+                } else {
+                    displayComponent(mySelect1);
+                }
+            }
+            catch (Error) {
+                displayComponent(mySelect1);
+                console.log(Error);
+            }
+        }
+
+        $(document).ready(function () {
+            displayComponent($("#SubInstitutionSelected"));
+        });
+
+        function convertArrayToArrayOfObject(arr, key) {
+            try {
+                var arrEmpty = [];
+                var object   = {};
+                arr.forEach(function (elem, i) {
+                    object = { [key] : elem};
+                    arrEmpty.push(object);
+                });
+                return arrEmpty;
+            } catch (error) {
+                console.log(error);
+                return null;
+            }
+        }
+    </script>

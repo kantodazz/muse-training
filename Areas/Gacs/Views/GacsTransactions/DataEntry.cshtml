@@ -1,0 +1,241 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Note Items";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+        width: 40px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    td {
+        padding: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                   <button class="btn btn-info" onclick="updateBalance()">UPDATE BALANCES</button>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="display:flex;justify-content:flex-end">
+                                       <div>
+                                           <a class="btn btn-info" href="@Url.Action("dataentry", "gacstransactions")/?q=@ViewBag.q">@ViewBag.q</a>
+                                       </div>
+                                        <div class="search-container" style="float:right;margin-left:4px">
+                                            <i class="fa fa-search searchIcon"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                        </div>
+                                    </div>
+                                 </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Fiscal Year</th>
+                                        <th>Note ID</th>
+                                        <th>Note Desc</th>
+                                        <th>Note Category</th>
+                                        <th>Actual Prev Year</th>
+                                        <th>Actual Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr style="background-color:#FAF2CC">
+                                        <th colspan="5" style="text-align:right">TOTAL</th>
+                                        <th id="ActualPrevYearTotal">0.00</th>
+                                        <th id="ActualTotal">0.00</th>
+                                        <th></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific{
+
+    <script>
+        var dt_table = $('#dt_table').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+            paging: '@ViewBag.q'=='DISPLAY ALL'
+        });
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        function LoadData() {
+            $("#loader").text("Loading...")
+          var  actionTemplate = function (Id) {
+                return '<div class="btn-group">\
+                         <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                           <span class="caret"></span\
+                            <span class="sr-only"></span>\
+                         </button>\
+                         <ul class="dropdown-menu">\
+                            <li><a href="@Url.Action("TrxDetails", "GacsTransactions")/?TrxSummaryID=' + Id + '">Trx Details</a></li>\
+                            <li><a  href="@Url.Action("GacsBudgetTrx", "GacsTransactions")/?TrxSummaryID=' + Id + '">Budget Details</a></li>\
+                         </ul>\
+                      </div>'
+          }
+
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetGacsTransactions", "GacsTransactions")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var data = response.data;
+                    dt_table.fnClearTable();
+                    var ActualPrevYearTotal = 0
+                    var ActualTotalTotal = 0
+                    for (var i = 0; i < data.length; i++) {
+                        dt_table.fnAddData([i + 1,
+                           data[i]["FiscalYear"],
+                           data[i]["NoteId"],
+                           data[i]["NoteDesc"],
+                           data[i]["NoteCategory"],
+                           toLabel(data[i]["ActualPrevYear"]),
+                           toLabel(data[i]["ActualTotal"]),
+                           actionTemplate(data[i].TrxSummaryID),
+                        ]);
+                        ActualPrevYearTotal += data[i]["ActualPrevYear"]
+                        ActualTotalTotal += data[i]["ActualTotal"]
+                    }
+                    $("#ActualPrevYearTotal").text(toLabel(ActualPrevYearTotal))
+                    $("#ActualTotalTotal").text(toLabel(ActualTotalTotal))
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        LoadData()
+
+        var FY = []
+        function loadFinancialYear() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetFinancialYear", "GacsTransactions")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    FY = response.data;
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadFinancialYear();
+
+        function updateBalance() {
+            swal({
+                text: 'Select Financial Year',
+                content: "input",
+                button: {
+                    text: "UPDATE",
+                    closeModal: false,
+                },
+            }).then(_ => {
+                var fy = document.getElementById("fyId").value
+                if (!fy) throw null;
+               $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("UpdateEntityOpeningBalance", "GacsTransactions")',
+                    data: { fy },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        swal.stopLoading();
+                        swal.close();
+                        if (response == "Success") {
+                            swal("Updated Successfully!", { icon: "success" })
+                                 .then((value) => {
+                                     window.location.reload();
+                                 });
+                        } else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }).catch(err => {
+                if (err) {
+                    swal("Oops something went wrong.", "Please contact system admin!", "error");
+                } else {
+                    swal.stopLoading();
+                    swal.close();
+                }
+            });
+            var dropDown = document.createElement("select")
+            dropDown.id = "fyId"
+            dropDown.classList.add("swal-content__input")
+            document.getElementsByClassName("swal-content")[0].appendChild(dropDown)
+            var input = document.getElementsByClassName("swal-content__input")[0]
+            input.style.display = "none"
+
+            FY.reverse().forEach(f=> {
+                var option = document.createElement("option")
+                option.text = f.FinancialYearDesc
+                option.value = f.FinancialYearCode
+                dropDown.appendChild(option)
+            })
+        }
+    </script>
+}

@@ -1,0 +1,133 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PayeeVM
+@{
+    var i=0;
+    bool show_save_button = false;
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+<hr />
+<div class="row">
+    <div class="col-md-1" style="padding: 5px; text-align: right">
+        <strong>Payee</strong>
+    </div>
+    <div class="col-md-4">
+        @Html.EditorFor(model => model.PayeeName, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+    </div>
+    <div class="col-md-2" style="padding: 5px;text-align:right">
+        <strong>Payee Code</strong>
+    </div>
+    <div class="col-md-2">
+        @Html.EditorFor(model => model.PayeeCode, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+    </div>
+    <div class="col-md-3">
+        <div class="search-container" style="float:right">
+            <i class="fa fa-search"></i>
+            <input type="search" name="search" placeholder="Search..." id="search-account">
+        </div>
+    </div>
+</div>
+<table class="table table-bordered table-hover table-condensed" id="dt_payee_account">
+
+    <thead>
+        <tr>
+            <th style="text-align:center;width:4%">#</th>
+            <th style="text-align:left">Account Name</th>
+            <th style="text-align:left">Account Number</th>
+            <th style="text-align:left">Bank</th>
+            <th style="text-align:center">Currency</th>
+            <th style="text-align:center">CheckBox</th>
+
+        </tr>
+    </thead>
+
+    <tbody>
+        @foreach(var item in Model.BankAccounts){
+        i++;
+        <tr>
+            <td style="text-align:center">@i</td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.AccountName)
+            </td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.Accountnumber)
+            </td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.BankName)
+            </td>
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.Currency)
+            </td>
+            <td style="text-align:center">
+
+                @if (item.Checked)
+                {
+                    if (Model.OverallStatus == "Pending")
+                    {
+                        <input type="checkbox" name="@item.PayeeDetailId" id="@item.PayeeDetailId" value="@item.Accountnumber" class="checkItem" checked>
+                    }
+
+
+                }
+                else
+                {
+
+                    if (show_save_button==false)
+                    {
+                        show_save_button = true;
+                    }
+                            <input type="checkbox" name="@item.PayeeDetailId" id="@item.PayeeDetailId" value="@item.Accountnumber" class="checkItem">
+                }
+            </td>
+        </tr>
+        }
+    </tbody>
+</table>
+<div class="modal-footer">
+    @if (show_save_button)
+    {
+    <button type="button" class="btn btn-info" id="btn_payee_accounts" onclick="savePayee()">
+        <i class="fa fa-save"></i>Save
+    </button>
+    }
+    @if (Model.OverallStatus == "Pending")
+    {
+    <button class="btn btn-info" data-dismiss="modal" id="cancel_button">
+        <i class="fa  fa-times"></i>Cancel
+    </button>
+    }
+</div>
+<script type="text/javascript">
+    var dt_payee_account = $('#dt_payee_account').dataTable();
+    $("#dt_payee_account_wrapper .dt-toolbar").remove();
+    $("#search-account").on("keyup search input paste cut", function () {
+        $("#dt_payee_account").DataTable().search(this.value).draw();
+    });
+   
+</script>

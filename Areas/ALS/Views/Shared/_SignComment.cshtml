@@ -1,0 +1,92 @@
+﻿@model IFMIS.Areas.ALS.Models.SignedDigitallyVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "commentForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.LoanApplId)
+        @Html.HiddenFor(model => model.ModuleId)
+        @Html.HiddenFor(model => model.AttachmentType)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.PasswordFor(model => model.Password, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+}
+
+<script>
+
+    $("#btnSaveComment").on("click", function () {
+        debugger;
+
+        $("#divLoader").show();
+        $("#btnSaveComment").prop("disabled", true);
+
+        $.validator.unobtrusive.parse("#commentForm");
+        if (!$("#commentForm").valid()) {
+            $("#divLoader").hide();
+            $("#btnSaveComment").prop("disabled", false);
+            return false;
+        }
+
+        var password = $("#Password").val();
+
+        if (password == '') {
+
+            swal("Digital Signature Password is Required");
+            return false;
+        }
+
+        var formData = new FormData()
+
+        formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+        formData.append("LoanApplId", $('#LoanApplId').val());
+        formData.append("ModuleId", $('#ModuleId').val());
+        formData.append("AttachmentType", $('#AttachmentType').val());
+        formData.append('Password', password);
+
+        var url = '@Url.Action("SignedDigitally", "ALSLoanApp")';
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function (response) {
+                if (response == "Success") {
+                    swal({
+                        text: "Signed successfully",
+                        icon: "success",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                } else {
+                    swal({
+                        text: response,
+                        icon: "warning",
+                        button: "OK",
+                    })
+                }
+            },
+            error: function () {
+                swal({
+                    text: "An error occured while processing your request, please contact system support",
+                    icon: "error",
+                    button: "OK",
+                })
+            },
+            complete: function () {
+                $("#divLoader").hide();
+                $("#btnSaveComment").prop("disabled", false);
+            
+            }
+        });
+    });
+</script>

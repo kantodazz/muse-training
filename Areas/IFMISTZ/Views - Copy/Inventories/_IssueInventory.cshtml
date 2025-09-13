@@ -1,0 +1,345 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Complete Inventory";
+}
+
+<fieldset class="scheduler-border">
+    <legend class="scheduler-border">Inventory Details</legend>
+    <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Item Card&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.ItemCard)</div> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Code&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.InventoryCode)</div></div>
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6">
+    <strong>Receiving Number&nbsp;&nbsp:</strong>&nbsp;
+    @if(Model.ReceivingNumber !=null){
+    @Html.DisplayFor(model => model.ReceivingNumber)
+    }
+    else{
+    <span>NA</span>
+    }
+
+</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Item Name&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.ItemName)</div></div>
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Original Quantity&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.Quantity)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Unit of Measure&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.UOM)</div></div>
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Unit Price&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.UnitPrice)  @Html.DisplayFor(model => model.Currency)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Inventory Value&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.InventoryValue) @Html.DisplayFor(model => model.Currency)</div></div>
+    @if (Model.ManufactureDate != null)
+    {
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Manufacture Date&nbsp;&nbsp:</strong>&nbsp;@Convert.ToDateTime(Model.ManufactureDate).ToString("dd/MM/yyyy")</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Expire date&nbsp;&nbsp:</strong>&nbsp;@Convert.ToDateTime(Model.ExpireDate).ToString("dd/MM/yyyy")</div></div>
+
+    }
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Batch Number&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.BatchNo) </div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Source Module&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.SourceModule) @Html.DisplayFor(model => model.Currency)</div></div>
+    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Previous Issued&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.IssuedQuantity)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Balance&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.Remains)</div></div>
+    <div class="row">
+        @if (Model.StoreName != null)
+        {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Store Name&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.StoreName)</div>
+
+
+        }
+        @if (Model.IssueStatus != null)
+        {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Overall Status&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.IssueStatus) </div>
+        }
+    </div>
+    <div class="row">
+
+    </div>
+
+</fieldset>
+
+@Html.HiddenFor(model => model.BalanceQuantity)
+
+@if (Model.IssueInventory == "Pending")
+{
+    if (Model.PreviousIssued > 0)
+    {
+        //Edit  Inventories previously issued
+
+
+             using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuingTwo(this)" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.InventoryDetailId)
+                @Html.HiddenFor(model => model.IssueInventory)
+<div class="form-horizontal">
+    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:100%">
+        <thead>
+            <tr>
+                <th style="text-align:center;width:4%">#</th>
+                <th style="text-align:left;width:15%">Sub Vote/Cost Center</th>
+                <th style="text-align:left;width:35%">Description</th>
+                <th style="text-align:center">Requested</th>
+                <th style="text-align:left">Previous Issued</th>
+                <th style="text-align:left">Quantity</th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+            {
+            var j = i + 1;
+            decimal previous_issued = 0;
+            if (Model.InventoryIssuings[i].IssuedQuantity > 0)
+            {
+            previous_issued = Convert.ToDecimal(Model.InventoryIssuings[i].IssuedQuantity);
+            }
+            if (Model.InventoryIssuings[i].CurrentIssued > 0)
+            {
+            previous_issued = Convert.ToDecimal(Model.InventoryIssuings[i].IssuedQuantity) - Convert.ToDecimal(Model.InventoryIssuings[i].CurrentIssued);
+            }
+            <tr>
+                <td style="text-align:center">@j</td>
+                <td style="width:140px">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelCode)
+                    @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].InventoryIssuingId)
+                    @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].InstitutionSubLevelId)
+
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelDesc)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].RequestedQuantity)
+                </td>
+                <td>
+                    @previous_issued
+                </td>
+
+                <td>
+                    @Html.EditorFor(modelItem => Model.InventoryIssuings[i].CurrentIssued, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, @onkeyup = "enteredQuantityTwo(this)" } })
+                </td>
+
+
+
+            </tr>
+            }
+            <tr><td colspan="5" align="right">Total quantity issuing</td><td align="left"><span id="total_issuing"></span></td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+    </button>
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+            }
+
+        //End edit  Inventories previously issued
+    }
+    else
+    {
+        //Edit  Inventories issued at first time
+
+
+            using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuing(this)" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.InventoryDetailId)
+                @Html.HiddenFor(model => model.IssueInventory)
+<div class="form-horizontal">
+    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:100%">
+        <thead>
+            <tr>
+                <th style="text-align:center;width:4%">#</th>
+                <th style="text-align:left;width:15%">Sub Vote/Cost center</th>
+                <th style="text-align:left;width:45%">Description</th>
+                <th style="text-align:center">Requested</th>
+                <th style="text-align:left">Quantity</th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+            {
+            var j = i + 1;
+            <tr>
+                <td style="text-align:center">@j</td>
+                <td style="width:140px">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelCode)
+                    @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].InstitutionSubLevelId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelDesc)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].RequestedQuantity)
+                </td>
+
+                <td>
+                    @Html.EditorFor(modelItem => Model.InventoryIssuings[i].IssuedQuantity, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, autocomplete = "off", @onkeyup = "enteredQuantity(this)" } })
+                </td>
+
+
+
+            </tr>
+            }
+            <tr><td colspan="4" align="right">Total quantity issuing</td><td align="left"><span id="total_issuing"></span></td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+    </button>
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+            }
+
+        //End edit  Inventories issued at first time
+    }
+
+}
+else
+{
+    if (Model.IssueStatus == "Partial Issued")
+    {
+
+        //Issue  Inventories previously issued
+
+
+             using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuingTwo(this)" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.InventoryDetailId)
+                @Html.HiddenFor(model => model.IssueInventory)
+<div class="form-horizontal">
+    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:100%">
+        <thead>
+            <tr>
+                <th style="text-align:center;width:4%">#</th>
+                <th style="text-align:left;width:15%">Sub Vote/Cost Center</th>
+                <th style="text-align:left;width:40%">Description</th>
+                <th style="text-align:center">Requested</th>
+                <th style="text-align:left">Previous Issued</th>
+                <th style="text-align:left">Quantity</th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+            {
+            var j = i + 1;
+            <tr>
+                <td style="text-align:center">@j</td>
+                <td style="width:140px">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelCode)
+                    @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].InstitutionSubLevelId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelDesc)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].RequestedQuantity)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].IssuedQuantity)
+                </td>
+
+                <td>
+                    @Html.EditorFor(modelItem => Model.InventoryIssuings[i].CurrentIssued, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, @onkeyup = "enteredQuantityTwo(this)" } })
+                </td>
+
+
+
+            </tr>
+            }
+            <tr><td colspan="5" align="right">Total quantity issuing</td><td align="left"><span id="total_issuing"></span></td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+    </button>
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+            }
+
+
+        //Issue  Inventories previously issued
+    }
+    else
+    {
+        //Issue Inventories first time
+
+            using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuing(this)" }))
+            {
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.InventoryDetailId)
+                @Html.HiddenFor(model => model.IssueInventory)
+<div class="form-horizontal">
+    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:100%">
+        <thead>
+            <tr>
+                <th style="text-align:center;width:4%">#</th>
+                <th style="text-align:left;width:15%">Sub Vote/Cost Center</th>
+                <th style="text-align:left;width:50%">Description</th>
+                <th style="text-align:center">Requested</th>
+                <th style="text-align:left">Quantity</th>
+
+            </tr>
+        </thead>
+
+        <tbody>
+            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+            {
+            var j = i + 1;
+            <tr>
+                <td style="text-align:center">@j</td>
+                <td style="width:140px">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelCode)
+                    @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].InstitutionSubLevelId)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubLevelDesc)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].RequestedQuantity)
+                </td>
+
+                <td>
+                    @Html.EditorFor(modelItem => Model.InventoryIssuings[i].IssuedQuantity, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, autocomplete = "off", @onkeyup = "enteredQuantity(this)" } })
+                </td>
+
+
+
+            </tr>
+            }
+            <tr><td colspan="4" align="right">Total quantity issuing</td><td align="left"><span id="total_issuing"></span></td></tr>
+        </tbody>
+    </table>
+</div>
+<div class="modal-footer">
+    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+    </button>
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+            }
+
+
+
+        //End issue Inventories first time
+    }
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

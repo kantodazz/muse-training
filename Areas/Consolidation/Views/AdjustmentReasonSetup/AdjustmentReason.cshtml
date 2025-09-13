@@ -1,0 +1,198 @@
+﻿@{
+    ViewBag.Title = "Adjustment Category List";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                        <a class="btn btn-info" href='@Url.Action("CreateAdjustmentReason", "AdjustmentReasonSetup")'>
+                                            <i class="fa fa-plus"></i> Add New
+                                        </a>
+                                    </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_trxsummary" class="table table-bordered table-condensed table-amount"></table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_trxsummary = $('#dt_trxsummary').dataTable({
+            "data": [],
+            "columnDefs": [
+                {
+                    "targets": [1, 2,3,4,5, 6, 7, 8],
+                    "className": "text-left"
+                }
+            ],
+            //"columnDefs": [{
+            //    "targets": [1],
+            //    "visible": false
+            //}],
+            "columns": [
+           //{
+           //    "className": 'details-control',
+           //    "orderable": false,
+           //    "data": null,
+           //    "defaultContent": ''
+           //},
+           { title: "#" },
+           { title: "Category" },
+           { title: "Debit StartItem" },
+           { title: "Debit EndItem" },
+           { title: "Creadit StartItem" },
+           { title: "Credit EndItem" },
+           { title: "IsGoT" },
+           { title: "Status" },
+           { title: "" }
+          ]
+        });
+
+
+
+        $("#dt_trxsummary_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_trxsummary.DataTable().search(this.value).draw();
+        });
+
+
+
+        function loadPaymentDetails() {
+            var url = '@Url.Action("GetAdjustmentReason", "AdjustmentReasonSetup")';
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    debugger
+                    data = response.data;
+                    dt_trxsummary.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_trxsummary.fnAddData([i + 1,
+                            data[i]["AdjustmentReason"],
+                            data[i]["DrGfsCodeStartItem"],
+                            data[i]["DrGfsCodeEndItem"],
+                            data[i]["CrGfsCodeStartItem"],
+                            data[i]["CrGfsCodeEndItem"],
+                            data[i]["IsGoT"],
+                            data[i]["Status"],
+                              '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                              <li><a href="@Url.Action("EditAdjustmentReason", "AdjustmentReasonSetup")?id='+ data[i]["TrxAdjustmentReasonId"]+'">Edit</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadPaymentDetails()
+
+
+    </script>
+}

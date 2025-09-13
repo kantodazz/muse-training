@@ -1,0 +1,149 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.PaymentBatchVM
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Payment Batch Form</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitData(this)", id = "AddBatch" }))
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.PaymentCategories, htmlAttributes: new { @class = "control-label col-md-2", @style = "padding-right: 5px" })
+                                        <div class="col-md-3" style="padding: 0px">
+                                            @*@Html.EnumDropDownListFor(model => model.PaymentCategories, "Select Payment Category", new { @class = "form-control select2" })*@
+                                            @Html.EditorFor(model => model.PaymentCategories, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.PaymentCategories, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.PayStationId, htmlAttributes: new { @class = "control-label col-md-2", @style = "padding-right: 5px" })
+                                        <div class="col-md-3" style="padding: 0px">
+                                            @Html.DropDownListFor(model => model.PayStationId, Model.PayStations, "Select Pay Station", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.PayStationId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.BatchNo, htmlAttributes: new { @class = "control-label col-md-2", @style = "padding-right: 5px" })
+                                        <div class="col-md-3" style="padding: 0px">
+                                            @Html.EditorFor(model => model.BatchNo, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.BatchNo, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.BatchDesc, htmlAttributes: new { @class = "control-label col-md-2", @style = "padding-right: 5px" })
+                                        <div class="col-md-5" style="padding: 0px">
+                                            @Html.EditorFor(model => model.BatchDesc, new { htmlAttributes = new { @class = "form-control", @width = "200", @height = "400" } })
+                                            @Html.ValidationMessageFor(model => model.BatchDesc, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <button type="submit" class="btn btn-info" id="submit" style="float: left">
+                                                <span class="glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                                                Save
+                                            </button>
+
+                                            <a href="@Request.UrlReferrer" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                                Back
+                                            </a>
+                                        </div>
+                                        @*<div class="col-md-offset-2 col-md-10" style="padding-left: 0px">
+                                            <input type="submit" value="Add Payment Batch" class="btn btn-default" />
+                                            <a href="@Request.UrlReferrer">Back to List</a>
+                                        </div>*@
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts{
+    <script>
+
+            $("#PayStationId").change(function () {
+
+                var id = $(this).val();
+                var paymentCategory = $("#PaymentCategories").val();
+
+                var url = '@Url.Action("GetPaymentBatchNoPerPayStation")';
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    contentType: "html",
+                    data: { id: id, paymentCategory: paymentCategory },
+                    success: function (response) {
+                        $("#BatchNo").val("");
+                        $("#BatchNo").val(response);
+                    }
+                })
+            });
+
+            function SubmitData(formData) {
+                debugger;
+                if (!$("#AddBatch").valid()) {
+                    swal("Please fill required area");
+                    return false;
+                }
+                var url = '@Url.Action("CreatePaymentBatchs", "PaymentBatches")';
+                $("#divLoader").show();
+                var ajaxConfig = {
+                    type: "post",
+                    url: url,
+                    data: new FormData(formData),
+                    success: function (response) {
+                        $("#divLoader").hide();
+                        if (response == "Success") {
+                            swal("Batch saved successfully", { icon: "success" })
+                                .then((value) => {
+                                    var url = '@Url.Action("PaymentBatchList", "PaymentBatches")';
+                                    window.location.replace(url);
+                                });
+                        }
+                        else {
+                            //pageLoading("false");
+                            swal(response, { icon: "warning" });
+                        }
+                    }
+                }
+
+                if ($(formData).attr('enctype') == "multipart/form-data") {
+                    ajaxConfig["contentType"] = false;
+                    ajaxConfig["processData"] = false;
+                }
+                $.ajax(ajaxConfig);
+                return false;
+            }
+
+    </script>
+}

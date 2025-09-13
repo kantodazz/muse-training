@@ -1,0 +1,164 @@
+﻿@{
+    ViewBag.Title = "Pending Budgets";
+}
+
+<div id="divLoader"></div>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Budget Tracker </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+
+                            <div class="row">
+                                <div class="col col-md-1">
+                                    @Html.Label("Institution", htmlAttributes: new { @class = "control-label col-md-2" })
+                                </div>
+                                <div class="col col-md-5">
+                                    @Html.Editor("InstitutionCode", new { htmlAttributes = new { @class = "form-control" } })
+                                </div>
+                            </div>
+
+                            <hr />
+
+                            <div id="searchResults" style="margin-top: 20px; display: none"></div>
+
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+@section Scripts{
+    <script>
+
+        $(function () {
+            $("#InstitutionCode").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder: "Search Institution",
+                allowClear: false,
+                ajax: {
+                    url: '@Url.Action("GetInstitutionsV2", "Institutions")', // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term,
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.institutions }; // data.CountryList returning json data from Controlle
+                    }
+                },
+            });
+        });
+
+        $("#InstitutionCode").on("change", function () {
+
+            $("#divLoader").show();
+            var url = '@Url.Action("GetBudgetSummary", "BudgetSummaries")';
+            var institutionCode = $("#InstitutionCode").val();
+
+            $.ajax({
+                type: "get",
+                url: url,
+                data: { institutionCode: institutionCode },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        });
+
+    </script>
+}

@@ -1,0 +1,142 @@
+﻿@model IEnumerable<GEFTP.Models.geftp_confirm_payroll_vw>
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="panel panel-default" style="font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; font-style:normal; font-size:15px">
+    <!-- Default panel contents -->
+    <div class="panel-heading">
+        <h3 class="panel-title"> Payroll </h3>
+    </div>
+    <div class="panel-body">
+        <div class="well">
+            @{
+                if (Model.Count() == 0)
+                {                    
+                    <div class="row">
+                        <div class="col-md-2">
+                            <a href="#" class="btn btn-success" onclick="runPayroll()">
+                                <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
+                                Run Payroll
+                            </a>
+                        </div>
+                        <div class="col-md-2">
+                            <span id="divLoader" style="display:none">
+                                <img src="~/Media/Images/loader.gif" width="50" height="30" />
+                            </span>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-default btn-flat" disabled>
+                        <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                        Run Payroll
+                    </button>
+                }
+            }
+
+        </div>
+        <hr />
+        <table class="display" id="tblDataList">
+            <thead>
+                <tr>
+                    <th>
+                        @Html.DisplayNameFor(model => model.BeneficiaryCategory)
+                    </th>
+                    <th style="text-align: center" >
+                        @Html.DisplayNameFor(model => model.NumEmp)
+                    </th>
+                    <th style="text-align: center">
+                        @Html.DisplayNameFor(model => model.OriginalNetAmount)
+                    </th>
+                    <th style="text-align: center">
+                        @Html.DisplayNameFor(model => model.TotalAllowanceAmount)
+                    </th>
+                    <th style="text-align: center">
+                        @Html.DisplayNameFor(model => model.TotalDeductionAmount)
+                    </th>
+                    <th style="text-align: center">
+                        @Html.DisplayNameFor(model => model.FinalNetAmount)
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("PayrollBeneficiaries", "Payrolls", new { benCat = item.BeneficiaryCategory, checkDate = item.CheckDate })">
+                            @Html.DisplayFor(modelItem => item.BeneficiaryCategory)
+                            </a>
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(modelItem => item.NumEmp)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(modelItem => item.OriginalNetAmount)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(modelItem => item.TotalAllowanceAmount)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(modelItem => item.TotalDeductionAmount)
+                        </td>
+                        <td align="right">
+                            @Html.DisplayFor(modelItem => item.FinalNetAmount)
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+                "scrollX": false
+            });
+        });
+
+        var runPayroll = function () {
+
+            var url = '@Url.Action("RunPayroll", "Payrolls")';
+
+            $("#divLoader").show();
+
+            $.ajax({
+                url: url,
+                type: "post",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        alert("Payroll Run Successfully!");
+                        $("#divLoader").hide();
+                        window.location = '@Url.Action("Index")';
+                    } else if (response == "InvalidFormat") {
+                        alert("Invalid file format, file format should be MS Excel!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    } else if (response == "InvalidSize") {
+                        alert("Invalid file size, file size should be less than 2MB!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    }
+                    else {
+                        alert("Unknown error, contact system admin!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    };
+                },
+                error: function (response) {
+                    alert(response);
+                    $("#divLoader").hide();
+                    location.reload();
+                }
+            });
+        };
+    </script>
+}

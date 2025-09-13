@@ -1,0 +1,447 @@
+﻿@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanApplicationVM>
+@{
+    ViewBag.Title = "Examine Application Entry ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_appraisal_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Application No</th>
+                                        <th>Customer Name</th>
+                                        <th>Project Region</th>
+                                        <th>Applied Amount</th>
+                                        <th>Registration Date</th>
+                                        <th>Application Date</th>
+                                        <th>OverallStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="ApplicationExamination">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Loan Application:<span id="ApplicationNo1"></span></h4>
+            </div>
+            <div class="modal-body form-horizontal">
+                <center> <span>Fullname: <span id="CustomerName1"></span></center>
+                <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Remarks"> Remarks(<span style="font-weight:bold;" id="Remarks1Count">250</span>)</label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Remarks1" required name="Remarks1" style="width:300px;" maxlength = "250"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Attachment"> Attachment</label>
+                    <div class="col-md-7">
+                        <input type="file" name="Attachment1" id="Attachment1" class="input" style="width:300px" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+
+                <button type="submit" class="btn btn-info" onclick="examineApplicationForm()" id="examineApplication">
+                    <i class="glyphicon glyphicon-arrow-right"></i>Save
+                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ExaminationRejection">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Loan Application:<span id="ApplicationNo2"></span></h4>
+            </div>
+            <input type="hidden" name="ApplicationNo4" id="ApplicationNo4" />
+            <div class="modal-body form-horizontal">
+                <center> <span>Fullname: <span id="CustomerName2"></span></center>
+                <input type="hidden" name="LoanApplicationId" id="LoanApplicationId" />
+                @Html.AntiForgeryToken()
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Remarks"> Remarks</label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Remarks2" required name="Remarks2" style="width:300px;"></textarea>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Attachment"> Attachment</label>
+                    <div class="col-md-7">
+                        <input type="file" name="Attachment2" id="Attachment2" class="input" style="width:300px" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+
+                <button type="submit" class="btn btn-info" onclick="rejectionExamineApplicationForm()" id="rejectApplication">
+                    <i class="glyphicon glyphicon-arrow-right"></i>Save
+                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $('#Remarks1').on("keyup", function () {
+            var count = $('#Remarks1').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#Remarks1Count').text(parseInt(numChars));
+        });
+
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_appraisal_list = $('#dt_appraisal_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+        //$("#dt_appraisal_list_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_appraisal_list.DataTable().search(this.value).draw();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        var LoanApplicationId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetLoanApplicationExaminationList", "LoanApplication")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_appraisal_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    if (data[i]["ApplicationDate"] != "" && data[i]["ApplicationDate"] != null) {
+                        applicationDate = ToJavaScriptDate(data[i]["ApplicationDate"]);
+                    }
+                    else {
+                        applicationDate = "NULL";
+                    }
+                    var amount = data[i]["AppliedLoanAmount"];
+                    if (amount != null) {
+                        amount = "<p align='right'>" + toLabel(data[i]["AppliedLoanAmount"]); +"</p>"
+                    } else {
+                        amount = "<p align='right'>" + data[i]["AppliedLoanAmount"]; +"</p>"
+                    }
+
+                    dt_appraisal_list.fnAddData([i + 1,
+                       data[i]["ApplicationNo"],
+                       data[i]["CustomerName"],
+                        data[i]["RegionName"],
+                      amount,
+                       ToJavaScriptDate(data[i]["CreatedAtDate"]),
+                       applicationDate,
+                       data[i]["OverallStatus"],
+                      '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + data[i]["LoanApplicationId"]+ '">View</a></li>\
+                                 <li><a href="#" onclick="examineApplication(' + i + ')">Examine</a></li>\
+                                 <li><a href="#" onclick="rejectApplication(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        /* END BASIC */
+        function examineApplication(i) {
+            $("#ApplicationNo1").text(data[i]["ApplicationNo"]);
+            $("#CustomerName1").text(data[i]["CustomerName"]);
+            //document.getElementById("ApplicationNo3").value = data[i]["ApplicationNo"];
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#ApplicationExamination').modal('show');
+        }
+
+        function rejectApplication(i) {
+            $("#ApplicationNo2").text(data[i]["ApplicationNo"]);
+            $("#CustomerName2").text(data[i]["CustomerName"]);
+            document.getElementById("LoanApplicationId").value = data[i]["LoanApplicationId"];
+            $('#ExaminationRejection').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        /*START EXAMINE LOAN APPLICATION EXAMINATION*/
+        function examineApplicationForm() {
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remarks = $("#Remarks1").val();
+            var Attachment = $("#Attachment1").val();
+
+            if (LoanApplicationId == '' || Remarks == '') {
+                var url = '@Url.Action("ExamineLoanApplication", "LoanApplication")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment1");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('ModuleId', LoanApplicationId);
+            formData.append('Remarks', Remarks);
+            formData.append('Attachment', $("#Attachment1")[0].files[0]);
+
+            postExamineLoanApplicationFormData(formData);
+        }
+
+        function postExamineLoanApplicationFormData(formData) {
+            $(".loadingImg").show();
+            $("#examineApplication").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("ExamineLoanApplication", "LoanApplication")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $("#examineApplication").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (resultData.response == "Success") {
+                        swal("Application Entry Examined Successfully!", { icon: "success" })
+                            .then((m) => {
+                                location.reload();
+                            });
+                    } else {
+                        $("#examineApplication").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal("Error Examining Loan Application", { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#examineApplication").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal("Error Examining Loan Application", { icon: "warning" });
+                }
+            });
+        }
+        /*END EXAMINE LOAN APPLICATION EXAMINATION*/
+        /*START REJECT LOAN APPLICATION EXAMINATION*/
+        function rejectionExamineApplicationForm() {
+            var LoanApplicationId = $("#LoanApplicationId").val();
+            var Remarks = $("#Remarks2").val();
+            var Attachment = $("#Attachment2").val();
+
+            if (LoanApplicationId == '' || Remarks == '') {
+                var url = '@Url.Action("ExamineLoanApplication", "LoanApplication")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (Attachment != '') {
+
+                var file = document.querySelector("#Attachment2");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('ModuleId', LoanApplicationId);
+            formData.append('Remarks', Remarks);
+            formData.append('Attachment', $("#Attachment2")[0].files[0]);
+
+            postFormData(formData);
+        }
+
+        function postFormData(formData) {
+            $(".loadingImg").show();
+            $("#rejectApplication").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("RejectExamineLoanApplication", "LoanApplication")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $("#rejectApplication").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (resultData.response == "Success") {
+                        swal("Application Entry Rejected Successfully!", { icon: "success" })
+                            .then((m) => {
+                                location.reload();
+                            });
+                    } else {
+                        $("#rejectApplication").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal("Error Rejecting Loan Application", { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#rejectApplication").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal("Error Rejecting Loan Application", { icon: "warning" });
+                }
+            });
+        }
+        /*END REJECT LOAN APPLICATION EXAMINATION*/
+
+    </script>
+}

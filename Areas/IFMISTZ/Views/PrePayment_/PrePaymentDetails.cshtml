@@ -1,0 +1,375 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PrePaymentVM
+@{
+    ViewBag.Title = "Prepayment Details";
+}
+
+@*<div id="content" >*@
+
+    @*<section id="widget-grid">
+        <div class="row">*@
+            <div class="jarviswidget jarviswidget-color-darken" id="wid-id-0" data-widget-colorbutton="false" data-widget-editbutton="false" style="width:100%;top:50px;padding-left:5px;padding-right:5px" >
+
+                <header style="background-color:#2196F3">
+                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                    <h2>Prepayment Details</h2>
+                </header>
+
+                <div>
+                    
+                    <div class="widget-body " style="padding-top:10px;width:100%">
+                        <table class="table  table-hover table-condensed">
+                          <tbody>
+                              <tr>
+                                  <td style="width:20%">Prepayment Number</td>
+                                  <td><strong>@Html.DisplayFor(model => model.PrePaymentNo)</strong></td>
+                              </tr>
+                              <tr>
+                                  <td>Description</td>
+                                  <td> @Html.DisplayFor(model => model.PrePaymentDesc)</td>
+                                  
+                              </tr>
+                              <tr>
+                                  <td>Prepayment Amount</td>
+                                  <td>@Html.DisplayFor(model => model.Currency) @Html.DisplayFor(model => model.PrePaymentAmount)</td>
+                              </tr>
+                              <tr>
+                                  <td>Total Item value</td>
+                                  <td>@Html.DisplayFor(model => model.Currency) @Html.DisplayFor(model => model.GrandTotal)</td>
+                              </tr>
+                              <tr>
+                                  <td>Balance</td>
+                                  <td>@Html.DisplayFor(model => model.Currency) @Html.DisplayFor(model => model.Balance)</td>
+                              </tr>
+                              <tr>
+                                  <td>Currency</td>
+                                  <td>@Html.DisplayFor(model => model.Currency)</td>
+                              </tr>
+                          </tbody>
+                       </table>
+                              
+                           <br/>
+                            <div class="row">
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    @if(Model.TotalItems==0){
+                                        <a href="#" data-toggle="modal" data-target="#lpodetail" data-id=@Model.PrePaymentId class="lpoDetail btn btn-info" style="width:120px;border-radius:1px;background-color:#2196F3;color:white">
+                                            <i class="fa fa-plus"></i>Add  Item
+                                        </a>
+                                }else{
+                                        <a href="#" data-toggle="modal" data-target="#lpodetail" data-id=@Model.PrePaymentId class="lpoDetail btn btn-info" style="width:120px;border-radius:1px;background-color:#2196F3;color:white">
+                                            <i class="fa fa-plus"></i>Add New Item
+                                        </a>
+                                }
+
+                                </div>
+                                <div class="col-sm-6">
+                                </div>
+
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    <div class="input-group"><input class="form-control" id="checkNo" name="checknumber" placeholder="Search item" type="text" @*style="width:100px"*@ pull-right /><span class="input-group-btn"><button class="btn shiny  " id="search" type="submit">Search</button></span></div>
+                                </div>
+                            </div>
+
+                            <br />
+
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="items">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center">#</th>
+                                        <th style="text-align:left">Item</th>
+                                        <th style="text-align:left;width:20%">Item Classification</th>
+                                        <th style="text-align:left">UOM</th>
+                                        <th style="text-align:center">Quantity</th>
+                                        <th style="text-align:right">Unit Price (@Html.DisplayFor(model => model.Currency))</th>
+                                        <th style="text-align:right">Total (@Html.DisplayFor(model => model.Currency))</th>
+                                        <th colspan="2" style="text-align:center;width:10%">Action</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{var i = 0;
+                                    decimal grandTotal=0;
+                                    var item_total=0;}
+                                   @foreach (var item in Model.PrePaymentDetails) {
+                                    grandTotal=grandTotal+Convert.ToDecimal(item.TotalAmount);
+                                    item_total=item_total +(int)item.Quantity;
+                                        i++;
+                                        <tr>
+                                            <td style="text-align:center">
+                                                @i
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.ItemDesc)
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.ItemClassification.ClassificationDesc)
+                                            </td>
+                                            <td style="text-align:left">
+                                                @*@Html.DisplayFor(modelItem => item.UOM.UomName)*@
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.Quantity)
+                                            </td>
+                                            <td style="text-align:right">
+
+                                                @Html.DisplayFor(modelItem => item.UnitPrice)
+
+                                            </td>
+                                            <td style="text-align:right">
+
+                                                @Html.DisplayFor(modelItem => item.TotalAmount)
+                                            </td>
+                                            <td style="text-align:center">
+                                                <div class="lpo">
+
+                                                    @if (Model.OverallStatus.ToUpper() == "PENDING")
+                {
+                                                        <a href="#" data-toggle="modal" data-target="#editAdjust" data-id="' + d.PrePaymentDetailId + '" class="editAdjust btn btn-info btn-xs edit"><i class="fa fa-edit"></i> Edit</a>
+
+                }
+                                                </div>
+                                            </td>
+                                            <td style="text-align:center">
+                                                <div class="lpo">
+
+                                                    @if (Model.OverallStatus.ToUpper() == "PENDING")
+                {
+                                                        <a href="#" data-toggle="modal" class="removeItems btn btn-danger btn-xs delete" data-id=@item.PrePaymentDetailId data-itemdesc='@item.ItemDesc'><i class="fa fa-trash-o"></i> Delete</a>
+
+                }
+                                                </div>
+                                            </td>
+
+                                        </tr>
+
+                                }
+                                    <tr>
+                                        <td colspan="4" style="text-align:right">Total</td>
+                                        <td style="text-align:center">@item_total</td>
+                                        <td style="text-align:center"></td>
+                                        <td style="text-align:right">@grandTotal.ToString("#,##0")</td>
+                                        <td colspan="2"></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+</div>
+                    <div class="panel-footer">
+                        <a href="@Url.Action("PrePayments", "PrePayment")" class="btn btn-default btn-flat">
+                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                            Back
+                        </a>
+                    </div>
+                    </div>
+                    <!-- end widget content -->
+
+                </div>
+                <!-- end widget div -->
+<div class="modal fade" id="lpodetail" style="left:4%">
+
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Prepayment Detail</h3>
+
+            </div>
+@using (Html.BeginForm(null, null, FormMethod.Post, new {@class = "well form-horizontal",id= "prePaymentItem" }))
+{
+
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+                @Html.HiddenFor(model => model.PrePaymentId)
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Item Class</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            @Html.DropDownList("ItemClassificationId", Model.ItemClassificationsList, "Select Item Class", new { @class = "selectpicker", @style = "background-color:white;width:230px;" })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Item</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            @Html.EditorFor(model => model.ItemDesc, new { htmlAttributes = new { @style = "background-color:white;width:230px;height:40px;", @placeholder = "Enter Item" } })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Unit Of Measure</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            <div>
+                                @Html.DropDownList("UomId", Model.UOMList, "Select Item Class", new { @class = "selectpicker", @style = "background-color:white;width:230px;" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Quantity</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @style = "background-color:white;width:230px;height:40px;", @placeholder = "Enter Number of Item" } })
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Unit Price</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @style = "background-color:white;width:230px;height:40px;", @placeholder = "Unit Price" } })
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-md-4 control-label">Total</label>
+                    <div class="col-md-8 inputGroupContainer">
+                        <div class="input-group">
+                            @Html.EditorFor(model => model.TotalAmount, new { htmlAttributes = new { @style = "background-color:white;width:230px;height:40px;", @readonly = "readonly" } })
+                        </div>
+                    </div>
+                </div>
+               
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" style="width:80px;border-radius:1px;background-color:#2196F3;color:white" value="Save" />
+              
+            </div>
+             }
+        </div>
+    </div>
+</div>
+
+            
+        @*</div>
+    </section>*@
+
+@*</div>*@
+
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+   
+<script type="text/javascript">
+
+    $(document).ready(function () {
+
+
+        $(".lpoDetail").on('click', function () {
+            var id = $(this).data('id');
+            $(".modal-body #PrePaymentId").val(id);
+            $('.modal-body #ItemDesc').val("");
+            $('.modal-body #Quantity').val("");
+            $('.modal-body #UnitPrice').val("");
+            $('.modal-body #TotalAmount').val("");
+        });
+        $(function () {
+            $("#prePaymentItem").on('submit', function (e) {
+                e.preventDefault();
+                var item_class = $(".modal-body #ItemClassificationId").val();
+                if (!item_class) {
+                    alert("Please select Item Class !");
+                    return
+                }
+                var itemDesc = $(".modal-body #ItemDesc").val();
+                if (!itemDesc) {
+                    alert("Please enter item !");
+                    return
+                }
+                var uomId = $(".modal-body #UomId").val();
+                if (!uomId) {
+                    alert("Please select Unit of measure !");
+                    return
+                }
+                var quantity = $(".modal-body #Quantity").val();
+                if (!quantity) {
+                    alert("Please enter quantity of items !");
+                    return
+                }
+                var unitPrice = $(".modal-body #UnitPrice").val();
+                if (!unitPrice) {
+                    alert("Please enter unit price !");
+                    return
+                }
+               
+                $('#lpodetail').modal('hide');
+                var formData = $(this).serialize();
+                var url = '@Url.Action("InsertPrePaymentDetails", "PrePayment")';
+                $.ajax(
+                {
+                    type: "POST", //HTTP POST Method
+                    url: url, // Controller/View
+                    data: formData,
+                    success: function (data) {
+                        if (data == "DbException") {
+                            alert(" An error has occured DbException, contact system support");
+                            $("#divLoader").hide();
+                        } else {
+                            alert("Item added successfully");
+                            location.reload();
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        alert("An error has occured, contact system support");
+                        $("#divLoader").hide();
+                    },
+
+                });
+
+            });
+        });
+        $(function () { // this will be called when the DOM is ready
+            $(".modal-body #UnitPrice").keyup(function () {
+                var unit_price = parseFloat($(".modal-body #UnitPrice").val());
+                var quantity = parseInt($(".modal-body #Quantity").val());
+                var total = unit_price * quantity;
+                $(".modal-body #TotalAmount").val(total);
+               
+
+            });
+
+        });
+
+        $('#items').on("click", ".removeItems", function (e) { //user click on remove
+            e.preventDefault();
+            var id = $(this).data('id');
+            var itemDesc = $(this).data('itemdesc');
+            var r = confirm("Do you what to delete  " + itemDesc + " ?");
+            if (!r) {
+                return;
+            }
+            var url = '@Url.Action("DeleteItem", "Procurement")';
+            $.ajax(
+{
+    type: "POST",
+    url: url,
+    data: { id: id },
+    success: function (response) {
+        if (response == "DbException") {
+            alert(" An error has occured DbException, contact system support");
+            $("#divLoader").hide();
+        } else {
+            alert("Deleted successfully");
+            location.reload();
+        }
+    },
+    error: function (xhr) {
+        //console.log(xhr.responseText);
+        alert("An error has occured, contact system support");
+        $("#divLoader").hide();
+    },
+
+});
+        });
+
+    });
+</script>
+
+}
+
+

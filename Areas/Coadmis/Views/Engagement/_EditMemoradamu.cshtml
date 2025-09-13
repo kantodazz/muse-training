@@ -1,0 +1,80 @@
+﻿@model IFMIS.Areas.Coadmis.Models.PlanningMemorandamVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "editiMemoradamuId" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.PlanningMemorandamId)
+
+    <div class="form-group">
+        <label class="control-label col-md-2">Module Type<span class="redStar">*</span></label>
+        <div class="col-md-8">
+            @Html.EditorFor(model => model.ModuleType, new { htmlAttributes = new { @class = "form-control", @readonly=true } })
+            @Html.ValidationMessageFor(model => model.ModuleType, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Remarks<span class="redStar">*</span></label>
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.EditRemarks, new { maxlength = 2500, @class = "form-control", @rows = 5, @cols = 30 })
+            @Html.ValidationMessageFor(model => model.EditRemarks, "", new { @class = "text-danger" })
+        </div>
+    </div>
+</div>
+}
+<script>
+     $("#editMemoradamu").click(function () {
+        debugger;
+        ///$.validator.unobtrusive.parse("#updateByEdit");
+        //if (!$("#updateByEdit").valid()) {
+        //    return false;
+        //}
+
+         var remarks = $("#EditRemarks").val();
+         var planningMemorandamId = $("#PlanningMemorandamId").val();
+
+         if (remarks == '' || planningMemorandamId == '') {
+             swal("Please Fill All the required Fields", { icon: "warning" });
+             return false;
+         }
+        
+
+         var formData = new FormData();
+         formData.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+         formData.append("PlanningMemorandamId", planningMemorandamId);
+         formData.append("Remarks", remarks);
+
+         $("#editMemoradamu").prop('disabled', true);
+         $("#divLoader").toggle(true);
+
+        for (const value of formData.values()) {
+            console.log(value);
+        }
+        var urlList = '@Url.Action("UpdatePlanningMemoradamu", "Engagement")';
+
+        $.ajax({
+            url: urlList,
+            type: "POST",
+            contentType: false,
+            processData: false,
+            data: formData,
+            success: function (response) {
+                $("#editMemoradamu").prop('disabled', false);
+                $("#divLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Memorandamu  Update Successfully!", { icon: "success" })
+                        .then((_) => window.location.reload());
+                }
+                else {
+
+                    swal(response);
+                }
+            },
+            error: function () {
+                $("#editMemoradamu").prop('disabled', false);
+                $("#divLoader").toggle(false);
+                alert('Error Please try again');
+                $('#btnSave').val('Save');
+            }
+        });
+    });
+</script>

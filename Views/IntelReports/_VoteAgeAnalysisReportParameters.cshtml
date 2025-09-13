@@ -1,0 +1,205 @@
+﻿@model IFMIS.Models.VoteAgeAnalysisReportParametersVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "formRole" }))
+{
+
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.VoteCriteria)
+        @Html.HiddenFor(model => model.ReportPath)
+        <div class="form-group">
+            @Html.LabelFor(model => model.FinancialYear, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.DropDownListFor(model => model.FinancialYear, Model.FinancialYears, "Select Financial Year", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.FinancialYear, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.VoteCode, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.DropDownListFor(model => model.VoteCode, Model.VoteCodes, "Select Vote", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.VoteCode, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group" id="divEntitySectors" style="display: none">
+            @Html.LabelFor(model => model.EntitySector, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.DropDownListFor(model => model.EntitySector, Model.EntitySectors, "Select Sector", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.EntitySector, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.EntitySubSector, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.DropDownListFor(model => model.EntitySubSector, Model.EntitySubSectors, "Select Sub Sector", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.EntitySubSector, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group" id="divEntityList" style="display: none">
+            @Html.LabelFor(model => model.Entity, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.DropDownListFor(model => model.Entity, Model.Entities, "Select Entity", new { @class = "form-control select2" })
+                @Html.ValidationMessageFor(model => model.Entity, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.AgeAnalysis, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.DropDownListFor(model => model.AgeAnalysis, Model.AgeAnalyses, "Select Age Analysis", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.AgeAnalysis, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-8">
+                <a href="#" class="btn btn-info" id="btnViewReport">View Report</a>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $("#VoteCode").on("change", function () {
+        if ($(this).val() == "GOT") {
+            $("#divEntitySectors").hide();
+            $("#divEntityList").hide();
+        } else if ($(this).val() == "Entity Sub Sector") {
+            $("#divEntitySectors").show();
+            $("#divEntityList").hide();
+        } else if ($(this).val() == "Specific Entity List") {
+            $("#divEntitySectors").show();
+            $("#divEntityList").show();
+        }
+
+        if ($(this).val() == "Entity Sub Sector" || $(this).val() == "Specific Entity List") {
+            var url = '@Url.Action("GetInstitutionSectors", "InstitutionSectors")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#EntitySector option").remove();
+                        $("#EntitySector").append('<option value="">Select Sector</option>');
+                        $.each(data.sectors, function (i, sector) {
+                            $("#EntitySector").append('<option value="'
+                                + sector.SectorId + '">'
+                                + sector.SectorName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        }
+    });
+
+    $("#EntitySector").on("change", function () {
+            var sectorId = $("#EntitySector").val();
+            var url = '@Url.Action("GetInstitutionSubSectors", "InstitutionSubSectors")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    sectorId: sectorId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#EntitySubSector option").remove();
+                        $("#EntitySubSector").append('<option value="">Select Sub Sector</option>');
+                        $.each(data.subSectors, function (i, subSector) {
+                            $("#EntitySubSector").append('<option value="'
+                                + subSector.SubSectorId + '">'
+                                + subSector.SubSectorName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#EntitySubSector").on("change", function () {
+            if ($("#VoteCode").val() == "Specific Entity List")
+            {
+            var subSectorId = $("#EntitySubSector").val();
+            var url = '@Url.Action("GetInstitutions", "Institutions")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    subSectorId: subSectorId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#Entity option").remove();
+                        $("#Entity").append('<option value="">Select Institution</option>');
+                        $.each(data.institutions, function (i, institution) {
+                            $("#Entity").append('<option value="'
+                                + institution.GacsVoteCode + '">'
+                                + institution.InstitutionCode + ' - ' + institution.InstitutionName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+            }
+    });
+
+    $("#btnViewReport").on("click", function () {
+        var fy = $("#FinancialYear").val();
+        if ($("#VoteCode").val() == "GOT") {
+            $("#VoteCriteria").val(0);
+        } else if ($("#VoteCode").val() == "Entity Sub Sector") {
+            $("#VoteCriteria").val($("#EntitySubSector").val());
+        } else {
+            $("#VoteCriteria").val($("#Entity").val());
+        }
+        var voteCriteria = $("#VoteCriteria").val();
+        var analysisType = $("#AgeAnalysis").val();
+
+        //reportPath = "http://10.1.67.139/reportapp/@Model.ReportPath?vote_code=" + voteCriteria + "&curr_fiscal_yr=" + fy + "&analysis_type=" + analysisType;
+
+        //reportPath = "../../Areas/Gacs/Reports/@Model.ReportPath?vote_code=" + voteCriteria + "&curr_fiscal_yr=" + fy + "&analysis_type=" + analysisType;
+        //window.open(reportPath);
+
+        var url = "../../Areas/Gacs/Reports/@Model.ReportPath";
+        @*var url = "http://10.1.67.186/Areas/Gacs/Reports/@Model.ReportPath";*@
+        var queryString = "vote_code=" + voteCriteria + "&curr_fiscal_yr=" + fy + "&analysis_type=" + analysisType;
+
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("ParameterEncryption", "Report")',
+            contentType: "application/json; charset=utf-8",
+            datatype: "json",
+            data: { "query": queryString },
+            success: function (response) {
+                window.open(url + response);
+            }
+        });
+
+    });
+</script>

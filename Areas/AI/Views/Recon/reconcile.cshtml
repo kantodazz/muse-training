@@ -1,0 +1,322 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+
+<!-- Main Content -->
+<div id="content" style="margin: 5px; margin-top: 30px">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i></span>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <!-- Filters & Buttons Row -->
+                            <div class="row" style="display: flex; align-items: center; gap: 15px; margin: 10px;">
+
+                                <!-- Bank Account Dropdown -->
+                                <select id="accountFilter" class="form-control select2" style="width: 250px;">
+                                    <option value="">-- Select Bank Account --</option>
+                                    @foreach (var item in ViewBag.InstitutionAccount)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                   
+                                </select>
+
+                                <!--CheckDate Filter -->
+                                <input type="date" id="checkDateFilter" class="form-control" style="width: 200px;">
+
+                                <!-- Status Filter -->
+                                <select id="statusFilter" class="form-control" style="width: 200px;">
+                                    <option value="All">All (Pending & Not Matched)</option>
+                                    @*<option value="Pending">Pending</option>
+                                    <option value="Not Matched">Not Matched</option>*@
+                                </select>
+
+                                <!-- Fetch Button -->
+                                <button class="btn btn-primary" id="fetchBtn">
+                                    📊 Fetch Transactions
+                                </button>
+
+                                <!-- Reconcile Button -->
+                                <button class="btn btn-info" id="reconcileBtn" onclick="reconcileTransactions()">
+                                    <span id="reconcileIcon">🔄</span> Reconcile Transactions
+                                </button>
+
+                                <!-- Counter Timer -->
+                                <div id="counterContainer" style="display:none;">
+                                    <strong id="counterText">⏳ Running: 00:00...</strong>
+                                </div>
+                            </div>
+
+                            <br />
+                            <div id="status" class="status"></div>
+                            <div id="loader" style="display: none; text-align: center; margin: 15px;">
+                                <span class="spinner-border spinner-border-sm text-primary"></span>
+                                <strong>Fetching transactions, please wait...</strong>
+                            </div>
+                            <br />
+
+                            <!-- 🔥 Two Side-by-Side Tables -->
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h4>@*📒*@ Cashbook Transactions (<span id="totalCashbook">0</span> total)</h4>
+                                    <table class="table table-striped table-bordered table-hover" id="cashbookTable">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Amount</th>
+                                                <th>Reference</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+
+                                <div class="col-md-6">
+                                    <h4>@*🏦*@ Statement Transactions (<span id="totalStatement">0</span> total)</h4>
+                                    <table class="table table-striped table-bordered table-hover" id="statementTable">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Amount</th>
+                                                <th>Related Ref.</th>
+                                                <th>Description</th>
+                                                <th>Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Pagination Controls -->
+                            <div id="paginationControls" style="margin-top: 10px; text-align: center;">
+                                <button id="prevPage" class="btn btn-sm btn-secondary">⬅️ Previous</button>
+                                <span id="pageInfo"></span>
+                                <button id="nextPage" class="btn btn-sm btn-secondary">Next ➡️</button>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- Spinner Animation Style -->
+<style>
+    @@keyframes spin {
+        0% {
+            transform: rotate(0deg);
+        }
+
+        100% {
+            transform: rotate(360deg);
+        }
+    }
+
+    .spinning {
+        display: inline-block;
+        animation: spin 1s linear infinite;
+    }
+    tr:hover {
+        background-color: #f2f2f2;
+        cursor: pointer;
+    }
+</style>
+
+<script type="text/javascript">
+    let counterInterval;
+    let counterSeconds = 0;
+
+    // Pagination
+    let currentPage = 1;
+    let pageSize = 10;
+    let totalPages = 1;
+    let totalRecords = 0;
+
+    // Filters
+    let selectedAccount = "";
+    let selectedCheckDate = "";
+    let filterStatus = "All";
+
+    $(document).ready(function () {
+        $("#status").html(""); // Clear on load
+        // Initialize Select2
+        $("#accountFilter").select2({
+            placeholder: "Search Bank Account...",
+            allowClear: true
+        });
+
+        // Click "Fetch Transactions" button
+        $("#fetchBtn").click(function () {
+            selectedAccount = $("#accountFilter").val();
+            selectedCheckDate = $("#checkDateFilter").val();
+            filterStatus = $("#statusFilter").val();
+
+            if (!selectedAccount || !selectedCheckDate) {
+                alert("Please select both Bank Account and CheckDate.");
+                return;
+            }
+            loadPendingTransactions(1);
+        });
+
+        // Pagination Buttons
+        $("#prevPage").click(function () {
+            if (currentPage > 1) {
+                currentPage--;
+                loadPendingTransactions(currentPage);
+            }
+        });
+
+        $("#nextPage").click(function () {
+            if (currentPage < totalPages) {
+                currentPage++;
+                loadPendingTransactions(currentPage);
+            }
+        });
+    });
+
+    // Fetch Data (Cashbook + Statement) from your API
+    async function loadPendingTransactions(page) {
+      /*  $("#status").html("");*/
+        $("#loader").show();
+        let url = `http://10.1.87.43:5001/pending-transactions?start=${(page - 1) * pageSize}&length=${pageSize}&bank_account=${selectedAccount}`;
+
+        if (filterStatus !== "All") url += `&status=${filterStatus}`;
+        if (selectedCheckDate) url += `&check_date=${selectedCheckDate}`;
+
+        console.log("🔄 Fetching Data: ", url);
+        try {
+            let response = await fetch(url);
+            let data = await response.json();
+
+            // Update pagination
+            totalRecords = data.recordsTotal;
+            totalPages = Math.ceil(totalRecords / pageSize);
+            currentPage = page;
+
+            // Display totals
+            $("#totalCashbook").text(data.totalCashbookRecords);
+            $("#totalStatement").text(data.totalStatementRecords);
+
+            // Update pagination info
+            $("#pageInfo").html(`Page ${page} of ${totalPages} (${totalRecords} total transactions)`);
+
+            // Render Cashbook Table
+            let cashbookBody = data.cashbook_data.map((tx, i) => `
+                <tr>
+                    <td>${i + 1 + (page - 1) * pageSize}</td>
+                    <td>${tx.OperationalAmount.toLocaleString() ?? "N/A"}</td>
+                    <td>${tx.FundingRef ?? "N/A"}</td>
+                    <td>${tx.ReconciliationStatus ?? "N/A"}</td>
+                </tr>
+            `).join("");
+            $("#cashbookTable tbody").html(cashbookBody);
+
+            // Render Statement Table
+            let statementBody = data.statement_data.map((tx, i) => `
+                <tr>
+                    <td>${i + 1 + (page - 1) * pageSize}</td>
+                    <td>${tx.TransactionAmount.toLocaleString() ?? "N/A"}</td>
+                    <td>${tx.RelatedRef ?? "N/A"}</td>
+                    <td>${tx.Description ?? "N/A"}</td>
+                    <td>${tx.ReconciliationStatus ?? "N/A"}</td>
+                </tr>
+            `).join("");
+            $("#statementTable tbody").html(statementBody);
+            $("#loader").hide();
+
+        } catch (error) {
+            console.error("❌ Error fetching transactions:", error);
+        }
+    }
+
+    // Reconcile
+    async function reconcileTransactions() {
+        if (!selectedAccount) {
+            alert("Please select a bank account before reconciliation.");
+            return;
+        }
+
+        let button = $("#reconcileBtn");
+        let icon = $("#reconcileIcon");
+        let counterContainer = $("#counterContainer");
+        let counterText = $("#counterText");
+        const username = '@User.Identity.Name';
+
+        // UI changes for "in progress"
+        button.prop("disabled", true);
+        icon.addClass("spinning");
+        counterContainer.show();
+        counterSeconds = 0;
+        counterText.text(`⏳ Running: 00:00...`);
+        startCounter();
+
+        try {
+
+            let response = await fetch(`http://10.1.87.43:5001/reconcile?bank_account=${selectedAccount}&checkdate=${selectedDate}`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "X-Username": username }
+            });
+            let result = await response.json();
+            console.log("✅ API Response:", result);
+
+            $("#status").html(`✅${result.message} <br> Matched Transactions: ${result.matched_transactions}
+            <br> Account: ${selectedAccount} <br> CheckDate: ${selectedDate}`);
+
+            // Reload to see updated statuses
+            loadPendingTransactions(currentPage);
+        } catch (error) {
+            console.error("❌ Reconciliation Error:", error);
+            $("#status").html("❌ Connection error. Please check your network or API server.");
+        } finally {
+            button.prop("disabled", false);
+            icon.removeClass("spinning");
+            clearInterval(counterInterval);
+            setTimeout(() => { counterContainer.hide(); }, 2000);
+        }
+    }
+
+    //Timer for Reconcile
+    function startCounter() {
+        clearInterval(counterInterval);
+        counterSeconds = 0;
+        counterInterval = setInterval(() => {
+            let minutes = Math.floor(counterSeconds / 60);
+            let seconds = counterSeconds % 60;
+            $("#counterText").text(`⏳ Running: ${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`);
+            counterSeconds++;
+        }, 1000);
+    }
+
+    $("#accountFilter").change(function () {
+        debugger
+        selectedAccount = $(this).val();
+        $("#status").html(""); // Clear status message
+        //if (selectedAccount) {
+        //    loadPendingTransactions(1);
+        //}
+    });
+    $("#checkDateFilter").change(function () {
+        selectedDate = $(this).val();
+        $("#status").html(""); // Clear status message
+    });
+
+    function clearStatusIfNotReady() {
+        if (!selectedAccount || !selectedDate) {
+            $("#status").html(""); // Clear if either filter is incomplete
+        }
+    }
+</script>

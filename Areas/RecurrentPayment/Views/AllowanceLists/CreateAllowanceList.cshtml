@@ -1,0 +1,154 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.AllowanceListVM
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 5%">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+
+                        <h2 style="color:black;">Add Allowance.</h2>
+
+                    </header>
+                    <div>
+                        <div class="widget-body" style="padding-top:10px; width:100%;">
+
+                            <table style="width:100%;">
+                                <tr>
+                                    <td>
+                                        @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitData(this)", id = "AddAllowance" }))
+                                        {
+                                            @Html.AntiForgeryToken()
+                                        <div class="form-horizontal">
+
+                                            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.AllowanceName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.AllowanceName, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.AllowanceName, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.AllowanceDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.AllowanceDescription, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.AllowanceDescription, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.AllowanceAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.AllowanceAmount, new { htmlAttributes = new { @class = "form-control" } })
+                                                    @Html.ValidationMessageFor(model => model.AllowanceAmount, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.IsLoanEntitled, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.IsLoanEntitled, new { htmlAttributes = new { @class = "form-control select2" } })
+                                                    @Html.ValidationMessageFor(model => model.IsLoanEntitled, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group">
+                                                @Html.LabelFor(model => model.IsActive, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-5">
+                                                    @Html.EditorFor(model => model.IsActive, new { htmlAttributes = new { @class = "form-control select2" } })
+                                                    @Html.ValidationMessageFor(model => model.IsActive, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <div class="col-md-offset-2 col-md-10">
+                                                    <button type="submit" class="btn btn-info" id="form_submision" style="float: left">
+                                                        <span class="glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                                                        Save
+                                                    </button>
+
+                                                    <a href="@Url.Action("AllowanceList","AllowanceLists")" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                        <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                                        Back
+                                                    </a>
+                                                </div>
+                                            </div>
+                                            
+                                        </div>
+                                        }
+                                    </td>
+                                    <td colspan="1"></td>
+                                </tr>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts{
+    <script>
+
+        $("#saveLoader").toggle(false);
+        $('#AllowanceAmount').autoNumeric('init');
+
+        $("#AllowanceAmount").change(function () {
+            var allowanceAmount = $("#AllowanceAmount").val();
+            if (allowanceAmount < 1) {
+                swal("Amount can not be less than 1", { icon: "warning" });
+                $("#AllowanceAmount").val("");
+            }
+        })
+
+        function SubmitData(formData) {
+            debugger;
+            if (!$("#AddAllowance").valid()) {
+                swal("Please fill required area");
+                return false;
+            }
+            var url = '@Url.Action("CreateAllowanceList", "AllowanceLists")';
+            $("#divLoader").show();
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Allowance saved successfully", { icon: "success" })
+                            .then((value) => {
+                                var url = '@Url.Action("AllowanceList", "AllowanceLists")';
+                                window.location.replace(url);
+                            });
+                    }
+                    else {
+                        //pageLoading("false");
+                        swal(response, { icon: "warning" });
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+    </script>
+}

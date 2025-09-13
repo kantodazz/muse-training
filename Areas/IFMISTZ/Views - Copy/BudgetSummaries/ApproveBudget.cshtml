@@ -1,0 +1,362 @@
+﻿@model List<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Budget Approval";
+}
+<script type="text/javascript">
+    function ConfirmUpdate() {
+
+        return confirm("Do you want to Update these records.?");
+    }
+
+    function SelectedIndexChanged() {
+        $("#ApprovalStatus").val($('#SelectedApprovalStatus').val());
+    }
+
+
+</script>
+<style>
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budget Approval</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                                <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                    <thead>
+                                        <tr style="text-align:left">
+                                            <th data-hide="phone">S/N</th>
+                                            <th data-class="expand"> Financial Year</th>
+                                            <th>Budget Type</th>
+                                            <th>Sub Budget Class</th>
+                                            <th>Funding Source</th>
+                                            <th>Status</th>
+                                            <th>Amount</th>
+                                            <th>Action</th>
+                                    </thead>
+                                    <tbody>
+                                        @{ int j = 0;}
+                                        @foreach (var budg in Model)
+                                        {
+                                            j = j + 1;
+                                            decimal? opamt = 0;
+                                            <tr>
+                                                <td>
+                                                    @j
+                                                    @Html.HiddenFor(model => budg.BudgetSummaryId)
+                                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                                </td>
+                                                <td>
+                                                    @budg.FinancialYearDesc
+                                                </td>
+                                                <td>
+                                                    @budg.JournalTypeDesc
+                                                </td>
+                                                <td>
+                                                    @budg.SubBudgetClass - @budg.SuBbudgetClassDesc
+                                                </td>
+                                                <td>
+                                                    @budg.FundingSource - @budg.FundingSourceDesc
+                                                </td>
+                                                <td>
+                                                    @budg.OverAllStatus
+                                                </td>
+                                                <td align="right">
+                                                    @if (budg.UpdatedAmount == 0)
+                                                    {
+                                                        opamt = budg.OperationalAmount;
+                                                    }
+                                                    else
+                                                    {
+                                                        opamt = budg.UpdatedAmount;
+                                                    }
+                                                    @string.Format("{0:#,0.00}", opamt)
+                                                </td>
+                                                <td>
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                            
+                                                            <span class="caret"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <input type="hidden" id="ctr-@j" value="@budg.BudgetSummaryId" />
+                                                        <ul class="dropdown-menu">
+                                                            <li><a href="#" onclick="approvebudget(@budg.BudgetSummaryId)">Approve</a></li>
+                                                            <li><a href="#" onclick="reject(@budg.BudgetSummaryId)">Reject</a></li>
+                                                            
+                                                        </ul>
+                                                       
+                                                    </div>
+                                                </td>
+                                                
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Approve</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Approve this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Rejection Reason</h4>
+            </div>
+
+            <form id="RejectForm">
+                <input type="hidden" name="id" id="id" value="" />
+                <input type="hidden" name="CostCenter" id="CostCenter" value="" />
+                <div class="modal-body">
+                    <textarea cols="75%" id="Comments" required name="Comments" rows="5%"></textarea>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="form_submision" style="float:left">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info delete-cancel" style="float:left" data-dismiss="modal">Cancel</button>
+
+                </div>
+            </form>
+        </div>
+        
+    </div>
+</div>
+@section pagespecific{
+   
+    <script>
+
+    var datatable_tabletools = $('#datatable_tabletools').dataTable({
+        "autoWidth": true,
+        "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+        "bPaginate": false,
+        "info": true,
+    });
+
+ // GRAB THIS==================================
+    $("#searchbox").on("keyup search input paste cut", function () {
+        datatable_tabletools.DataTable().search(this.value).draw();
+    });
+
+//END HERE ==========================================
+    $(function () {
+            $("#cboAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w3-check").prop('checked', true);
+                }
+                else {
+                    $(".w3-check").prop('checked', false);
+                }
+            });
+        })
+        $(function () {
+            $("#cboApprAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w4-check").prop('checked', true);
+                }
+                else {
+                    $(".w4-check").prop('checked', false);
+                }
+            });
+        })
+        
+        function reject(id) {
+            //if (i == 'x') i = globalPayeeId;
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    console.log(remark)
+                    confirmRejection(id, remark);
+
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        /**
+         * Send Rejection signal to the backend
+         * param  {Int} i - Id of the selected Item
+         */
+        function confirmRejection(Id, remark) {
+
+            var url = '@Url.Action("RejectBudget", "BudgetSummaries")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "comment": remark },
+
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Transaction Rejected Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        //=================== APPROVE START =========================  
+        /**
+        * Show Approve Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function approvebudget(id) {
+           // if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Approve this record ?',
+                text: "This Process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmApproval(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send Acceptance signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmApproval(id) {
+            var url = '@Url.Action("ApprBudget", "BudgetSummaries")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** Approve END **************************
+
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Approve this record ?');
+        });
+
+    </script>
+}

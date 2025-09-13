@@ -1,0 +1,250 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Legal Review Attachment";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div style="display:flex;flex-direction:row;justify-content:space-between">
+                                <div>
+                                    <a class="btn btn-info" href='@Url.Action("LoanLegalReviewAttachmentCreate", "LoanLegalReviewAttachment")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th style="width:30px">#</th>
+                                        <th>Loan Security</th>
+                                        <th>Customer Type</th>
+                                        <th>Attachment</th>
+                                        <th>Required</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+
+        function LoadData() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetLoanLegalReviewAttachments", "LoanLegalReviewAttachment")',
+                data: { status: ['Pending', 'Rejected'].toString() },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_table.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_table.fnAddData([i + 1,
+                           data[i]["LoanSecurityName"],
+                           data[i]["CustomerTypeName"],
+                           data[i]["AttachmentName"],
+                           data[i]["IsRequired"] ? "YES" : "NO",
+                           '<div class="btn-group" id="drop-' + i + '">\
+                               <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                               </button>\
+                             <ul class="dropdown-menu">\
+                                   <li><a href="#" onclick= "cancel(' + data[i]["LoanLegalReviewAttachmentId"] + ')">Cancel</a></li>\
+                              </ul>\
+                           </div>\
+                           <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                        ]);
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                },
+                failure: function (errmsg) {
+                    alert(errmsg);
+                }
+            });
+        }
+        LoadData()
+
+
+        function cancel(Id) {
+            swal({
+                title: "Cancel this Attachment",
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    confirmPost(Id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function confirmPost(Id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("LoanLegalReviewAttachmentCancel", "LoanLegalReviewAttachment")',
+                data: CreateForm({ Id }),
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => window.location.reload());
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function CreateForm(form) {
+            let _form = new FormData();
+            for (let key in form) {
+                _form.append(key, form[key])
+            }
+            return _form
+        }
+    </script>
+}

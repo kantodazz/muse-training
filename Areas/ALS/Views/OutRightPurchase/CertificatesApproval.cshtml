@@ -1,0 +1,897 @@
+﻿@model IEnumerable<IFMIS.Areas.ALS.Models.ALS_OutRightSale>
+@{
+    ViewBag.Title = "Certificate Approval";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<!-- MAIN CONTENT -->
+<div id="content">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <div id="divLoader"></div>
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                    usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+                    data-widget-colorbutton="false"
+                    data-widget-editbutton="false"
+                    data-widget-togglebutton="false"
+                    data-widget-deletebutton="false"
+                    data-widget-fullscreenbutton="false"
+                    data-widget-custombutton="false"
+                    data-widget-collapsed="true"
+                    data-widget-sortable="false"
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> Approval - Certificates of Allocation  </h2>
+                    </header>
+                    <!-- widget content -->
+                    <div class="widget-body">
+
+                        <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed table-condensed" width="100%">
+                            <thead>
+                                <tr>
+                                    <th> # </th>
+                                    @*<th>  <input type="checkbox" class="cbCheckAllReq" />  </th>*@
+                                    <th>  Certificate Number </th>
+                                    <th>  Check Number  </th>
+                                    <th>  Full Name </th>
+                                    <th style="text-align:center">  Vote  </th>
+                                    <th>  Payment Option </th>
+                                    <th>  Asset Code </th>
+                                    <th style="text-align:right">  Asset Value </th>
+
+                                    <th style="text-align:center">  Status  </th>
+                                    <th>  Action  </th>
+                                </tr>
+                            </thead>
+                            @{
+                                int i = 0;
+                            }
+                            <tbody>
+                                @foreach (var item in Model)
+                                {
+                                    i++;
+                                    <tr>
+                                        <td>
+                                            @i
+                                        </td>
+                                        @*<td>
+                                                <input type="checkbox" class="checkItem" value="@item.OutrightSalesID" style="margin-left:10px" />
+                                            </td>*@
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.CertificateNumber)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.CheckNumber)
+                                        </td>
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.FirstName)  @Html.DisplayFor(modelItem => item.MiddleName)    @Html.DisplayFor(modelItem => item.LastName)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.VoteCode) -  @Html.DisplayFor(modelItem => item.VoteName)
+                                        </td>
+                                        <td>
+                                            @item.PaymentOption
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.AssetCode)
+                                        </td>
+                                        <td style="text-align:right">
+                                            @Convert.ToDecimal(item.AssetValue).ToString("#,##0")
+                                        </td>
+
+                                        <td style="text-align:center">
+                                            <a href="#" onclick="viewBillStatus('@item.OutrightSalesID')"> View Bill Status </a>
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu dropdown-menu-right" style="width:30px">
+
+                                                    @if (item.OverallStatus == "Authorized")
+                                                    {
+                                                        <li><a href="#" onclick="Outrightletter(@item.OutrightSalesID)"><i class="fa fa-edit"></i> Print Release Letter </a></li>
+                                                        <li><a href="#" onclick="printtraletter(@item.OutrightSalesID)"><i class="fa fa-edit"></i> Print TRA Letter  </a></li>
+                                                    }
+                                                    else
+                                                    {
+
+                                                        <li><a href="#" onclick="certfDetails(@item.OutrightSalesID)">  Details </a></li>
+                                                        <li><a href="#" onclick="Approve(@item.OutrightSalesID)"><i class="fa fa-edit"></i> Approve </a></li>
+                                                    }
+
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+                <!-- end widget -->
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Assignment Certificate of Allocation </h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="ALSLoanSummaryID" id="ALSLoanSummaryID" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Loan Officer
+                                    <i class="fa fa-times" style="color:white" id="userId1"></i>
+
+                                </td>
+                                <td>
+                                    <select name="userId" id="userId" required class="form-control select2">
+                                        @if (ViewBag.LoanOfficerList != null)
+                                        {
+                                            <option value="NULL">Select Loan officer</option>
+                                            foreach (var loanUser in ViewBag.LoanOfficerList)
+                                            {
+                                                <option value='@loanUser.Id'>@loanUser.UserName</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+
+                            </tr>
+                            <tr>
+                                <td style="padding-bottom:20px"></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="AssignForm()" id="assignform">
+                        <i class="fa fa-times"></i>Assign
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="detailsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">  </h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body" id="certDetail_body">
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+           
+                    <button class="btn btn-info btn-150" id="btncancel" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="slipModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Attachment </h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body" id="transferSlip_body" style="height:auto">
+
+                        <div id="detailID"><iframe height="700" id="slipImage" width="100%" src=""></iframe></div>
+
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    @*<button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="accept('x')">
+                            <i class="fa fa-check"></i>Accept
+                        </button>
+                        <button class="btn btn-info btn-150" data-dismiss="modal" style="width:100px;" onclick="reject('x')">
+                            <i class="fa  fa-times-circle"></i> Reject
+                        </button>*@
+                    <button class="btn btn-info btn-150" id="btncancel" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i> Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="RemarkingModal">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+
+            <div class="modal-header" style="background-color:#b3e5fc;">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">  Remark </h3>
+
+            </div>
+            @using (Html.BeginForm("SaveRemark", "OutRightPurchase", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-3">  </div>
+                            <div class="col-md-8">
+                                <input type="hidden" value="CertificatesApproval" id="ActionUrl" name="ActionUrl" readonly="readonly" class="form-control" />
+                                <input type="hidden" value="" id="ModuleId" name="ModuleId" readonly="readonly" class="form-control" />
+                                <input type="hidden" id="ModuleName" value="CashOutRightSales" name="ModuleName" readonly="readonly" class="form-control" />
+                                <input type="hidden" id="ModuleLevel" value="CA - pprover" name="ModuleLevel" readonly="readonly" class="form-control" />
+                                <input type="hidden" id="OverallStatus" value="Approved" name="OverallStatus" readonly="readonly" class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3"> Remark </div>
+                            <div class="col-md-8">
+                                @Html.TextArea("Remarks", new { @class = "form-control" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3"> Attachment  </div>
+                            <div class="col-md-8">
+                                <input type="file" class="form-control" name="Attachment" id="attachment" accept=".pdf" />
+                            </div>
+                        </div>
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group" style="float:left;margin:0px 0px 0px 85px">
+                        <div class="col-md-offset-3 col-md-7">
+                            &nbsp;&nbsp; <input type="submit" id="saveRemark" value="Save" class="btn btninfo" />
+                        </div>
+                    </div>
+
+                </div>
+            }
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<div class="modal fade" id="BillsModal">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content ">
+
+            <div class="modal-header" style="background-color:#b3e5fc;">
+                @*<a href="#" class="close" data-dismiss="modal">&times;</a>*@<a href="#" class="close" data-dismiss="modal"></a><a href="#" class="close" data-dismiss="modal"></a><a href="#" class="close" data-dismiss="modal"></a>
+                <h3 class="modal-title">  Bill Details </h3>
+
+            </div>
+
+            <div class="modal-body">
+
+                <table class="table table-bordered table-striped" id="tblBills">
+                    <thead>
+                        <tr style="font-weight:bold">
+                            <td> # </td>
+                            <td>  Bill Type  </td>
+                            <td style="text-align:right">  Bill Amount  </td>
+                            <td>  Remark  </td>
+                            <td>  Bill Valid Days </td>
+                            <td>  Rereference No </td>
+                            <td> Status </td>
+                            <td> Contdol Number </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    </tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default btn-flat" data-dismiss="modal">
+                    <span class="fa fa-times" aria-hidden="true"></span>
+                    Close
+                </a>
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+<div class="modal fade" id="signingDigitallyModal" style="left:4%">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Signing Digitally</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Password
+                                    <i class="fa fa-times" style="color:white" id="password_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" name="password" id="password" class="input" />
+                                        @*<input type="password" id="pwd" name="pwd" minlength="8" />*@
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="signingForm()" id="signingform">
+                        <i class="fa fa-times"></i>Sign
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- END MAIN CONTENT -->
+
+@section pagespecific{
+
+    <script type="text/javascript">
+
+        $(".cbCheckAllReq").click(function () {
+            $(".checkItem").prop('checked',
+                $(this).prop('checked'));
+        });
+
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+        $(document).ready(function () {
+            /* // DOM Position key index //
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+            Also see: http://legacy.datatables.net/usage/features
+            */
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC*/
+            /* COLUMN FILTER */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sTitle": "SmartAdmin_PDF",
+                            "sPdfMessage": "SmartAdmin PDF Export",
+                            "sPdfSize": "letter"
+                        },
+                        {
+                            "sExtends": "print",
+                            "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                        }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+            /*END TABLETOOLS*/
+        })
+
+
+
+        var csvIds = [];
+        function assign() {
+            debugger;
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val().replace('/', ''));
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No Item Selected", { icon: "info" })
+                return;
+            }
+            else {
+                $('#commentModal').modal('show');
+            }
+
+        };
+
+
+        function AssignForm() {
+            debugger;
+            $("#divLoader").show();
+            var ids = csvIds;
+            var userId = $("#userId").val();
+            var username = $("#userId option:selected").text();
+            var remarks = $("#remarks").val();
+            $.ajax({
+                type: "POST",
+                url: "CertificateAssignment",
+                data: { OutRightSalesIds: ids, UserId: userId, remark: remarks },
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Certificate Successfully Assigned to " + username, { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                        $("#divLoader").hide();
+
+                    } else {
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                        $("#divLoader").hide();
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+
+         //----Display Details---//
+        var certfDetails = function (id) {
+            debugger
+            var url = '@Url.Action("CertificateDetails", "OutRightPurchase")';
+            $("#certDetail_body").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#certDetail_body").html(status + " Error on accessing this details, contact system support.");
+                }
+                $("#detailsModal").modal("show");
+            });
+        };
+
+
+
+        function Verify(i, id) {
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Are you sure?",
+                text: "To Re-Submit Selected Certifcate Details",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    VerifyCertificate(i)
+                }
+            });
+
+        };
+
+
+        var VerifyCertificate = function (id) {
+
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "POST",
+                url: "VerifyCertificate",
+                data: { ids: id },
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Verified  Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response, { icon: "info" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+
+        };
+
+
+        function Approve(i, id) {
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Are you sure?",
+                text: "To Approve Selected Certifcate Details",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                 //ApprovedCertificate(i)
+                    attachmentRemark(i);
+                }
+            });
+
+        };
+
+
+        function signOutRight(i, id) {
+            debugger;
+            if (i == 'x') i = id;
+            swal({
+                title: "Confirmation",
+                text: "Selected Detail Will be Signed Digitally",
+                buttons: [
+                    'Proceed',
+                    'Cancel'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    //  ApprovedCertificate(i)
+                    digitalsignature(i);
+                }
+            });
+
+        };
+
+
+        var digitalsignature = function (id) {
+
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "POST",
+                url: "SignData",
+                data: { ids: id, level:"Approve"},
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Successfully Signed", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response, { icon: "info" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+
+        };
+
+
+         function PreviewAttachment(slipfile) {
+            debugger;
+            var url = '@Url.Content("~/Media/Attachments/")'+ slipfile;
+            document.getElementById("slipImage").src = url;
+            $('#detailID').dialog({
+                                 autoOpen: true,
+                                 width: 900,
+                                 height: 700,
+                                 position: 'center',
+                                 resizable: true,
+                                draggable: true
+                                });
+        };
+
+
+        var attachmentRemark = function (csvIds) {
+            $("#divLoader").show();
+            $("#RemarkingModal").modal("show");
+            $(".modal-body #ModuleId").val(csvIds);
+            $("#divLoader").hide();
+        };
+
+
+        function getUrlVars() {
+            debugger;
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        $(document).ready(function () {
+            debugger;
+            var urlvalue = getUrlVars()["remark"];
+            if (urlvalue == "Success") {
+                swal("Successfully Approved", { icon: "success" })
+                    .then((value) => {
+                         window.location.href = '@Url.Action("CertificatesApproval", "OutRightPurchase")';
+                    })
+            }
+
+        });
+
+        var tblBills = $('#tblBills').dataTable();
+        $("#tblBills_wrapper .dt-toolbar").remove();
+        $("#tblBills_wrapper .dt-toolbar-footer").remove();
+
+        function viewBillStatus(id) {
+            debugger;
+            $("#divLoader").show();
+            $.ajax({
+                type: "POST",
+                url: "ViewBillStatus",
+                data: { ids: id },
+                success: function (data) {
+                    $("#divLoader").hide();
+
+                    tblBills.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var status = data[i]["OverallStatus"];
+                        var cntrlNo = data[i]["ControlNumber"];
+                        if (status == "Bill Requested") {
+                            status = "Waiting Control Number";
+                        }
+                        if (status == null) {
+                            status = "N/A";
+                        }
+                        if (cntrlNo == null) {
+                            cntrlNo = "N/A";
+                        }
+                        tblBills.fnAddData([i + 1,
+                        data[i]["BillType"],
+                        toLabel(data[i]["BillAmount"]),
+                        data[i]["Remarks"],
+                        data[i]["BillValidDays"],
+                        data[i]["ReferenceNo"],
+                            status,
+                            cntrlNo
+                        ]);
+                    }
+                    $('#BillsModal').modal({
+                        backdrop: 'static',
+                        keyboard: false,
+                    });
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+        function printtraletter(OutrightSalesID) {
+            var queryString = "OutrightId=" + OutrightSalesID;
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("ParameterEncryption", "Reports")',
+                contentType: "application/json; charset=utf-8",
+                datatype: "json",
+                data: { "query": queryString },
+                success: function (response) {
+                    window.open("../../Areas/ALS/Reports/ALS_NewTraReleaseLetterRPT.aspx" + response);
+                }
+            });
+        }
+        function Outrightletter(OutrightSalesID) {
+            var queryString = "OutrightId=" + OutrightSalesID;
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("ParameterEncryption", "Reports")',
+                contentType: "application/json; charset=utf-8",
+                datatype: "json",
+                data: { "query": queryString },
+                success: function (response) {
+                    window.open("../../Areas/ALS/Reports/TraNewReleaseRPT.aspx" + response);
+                }
+            });
+
+        }
+
+
+    </script>
+}
+
+

@@ -1,0 +1,704 @@
+@{
+    ViewBag.Title = "Payment Batches Lists";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+@model IFMIS.Areas.RecurrentPayment.Models.BeneficiaryVM
+    @{
+        ViewBag.Title = "Payment Batches Lists";
+        Layout = "~/Views/Shared/_Layout.cshtml";
+    }
+    <style>
+        input[type=number] {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        select {
+            padding: 8px;
+            border: 1px solid #ccc;
+            resize: vertical;
+            width: 230px;
+        }
+
+        input[type=text] {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+
+        td {
+            padding: 5px;
+        }
+
+        .table-amount td:nth-child(6) {
+            text-align: right;
+        }
+
+        .payee-entry {
+            border: 1px solid #ccc;
+            border-radius: 10px;
+            padding-bottom: 10px;
+        }
+
+        .entry-label {
+            position: relative;
+            top: -12px;
+            background-color: white;
+            width: 110px;
+            left: 15px;
+            padding-left: 5px;
+            padding-right: 5px;
+            text-align: center;
+            font-weight: bold;
+            color: #2196F3;
+        }
+
+        .total-amount {
+            float: right;
+        }
+
+        .widget-body {
+            position: relative;
+        }
+
+        .loadingImg {
+            margin-left: auto;
+            margin-right: auto;            
+	    position: absolute;
+	    top: 50%;
+        }
+
+        .search-container {
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        input[type=search] {
+            padding: 4px;
+            border: hidden;
+        }
+
+        input[type=text] {
+            padding: 8px;
+            border: 1px solid #ccc;
+        }
+    </style>
+
+    <div id="content" style="margin: 5px;">
+        <div class="row"></div>
+        <section id="widget-grid">
+            <div class="row">
+                <article class="col-sm-12 col-md-12 col-lg-12">
+                    <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                        <header>
+                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                            <h2>@ViewBag.Title</h2>
+                        </header>
+                        <div>
+                            <div class="widget-body">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <a class="btn btn-info" href='@Url.Action("CreatePaymentBatch", "EFTPayments")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add Batch
+                                        </a>&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a class="btn btn-info" href="@Url.Action("PreviewTobeUploadFile", "EFTPayments", new { Filename = "Beneficiaries.xlsx" })">
+                                            <i class="fa fa-file-excel-o"></i> &nbsp;Download Template
+                                        </a>
+                                    </div><br>
+                                    <div class="col-md-6">
+                                    </div>
+                                </div><br />
+                                <div align="center">
+                                    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                                </div>
+                                <table id="dt_payment_list" class="table table-bordered table-condensed table-amount">
+                                    <thead>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Batch Number</th>
+                                            <th>Payment Description</th>
+                                            <th>Payment Category</th>
+                                            <th>No of Transactions</th>
+                                            <th>Amount</th>
+                                            <th>Status</th>
+                                            <th>Created Date</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </section>
+    </div>
+
+    <div class="modal fade" id="UploadBeneficiaryModel">
+        <div class="modal-dialog">
+            <div class="modal-content ">
+                <div class="modal-header alert alert-info">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title">Upload Beneficieries</h3>
+                </div>
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-3">Department<span class="redStar">*</span> </div>
+                            <div class="col-md-8">
+                                <select name="BenDepartmentID" id="BenDepartmentID" class="form-control" required style="padding:6px;">
+                                    <option value="">Select Department</option>
+                                    @if (ViewBag.DepartmentLists != null)
+                                    {
+                                        foreach (var item in ViewBag.DepartmentLists)
+                                        {
+                                            <option value=@item.DepartmentID>@item.DeptCode - @item.DeptName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">Upload Beneficiaries<span class="redStar">*</span> </div>
+                            <div class="col-md-8">
+                                @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-3">
+                            <input type="submit" value="Submit" class="btn btn-info" onclick="uploadBeneficiary()" id="btnUpload" />
+                            <img src="~/Content/img/loading.gif" class="saveLoader" />
+                        </div>
+                        <div class="col-md-7"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="modal fade" id="UpdateBeneficiaryModel">
+        <div class="modal-dialog">
+            <div class="modal-content ">
+                <div class="modal-header alert alert-info">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title">Upload More Beneficieries</h3>
+                </div>
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-3">Department<span class="redStar">*</span> </div>
+                            <div class="col-md-8">
+                                <select name="BenDepartmentID2" id="BenDepartmentID2" class="form-control" required style="padding:6px;">
+                                    <option value="">Select Department</option>
+                                    @if (ViewBag.DepartmentLists != null)
+                                    {
+                                        foreach (var item in ViewBag.DepartmentLists)
+                                        {
+                                            <option value=@item.DepartmentID>@item.DeptCode - @item.DeptName</option>
+                                        }
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">Upload Beneficiaries<span class="redStar">*</span> </div>
+                            <div class="col-md-8">
+                                @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control", @id = "FileName2" })
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-3">
+                            <input type="submit" value="Submit" class="btn btn-info" onclick="updateBeneficiary()" id="btnUpload" />
+                            <img src="~/Content/img/loading.gif" class="saveLoader" />
+                        </div>
+                        <div class="col-md-7"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+@section pagespecific{
+        <script>
+            $(".saveLoader").toggle(false);
+            $(".loadingImg").hide();
+            $(document).ajaxStop(function () {
+                $(".loadingImg").hide();
+            });
+
+            $(document).ajaxStart(function () {
+                $(".loadingImg").show();
+                document.getElementById("ImageLoader").style.marginLeft = "auto";
+                document.getElementById("ImageLoader").style.marginRight = "auto";
+                document.getElementById("ImageLoader").style.position = "absolute";
+                document.getElementById("ImageLoader").style.top = "50%";
+            });
+
+            $("#dt_payment_list_wrapper .dt-toolbar").remove();
+
+            $("#search-box").on("keyup search input paste cut", function () {
+                $("#dt_payment_list").DataTable().search(this.value).draw();
+                $("#dt_payment_list_wrapper .dt-toolbar").remove();
+            });
+
+            $(document).ready(function () {
+                $(".saveLoader").toggle(false);
+                BindDataTable();
+            });
+
+            function ToJavaScriptDate(value) {
+                if (value != null && value != '') {
+                    var pattern = /Date\(([^)]+)\)/;
+                    var results = pattern.exec(value);
+                    var dt = new Date(parseFloat(results[1]));
+                    return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+                }
+            }
+
+            var BindDataTable = function (response) {
+                $("#dt_payment_list").DataTable({
+                    "bServerSide": true,
+                    "sAjaxSource": '@Url.Action("GetPaymentBatchesList", "EFTPayments")',
+                    "iDisplayLength": 10,
+                    "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                    "fnServerData": function (sSource, aoData, fnCallback) {
+
+                        $.ajax({
+                            type: "Get",
+                            data: aoData,
+                            url: sSource,
+                            success: fnCallback
+                        })
+                    },
+                    "aoColumns": [
+                        {
+                            render: function (data, type, row, meta) {
+                                return meta.row + meta.settings._iDisplayStart + 1;
+                            }
+                        },
+                        { "mData": "BatchNo"},
+                        { "mData": "BatchDesc"},
+                        { "mData": "PaymentCategory" },
+                        {
+                            "mData": "NoTrx",
+                            "render": function (NoTrx, type, full, meta) {
+                                var num = null;
+                                if (NoTrx == null || NoTrx == 0) {
+                                    num = "<p align='right'>0</p>";
+                                }
+                                else {
+                                    num = "<p align='right'>" + NoTrx.toLocaleString() + "</p>";
+                                }
+                                return num;
+                            }
+                        },
+
+                        {
+                            "mData": "TotalAmount",
+                            "render": function (TotalAmount, type, full, meta) {
+                                var amount = null;
+                                if (TotalAmount == null) {
+                                    amount = "<p align='right'>0</p>";
+                                }
+                                else {
+                                    amount = "<p align='right'>" + TotalAmount.toLocaleString() + "</p>";
+                                }
+                                return amount;
+                            }
+                        },
+
+                        { "mData": "OverallStatus" },
+                        {
+                            "mData": "CreatedAt",
+                            "render": function (CreatedAt, type, full, meta) {
+                                if (CreatedAt != null && CreatedAt != "") {
+                                    return ToJavaScriptDate(CreatedAt);
+                                } else {
+                                    return "Not Found";
+                                }
+                            }
+                        },
+                        {
+                            "mData": "PaymentBatchID",
+                            "render": function (PaymentBatchID, type, full, meta) {
+                                var detailsLink = "display:none";
+                                var addMoreLink = "display:none";
+                                var confirmLink = "display:none";
+                                var uploadLink = "display:none";
+                                if (full.NoTrx > 0) {
+                                    detailsLink = "";
+                                    addMoreLink = "";
+                                    confirmLink = "";
+                                    uploadLink = "display:none";
+                                } else {
+                                    uploadLink =""
+                                }
+                                   return '<div class="btn-group" id="drop">\
+                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                    <span class="caret"></span\
+                                    <span class="sr-only"></span>\
+                                    </button>\
+                                    <ul class="dropdown-menu dropdown-menu-right">\
+                                        <li><a class="dropdown-item" href="@Url.Action("EditPaymentBatch", "EFTPayments")/?id=' + full.PaymentBatchID +'">Edit Batch</a></li>\
+                                        <li  style = "' + detailsLink + '"><a class="dropdown-item" href="@Url.Action("PaymentBatchDetails", "EFTPayments")/?paymentBatchId=' + full.PaymentBatchID +'">Details</a></li>\
+                                        <li style="' + uploadLink + ';cursor:pointer"><a class="dropdown-item" onclick="UploadBeneficiaryForm(' + full.PaymentBatchID + ')">Upload Beneficiary</a></li>\
+                                        <li style="' + addMoreLink + ';cursor:pointer"><a class="dropdown-item" onclick="UpdateBeneficiaryForm(' + full.PaymentBatchID + ')">Add More Beneficiary</a></li>\
+                                        <li  style = "' + confirmLink + ';cursor:pointer" ><a class="dropdown-item" onclick="confirmPaymentBatch(`' + full.BatchNo + '`,`' + full.PaymentBatchID + '`,`' + full.TotalAmount + '`,`' + full.TotalBatchAmount +'`)">Confirm</a></li>\
+                                        <li style="cursor:pointer"><a class="dropdown-item" onclick="cancelPaymentBatch(`' + full.BatchNo + '`,`' + full.BatchDesc + '`,`' + full.PaymentBatchID + '`)">Cancel Batch</a></li>\
+                                    </ul>\
+                                </div>\ ';
+                            }
+                        },
+                    ]
+                });
+            }
+
+       /*BEGINNING VERIFYING PAYMENT BATCH*/
+        var batchNo = null;
+        function confirmPaymentBatch(batchNumber, PaymentBatchId, totalAmount, totalBatchAmount) {
+              if (parseFloat(totalAmount) != parseFloat(totalBatchAmount)) {
+                swal("Total Batch Amount does not match with Summary of Beneficiaries Total Amount", { icon: "warning" });
+              }else {
+                    batchNo = batchNumber;
+                    swal({
+                        title: 'Batch Confirmation',
+                        text: 'Are you sure you want to Confirm Batch: '+batchNumber,
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                           var formData = new FormData()
+                            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                            formData.append('PaymentBatchId', PaymentBatchId);
+                            formData.append('OverallStatus', '@IFMIS.Libraries.Constants.CONFIRM');
+                            postFormData(formData);
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+              }
+        }
+
+        function postFormData(formData) {
+            var successMessage = "Batch Number: " + batchNo +' @IFMIS.Libraries.Constants.VERIFIED '+"Successfully";
+            var failureMessage = "An error occurred during Confirmation of Batch Number:  " + batchNo;
+
+            $(".loadingImg").show();
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("ChangePaymentStatus", "EFTPayments")';
+            var urlList = '@Url.Action("PaymentBatchesList", "EFTPayments")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $(".saveLoader").toggle(true);
+                    if (response.data == "Success") {
+                        swal(successMessage, { icon: "success" })
+                            .then((m) => {
+                                window.location.replace(urlList);
+                            });
+                    } else {
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $(".saveLoader").toggle(false);
+                    swal(failureMessage, { icon: "warning" });
+                }
+            });
+        }
+        /*ENDING VERIFYING PAYMENT BATCH*/
+        /*BEGINNING UPLOADING BENEFICIERIES*/
+            var paymentBatchId = null;
+            function UploadBeneficiaryForm(id) {
+                paymentBatchId = id;
+                $('#UploadBeneficiaryModel').modal('show');
+            }
+
+            var url = null;
+             var urlList = null;
+             $("#saveLoader").toggle(false);
+             function uploadBeneficiary() {
+                 swal({
+                     title: "Upload",
+                     text: "Are you sure you want to Upload Beneficieries? ",
+                     buttons: [
+                       'Yes',
+                       'No'
+                     ],
+                     closeOnClickOutside: false,
+                 }).then(function (isConfirm) {
+                     if (isConfirm) {
+                         swal("Cancelled", "No change was made");
+                     } else {
+
+                         uploadData();
+                     }
+                 });
+            }
+
+            var uploadData = function () {
+                    var benDepartmentID = $("#BenDepartmentID").val();
+                    var FileName = $("#FileName").val();
+
+                    if (benDepartmentID == "") {
+                        swal("Please Select Department First", { icon: "warning" });
+                        return false;
+                    }
+
+                    if (paymentBatchId == "") {
+                        swal("Please Select Batch First", { icon: "warning" });
+                        return false;
+                    }
+
+                    if (FileName == '') {
+                        swal("Please Attach File (Excel Format)")
+                        return false;
+                    }
+                    var file = document.querySelector("#FileName");
+                    if (/\.(xlsx)$/i.test(file.files[0].name) === false) {
+                        swal("Please Attach File (Excel Format)")
+                        return false;
+                    }
+                    var data = new FormData();
+                    var file = $("#FileName").get(0).files;
+
+                    if (file.length > 0) {
+                        data.append("FileName", file[0]);
+                        data.append("PaymentBatchID", paymentBatchId);
+                        data.append("BenDepartmentID", benDepartmentID);
+                        data.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+                    }
+
+                    url = '@Url.Action("UploadBeneficiary", "EFTPayments")';
+                    urlList = '@Url.Action("PaymentBatchesList", "EFTPayments")';
+
+
+                    $("#saveLoader").toggle(true);
+                    $("#btnUpload").prop('disabled', true);
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        processData: false,
+                        contentType: false,
+                        data: data,
+                        success: function (response) {
+                            if (response == "Success") {
+                                $("#btnUpload").prop('disabled', false);
+                                swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.href = urlList;
+                                });
+
+                            } else if (response == "InvalidFormat") {
+                                $("#btnUpload").prop('disabled', false);
+                                swal("Invalid file format, file format should be MS Excel", { icon: "warning" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.reload();
+                                });
+
+                            }
+
+                            else {
+                                $("#btnUpload").prop('disabled', false);
+                                swal(response, { icon: "warning" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.reload();
+                                });
+                            };
+                        },
+                        error: function (err) {
+                            swal(err.statusText)
+                            $("#saveLoader").toggle(false);
+                        }
+                    });
+
+            };
+            /*ENDING UPLOADING BENEFICIARIES*/
+            /*BEGINNING UPLOADING MORE BENEFICIERIES*/
+            function UpdateBeneficiaryForm(id) {
+                paymentBatchId = id;
+                $('#UpdateBeneficiaryModel').modal('show');
+            }
+
+            var url = null;
+             var urlList = null;
+             $("#saveLoader").toggle(false);
+             function updateBeneficiary() {
+                 swal({
+                     title: "Upload",
+                     text: "Are you sure you want to Upload More Beneficieries? ",
+                     buttons: [
+                       'Yes',
+                       'No'
+                     ],
+                     closeOnClickOutside: false,
+                 }).then(function (isConfirm) {
+                     if (isConfirm) {
+                         swal("Cancelled", "No change was made");
+                     } else {
+
+                         uploadMoreBenData();
+                     }
+                 });
+            }
+
+            var uploadMoreBenData = function () {
+                    var benDepartmentID = $("#BenDepartmentID2").val();
+                    var FileName = $("#FileName2").val();
+
+                    if (benDepartmentID == "") {
+                        swal("Please Select Department First", { icon: "warning" });
+                        return false;
+                    }
+
+                    if (paymentBatchId == "") {
+                        swal("Please Select Batch First", { icon: "warning" });
+                        return false;
+                    }
+
+                    if (FileName == '') {
+                        swal("Please Attach File (Excel Format)")
+                        return false;
+                    }
+                    var file = document.querySelector("#FileName2");
+                    if (/\.(xlsx)$/i.test(file.files[0].name) === false) {
+                        swal("Please Attach File (Excel Format)")
+                        return false;
+                    }
+                    var data = new FormData();
+                    var file = $("#FileName2").get(0).files;
+
+                    if (file.length > 0) {
+                        data.append("FileName", file[0]);
+                        data.append("PaymentBatchID", paymentBatchId);
+                        data.append("BenDepartmentID", benDepartmentID);
+                        data.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+                    }
+
+                    url = '@Url.Action("UploadBeneficiaryData", "EFTPayments")';
+                    urlList = '@Url.Action("PaymentBatchesList", "EFTPayments")';
+
+                    $("#saveLoader").toggle(true);
+                    $("#btnUpload").prop('disabled', true);
+                    $.ajax({
+                        url: url,
+                        type: "POST",
+                        processData: false,
+                        contentType: false,
+                        data: data,
+                        success: function (response) {
+                            if (response == "Success") {
+                                $("#btnUpload").prop('disabled', false);
+                                swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.href = urlList;
+                                });
+
+                            } else if (response == "InvalidFormat") {
+                                $("#btnUpload").prop('disabled', false);
+                                swal("Invalid file format, file format should be MS Excel", { icon: "warning" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.reload();
+                                });
+
+                            }
+
+                            else {
+                                $("#btnUpload").prop('disabled', false);
+                                swal(response, { icon: "warning" }).then((e) => {
+                                    $("#saveLoader").toggle(false);
+                                    window.location.reload();
+                                });
+                            };
+                        },
+                        error: function (err) {
+                            swal(err.statusText)
+                            $("#saveLoader").toggle(false);
+                        }
+                    });
+
+            };
+            /*ENDING UPLOADING MORE BENEFICIARIES*/
+            /*BEGINNING CANCELLING BATCH*/
+            var batchNum = null;
+            function cancelPaymentBatch(batchNumber,batchDesc, PaymentBatchId) {
+                batchNum = batchNumber;
+              swal({
+                  title: 'Batch Cancellation',
+                  text: 'Are you sure you want to Cancel Batch: ' + batchNumber +" "+batchDesc +'?',
+                  buttons: [
+                    'No',
+                    'Yes'
+                  ],
+              }).then(function (isConfirm) {
+                  if (isConfirm) {
+                     var formData = new FormData()
+                      formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                      formData.append('PaymentBatchID', PaymentBatchId);
+                      postCancelFormData(formData);
+                  } else {
+                      swal("Cancelled", "No change was made");
+                  }
+              });
+            }
+
+            function postCancelFormData(formData) {
+                var successMessage = "Batch Number: " + batchNum +' @IFMIS.Libraries.Constants.CANCELLED '+"Successfully";
+                var failureMessage = "An error occurred during Cancellation of Batch Number:  " + batchNum;
+
+                $(".loadingImg").show();
+                $(".saveLoader").toggle(true);
+                var url = '@Url.Action("CancelPaymentBatch", "EFTPayments")';
+                var urlList = '@Url.Action("PaymentBatchesList", "EFTPayments")';
+                $.ajax({
+                    url: url,
+                    data: formData,
+                    type: 'POST',
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $(".saveLoader").toggle(true);
+                        if (response.data == "Success") {
+                            swal(successMessage, { icon: "success" })
+                                .then((m) => {
+                                    window.location.replace(urlList);
+                                });
+                        } else {
+                            $(".saveLoader").toggle(false);
+                            swal(failureMessage + ": " + response, { icon: "warning" });
+                        }
+                    },
+                    failure: function (error) {
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage, { icon: "warning" });
+                    }
+                });
+            }
+
+            /*ENDING CANCELLING BATCH*/
+        </script>
+    }

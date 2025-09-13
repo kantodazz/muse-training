@@ -1,0 +1,583 @@
+﻿@{
+    ViewBag.Title = "Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="divLoader"></div>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Entry </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Pay Month
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="datetime" name="paydate" id="paydate" class="form-control" />
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="button" class="btn btn-info" value="Search" onclick="SearchEntry()" />
+                                    </div>
+                                </div>
+                            </div>
+                            @*<a href="@Url.Action("CreateBill","Bills")" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-plus"></span>
+                                    Add New
+                                </a>*@
+                            <hr class="simple" />
+                            <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr style="background-color: #f5f5f5; color:black">
+                                        <th>#</th>
+                                        <th>
+                                            InstitutionCode
+                                        </th>
+                                        <th>
+                                            InstitutionName
+                                        </th>
+                                        <th>
+                                            LegalNumber
+                                        </th>
+                                        <th>
+                                            PaymentDesc
+                                        </th>
+                                        <th>
+                                            CheckDate
+                                        </th>
+                                        <th>
+                                            VatOperationalAmount
+                                        </th>
+                                        <th>
+                                            VatBaseAmount
+                                        </th>
+                                        <th>
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+<!--Start of delete confirmation modal section-->
+<div class="modal fade" id="modalPayee" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Add Payee</h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "statusEntry" }))
+            {
+                <div class="modal-body form-horizontal" id="modal-body">
+                    <br />
+
+                    <input type="hidden" name="checkdate" id="checkdate" value="">
+
+                    <div class="form-group">
+                        <label class="col-md-3 control-label" id="AgreedAmountlabel">Payee</label>
+                        <div class="col-md-9">
+                            <input name="payee" id="payee" placeholder="Enter Payee Code" class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    <button class="btn btn-default delete-cancel" data-dismiss="modal">Cancel</button>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+<!--Start of details modal section-->
+<div class="modal fade" id="modal-details" tabindex="-1" role="dialog" aria-labelledby="lbl-modal">
+    <div class="modal-dialog" style="width:60%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lbl-modal-details">Bill Details</h4>
+            </div>
+            <div class="modal-body" id="modal-details-body" style="padding: 0px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of details modal section-->
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="VATNetDetails" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">VAT Receivable</h3>
+
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="AssessmentDetails" style="left:4%">
+
+    <div class="modal-dialog" style="width:60%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Details of Assessment</h3>
+
+            </div>
+            <div class="modal-body" id="ModalBody">
+
+            </div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        $(document).ready(function () {
+
+            var url = '@Url.Action("GetPayee", "NetVatPay")';
+
+            $("#payee").select2({
+                minimumInputLength: 2,
+                width: 'resolve',
+                ajax: {
+                    url: url,
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (payeecode) {
+                        return {
+                            payeecode: payeecode,
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.payeeViews };
+                    }
+                }
+            });
+        });
+
+        $('.js-thead-colors a').on('click', function () {
+            var theadColor = $(this).attr("data-bg");
+            $('#dataTableList thead').removeClassPrefix('bg-').addClass(theadColor);
+        });
+        $('.js-tbody-colors a').on('click', function () {
+            var theadColor = $(this).attr("data-bg");
+            $('#dataTableList').removeClassPrefix('bg-').addClass(theadColor);
+        });
+        var datatable = $('#dt_basic').dataTable({
+            responsive: true,
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#statusEntry").on('submit', function (e) {
+            debugger;
+            e.preventDefault();
+            var checkdate = $("#checkdate").val();
+            var payee = $("#payee").val();
+            if (!checkdate) {
+                swal("Please enter payee name");
+                return false;
+            }
+
+                    swal({
+                        title: 'Add',
+                        text: "Are you sure you want to add this payee?",
+                        buttons: [
+                            'No',
+                            'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("Addpayee", "NetVatPay")';
+                            var id = $("#id").val();
+                            var reason = $("#Reason").val();
+                            var formData = {
+                                "CheckDate": checkdate,
+                                "PayeeCode": payee
+                            }
+                            $("#divLoader").show();
+                            $('#modalPayee').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                                    success: function (response) {
+                                      $("#divLoader").hide();
+                                if (response == "Success") {
+
+                                    swal("Payee added successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    location.reload();
+                                                });
+                                }
+                                else {
+                                    swal(response, { icon: "warning" });
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var SearchEntry = function () {
+            debugger
+            var dates = $("#paydate").val();
+            $("#divLoader").show();
+            var data = [];
+            //var status = "Pending";
+            $.ajax({
+                type: "Post",
+                url: '@Url.Action("SearchPay", "NetVatPay")',
+                contenttype: "application/json;",
+                data: { dates },
+                datatype: "json",
+                success: function (response) {
+                    debugger
+
+                        data = response.data;
+                        datatable.fnClearTable();
+                        //pageLoading("false");
+                        $("#divLoader").hide();
+                        //for (var i = 0; i < data.length; i++) {
+                            var vatOperationalAmount = data.VatOperationalAmount.toLocaleString('en');
+                            var vatBaseAmount = data.VatBaseAmount.toLocaleString('en');
+                            var paymentdesc = "Vat Net Pay for the month of " + ToJavaScriptDate(data.CheckDate);
+                            datatable.fnAddData(
+                                [1,
+                                data.InstitutionCode,
+                                data.InstitutionName,
+                                data.LegalNumber,
+                                paymentdesc,
+                                ToJavaScriptDate(data.CheckDate),
+                                '<div style="text-align:right">' + vatOperationalAmount + '</div>',
+                                '<div style="text-align:right">' + vatBaseAmount + '</div>',
+                                '<div class="btn-group" id="drop-' + 1 + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="#" onclick="OpenDialog('+ data.CheckDate + ')">Details</li>\
+                                 <li><a href="#" onclick="OpenDialogAssess('+ data.CheckDate + ',`' + data.InstitutionCode +'`)">View Assessment</li>\
+                                 <li><a href="#" onclick="changeStatus('+ data.CheckDate + ',' + data.VatOperationalAmount + ')">Pay Net VAT</li>\
+                            </ul>\
+                        </div>\ '
+                                ]);
+
+
+                },
+                failure: function (error) {
+                    $("#divLoader").hide();
+                    swal(error, { icon: "warning" });
+                    //pageLoading("true");
+                }
+            });
+        }
+
+        var changeStatus = function (dates, vatOperationalAmount) {
+            debugger
+            if (vatOperationalAmount > 0) {
+                var dt = ToJavaScriptDate(dates);
+                $(".modal-body #checkdate").val(dt);
+                $('#modalPayee').modal('show');
+            }
+            else {
+                swal("payment can not proceed because purchase is greater than sales", { icon: "warning" });
+            }
+
+        };
+
+        function OpenDialogAssess(dates,InstistutionCode) {
+            debugger
+            var url = '@Url.Action("AssessmentEntry", "NetVatPay")';
+            // Access item properties directly
+            $("#divLoader").show();
+
+            var newdate = ToJavaScriptDate(dates);
+            //var formted = new Date(dates.getFullYear(), dates.getMonth(), dates.getDate());
+
+            $("#ModalBody").load(url, { CheckDate: newdate, InstitutionCode: InstistutionCode }, function (response, status, xhr) {
+                $("#divLoader").hide();
+                $("#AssessmentDetails").modal("show");
+                 if (status == "error") {
+                     $("#ModalBody").html("Error on accessing this details, contact system support.");
+                 }
+
+            });
+        }
+
+        function OpenDialog(dates) {
+            debugger
+            var url = '@Url.Action("EntryDetails", "NetVatPay")';
+            var dt = ToJavaScriptDate(dates);
+            // Access item properties directly
+            $("#divLoader").show();
+
+            $("#divModalBody").load(url, { CheckDate: dt }, function (response, status, xhr) {
+                $("#divLoader").hide();
+                $("#VATNetDetails").modal("show");
+                 if (status == "error") {
+                     $("#divModalBody").html("Error on accessing this details, contact system support.");
+                 }
+
+            });
+
+            // Use the retrieved data to populate the dialog content
+            // ... (populate dialog elements with data)
+        }
+
+        var requestCntrlNo = function (id) {
+
+            swal({
+                text: "Are you sure you want to request control number for this record?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    $("#divLoader").show();
+                    var url = '@Url.Action("RequestCntrlNo", "Billings")';
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "OK") {
+                                swal({
+                                    text: "Invoice submitted successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            } else if (response == "NotOk") {
+                                swal({
+                                    text: "Invoice submitted with errors, view error for more details!",
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                            else {
+                                swal({
+                                    text: response,
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (response) {
+                            swal({
+                                text: response,
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        },
+                        complete: function () {
+                            $("#divLoader").hide();
+                        }
+                    });
+                }
+            });
+        };
+
+        var billDetails = function (id) {
+            var url = '@Url.Action("BillDetails", "Bills")/' + id;
+
+            $("#modal-details-body").load(url, function () {
+                $("#modal-details").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+            });
+        };
+
+        var deleteBill = function (id) {
+            $("#modal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $(".delete-confirm").click(function () {
+                if (id != "") {
+                    var url = '@Url.Action("Delete", "Billings")';
+                    $.ajax({
+                        url: url,
+                        data: { id: id },
+                        type: "POST",
+                        success: function (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show success message.
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-danger')) {
+                                    $('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Record deleted successfully');
+                            }
+                            else {
+                                //hide ok button as it is not necessary
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                                $('.success-message').html(response);
+                            }
+                        }, error: function (err) {
+                            if (!$('.modal-header').hasClass('alert-danger')) {
+                                $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                                $('.delete-confirm').css('display', 'none');
+                            }
+                            $('.success-message').html(err.statusText);
+                        }
+                    });
+                }
+            });
+        };
+
+        var viewErrors = function (id) {
+            $("#divLoader").show();
+            var url = '@Url.Action("ViewBillErrors", "Billings")/' + id;
+
+            $("#modal-details-body").load(url, function () {
+                $("#modal-details").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+
+                $("#divLoader").hide();
+            });
+        };
+
+
+        //function to reset bootstrap modal popups
+        $('#modal').on('hidden.bs.modal', '.modal', function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message .modal-body').html('').html('Are you sure you want to delete this record ?');
+        });
+    </script>
+}

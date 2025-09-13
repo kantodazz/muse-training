@@ -1,0 +1,264 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.LoanListVM>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Beneficiary Deductions</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateDeduction","Deductions")'>
+                                        <i class="glyphicon glyphicon-plus"></i>Add Beneficiary Deduction
+                                    </a>
+                                </div>
+
+                            </div>
+
+                            <hr />
+                            <table class="table table-bordered table-condensed" id="tblDataList">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Beneficiary.BeneficiaryCode)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.Beneficiary.BeneficiaryName)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.DeductionCode.DedCode)
+                                        </th>
+                                        @*<th>
+                                            @Html.DisplayNameFor(model => model.DeductionCode.DedDescription)
+                                        </th>*@
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.LoanAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PaybackPeriod)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.MonthlyDeductionAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.BalanceAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.ApprovallStatus)
+                                        </th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.Beneficiary.BeneficiaryCode)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.Beneficiary.BeneficiaryName)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.DeductionCode.DedCode)
+                                            </td>
+                                            @*<td>
+                                                @Html.DisplayFor(modelItem => item.DeductionCode.DedDescription)
+                                            </td>*@
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.LoanAmount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PaybackPeriod)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.MonthlyDeductionAmount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.BalanceAmount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.ApprovallStatus)
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @if (item.ApprovallStatus != "Approved")
+                                                        {
+                                                            <li>
+                                                                <a href="@Url.Action("EditDeduction","Deductions", new { id = item.LoanId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Edit
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="#" onclick="confirmDeductions(@item.LoanId)" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Confirm
+                                                                </a>
+                                                            </li>
+                                                        }
+                                                        <li>
+                                                            <a href="#" onclick="showDetails(@item.LoanId)" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Details
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- Start of modal div -->
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Employee Deduction Details
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of modal div-->
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            var responsiveHelper_tblDataList = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+            $('#tblDataList').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_tblDataList) {
+                        responsiveHelper_tblDataList = new ResponsiveDatatablesHelper($('#tblDataList'), breakpointDefinition);
+                    }
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+
+            }); 
+        });
+
+        var showDetails = function (id) {
+            var url = '@Url.Action("DeductionDetails", "Deductions")';
+
+            $("#divModalBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    if (!$(".modal-header").hasClass("alert-danger")) {
+                        $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                    }
+                    $("#divModalBody").html("Error on accessing this Deduction details, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+        };
+
+        var confirmDeductions = function (Id) {
+            debugger
+            var url = '@Url.Action("ConfirmDeductions", "Deductions")';
+
+
+            swal({
+                title: 'Confirmation',
+                text: "Are you sure you want to confirm this beneficiary deductions?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    //pageLoading("true");
+                    $("#divLoader").show();
+                    $.ajax(
+                    {
+                    type: "POST",
+                    url: url,
+                            data: { id: Id },
+                    success: function (response) {
+                        //pageLoading("false");
+                        $("#divLoader").hide();
+                        if (response == "Success") {
+                            swal("Beneficiary Deductions successfully confirmed!", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                        });
+                        }
+                        else {
+                            swal(response, { icon: "warning" });
+                        }
+                    },
+                    error: function (xhr) {
+                        //pageLoading("false");
+                        $("#divLoader").hide();
+                        console.log('errorResp', xhr.responseText)
+                        swal(xhr.responseText, { icon: "warning" });
+                    },
+
+                });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        //function to reset bootstrap modal popups
+        $("#divModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+            $("#divModalBody").html("");
+        });
+    </script>
+}

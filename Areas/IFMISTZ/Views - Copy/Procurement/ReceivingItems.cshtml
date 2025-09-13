@@ -1,0 +1,547 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PurchaseOrderVM
+@{
+    ViewBag.Title = "Receiving Items";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Receiving LPO </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <br />
+                            <br />
+
+
+                            <div class="row">
+                                @using (Html.BeginForm(null, null, FormMethod.Get))
+                                {
+                                    <div class="col-lg-3 col-sm-3 col-xs-3">
+                                        <input class="form-control" id="PayeeDetailId" name="PayeeDetailId" placeholder="Select Payee Name" />
+                                    </div>
+                                    <div class="col-lg-3 col-sm-3 col-xs-3">
+                                        <div class="input-group"><input class="form-control" id="LPONumber" data-toggle="modal" data-target="#search_lpos" name="LPONumber" value='@ViewBag.LPONumber' placeholder="Click here to search LPO" onclick="SearchLPO()" type="text" autocomplete="off" /><span class="input-group-btn"><button class="btn shiny  " id="search" type="submit">Search</button></span></div>
+                                    </div>
+                                }
+                                <br />
+                                <br />
+                                <br />
+                                <hr />
+                            </div>
+
+                            @if (ViewBag.LPONumber != null)
+                            {
+                                if (ViewBag.Invalid == "Yes")
+                                {
+                                    <h3><font color="red">Local Purchase Order (LPO) of this number either does not exist,not approved or full received !!!</font></h3>
+                                    <div class="col-md-offset-1">
+                                        <a href="@Url.Action("ReceivingList","Procurement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+
+
+                                    </div>
+                                    <br />
+                                    <br />
+                                }
+                                else if (ViewBag.Invalid == "Received")
+                                {
+                                    <h3><font color="red">This Local Purchase Order (LPO) already full received !!!</font></h3>
+                                    <div class="col-md-offset-1">
+                                        <a href="@Url.Action("ReceivingList","Procurement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+
+
+                                    </div>
+                                    <br />
+                                    <br />
+                                }
+                                else
+                                {
+                                    @Html.HiddenFor(model => model.CountItems)
+                                    @Html.HiddenFor(model => model.PurchaseOrderId)
+                                    int i = 0;
+
+                                    decimal? total_quantity = 0;
+                                    decimal total_VAT = 0;
+                                    decimal total_amount = 0;
+                                    <p align="left"><span>LPO Number &nbsp;&nbsp; :<strong>@Model.PurchaseOrderNo</strong></span><br /><span>Supplier&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.SupplierName</strong></span><br /> <span>Payee Code&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.PayeeCode</strong></span><br /> Currency&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.Currency</strong><br />Ordered Date&nbsp;&nbsp;&nbsp;:<strong>@Convert.ToDateTime(Model.OrderDate).ToString("dd/MM/yyyy")</strong><br />Delivered Date&nbsp;:<strong>@Convert.ToDateTime(Model.DeliveryDate).ToString("dd/MM/yyyy")</strong><br />Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<strong>@Model.PurchaseOrderDesc</strong></p>
+                                    using (Html.BeginForm(null, null, FormMethod.Post, new { id = "ReceivingItems" }))
+                                    {
+                                        <table class="table  table-bordered table-hover table-condensed">
+
+                                            <thead>
+                                                <tr>
+                                                    <th style="text-align:right;width:4%"></th>
+                                                    <th style="text-align:center" colspan="6">LPO Details</th>
+
+                                                    <th style="text-align:center" colspan="3">Receiving Items</th>
+
+                                                </tr>
+                                                <tr>
+                                                    <th style="text-align:right;width:4%">#</th>
+                                                    <th style="text-align:left;width:18%">Item</th>
+                                                    <th style="text-align:left;width:15%">Unit Of Measure</th>
+                                                    <th style="text-align:right;width:8%">Quantity</th>
+                                                    <th style="text-align:right;width:9%">Unit Price</th>
+                                                    <th style="text-align:right;width:9%">VAT</th>
+                                                    <th style="text-align:right;width:10%">Total Amount</th>
+                                                    <th style="text-align:center;width:8%">Quantity</th>
+                                                    <th style="text-align:center;width:9%">VAT</th>
+                                                    <th style="text-align:center;width:10%">Total Amount</th>
+                                                </tr>
+                                            </thead>
+
+                                            <tbody>
+                                                @foreach (var item in Model.PurchaseOrderDetails)
+                                                {
+
+                                                    i++;
+                                                    var item_id = "item" + i;
+                                                    var vat_status = "vatstatus" + i;
+                                                    var vat = "vat" + i;
+                                                    var amount = "amount" + i;
+                                                    var price_id = "price" + i;
+                                                    total_quantity = total_quantity + item.Quantity;
+                                                    total_VAT = total_VAT + (decimal)item.VAT;
+                                                    total_amount = total_amount + (decimal)item.TotalAmount;
+                                                    if (item.Quantity > 0)
+                                                    {
+                                                        <tr>
+                                                            <td style="text-align:right">
+                                                                @i
+                                                            </td>
+                                                            <td style="text-align:left">
+                                                                @Html.DisplayFor(modelItem => item.ItemDesc)
+                                                            </td>
+                                                            <td style="text-align:left">
+                                                                @Html.DisplayFor(modelItem => item.UOM)
+                                                            </td>
+                                                            <td style="text-align:right">
+                                                                @Html.DisplayFor(modelItem => item.Quantity)
+                                                            </td>
+                                                            <td style="text-align:right">
+
+                                                                @Html.DisplayFor(modelItem => item.UnitPrice)
+
+                                                            </td>
+                                                            <td style="text-align:right">
+
+                                                                @Html.DisplayFor(modelItem => item.VAT)
+
+                                                            </td>
+                                                            <td style="text-align:right">
+
+                                                                @Html.DisplayFor(modelItem => item.TotalAmount)
+
+                                                            </td>
+                                                            <td style="text-align:center">
+                                                                <input type="text" name="" class="quantity" id='@i' value="" max=@item.Quantity min="0" required autocomplete="off" style="width:60px" />
+                                                                <input type="hidden" id='@item_id' name='@item_id' value='@item.PurchaseOrderDetailId'>
+                                                                <input type="hidden" id='@vat_status' name='@vat_status' value='@item.VatStatus'>
+                                                                <input type="hidden" id='@price_id' name='@price_id' value=@item.UnitPrice>
+                                                            </td>
+                                                            <td style="text-align:center">
+                                                                <input type="number" name='@vat' id='@vat' value="" readonly style="width:120px;text-align:right" />
+                                                            </td>
+                                                            <td style="text-align:center">
+                                                                <input type="number" name='@amount' id='@amount' value="" readonly style="width:120px;text-align:right" />
+                                                            </td>
+                                                        </tr>
+                                                    }
+                                                }
+                                                <tr>
+                                                    <td colspan="3" style="text-align:right">
+                                                        Total
+                                                    </td>
+                                                    <td style="text-align:right">@total_quantity</td>
+                                                    <td style="text-align:right"></td>
+                                                    <td style="text-align:right">@total_VAT.ToString("#,##0/=")</td>
+                                                    <td style="text-align:right">@total_amount.ToString("#,##0/=")</td>
+                                                    <td style="text-align:center">
+                                                        <input type="number" name="total_quantity" id="total_quantity" value="" style="width:60px" readonly />
+                                                    </td>
+                                                    <td style="text-align:center">
+                                                        <input type="number" name="" id="total_vat" value="" readonly style="width:120px;text-align:right" />
+                                                    </td>
+                                                    <td style="text-align:center">
+                                                        <input type="number" name="" id="total_amount" value="" readonly style="width:120px;text-align:right" />
+                                                    </td>
+                                                </tr>
+
+                                            </tbody>
+                                        </table>
+                                        <div align="center">
+                                            <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                                        </div>
+                                        <div class="col-md-offset-1">
+                                            <a href="@Url.Action("ReceivingList","Procurement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                            <button type="submit" id="summary" class="btn btn-info" style="margin-right:2px">
+                                                <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                            </button>
+
+                                        </div>
+                                    }
+                                }
+
+
+                            }
+                            else
+                            {
+                                <div class="col-md-offset-1">
+                                    <a href="@Url.Action("ReceivingList","Procurement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                </div>
+                                <br />
+                                <br />
+
+                            }
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<!----------- Search  Local Purchase Order----------------->
+<div class="modal fade" id="search_lpos" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Local Purchase Orders List</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+
+
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_lpo">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg"/>
+                    </div>
+                    <table id="dt_search_lpo" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Purchase Order No</th>
+                                <th>Payee Name</th>
+                                <th>Description</th>
+                                <th>LPO Amount</th>
+                                <th>Previous Received</th>
+                                <th>Balance</th>
+                                <th> Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+            $(function () {
+
+            var url = '@Url.Action("GetLpoPayees", "Procurement")';
+
+              $("#PayeeDetailId").select2({
+                minimumInputLength: 3,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.lpoPayees }; // data.exchequers returning json data from Controller
+                    }
+                }
+            });
+
+        });
+
+             //SEARCH LOCAL PURCHASE ORDER
+                  var dt_search_lpo = $('#dt_search_lpo').dataTable({
+                    "aoColumnDefs": [{ "bVisible": false, "aTargets": [] }],
+                }
+                );
+                $("#dt_search_lpo_wrapper .dt-toolbar").remove();
+               $("#search_lpo").on("keyup search input paste cut", function () {
+                dt_search_lpo.DataTable().search(this.value).draw();
+               });
+        function SearchLPO() {
+
+            var payeeDetailId = $("#PayeeDetailId").val();
+            if (!payeeDetailId) {
+                swal("Please select Payee Name first");
+                return;
+            }
+
+
+                    var url = '@Url.Action("GetPurchaseOrders", "Procurement")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: { id: payeeDetailId },
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                            if (response == "NoLPO") {
+                              swal("No any Local Purchase Order which is open to be received");
+                            }
+                            else if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                data = response.data;
+                                dt_search_lpo.fnClearTable();
+                                for (var i = 0; i < data.length; i++) {
+
+                                    dt_search_lpo.fnAddData([i + 1,
+                                    data[i]["PurchaseOrderNo"],
+                                    data[i]["PayeeName"],
+                                    data[i]["PurchaseOrderDesc"],
+                                    toLabel(data[i]["PurchaseOrderAmount"]) + ' ' + data[i]["Currency"],
+                                    toLabel(data[i]["ReceivedAmount"]),
+                                    toLabel(data[i]["Balance"]),
+                                    '<a href="#" onclick="lpoClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                                    ]);
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+        }
+       function lpoClicked(rowId) {
+        var data = dt_search_lpo.DataTable().rows().data();
+            var row = data[rowId];
+            $("#LPONumber").val(row[1]);
+           $("#search_lpos").modal("hide");
+           $('#search').trigger('click');
+        }
+        //END SEARCH LOCAL PURCHASE ORDER
+        $(document).ready(function () {
+            var items_number = $("#CountItems").val();
+
+
+                $(".quantity").keyup(function () {
+                    var max_quantity = 0;
+                    var entered_quantity = 0;
+                    max_quantity = parseFloat($(this).attr('max'));
+                    var id = $(this).attr('id');
+                    var item_id = "#item" + id;
+                    var vat_status_id = "#vatstatus" + id;
+                    var amount_id = "#amount" + id;
+                    var vat_id = "#vat" + id;
+                    var price_id = "#price" + id;
+                    var mamb = $(item_id).val()
+                    var vat_status = $(vat_status_id).val();
+                    var price = parseFloat($(price_id).val());
+
+                    entered_quantity = parseFloat($(this).val());
+                    var total = entered_quantity * price;
+
+                    var vat_amount = 0;
+
+                    if (entered_quantity <0) {
+                        swal("Received quantity can not be negative !");
+                        $(this).val("");
+                        $(vat_id).val("");
+                        $(amount_id).val("");
+                    }
+                    else if (entered_quantity > max_quantity) {
+                        swal("Received quantity can not exceed ordered quantity " + max_quantity + " !");
+                        $(this).val("");
+                        $(vat_id).val("");
+                        $(amount_id).val("");
+                    } else {
+                        if (vat_status == "Applicable") {
+                            vat_amount = total * 0.18;
+                            var total_amount = total + vat_amount;
+                            var vatAmount = vat_amount.toFixed(2);
+                            $(vat_id).val(vatAmount);
+                            var totalAmount = total_amount.toFixed(2);
+                            $(amount_id).val(totalAmount);
+                        } else if (vat_status == "Excempted") {
+                            $(vat_id).val(vat_amount);
+                            var totalAmount = total.toFixed(2);
+                            $(amount_id).val(totalAmount);
+                        }
+                    }
+                    var i = 1;
+                    var sum_quantity = 0;
+                    var sum_vat = 0;
+                    var sum_total = 0;
+                    while (i <= items_number) {
+                        var col8_id = "#" + i;
+                        var col9_id = "#vat" + i;
+                        var col10_id = "#amount" + i;
+                        var quantity = parseFloat($(col8_id).val());
+                        var vat = parseFloat($(col9_id).val());
+                        var amount = parseFloat($(col10_id).val());
+                        if (quantity > 0) {
+                            sum_quantity = sum_quantity + quantity;
+                            sum_vat = sum_vat + vat;
+                            sum_total = sum_total + amount;
+
+                        }
+                        i++;
+                    }
+                    $("#total_quantity").val(sum_quantity);
+                    var sumVat = sum_vat.toFixed(2);
+                    $("#total_vat").val(sumVat);
+                    var sumTotal = sum_total.toFixed(2);
+                    $("#total_amount").val(sumTotal);
+                });
+
+                $("#ReceivingItems").on('submit', function (e) {
+                    e.preventDefault();
+                    var $form = $(this);
+                    if ($form.data('submitted') === true) {
+                        swal("You can not receive twice");
+
+                    } else {
+                 $('button[type=submit], input[type=submit]').prop('disabled', true);
+                    var i = 1;
+                    var count = 0;
+                    var receivingDetails = [];
+                    while (i <= items_number) {
+                        var col8_id = "#" + i;
+                        var col10_id = "#amount" + i;
+                        var item_id = "#item" + i;
+                        var quantity = parseFloat($(col8_id).val());
+                        if (quantity > 0) {
+                            var amount = parseFloat($(col10_id).val());
+                            var itemid = parseInt($(item_id).val());
+                            receivingDetails.push({
+                                "PurchaseOrderDetailId":itemid,
+                                "Quantity": quantity,
+                                "Amount": amount
+                            });
+                            count++;
+                        }
+                        i++;
+                    }
+                    var lpo_id = $("#PurchaseOrderId").val();
+
+                    var form_data = {
+                        "PurchaseOrderId": lpo_id,
+                        "ItemsReceived": receivingDetails
+                    }
+                    var url = '@Url.Action("ReceiveItems", "Procurement")';
+                    $.ajax(
+                    {
+                        type: "POST", //HTTP POST Method
+                        url: url, // Controller/View
+                        data: form_data,
+                            success: function (result) {
+                           $('button[type=submit], input[type=submit]').prop('disabled', false);
+                            if (result == "SetupProblem") {
+                               swal("Currency Rate Setup is Incomplete");
+                            }
+                            else if (result.response == "Success") {
+                                swal("Items received successfully", { icon: "success" })
+                                               .then((value) => {
+                                                   var url = '@Url.Action("ReceivingList", "Procurement")';
+                                                   window.location.replace(url);
+                                               });
+                            } else {
+
+                                swal("Failed to receive,contact technical supporter");
+
+                            }
+                        },
+                        error: function (xhr) {
+                            //console.log(xhr.responseText);
+                            swal("An error has occured, contact system support");
+                        },
+
+                    });
+
+                    }
+
+                });
+
+                        });
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+    </script>
+}
+
+

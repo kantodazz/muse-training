@@ -1,0 +1,810 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.HelpdeskTicketVM>
+
+@{
+    ViewBag.Title = "Assigned Tickets";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-user"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="row">
+                            <div class="form-group">
+                                <div class="col-md-3">
+                                    <select name="SupportTeamId" id="SupportTeamId" required class="form-control select2">
+                                        @if (ViewBag.SupportTeamList != null)
+                                        {
+                                            <option value="NULL">Select User</option>
+                                            foreach (var support in ViewBag.SupportTeamList)
+                                            {
+                                                <option value='@support.SupportTeamId'>@support.FirstName @support.Surname - @support.Email</option>
+
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-info AssignBtn" id="Assign" onclick="AssignTicketToSupportTeam()">
+                                        <img src="~/Content/img/loading.gif" class="saveLoader" /> Re-assign Ticket
+                                    </button>
+                                    <button class="btn btn-info CloseBtn" id="Close" onclick="CloseTicket()">
+                                        <img src="~/Content/img/loading.gif" class="saveLoader2" /> Close Ticket
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6"></div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                        <br />
+                        </div>
+
+                        <br />
+                        <div class="widget-body">
+                            <table id="dt_helpdesk_ticket_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>Institution Name</th>
+                                        <th>Ticket Number</th>
+                                        <th>Support Full Name</th>
+                                        <th style="width:150px;">Title</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Assigned Date</th>
+                                        <th>Pending in Days</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="CloseTicketModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Close Ticket:<span id="tticket_number2"></span></h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TicketId" id="TicketId" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Description"> Description (<span style="font-weight:bold;" id="DescriptionCount2">250</span>) </label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Description2" name="Description2" style="width:300px;" maxlength="250"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="close_form_submission">
+                    @*<i class="fa fa-save"></i>*@ Close
+                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="TicketInformationModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Ticket Information</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Ticket Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Institution Name: </th>
+                                                <td id="institutionName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Institution Code:</th>
+                                                <td id="institutionCode"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Module Name:</th>
+                                                <td id="moduleName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Sub Module Name:</th>
+                                                <td id="subModuleName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Ticket Number:</th>
+                                                <td id="ticketNumber"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Source:</th>
+                                                <td id="hostName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Title:</th>
+                                                <td id="title"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>FullName:</th>
+                                                <td id="fullName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email:</th>
+                                                <td id="email"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Phone Number:</th>
+                                                <td id="phoneNumber"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Status:</th>
+                                                <td id="status"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Attachment Name:</th>
+                                                <td id="attachmentName">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Priority:</th>
+                                                <td id="priority">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table>
+                                            <tr>
+                                                <th>Description</th>
+                                            </tr>
+                                            <tr>
+                                                <td id="descriptions"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table id="dt_tbl_helpdesk_ticket_listing" class="table table-bordered table-condensed table-amount">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Institution Name</th>
+                                                    <th>Description</th>
+                                                    <th>Status</th>
+                                                    <th>User</th>
+                                                    <th>Created Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+
+                        <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                            <i class="fa fa-times"></i>Close
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        /*BEGINNING ASSIGN TICKET TO SUPPORT TEAM AND BULK CLOSING OF RESOLVED TICKET*/
+
+        $(".AssignBtn").attr('disabled', true);
+        $(".CloseBtn").attr('disabled', true);
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleAssignButton();
+        }
+
+        function toggleAssignButton() {
+            if (checkedRows.length > 0) {
+                var data = dt_helpdesk_ticket_listing.DataTable().rows().data();
+                checkedRows.forEach(rowId => {
+                    var row = data.rows(rowId).data()[0];
+                });
+                $("#Assign").attr('disabled', false);
+                $("#Close").attr('disabled', false);
+            } else {
+                $("#Assign").attr('disabled', true);
+                $("#Close").attr('disabled', true);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+       var SupportTeamId = null;
+        var TicketIds = [];
+        function AssignTicketToSupportTeam() {
+             SupportTeamId = document.getElementById("SupportTeamId").value;
+            if (SupportTeamId == "NULL") {
+                swal("Please Select User First", { icon: "warning" });
+                return false;
+            }
+
+            swal({
+                text: "Assign Selected Ticket(s)?",
+                buttons: ["NO", "YES"],
+            }).then((assign) => {
+                if (assign) {
+                    postAssignTicketToSupportTeam();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postAssignTicketToSupportTeam() {
+            $(".saveLoader").toggle(true);
+            $("#Assign").attr('disabled', true);
+            checkedRows.forEach(rowId => {
+                TicketIds.push(data[rowId]['TicketId']);
+            });
+
+            var url = '@Url.Action("AssignTicketToUser", "Ticket")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "TicketIds": TicketIds, "__RequestVerificationToken": $("[name=__RequestVerificationToken]").val(), "SupportTeamId": SupportTeamId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        $(".saveLoader").toggle(false);
+                        //$("#Assign").attr('disabled', false);
+                        swal("Ticket(s) re-assigned successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.href = '@Url.Action("AssignedTicketList", "Ticket")';
+                        });
+                    } else {
+                        $(".saveLoader").toggle(false);
+                        $("#Assign").attr('disabled', false);
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#Assign").attr('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        function CloseTicket() {
+            swal({
+                text: "Are you sure you want to close the Selected Ticket(s)?",
+                buttons: ["NO", "YES"],
+            }).then((close) => {
+                if (close) {
+                    postBulkClosingTicket();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+         function postBulkClosingTicket() {
+            $(".saveLoader2").toggle(true);
+            $("#Close").attr('disabled', true);
+            checkedRows.forEach(rowId => {
+                TicketIds.push(data[rowId]['TicketId']);
+            });
+
+            var url = '@Url.Action("closeBulkTicket", "Ticket")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "TicketIds": TicketIds, "__RequestVerificationToken": $("[name=__RequestVerificationToken]").val() },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        $(".saveLoader2").toggle(false);
+                        swal("Ticket(s) closed successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.href = '@Url.Action("AssignedTicketList", "Ticket")';
+                        });
+                    } else {
+                        $(".saveLoader2").toggle(false);
+                        $("#Close").attr('disabled', false);
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#Close").attr('disabled', false);
+                    $(".saveLoader2").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+        /*ENDING ASSIGN TICKET TO SUPPORT TEAM*/
+
+        $('#Description2').on("keyup", function () {
+            var count = $('#Description2').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount2').text(parseInt(numChars));
+        });
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        ////$(document).ready(function () {
+        $(".saveLoader").toggle(false);
+        $(".saveLoader2").toggle(false);
+
+            function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+           }
+
+        var dateDifferenceInDays = function (date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            var datearray = date1.split("/");
+            var newdate1 = datearray[1] + '/' + datearray[0] + '/' + datearray[2];
+
+            var datearray2 = date2.split("/");
+            var newdate2 = datearray2[1] + '/' + datearray2[0] + '/' + datearray2[2];
+
+            const firstDate = new Date(newdate1);
+            const secondDate = new Date(newdate2);
+
+            const diffDays = Math.round((secondDate - firstDate) / oneDay);
+            return diffDays;
+        }
+
+            var dt_helpdesk_ticket_listing = $('#dt_helpdesk_ticket_listing').dataTable({
+                "fnDrawCallback": function (oSettings) {
+                    $(".loading-gif").toggle(false)
+                },
+                "language": {
+                    "emptyTable": '<span id="loader"><strong>Loading records, please wait...</strong></span>',
+                    "zeroRecords": "No matching records found"
+                },
+                "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+            });
+
+            $("#dt_helpdesk_ticket_listing_wrapper .dt-toolbar").remove();
+
+            $("#searchbox").on("keyup search input paste cut", function () {
+                dt_helpdesk_ticket_listing.DataTable().search(this.value).draw();
+            });
+
+           var dt_tbl_helpdesk_ticket_listing = $('#dt_tbl_helpdesk_ticket_listing').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "language": {
+                "emptyTable": '<span id="tbl_loader"><strong>Loading records, please wait...</strong></span>',
+                "zeroRecords": "No matching records found"
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+        $("#dt_tbl_helpdesk_ticket_listing_wrapper .dt-toolbar").remove();
+
+       var data = [];
+        var TicketId = null;
+        var currentDate = new Date();
+        var day = currentDate.getDate();
+        var month = currentDate.getMonth() + 1;
+        var year = currentDate.getFullYear();
+        var today = day + "/" + month + "/" + year;
+
+        $.ajax({
+            type: "get",
+            url: "@Url.Action("GetAssignedTicketList", "Ticket")",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                var noPendingDays = null;
+                if (data == "" || data == undefined) {
+                    document.getElementById("loader").textContent = "Data  not available in our records";
+                }
+                else {
+                dt_helpdesk_ticket_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var priority = null;
+                        switch (data[i]["Priority"]) {
+                            case "1":
+                                priority = "NORMAL";
+                                break;
+                            case "2":
+                                priority = "HIGH";
+                                break;
+                            case "3":
+                                priority = "<span style='color:red;font-weight:bold'>URGENT</span>";
+                                break;
+                            default:
+                                priority = "NILL";
+                        }
+                    var downloadAttachment = 'display:none;';
+                    if (data[i]["AttachmentName"] != null) {
+                        downloadAttachment = '';
+                    }
+                    var noDays = dateDifferenceInDays(ToJavaScriptDate(data[i]["AssignedDate"]), today);
+                    if (noDays >= 10) {
+                        noPendingDays = "<span style='color:red;font-weight:bold'>" + noDays + "</span> ";
+                    } else {
+                        noPendingDays = "<span >" + noDays + "</span> ";
+                    }
+                    dt_helpdesk_ticket_listing.fnAddData([i + 1,
+                    '<input  type="checkbox" id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',
+                    data[i]["InstitutionName"] + " - (" + (data[i]["InstitutionCode"]) + ")",
+                        data[i]["TicketNumber"] + " " + data[i]["ModuleName"] + " - (" + data[i]["SubModuleName"] + ")",
+                    data[i]["SupportFullName"] + " - (" + data[i]["SupportTeamPhoneNumber"] + ")",
+                    data[i]["Title"],
+                    //data[i]["Email"],
+                    //data[i]["PhoneNumber"],
+                    data[i]["Status"],
+                    priority,
+                    //ToJavaScriptDate(data[i]["CreatedAt"]),
+                    ToJavaScriptDate(data[i]["AssignedDate"]),
+                    noPendingDays,
+                    '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                  <li><a href="#" onclick="openViewDialog(' + i + ')">Preview</a></li>\
+                                 <li><a href="#" onclick="closeTicketDialog(' + i + ')">Close</a></li>\
+                                 <li style="' + downloadAttachment + '"><a href = "http://' + data[i]['HostName'] + '/Media/HelpDesk/Tickets/' + data[i]["AttachmentName"] + '" target = "_blank" > View Attachment</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+                }
+                }
+
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        $("#saveLoader").toggle(false);
+
+        function upperCaseWords(str) {
+            return (str + '').replace(/^([a-z])|\s+([a-z])/g, function ($1) {
+                return $1.toUpperCase();
+            });
+        };
+
+        $(function () {
+            $("#SupportTeamId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server...
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder: 'Select Employee',
+                ajax: {
+                    url:'@Url.Action("GetAssignedEmployees", "Ticket")', // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (term) {
+                        if (term != "NULL") {
+                            return {
+                                term: term
+                            };
+                        }
+
+                    },
+                    results: function (data, page) {
+                        return { results: data.employees }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        /******************** BEGINNING OF CLOSE TICKET DIALOG***************************************/
+        var ticketId = null;
+        function closeTicketDialog(i) {
+            $("#tticket_number2").text(data[i]["TicketNumber"]);
+            $("#TicketId").text(data[i]["TicketId"]);
+            ticketId = data[i]["TicketId"];
+            $('#TicketId').val(ticketId);
+            $('#CloseTicketModal').modal('show');
+
+             $("#close_form_submission").click(function () {
+            var ticketId = document.getElementById("TicketId").value;
+            var Description = document.getElementById("Description2").value;
+            if (Description == "") {
+                swal("Description is Required.", { icon: "warning" })
+                .then((value) => { });
+                $("#close_form_submission").prop('disabled', false);
+                return
+            }
+            var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "TicketId": ticketId,
+                "Description": Description
+            }
+
+            var url = '@Url.Action("CloseTickets", "Ticket")';
+            var urlList = '@Url.Action("AssignedTicketList", "Ticket")';
+            $("#close_form_submission").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#close_form_submission").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket Closed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#close_form_submission").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+        }
+        /******************** ENDING OF CLOSE TICKET DIALOG***************************************/
+
+        // *************** BEGINNING SHOW VIEW DIALOG ********************
+           
+        function openViewDialog(i) {
+            let attachment = "NILL";
+            let hostNameIpAddress = data[i]["HostName"];
+            let ticketNo = data[i]["TicketNumber"];
+            let desctn = data[i]["Description"];
+            let instName = data[i]["InstitutionName"];
+            let instCode = data[i]["InstitutionCode"];
+            let modName = data[i]["ModuleName"];
+            let subModName = data[i]["SubModuleName"];
+            let fName = data[i]["FirstName"];
+            let mName = data[i]["MiddleName"];
+            let lName = data[i]["LastName"];
+            let eMail = data[i]["Email"];
+            let phone = data[i]["PhoneNumber"];
+            let stats = data[i]["Status"];
+            let hName = data[i]["HostName"];
+            let title = data[i]["Title"];
+            let attchName = data[i]["AttachmentName"];
+            let ticketId = data[i]["TicketId"];
+            let priority = null;
+
+            switch (data[i]["Priority"]) {
+                case "1":
+                    priority = "NORMAL";
+                    break;
+                case "2":
+                    priority = "HIGH";
+                    break;
+                case "3":
+                    priority = "<span style='color:red;font-weight:bold'>URGENT</span>";
+                    break;
+                default:
+                    priority = "NILL";
+            }
+
+            $("#institutionName").text(instName);
+            $("#institutionCode").text(instCode);
+            $("#moduleName").text(modName);
+            $("#subModuleName").text(subModName);
+            $("#ticketNumber").text(ticketNo);
+            $("#fullName").text(fName + " " + mName + " " + lName);
+            $("#email").text(eMail);
+            $("#phoneNumber").text(phone);
+            $("#status").text(stats);
+            if (attchName != null) {
+                attachment = '<a href="http://' + hostNameIpAddress + '/Media/HelpDesk/Tickets/' + attchName + '" target="_blank">View Attachment</a>';
+            }
+            $("#attachmentName").html(attachment);
+            $("#descriptions").text(desctn);
+            $("#hostName").text(hName);
+            $("#title").text(title);
+            $("#priority").html(priority);
+
+            var responseData = [];
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetActivityDescriptionByTicketId", "Ticket")/?ticketId=' + ticketId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    responseData = response.responseData;
+                    if (responseData == "" || responseData == undefined) {
+                        dt_tbl_helpdesk_ticket_listing.fnClearTable();
+                        document.getElementById("tbl_loader").textContent = "Data  not available in our records";
+                    } else {
+                        dt_tbl_helpdesk_ticket_listing.fnClearTable();
+                        for (var i = 0; i < responseData.length; i++) {
+                            let institutionName = responseData[i]["InstitutionName"];
+                            let institutionCode = responseData[i]["InstitutionCode"];
+                            let descptn = responseData[i]["Description"];
+                            let overallStatus = responseData[i]["OverallStatus"];
+                            let user = responseData[i]["CreatedBy"].replace(".", " ");
+                            let date = responseData[i]["CreatedAt"];
+                            dt_tbl_helpdesk_ticket_listing.fnAddData([i + 1,
+                            institutionName + " (" + institutionCode + ") ",
+                            descptn,
+                            (overallStatus == "Assigned") ? "Re-opened" : overallStatus,
+                            upperCaseWords(user),
+                            ToJavaScriptDate(date)
+                            ]);
+                        }
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#TicketInformationModal').modal('show');
+        }
+        // *************** ENDING SHOW VIEW DIALOG ********************
+    </script>
+}

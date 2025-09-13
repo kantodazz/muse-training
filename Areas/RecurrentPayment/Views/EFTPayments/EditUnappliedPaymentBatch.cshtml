@@ -1,0 +1,306 @@
+@model IFMIS.Areas.RecurrentPayment.Models.PaymentBatchVM
+@{
+    ViewBag.Title = "Edit Unappplied Payment Batch";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body " style="padding-top:10px">
+                            @Html.AntiForgeryToken()
+                            <div class="form-horizontal">
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2" style="padding-right: 5px">Payer Account Number</label>
+                                    <div class="col-md-10">
+                                        <select id="InstitutionAccountId" class="form-control" required style="padding:6px;" onchange="GetSBCList()">
+                                            @if (ViewBag.InstitutionAccountList != null)
+                                            {
+                                                foreach (var instAccount in ViewBag.InstitutionAccountList)
+                                                {
+                                                    if (ViewBag.InstitutionAccountId == instAccount.InstitutionAccountId)
+                                                    {
+                                                        <option value='@instAccount.InstitutionAccountId' selected>@instAccount.AccountName - @instAccount.AccountNumber</option>
+                                                    }
+                                                    else
+                                                    {
+                                                        <option value='@instAccount.InstitutionAccountId'>
+                                                            @instAccount.AccountName - @instAccount.AccountNumber
+                                                        </option>
+                                                    }
+                                                }
+                                            }
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2" style="padding-right: 5px">Sub Budget Class</label>
+                                    <div class="col-md-4">
+                                        <select name="SubBudgetClass" id="SubBudgetClass" class="form-control" required style="padding:6px;">
+                                            <option value="@ViewBag.SubBudgetClass">@ViewBag.SubBudgetClass</option>
+                                        </select>
+                                    </div>
+                                    <label class="control-label col-md-2" style="padding-right: 5px">Beneficiary Currency</label>
+                                    <div class="col-md-4">
+                                        <select name="BenCurrency" id="BenCurrency" class="form-control" required style="padding:6px;">
+                                            <option value="@ViewBag.BenCurrency">@ViewBag.BenCurrency</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2" style="padding-right: 5px">Payment Description (<span style="font-weight:bold;" id="BatchDescCount">80</span>)</label>
+                                    <div class="col-md-10">
+                                        <textarea rows="2" id="BatchDesc" name="BatchDesc" class="form-control" style="resize: none;" maxlength="80">@Model.BatchDesc</textarea>
+                                    </div>
+                                </div>
+
+                                <div class="row" style="padding:12px">
+                                    <div class="col-md-2"></div>
+                                    <div class="col-md-4">
+                                        <button type="button" class="btn btn-info">
+                                            <a href='@Url.Action("PaymentBatchesList", "EFTPayments")' style="text-decoration:none;color:white;">
+                                                <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                                Back
+                                            </a>
+                                        </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                        <button type="button" class="btn btn-info" id="btnUpdatePaymentBatch" onclick="UpdatePaymentBatch()">
+                                            <i class="glyphicon glyphicon-plus"></i>Update
+                                            <img src="~/Content/img/loading.gif" class="batchLoader" />
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- Start of div loader-->
+                        <div id="divLoader" style="text-align: center; display: none">
+                            <img src="~/Media/Images/ajax_loader.gif" />
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $("#InstitutionAccountId").select2();
+        $("#SubBudgetClass").select2();
+        $("#BenCurrency").select2();
+        $(".batchLoader").toggle(false);
+
+        var count = $('#BatchDesc').val().split('');
+        var numChars = 80 - parseInt(count.length);
+        $('#BatchDescCount').text(parseInt(numChars));
+
+        $('#BatchDesc').on("keyup", function () {
+            var count2 = $('#BatchDesc').val().split('');
+            var numChars2 = 80 - parseInt(count2.length);
+            $('#BatchDescCount').text(parseInt(numChars2));
+        });
+
+        function GetSBCList() {
+            $('#SubBudgetClass').val('');
+            $('#SubBudgetClass').change();
+
+            $('#BenCurrency').val('');
+            $('#BenCurrency').change();
+
+            var option = [];
+            var option2 = [];
+            var instAccountId = $("#InstitutionAccountId").val();
+            var url = '@Url.Action("GetSBCByInstitutionAccountId", "EFTPayments")/?InstitutionAccountId=' + instAccountId;
+
+            $.ajax({
+                url: url,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    option.push('<option value="">Select Sub Budget Class</option>');
+                    data.data.forEach(d => {
+                        option.push('<option value=' + d["SubBudgetClass"] + '>' + d["SubBudgetClass"] + '</option>');
+                    });
+                    option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                    $("#SubBudgetClass").html(option);
+                }
+            })
+
+           var url2 = '@Url.Action("GetCurrencyByInstitutionAccountId", "EFTPayments")/?InstitutionAccountId=' + instAccountId;
+            $.ajax({
+                url: url2,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    option2.push('<option value="">Select Beneficiary Currency</option>');
+                    data.data.forEach(d => {
+                        option2.push('<option value=' + d["Currency"] + '>' + d["Currency"] + '</option>');
+                    });
+                    option2 = option2.toString().replace(",", "").replace("[", "").replace("]", "");
+                    $("#BenCurrency").html(option2);
+                }
+            })
+        }
+
+          /*BEGINNING SAVING PAYMENT BATCH*/
+        function UpdatePaymentBatch() {
+            $(".batchLoader").toggle(true);
+            $("#btnUpdatePaymentBatch").prop('disabled', true);
+            var InstitutionAccountId = $("#InstitutionAccountId").val();
+            var SubBudgetClass = $("#SubBudgetClass").val();
+            var BenCurrency = $("#BenCurrency").val();
+            var BatchDesc = $("#BatchDesc").val();
+
+            if (InstitutionAccountId == '' || InstitutionAccountId == 'Select Payer Account Number') {
+                swal("Payer Account Number is Required", { icon: "warning" });
+                $(".batchLoader").toggle(false);
+                $("#btnUpdatePaymentBatch").prop('disabled', false);
+                return false;
+            }
+
+            if (SubBudgetClass == '' || SubBudgetClass == 'Select Sub Budget Class') {
+                swal("Sub Budget Class is Required", { icon: "warning" });
+                $(".batchLoader").toggle(false);
+                $("#btnUpdatePaymentBatch").prop('disabled', false);
+                return false;
+            }
+
+            if (BenCurrency == '' || BenCurrency == 'Select Beneficiary Currency') {
+                swal("Beneficiary Currency is Required", { icon: "warning" });
+                $(".batchLoader").toggle(false);
+                $("#btnUpdatePaymentBatch").prop('disabled', false);
+                return false;
+            }
+
+            if (BatchDesc == '' ) {
+                swal("Payment Description is Required", { icon: "warning" });
+                $(".batchLoader").toggle(false);
+                $("#btnUpdatePaymentBatch").prop('disabled', false);
+                return false;
+            }
+
+                var formData = new FormData();
+                formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                formData.append('PaymentBatchId', '@ViewBag.PaymentBatchId');
+                formData.append('InstitutionAccountId', InstitutionAccountId);
+                formData.append('SubBudgetClass', SubBudgetClass);
+                formData.append('BenCurrency', BenCurrency);
+                formData.append('BatchDesc', BatchDesc);
+
+                var url = '@Url.Action("UpdateUnappliedPaymentBatch", "EFTPayments")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        switch (response) {
+                            case "Success":
+                               swal("Payment Batch Updated Successfully", { icon: "success" })
+                                .then((value) => {
+                                 var url = '@Url.Action("UnappliedPaymentBatchesList", "EFTPayments")';
+                                  window.location.replace(url);
+                                });
+
+                                $(".batchLoader").toggle(false);
+                                $("#btnUpdatePaymentBatch").prop('disabled', false);
+                                break;
+                        }
+                    },
+                    failure: function (response) {
+                        swal(response.d, { icon: "warning" });
+                        $(".batchLoader").toggle(false);
+                        $("#btnUpdatePaymentBatch").prop('disabled', false);
+                    }
+                });
+        }
+       /*ENDING SAVING PAYMENT BATCH*/
+    </script>
+}

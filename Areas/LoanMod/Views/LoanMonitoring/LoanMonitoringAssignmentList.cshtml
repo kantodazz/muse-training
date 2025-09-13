@@ -1,0 +1,453 @@
+﻿@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanMonitoringVM>
+@{
+    ViewBag.Title = "Loan Monitoring Officer Assignment ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                              <div class="col-md-3">
+                                  <select name="RegionId" id="RegionId" style="width:100px" required class="form-control select2">
+                                      @if (ViewBag.regionList != null)
+                                      {
+                                          <option value="NULL">Select Region</option>
+                                          foreach (var region in ViewBag.regionList)
+                                          {
+                                            <option value='@region.RegionId'>@region.RegionName</option>
+                                          }
+                                      }
+                                  </select>
+                                </div>
+
+                                <div class="col-md-3">
+                                    <select name="LoanAppraiserId" id="LoanAppraiserId" style="width:100px" required class="form-control select2">
+                                        @if (ViewBag.LoanAccessorList != null)
+                                        {
+                                            <option value="NULL">Select Loan Officer</option>
+                                            foreach (var appraiser in ViewBag.LoanAccessorList)
+                                            {
+                                                if (appraiser.CheckNumber != "")
+                                                {
+                                                    <option value='@appraiser.LoanAccessorId'>@appraiser.Fullname - @appraiser.CheckNumber</option>
+                                                }
+                                                else
+                                                {
+                                                    <option value='@appraiser.LoanAccessorId'>@appraiser.Fullname - @appraiser.Email</option>
+                                                }
+                                            }
+                                        }
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button class="btn btn-info AssignBtn" id="Assign" onclick="AssignLoanOfficer()">
+                                        Assign Loan(s)
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <hr />
+                            <table id="dt_monitoring_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th><input type="checkbox" class="cbCheckAll"></th>
+                                        <th>Customer Name</th>
+                                        <th>Application Number</th>
+                                        <th>Loan Purpose</th>
+                                        <th>Applied Amount</th>
+                                        <th>Approved Amount</th>
+                                        <th>Disbursed Amount</th>
+                                        <th>OverAllStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+@section pagespecific{
+
+    <script>
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkbox1").prop('checked',
+              $(this).prop('checked'));
+        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        $(".AssignBtn").attr('disabled', true);
+
+        var dt_monitoring_list = $('#dt_monitoring_list').dataTable();
+        $("#dt_monitoring_list_wrapper .dt-toolbar").remove();
+        //$("#searchbox").on("keyup search input paste cut", function () {
+        //    dt_monitoring_list.DataTable().search(this.value).draw();
+        //});
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_monitoring_list.fnClearTable();
+            } else {
+                searchLoanTableUpdate(this.value);
+            }
+        });
+
+        var data = [];
+        var LoanApplicationId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetLoanOfficerAssignmentList", "LoanMonitoring")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                console.log(data);
+                dt_monitoring_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_monitoring_list.fnAddData([i + 1,
+                       '<input type="checkbox" class="checkbox1"  id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',
+                       data[i]["CustomerName"],
+                       data[i]["ApplicationNo"],
+                       data[i]["LoanPurpose"],
+                       toLabel(data[i]["AppliedLoanAmount"]),
+                       toLabel(data[i]["LoanApprovedAmount"]),
+                       toLabel(data[i]["DisbursedAmount"]),
+                       data[i]["OverAllStatus"],
+                      '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchLoanTableUpdate(search) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetLoanListDt2", "LoanMonitoring")/?search=' + search + '',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    console.log(data);
+                    dt_monitoring_list.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_monitoring_list.fnAddData([i + 1,
+                           '<input  type="checkbox" class="checkbox1"  id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',
+                           data[i]["CustomerName"],
+                           data[i]["ApplicationNo"],
+                           data[i]["LoanPurpose"],
+                           toLabel(data[i]["AppliedLoanAmount"]),
+                           toLabel(data[i]["LoanApprovedAmount"]),
+                           toLabel(data[i]["DisbursedAmount"]),
+                           data[i]["OverAllStatus"],
+                          '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                            </ul>\
+                        </div>\ '
+                        ]);
+
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+
+
+
+        $("#RegionId").change(function () {
+            if ($(this).val() != "0") {
+                updateSearchLoanRegionTable($(this).val());
+            }
+        });
+
+        let RegionData = []
+        function updateSearchLoanRegionTable(regionId) {
+            $("#loader").text("Loading Please Wait...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetRegionLoanList", "LoanMonitoring")/?id=' + regionId + '',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    debugger;
+                    console.log(response)
+                    RegionData = response.data;
+                    updateLoanSearchTable(RegionData)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function updateLoanSearchTable(RegionData) {
+            dt_monitoring_list.fnClearTable();
+            for (var i = 0; i < RegionData.length; i++) {
+                dt_monitoring_list.fnAddData([i + 1,
+                   '<input  type="checkbox" class="checkbox1"  id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',
+                   RegionData[i]["CustomerName"],
+                   RegionData[i]["ApplicationNo"],
+                   RegionData[i]["LoanPurpose"],
+                   toLabel(RegionData[i]["AppliedLoanAmount"]),
+                   toLabel(RegionData[i]["LoanApprovedAmount"]),
+                   toLabel(RegionData[i]["DisbursedAmount"]),
+                   RegionData[i]["OverAllStatus"],
+                  '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + RegionData[i]["LoanApplicationId"] + '">View</a></li>\
+                            </ul>\
+                        </div>\ '
+                ]);
+            }
+
+            if (RegionData.length == 0) {
+                $("#loader").text("No Matching Record Found")
+            } else {
+                $("#loader").text("")
+            }
+        }
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleAssignButton();
+        }
+
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkbox1").prop('checked',
+              $(this).prop('checked'));
+            checkAll();
+        });
+
+
+
+
+        function checkAll() {
+            debugger
+            //checkedRows = [];
+            if ($(".checkbox1").is(":checked")) {
+                for (var j = 0; j < RegionData.length; j++) {
+                    checkedRows.push(j);
+                    $("#row-" + j).prop('checked', true);
+                }
+            } else {
+                for (var j = 0; j < RegionData.length; j++) {
+                    $("#row-" + j).prop('checked', false);
+                }
+            }
+            toggleAssignButton()
+        }
+
+
+
+
+
+        function toggleAssignButton() {
+            debugger
+            if (checkedRows.length > 0) {
+                var data = dt_monitoring_list.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                });
+                $("#Assign").attr('disabled', false);
+            } else {
+                $("#Assign").attr('disabled', true);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var LoanAppraiserId = null;
+        var LoanApplicationIds = [];
+        function AssignLoanOfficer() {
+            LoanAppraiserId = document.getElementById("LoanAppraiserId").value;
+            if (LoanAppraiserId == "NULL") {
+                swal("Please Select Loan Officer First", { icon: "warning" });
+                return false;
+            }
+
+            swal({
+                text: "Assign Selected Application(s)?",
+                buttons: ["NO", "YES"],
+            }).then((assign) => {
+                if (assign) {
+                    postAssignLoanOfficer();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postAssignLoanOfficer() {
+            checkedRows.forEach(rowId => {
+                LoanApplicationIds.push(data[rowId]['LoanApplicationId']);
+            });
+
+            var url = '@Url.Action("AssignApplicationToOfficer", "LoanMonitoring")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "LoanApplicationIds": LoanApplicationIds, "__RequestVerificationToken": $("[name=__RequestVerificationToken]").val(), "LoanAppraiserId": LoanAppraiserId, "Stage": "@IFMIS.Libraries.Constants.LOAN_MONITORING" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Application(s) Assigned successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.href = '@Url.Action("LoanMonitoringAssignmentList", "LoanMonitoring")';
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        $(".saveLoader").toggle(false);
+
+    </script>
+}

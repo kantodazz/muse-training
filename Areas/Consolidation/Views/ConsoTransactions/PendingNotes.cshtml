@@ -1,0 +1,384 @@
+﻿@model IFMIS.Areas.Consolidation.Models.ConsoDataEntryVM
+@{
+ 
+    ViewBag.Title = "Transactions Entry Notes";
+    var i=0;
+}
+
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                <strong>Financial Year: @Html.DisplayFor(model => model.FinancialYear)</strong>
+                            </p>
+
+                            <div class="row">
+                                @if (Model.TransactionList.Any(a => a.SourceModule == "Muse"))
+                                {
+                                    <div class="col-md-12">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="search-box">
+                                        </div>
+                                    </div>
+
+                                }
+                                else
+                                {
+                                    <div class="col-md-6">
+                                        <a href="@Url.Action("DataEntry", "ConsoTransactions",new {id=Model.ConsoTransactionSummaryId})" class="btn btn-info" style="width:120px;border-radius:1px;">
+                                            <i class="fa fa-plus"></i>Add Note
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="search-box">
+                                        </div>
+                                    </div>
+                                }
+
+                            </div>
+                            <table class="table table-bordered table-hover table-condensed" id="dt_summary">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right">
+                                            #
+                                        </th>
+
+                                        <th style="text-align:center">
+                                            @Html.DisplayNameFor(model => model.Note)
+                                        </th>
+
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.NoteDesc)
+                                        </th>
+                                        <th style="text-align:center">
+                                            TrxNo
+                                        </th>
+                                        <th style="text-align:right">
+                                            CrAmount
+                                        </th>
+                                        <th style="text-align:right">
+                                            DrAmount
+                                        </th>
+                                        <th style="text-align:right">
+                                            Diff(DR-CR)
+                                        </th>
+                                        <th style="text-align:center">
+                                            @Html.DisplayNameFor(model => model.TransactionType)
+                                        </th>
+                                        <th style="text-align:center">
+                                            @Html.DisplayNameFor(model => model.FinancialYear)
+                                        </th>
+                                        <th style="text-align:center">
+                                            Status
+                                        </th>
+
+
+                                        <th style="text-align:center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model.TransactionList)
+                                    {
+                                        i++;
+                                        decimal? drAmount = item.DrAmount;
+                                        if (item.DrAmount == null) {
+                                            drAmount = 0;
+                                        }
+                                        decimal? crAmount = item.CrAmount;
+                                        if (item.CrAmount == null)
+                                        {
+                                            crAmount = 0;
+                                        }
+                                        decimal? difference = drAmount - crAmount;
+
+                                        <tr>
+                                            <td style="text-align:right">
+                                                @i
+                                            </td>
+
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.Note)
+                                            </td>
+
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.NoteDesc)
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.TrxNo)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.DrAmount)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.CrAmount)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Convert.ToDecimal(difference).ToString("#,0.00")
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.TransactionType)
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.FinancialYear)
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.OverallStatus)
+                                            </td>
+
+                                            <td style="text-align:center">
+
+                                                <div class="btn-group" style="text-align:left">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @if (item.SourceModule == "Muse")
+                                                        {
+
+
+                                                            <li>
+                                                                <a href="@Url.Action("NoteDetails", "ConsoTransactions", new { id = item.NoteId, tbid = Model.ConsoTransactionSummaryId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Details
+                                                                </a>
+                                                            </li>
+
+                                                        }
+                                                        else
+                                                        {
+
+                                                            <li>
+                                                                <a href="@Url.Action("AddMore", "ConsoTransactions", new { id = item.NoteId, tbid = Model.ConsoTransactionSummaryId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Add More
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="@Url.Action("EditNoteItems", "ConsoTransactions", new { id = item.NoteId, tbid = Model.ConsoTransactionSummaryId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Edit
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="@Url.Action("NoteDetails", "ConsoTransactions", new { id = item.NoteId, tbid = Model.ConsoTransactionSummaryId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Details
+                                                                </a>
+                                                            </li>
+                                                            <li>
+                                                                <a href="#" onclick="cancelEntry(@item.NoteId,'@item.FinancialYear')">
+                                                                    <i class="fa fa-edit"></i>Cancel
+                                                                </a>
+                                                            </li>
+
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                            @if (Model.TransactionList.Select(a => a.OverallStatus).FirstOrDefault() == "Confirmed")
+                            {
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-1">
+                                            <a href="@Url.Action("TBSubmission","ConsoTransactions")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-1">
+                                            <a href="@Url.Action("PendingTB","ConsoTransactions")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            }
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_search_summary = $('#dt_summary').dataTable();
+        $("#dt_summary_wrapper .dt-toolbar").remove();
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_summary").DataTable().search(this.value).draw();
+        });
+
+
+           var confirmEntry = function (id, fy) {
+             swal({
+                        title: 'Confirmation',
+                        text: "Do you want to confirm this Note ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmEntry", "ConsoTransactions")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id,fy:fy },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Confirmed  successfully!", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                         });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        swal("An error has occured, contact system support");
+
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+        };
+
+
+        var cancelEntry = function (id, fy) {
+             swal({
+                        title: 'Confirmation',
+                        text: "Do you want to cancel this Note ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("CancelEntry", "ConsoTransactions")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id,fy:fy },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Cancelled  successfully!", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                         });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        swal("An error has occured, contact system support");
+
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+        };
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}

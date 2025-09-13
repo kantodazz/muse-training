@@ -1,0 +1,222 @@
+﻿@model IFMIS.Areas.PayrollManagement.Models.DepartmentVm
+@{
+    ViewBag.Title = "Create Department";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .input {
+        height: 36px;
+    }
+
+    input.error,
+    select.error {
+        border: 1px solid red;
+    }
+
+    label.error {
+        color: red;
+    }
+</style>
+
+<!-- MAIN CONTENT -->
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; margin-top: 30px">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i></span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form id="addDepartment" class="form-horizontal" style="margin-left: 10px;">
+                                <table style="width: 80%;">
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                @Html.LabelFor(d => d.Department.DeptName, new { @class = "control-label col-md-3" })
+                                                <div class="col-md-5">
+                                                    @Html.TextBoxFor(d => d.Department.DeptName, new { @class = "form-control padding-10 input", name = "DeptName" })
+                                                    @Html.ValidationMessageFor(model => model.Department.DeptName, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                @Html.LabelFor(d => d.Department.CompanyId, new { @class = "control-label col-md-3" })
+                                                <div class="col-md-4">
+                                                    @Html.DropDownListFor(d => d.Department.CompanyId, new SelectList(Model.Companies, "CompanyId", "CompanyCodeName"), "Select Company", new { @class = "form-control padding-10 input" })
+                                                    @Html.ValidationMessageFor(model => model.Department.CompanyId, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                @Html.LabelFor(d => d.Department.DeptCode, new { @class = "control-label col-md-3" })
+                                                <div class="col-md-2">
+                                                    @Html.TextBoxFor(d => d.Department.DeptCode, new { @class = "form-control padding-10 input", name = "DeptCode" })
+                                                    @Html.ValidationMessageFor(model => model.Department.DeptCode, "", new { @class = "text-danger" })
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-1">
+                                            <a href="@Url.Action("DepartmentList", "Departments")" class="btn btn-info" style="float: left; margin-left: 145px">
+                                                <i class="fa fa-arrow-left"></i>
+                                                Back
+                                            </a>
+                                            <button class="btn btn-info" type="button" onclick="addDepartment()" style="float: left; margin-left: 5px;">
+                                                <i class="fa fa-save"></i>
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+        </div>
+        <!-- END ROW -->
+    </section>
+    <!-- end widget grid -->
+</div>
+<!-- END MAIN CONTENT -->
+@section scripts
+{
+    <script>
+        var addDepartment = function () {
+            var vm = {};
+         $.validator.unobtrusive.parse("#addDepartment");
+         if (!$("#addDepartment").valid()) {
+             return false;
+         }
+
+         var url = '@Url.Action("CreateDepartment", "Departments")';
+         var url1 = '@Url.Action("DepartmentList", "Departments")';
+         //var model = $("#addDepartment").serialize();
+
+         vm.DeptCode = $("#Department_DeptCode").val().trim().toUpperCase();
+         vm.DeptName = $("#Department_DeptName").val().trim().toUpperCase();
+         vm.CompanyId = $("#Department_CompanyId").val();
+            vm.IsActive = true;
+            $("#divLoader").show();
+
+     $.ajax({
+         type: "POST",
+         url: url,
+         data: vm,
+         success: function (response) {
+             $("#divLoader").hide();
+             if (response == "success") {
+                 swal("Saved Successfully!", { icon: "success" })
+                     .then((value) => {
+                         window.location.href = url1;
+                     })
+             } else if (response == "exist") {
+                 swal("Already Exist!", { icon: "warning" })
+                    .then((value) => {
+
+                    })
+             }
+             else {
+                 swal("Error on Saving!", { icon: "error" })
+                     .then((value) => {
+
+                     })
+             }
+         },
+         error: function (response) {
+             swal("Error on Saving!")
+
+         }
+     });
+ };
+
+
+        @*$(document).ready(function () {
+
+            var vm = {};
+
+            var validator = $("#addDepartment").validate({
+
+                rules: {
+                    "Department.DeptCode": { required: true, maxlength: 10 },
+                    "Department.DeptName": { required: true, maxlength: 100 },
+                    "Department.CompanyId": { required: true}
+                },
+                messages: {
+                    Department_DeptCode: {
+                        maxlength: "This field should not exceed {0} characters."
+                    },
+
+                    Department_DeptName: {
+                        maxlength: "This field should not exceed {0} characters."
+                    }
+
+                },
+                submitHandler: function() {
+                    vm.DeptCode = $("#Department_DeptCode").val().trim().toUpperCase();
+                    vm.DeptName = $("#Department_DeptName").val().trim().toUpperCase();
+                    vm.CompanyId = $("#Department_CompanyId").val();
+                    vm.IsActive = true;
+
+                    $.ajax({
+                        url: '@Url.Action("CreateDepartment", "Departments")',
+                        method: "POST",
+                        data: vm,
+                        success: function(status) {
+                            if (status === "success") {
+                                swal("Saved Successfully!", { icon: "success" })
+                                    .then(() => {
+                                        vm = {};
+                                        validator.resetForm();
+                                        window.location.href = '@Url.Action("DepartmentList", "Departments")';
+                                    });
+                            } else {
+                                swal(status, { icon: "info" });
+                            }
+
+                        },
+                        failure: function(error) {
+                            swal(error, { icon: "error" });
+                        }
+                    });
+
+                    return false;
+                }
+            });
+        });*@
+    </script>
+}

@@ -1,0 +1,117 @@
+﻿
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <div class="widget-body">
+                      
+                        <div style="text-align: center">
+                            <a href="@Url.Action("DownloadGfsCodeTemplate", "GfscodeSetup")" class="btn btn-info">
+                                <i class="fa fa-download"></i> Download Template ...
+                            </a>
+                        </div>
+                        <br />
+                        <br />
+                        <div>
+                            @using (Html.BeginForm("", "", FormMethod.Post, new { id = "form2" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-group col-md-2">
+                                    <label for="fileInput">Choose Excel File:</label>
+                                </div>
+                                <div class="form-group col-md-5">
+                                    <input type="file" class="form-control" name="FileName" id="FileNameExcel" required />
+                                </div>
+                                <div class="form-group col-md-5">
+                                    <button type="button" class="btn btn-info" id="uploadFormTemplate">
+                                        <i class="fa fa-save"></i>
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" style="display: none;" />
+                                        Upload
+                                    </button>
+                                </div>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+</div>
+
+
+<!-- END MAIN CONTENT -->
+<!--Start of delete confirmation modal section-->
+
+@section Scripts{
+    <script>
+
+        //$(document).ready(function () {
+        //    $("#saveLoader").toggle(false);
+        //});
+
+      
+        $('#uploadFormTemplate').on("click", function () {
+            debugger;
+            // e.preventDefault(); // Prevent default form submission
+            $("#saveLoader").show();
+            /* var formData = new FormData(this);*/
+            var formData = new FormData();
+            formData.append('FileName', $('#FileNameExcel')[0].files[0]);
+
+            for (const value of formData.values()) {
+                console.log(value);
+            }
+
+            $.ajax({
+                url: '@Url.Action("UploadBulkImportation", "GfscodeSetup")',
+                type: "POST",
+                data: formData,
+                dataType: "JSON",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    $("#saveLoader").hide();
+                    console.log('Response', response);
+                    if (response[0] == "Success")
+                    {
+                        swal({
+                            text: response[1],
+                            icon: "success"
+                        }).then(function () {
+                            window.location = '@Url.Action("GfsCodeSetupCreate", "GfscodeSetup")';
+                        });
+                    }
+                    else if (response[0] == "Partial Success" || response[0] == "Failure")
+                    {
+               
+                    }
+                    else {
+                        swal({
+                            text: response[0],
+                            icon: "error"
+                        });
+                    }
+                }
+            });
+        });
+    </script>
+}
+
+

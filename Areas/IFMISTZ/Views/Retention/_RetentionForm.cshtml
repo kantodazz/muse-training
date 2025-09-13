@@ -1,0 +1,557 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+
+@if (Model.OverallStatus == "Success")
+{
+    using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data" }))
+    {
+        @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.ReservedRetentionId)
+    @Html.HiddenFor(model => model.PayeeDetailId)
+    @Html.HiddenFor(model => model.HasNewPayee)
+    @Html.HiddenFor(model => model.Currency)
+    @Html.HiddenFor(model => model.TransactionExchangeRate)
+    @Html.HiddenFor(model => model.TransactionCurrency)
+    @Html.HiddenFor(model => model.CrossOperationToTrxExchangeRate)
+    @Html.HiddenFor(model => model.CrossOperationToAOExchangeRate)
+    <div id="retention-form"></div>
+
+    @if (Model.ShowApprovalType)
+    {
+    <div class="form-group">
+        @Html.LabelFor(model => model.ApprovalType, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.ApprovalType, new List<SelectListItem>
+                {
+                new SelectListItem{ Text="--Select ---", Value = "" },
+                new SelectListItem{ Text="Manually", Value = "Manually" },
+                new SelectListItem{ Text="Electronic", Value = "Electronic" },
+                }, new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.ApprovalType, "", new { @class = "text-danger" })
+
+        </div>
+    </div>
+    }
+    else
+    {
+    @Html.HiddenFor(model => model.ApprovalType)
+    }
+
+    <div class="form-group">
+        @if (Model.HasRetentionSubContract)
+        {
+        @Html.LabelFor(model => model.ChangeRetentionPayeeId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.ChangeRetentionPayeeId, Model.NewRetentionPayeeList, "Select ---", new { @class = "form-control select2" })
+            @Html.ValidationMessageFor(model => model.ChangeRetentionPayeeId, "", new { @class = "text-danger" })
+        </div>
+        }
+        else
+        {
+        @Html.LabelFor(model => model.PurchasePayeeAccountId, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left;padding-top:8px;" })
+        <div class="col-md-10">
+            @Html.DropDownListFor(model => model.PurchasePayeeAccountId, Model.PayeeAccountsList, "Select ---", new { @class = "form-control select2" })
+        </div>
+
+        }
+    </div>
+    <div id="eApprovalField" style="display:none">
+        <div class="form-group">
+            @Html.LabelFor(model => model.EOfficeApprovalId, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                @Html.EditorFor(model => model.EOfficeApprovalId, new { htmlAttributes = new { @class = "form-control", @placeholder = "Select Approval Reference" } })
+                @Html.ValidationMessageFor(model => model.EOfficeApprovalId, "", new { @class = "text-danger" })
+
+            </div>
+            @Html.LabelFor(model => model.AvailableBalanceEOffice, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon aoCurrency"></span>
+                    @Html.EditorFor(model => model.AvailableBalanceEOffice, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+                    @Html.ValidationMessageFor(model => model.AvailableBalanceEOffice, "", new { @class = "text-danger" })
+
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.EOfficeTitle, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                @Html.EditorFor(model => model.EOfficeTitle, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly" } })
+                @Html.ValidationMessageFor(model => model.EOfficeTitle, "", new { @class = "text-danger" })
+
+            </div>
+            @Html.LabelFor(model => model.AoAmount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+            <div class="col-md-4">
+                <div class="input-group">
+
+                    <span class="input-group-addon aoCurrency"></span>
+                    @Html.EditorFor(model => model.AoAmount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+                    @Html.ValidationMessageFor(model => model.AoAmount, "", new { @class = "text-danger" })
+
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="col-md-2 control-label" style="text-align:left">Contract Number<sup></sup></label>
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.ContractNumber, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Search", autocomplete = "off", @readonly = "readonly" } })
+            @Html.ValidationMessageFor(model => model.ContractNumber, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.TotalPaid, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                @Html.EditorFor(model => model.TotalPaid, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.TotalPaid, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @Html.LabelFor(model => model.AvailableAmount, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                @Html.EditorFor(model => model.AvailableAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.AvailableAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.PaymentAmount, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                @Html.EditorFor(model => model.PaymentAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Enter Amount", @autocomplete = "off", @max = @Model.AvailableAmount, @onkeyup = "amountEntered(this)" } })
+                @Html.ValidationMessageFor(model => model.PaymentAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @Html.LabelFor(model => model.TransactionAmount, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon trxCurrency"></span>
+                @Html.EditorFor(model => model.TransactionAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @readonly = "readonly" } })
+                @Html.ValidationMessageFor(model => model.TransactionAmount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.SubBudgetClass, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.SubBudgetClass, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.SubBudgetClass, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.PayerBankAccount, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.PayerBankAccount, new { htmlAttributes = new { @class = "form-control", @readonly = "readonly", @autocomplete = "off" } })
+            @Html.ValidationMessageFor(model => model.PayerBankAccount, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.AvailableFundBalance, htmlAttributes: new { @class = "control-label   col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon">@Html.DisplayFor(model => model.Currency)</span>
+                @Html.EditorFor(model => model.AvailableFundBalance, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Enter Amount", @autocomplete = "off", @max = @Model.AvailableAmount, @onkeyup = "amountEntered(this)" } })
+                @Html.ValidationMessageFor(model => model.AvailableFundBalance, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <label class="col-md-2 control-label" style="text-align:left">GL Items<sup></sup></label>
+        <div class="col-md-4">
+            <div class="input-group">
+
+                <span class="input-group-addon" onclick="SearchGL()"><i class="fa fa-search"></i></span>
+                @Html.EditorFor(model => model.GLAccount, new { htmlAttributes = new { @class = "form-control", @required = "required", @placeholder = "Search ", autocomplete = "off", @onclick = "SearchGL()" } })
+                @Html.ValidationMessageFor(model => model.GLAccount, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.PaymentDescription, htmlAttributes: new { @class = "control-label col-md-2", @style = "text-align:left" })
+        <div class="col-md-4">
+            @Html.EditorFor(model => model.PaymentDescription, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off", maxlength = 250 } })
+            @Html.ValidationMessageFor(model => model.PaymentDescription, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+</div>
+    }
+
+    <div style="padding-top:5px">
+
+        <table id="selected_gls" class="table table-bordered
+                                       table-hover table-condensed" width="100%"></table>
+        <div style="padding-bottom:10px" id="infoPanel">
+            <div class="info-box">No GL Items Selected</div>
+        </div>
+    </div>
+
+
+    <div class="form-actions" id="back_button_partial">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-1">
+                <a href="@Url.Action("PendingRetention","Retention")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                &nbsp;
+                <button type="submit" class="btn btn-info" id="form_submision" style="float: left; margin-left: 5px">
+                    <i class="fa fa-save"></i>Save
+                </button>
+            </div>
+        </div>
+    </div>
+
+}
+else
+{
+    <h3 style="text-align:center">@Model.PaymentDescription</h3>
+    <div class="form-actions" id="back_button_partial">
+        <div class="row">
+            <div class="col-md-8 col-md-offset-1">
+                <a href="@Url.Action("PendingRetention","Retention")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+            </div>
+        </div>
+    </div>
+}
+
+
+
+<script>
+
+    $("#ApprovalType").change(function () {
+        var approvalType = $(this).val();
+        if (approvalType == "Electronic") {
+            $("#eApprovalField").show();
+        }
+        else {
+            $("#eApprovalField").hide();
+        }
+
+    });
+
+    $("#Amount").autoNumeric('init');
+    $("#TotalPaid").autoNumeric('init');
+    $("#AvailableAmount").autoNumeric('init');
+    $("#PaymentAmount").autoNumeric('init');
+    $("#AvailableFundBalance").autoNumeric('init');
+    var operationalCurrency = '@Model.Currency';
+    var trxCurrency = null;
+    var aoCurrency = null;
+    var dfundCurrency = null;
+    var operationExchangeRate = 0;
+    var aoExchangeRate = 0;
+    var availableBalanceEOffice = 0;
+    var operationToTrxRate = 0;
+    var operationToAoRate = 0;
+
+    $("#ApprovalType").change(function () {
+        var approvalType = $(this).val();
+        if (approvalType == "Electronic") {
+            $("#eApprovalField").show();
+        }
+        else {
+            $("#eApprovalField").hide();
+        }
+
+    });
+    $('#PaymentDescription').bind('copy paste cut', function (e) {
+        e.preventDefault();
+        swal('Paste option is disabled !!');
+    });
+    $("#PaymentDescription").on('keypress', function (event) {
+        var regex = new RegExp("^[0-9a-zA-Z \b]+$");
+        var key = String.fromCharCode(!event.charCode ? event.which : event.charCode);
+        if (!regex.test(key)) {
+            event.preventDefault();
+            return false;
+        }
+    });
+
+   var trxCurrency = "";
+    var availableBalanceEOffice = 0;
+
+
+       $(function () {
+           if ($("#EOfficeApprovalId")[0]) {
+           availableBalanceEOffice = 0;
+       }
+       $("#EOfficeApprovalId").select2({
+           minimumInputLength: 2,
+           width: 'resolve',
+           ajax: {
+               url: '@Url.Action("GetApprovalByApprovalCategory", "DfundApprovals")',
+               type: "GET",
+               dataType: 'json',
+               data: function (term) {
+                   return { term: term, approvalCategory:"AO" };
+               },
+               results: function (data, page) {
+                   return { results: data.approvals };
+               }
+           }
+       });
+       });
+
+       $("#EOfficeApprovalId").change(function () {
+           if (operationToTrxRate > 0) {
+               //Valid
+           }
+           else {
+               swal("Please first select  Payee Account Number", { icon: "warning" }).then((e) => {
+                   $("#PaymentAmount").val("");
+                   $("#TransactionAmount").val("");
+                   $("#AoAmount").val("");
+               });
+               return false;
+           }
+
+        var id = $(this).val();
+          $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetApprovalByApprovalId", "DfundApprovals")',
+              data: { id: id},
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+              success: function (response) {
+
+                  if (response.success) {
+                      $(".aoCurrency").text(response.currency);
+                      $("#AvailableBalanceEOffice").val(0);
+                      $("#EOfficeTitle").val(response.title);
+                      availableBalanceEOffice = 0;
+                      aoCurrency = response.currency;
+                      $("#PaymentAmount").val("");
+                      $("#TransactionAmount").val("");
+                      $("#AoAmount").val("");
+                      if (response.balanceAmount) {
+                          availableBalanceEOffice = response.balanceAmount;
+                          $("#AvailableBalanceEOffice").val(toLabel(availableBalanceEOffice));
+                          getCrossExchangeRate(operationalCurrency, response.currency, "AO");
+
+                      }
+
+                  }
+              },
+              failure: function (error) {
+                  swal(error);
+              }
+          });
+      });
+
+
+
+    function getExchangeRate(operationalCurrency,trxCurrency,) {
+
+             $.ajax({
+         type: "GET",
+         url: '@Url.Action("GetExchangeRate", "Retention")',
+         data: { operationCurrency: operationalCurrency, trxCurrency: trxCurrency },
+         contenttype: "application/json; charset=utf-8",
+         datatype: "json",
+         success: function (response) {
+
+             if (response.success) {
+                 tranExchangeRate = response.traxExchangeRate;
+                 $("#TransactionExchangeRate").val(tranExchangeRate);
+             }
+             else {
+                 swal(response.message);
+             }
+         },
+         failure: function (error) {
+             swal(error);
+         }
+     });
+    }
+
+    function amountEntered(e) {
+
+        var max_value = parseFloat(e.max);
+        var entered_value = parseFloat(e.value.split(",").join(""));
+        if (entered_value >= 0) {
+            if (entered_value > max_value) {
+                e.value = "";
+                $("#TransactionAmount").val("");
+                swal("Amount can not exceed " + max_value.toLocaleString('en'));
+            }
+            var trxAmt = tranExchangeRate * entered_value
+            $("#TransactionAmount").val(toLabel(trxAmt));
+        }
+    }
+
+
+    $("#PurchasePayeeAccountId").change(function () {
+    var id = $(this).val();
+      $.ajax({
+          type: "GET",
+          url: '@Url.Action("GetTranactionInfo", "Contract")',
+          data: { id: id, operationalCurrency: operationalCurrency },
+          contenttype: "application/json; charset=utf-8",
+          datatype: "json",
+          success: function (response) {
+              $("#TransactionAmount").val("");
+              if (response.success) {
+                  trxCurrency=response.currency;
+                  $(".trxCurrency").text(response.currency);
+                  $("#TransactionCurrency").val(response.currency);
+                  if (response.rate > 0) {
+                      getCrossExchangeRate(operationalCurrency, trxCurrency, operationalCurrency, "Operation");
+                      $("#TransactionExchangeRate").val(toLabel(response.rate));
+                  }
+                  else {
+                      swal(response.message, { icon: "warning" }).then((e) => {
+                          $("#TransactionExchangeRate").val("");
+                      });
+                  }
+              }
+              else {
+                  swal(response.message, { icon: "warning" }).then((e) => {
+                      $("#TransactionExchangeRate").val("");
+
+                  });
+              }
+          },
+          failure: function (error) {
+              swal(error);
+          }
+      });
+    });
+
+    $("#PaymentAmount").keyup(function () {
+        var approvalType = $("#ApprovalType").val();
+        debugger
+        if (operationToTrxRate > 0) {
+            //Valid
+        }
+        else {
+            swal("Please first select  Payee Account Number", { icon: "warning" }).then((e) => {
+                $("#PaymentAmount").val("");
+                $("#TransactionAmount").val("");
+                $("#AoAmount").val("");
+            });
+            return false;
+        }
+        if (approvalType == "Electronic") {
+            if (operationToAoRate > 0) {
+                //Valid
+            }
+            else {
+                swal("Please first select  AO Approval", { icon: "warning" }).then((e) => {
+                    $("#PaymentAmount").val("");
+                    $("#TransactionAmount").val("");
+                    $("#AoAmount").val("");
+                });
+                return false;
+
+            }
+        }
+        var amount = $(this).val();
+        var trxAmount = 0;
+        var aoAmount = 0;
+
+        if (amount) {
+            amount = parseFloat(amount.split(",").join(""));
+            trxAmount = amount * operationToTrxRate;
+            $("#TransactionAmount").val(toLabel(trxAmount));
+            if (approvalType == "Electronic") {
+                aoAmount = amount * operationToAoRate;
+                $("#AoAmount").val(toLabel(aoAmount));
+            }
+            }
+            else {
+                $("#PaymentAmount").val("");
+                $("#TransactionAmount").val("");
+                $("#AoAmount").val("");
+            }
+     }
+    );
+
+
+
+    $("#ChangeRetentionPayeeId").change(function () {
+  var id = $(this).val();
+    $.ajax({
+        type: "GET",
+        url: '@Url.Action("GetTranactionInfo", "Retention")',
+        data: { id: id},
+        contenttype: "application/json; charset=utf-8",
+        datatype: "json",
+        success: function (response) {
+            $("#TransactionAmount").val("");
+            if (response.success) {
+                trxCurrency=response.currency;
+                $(".trxCurrency").text(response.currency);
+                $("#TransactionCurrency").val(response.currency);
+                if (response.rate > 0) {
+                    getCrossExchangeRate(operationalCurrency, trxCurrency, "Operation");
+                    $("#TransactionExchangeRate").val(toLabel(response.rate));
+                }
+                else {
+                    swal(response.message, { icon: "warning" }).then((e) => {
+                        $("#TransactionExchangeRate").val("");
+                    });
+                }
+            }
+            else {
+                swal(response.message, { icon: "warning" }).then((e) => {
+                    $("#TransactionExchangeRate").val("");
+
+                });
+            }
+        },
+        failure: function (error) {
+            swal(error);
+        }
+    });
+    });
+
+    function getCrossExchangeRate(fromCurrency, toCurrency, operationCurrency,type) {
+     $.ajax({
+     type: "GET",
+     url: '@Url.Action("ComputeExchangeRate", "Contract")',
+         data: { currencyFrom: fromCurrency, currencyTo: toCurrency, operationCurrency: operationCurrency },
+     contenttype: "application/json; charset=utf-8",
+     datatype: "json",
+     success: function (response) {
+
+         if (response.success) {
+             if (type == "Operation") {
+                 operationToTrxRate = response.exchangeRate;
+                 $("#CrossOperationToTrxExchangeRate").val(operationToTrxRate);
+             }
+             else if (type == "AO") {
+                 operationToAoRate = response.exchangeRate;
+                 $("#CrossOperationToAOExchangeRate").val(operationToAoRate);
+             }
+
+     }
+     else {
+         swal(response.message);
+     }
+     },
+     failure: function (error) {
+         swal(error);
+     }
+         });
+}
+
+</script>

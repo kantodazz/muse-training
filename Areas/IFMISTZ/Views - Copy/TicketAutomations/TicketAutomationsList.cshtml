@@ -1,0 +1,507 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.TicketAutomationVM>
+
+@{
+    ViewBag.Title = "Tickets Automation";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @if (User.IsInRole("Helpdesk Assignment Automation"))
+                                    {
+                                        <a class="btn btn-info" href='@Url.Action("CreateAssignee", "TicketAutomations")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add New
+                                        </a>
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Level</th>
+                                        <th>Firstname</th>
+                                        <th>Surname</th>
+                                        <th>Email</th>
+                                        <th>Phone number</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Notification</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LevelName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.FirstName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LastName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.Email)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.PhoneNumber)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.Status)</td>
+                                            @if (item.Priority == "1")
+                                            {
+                                                <td>NORMAL</td>
+                                            }
+                                            @if (item.Priority == "2")
+                                            {
+                                                <td>MEDIUM</td>
+                                            }
+                                            @if (item.Priority == "3")
+                                            {
+                                                <td>HIGH</td>
+                                            }
+                                            @if (item.Priority == "4")
+                                            {
+                                                <td>URGENT</td>
+                                            }
+                                            @if (item.Priority == "5")
+                                            {
+                                                <td>All</td>
+                                            }
+
+                                            <td>@Html.DisplayFor(modelItem => item.Notification)</td>
+                                            <td>
+                                                @Convert.ToDateTime(item.CreatedAt).ToString("dd/MM/yyyy")
+                                            </td>
+
+                                            <td style="text-align:center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @*<li>
+                                                                <a href="@Url.Action("Edit", "TicketAutomations", new { id = item.TicketAutomationId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Edit
+                                                                </a>
+                                                            </li>*@
+                                                        <li><a href="#" data-toggle="modal" class="ticketCancellation   delete" data-id=@item.TicketAutomationId data-email='@item.Email'><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="AssignTickets">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Assign Ticket:<span id="ticket_number"></span></h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                <h5 align="center"><span id="atitle"></span></h5>
+                <br />
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="UserId" id="UserId" value="@ViewBag.UserId" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Remark"> Check Number</label>
+                    <div class="col-md-7">
+                        <input type="text" name="SupportTeamId" required id="SupportTeamId" placeholder="Enter Employee's checknumber" style="width:300px" />
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="CheckNumber"> Check Number</label>
+                    <div class="col-md-7">
+                        <input type="text" name="CheckNumber" id="CheckNumber" readonly style="width:300px" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Firstname"> Firstname</label>
+                    <div class="col-md-7">
+                        <input type="text" name="FirstName" id="FirstName" readonly style="width:300px" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Middlename"> Middlename</label>
+                    <div class="col-md-7">
+                        <input type="text" name="MiddleName" id="MiddleName" readonly style="width:300px" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Surname"> Surname</label>
+                    <div class="col-md-7">
+                        <input type="text" name="LastName" id="LastName" readonly style="width:300px" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Email"> Email</label>
+                    <div class="col-md-7">
+                        <input type="text" name="Email" id="Email" readonly style="width:300px" />
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Phonenumber"> Phone Number</label>
+                    <div class="col-md-7">
+                        <input type="text" name="PhoneNumber" id="PhoneNumber" readonly style="width:300px" />
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="TicketDescription">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Ticket Number <span id="tnumber"></span></h4>
+            </div>
+
+            <div class="modal-body">
+
+                <center><b><span id="title"></span></b></center>
+                <br />
+                <span id="description"></span>
+
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+
+
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        // ============ INIT DATA TABLES START =====================
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+        $(".ticket_description").on('click', function () {
+            var reason = $(this).data('description');
+            var tNo = $(this).data('ticket');
+            var title = $(this).data('title');
+            $("#tnumber").text(tNo);
+            $("#title").text(title);
+            $("#description").text(reason);
+        });
+
+        var message = '@TempData["Message"]';
+        if (message == "Success") {
+            swal("Ticket Saved Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Updated") {
+            swal("Ticket Updated Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Error") {
+            swal("Error saving Tickets Entry. Please contact System Administrator", { icon: "warning" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        // ********************** INIT DATA TABLES END **********************
+
+        $(".ticketCancellation").on('click', function () {
+            var id = $(this).data('id');
+            var email = $(this).data('email');
+            swal({
+                title: 'Cancellation',
+                text: "Do you what to Cancel Ticket Automation for  " + email + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelTicketAutomation", "TicketAutomations")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Ticket Automation Cancelled successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to Cancel Ticket Automation" + response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+        var ticketId = null;
+        var SupportTeamId =null;
+        $(".assign_tickets").on('click', function () {
+            var id = $(this).data('id');
+            ticketId = id;
+            var ticket_number = $(this).data('ticket_number');
+            var title = $(this).data('atitle');
+            $("#ticket_number").text(ticket_number);
+            $("#atitle").text(title);
+            $(".modal-body #Id").val(id);
+
+        });
+
+
+        $("#saveLoader").toggle(false);
+        $("#form_submision").click(function () {
+            var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "SupportTeamId": $("#CheckNumber").val(),
+                "UserId": '@ViewBag.UserId',
+                "TicketsId": ticketId
+            }
+            //console.log(form_data);
+            var checkNumber = $("#CheckNumber").val();
+            if (!checkNumber) {
+                swal("Please Choose Support Team", { icon: "warning" })
+                                                        .then((value) => { });
+                return
+            }
+            var url = '@Url.Action("AssignTickets", "Tickets")';
+            var urlList = '@Url.Action("TicketsList", "Tickets")';
+            $("#form_submision").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket Assigned Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        $(function () {
+
+            var url = '@Url.Action("GetEmployees", "Tickets")';
+
+            $("#SupportTeamId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder: 'Select Employee',
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.employees }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        $('#SupportTeamId').on("change", function () {
+            var employeeId = $("#SupportTeamId").val();
+            $.ajax({
+                type: "POST",
+                url: "GetEmployee",
+                data: { id: employeeId },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#CheckNumber").val(data.CheckNumber);
+                        $("#UserName").val(data.UserName);
+                        $("#FirstName").val(data.FirstName);
+                        $("#MiddleName").val(data.MiddleName);
+                        $("#LastName").val(data.LastName);
+                        $("#PhoneNumber").val(data.PhoneNumber);
+                        $("#Email").val(data.Email);
+                    } else {
+                        alert('Error on accessing employee details');
+                    }
+                },
+                error: function () {
+                    alert("Error on accessing employee details...");
+                }
+            })
+        });
+
+
+    </script>
+}

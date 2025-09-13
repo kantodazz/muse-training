@@ -1,0 +1,481 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.FundDistributions>
+
+    @{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+    }
+
+    <style>
+        th {
+            text-align: center;
+        }
+
+        #amountdata {
+            text-align: right;
+        }
+    </style>
+
+    <!-- MAIN CONTENT -->
+    <div id="content">
+
+        <div class="row">
+            <section id="widget-grid" class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="row">
+                    <div class="jarviswidget" id="wid-id-0" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                        <header>
+                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                            <h2> Fund Allocation </h2>
+                        </header>
+
+                        <div>
+                            <div class="widget-body " style="padding-top:10px">
+
+                                @foreach (var group in ((IEnumerable<IFMIS.Areas.IFMISTZ.Models.FundDistributionSummary>
+                                    )ViewBag.distributionDetails).Where(a => a.OverallStatus == "Pending").GroupBy(a => a.InstitutionCode))
+                                    {
+                                    int i = 0;
+                                    <table id="datatable_tabletools" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                        <thead>
+                                            <tr style="text-align:right">
+                                                <th data-hide="phone">ID</th>
+                                                <th style="text-align:left">Department</th>
+
+                                                <th data-class="expand" style="text-align:left">Funding RefNo</th>
+                                                <th data-class="expand" style="text-align:left">Funding Source</th>
+                                                <th data-class="expand" style="text-align:left">Description</th>
+                                                <th data-class="expand" style="text-align:left"> Date</th>
+                                                <th data-hide="phone,tablet" style="text-align:right"> Operational Amount</th>
+
+                                                <th data-hide="phone,tablet"> Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @foreach (var group1 in group)
+                                            {
+
+                                                i++;
+                                                <tr>
+                                                    <td style="text-align:right">@i</td>
+                                                    <td style="text-align:left">
+                                                        @group1.SubVoteCodeDesc
+                                                    </td>
+                                                    <td style="text-align:left">@group1.FundingRefNo</td>
+                                                    <td style="text-align:left">@group1.FundingSource</td>
+                                                    <td style="text-align:left">@group1.Description</td>
+                                                    <td style="text-align:left">@string.Format("{0:d/M/yyyy}", group1.CreatedAt)</td>
+                                                    <td style="text-align:right">@string.Format("{0:#,0.00}", group1.TotalAmount)</td>
+                                                    <td>
+                                                        <div class="btn-group">
+                                                            <button type="button" class="btn btn-info btn-xs"><i class="fa fa-tasks"></i></button>
+                                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                                <span class="caret"></span>
+                                                                <span class="sr-only">Toggle Dropdown</span>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+
+                                                                <li>
+                                                                    @Html.ActionLink("Allocate", "FundCompAllocation", new { id = @group1.FundReceivingId, @balanceAmount = @group1.TotalAmount })
+                                                            </li>
+
+                                                            @*<li>@Html.ActionLink("Delete", "DeleteDepartmentDistribution", new { id = @group1.FundDistributionId, frid = @group1.FundReceivingId, balanceAmount = @ViewBag.BalanceAmount },new { @class= "fa fa-trash" })</li>*@
+
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                    }
+
+
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+
+
+
+
+    <!--Start of no record selected modal section-->
+    <div class="modal fade" id="NoRecordSelected">
+        <div class="modal-dialog">
+            <div class="modal-content panel-warning">
+
+                <div class="modal-header panel-heading">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title"> Warning..!</h3>
+
+                </div>
+                <div class="modal-body">
+                    <h4 style="color:red"> No Records Selected </h4>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-warning" data-dismiss="modal">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    '
+    @*Start request form bootstarp pop model*@
+    <div class="modal fade" id="rejectModal">
+        <div class="modal-dialog">
+            <div class="modal-content ">
+
+                <div class="modal-header">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title">Rejection Reason  </h3>
+
+                </div>
+                @using (Html.BeginForm("RejectDistribution", "FundAllocations", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                {
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-3">  </div>
+                            <div class="col-md-8">
+                                <input type="hidden" value="" id="ids" name="ids" readonly="readonly" class="form-control" />
+                            </div>
+
+                        </div>
+
+                        <div class="form-group">
+                            <div class="col-md-3"> Reason </div>
+                            <div class="col-md-8">
+                                @Html.TextArea("RejectionReason")
+                            </div>
+                        </div>
+
+
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <div class="form-group" style="float:left;margin:0px 0px 0px 85px">
+                        <div class="col-md-offset-3 col-md-7">
+                            &nbsp;&nbsp; <input type="submit" value="Submit Rejection" class="btn btn-danger" />
+                        </div>
+                    </div>
+
+                </div>
+                }
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+
+
+
+
+    @section pagespecific {
+    <script type="text/javascript">
+
+        function edit() {
+            $('#detailsModal').modal('show');
+        }
+
+
+
+        var ApproveDistribution = function () {
+            var csvIds = [];
+
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+
+                $("#NoRecordSelected").modal("show");
+                //alert("No record selected!");
+                return;
+            }
+
+            var r = confirm("Selected Components will be Approve..Are you Sure to Approve ?");
+            if (!r) {
+                return;
+            }
+
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "POST",
+                url: "ApproveDistribution",
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "Success") {
+                        alert("Component Successfully Approved");
+                        //// $("#divLoader").hide();
+                        location.reload();
+                        //$(".modal-body #ids").val(csvIds);
+                        ////$(".modal-body #assetvalue").val(response[2]);
+                        ////$(".modal-body #assetcondition").val(response[1]);
+                        //$("#verifyModal").modal("show");  // show modal
+                        $("#divLoader").hide();
+
+                    } else if (response == "DbException") {
+                        alert("An error has occured, contact system support");
+                        $("#divLoader").hide();
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        };
+
+
+        var RejectDistribution = function () {
+            var csvIds = [];
+
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                $("#NoRecordSelected").modal("show");
+                return;
+            }
+            var r = confirm("Are you sure you want to REJECT selected Distribution(s) ?");
+            if (!r) {
+                return;
+            }
+            // $("#divLoader").show();
+            $("#rejectModal").modal("show");
+            $(".modal-body #ids").val(csvIds);
+        };
+
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        $(document).ready(function () {
+
+
+            /*
+              * ACCORDION
+              */
+            //jquery accordion
+
+            var accordionIcons = {
+                header: "fa fa-plus",    // custom icon class
+                activeHeader: "fa fa-minus" // custom icon class
+            };
+
+            $("#accordion").accordion({
+                autoHeight: false,
+                heightStyle: "content",
+                collapsible: true,
+                animate: 300,
+                icons: accordionIcons,
+                header: "h4",
+            })
+
+
+
+            $('#tabs').tabs();
+
+            // PAGE RELATED SCRIPTS
+
+            // switch style change
+            $('input[name="checkbox-style"]').change(function () {
+                //alert($(this).val())
+                var $this = $(this);
+
+                if ($this.attr('value') === "switch-1") {
+                    $("#switch-1").show();
+                    $("#switch-2").hide();
+                } else if ($this.attr('value') === "switch-2") {
+                    $("#switch-1").hide();
+                    $("#switch-2").show();
+                }
+
+            });
+
+            // tab - pills toggle
+            $('#show-tabs').click(function () {
+                var $this = $(this);
+                if ($this.prop('checked')) {
+                    $("#widget-tab-1").removeClass("nav-pills").addClass("nav-tabs");
+                } else {
+                    $("#widget-tab-1").removeClass("nav-tabs").addClass("nav-pills");
+                }
+
+            });
+
+        });
+
+        $(document).ready(function () {
+
+            /* // DOM Position key index //
+
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+
+            Also see: http://legacy.datatables.net/usage/features
+            */
+
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                    "copy",
+                    "csv",
+                    "xls",
+                       {
+                           "sExtends": "pdf",
+                           "sTitle": "SmartAdmin_PDF",
+                           "sPdfMessage": "SmartAdmin PDF Export",
+                           "sPdfSize": "letter"
+                       }
+
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+
+        })
+
+    </script>
+    }

@@ -1,0 +1,240 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PrePaymentReceivingSummaryVM
+@{
+    ViewBag.Title = "Edit Receiving";
+}
+
+<!-- MAIN CONTENT -->
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Edit  Prepayment Receiving </h2>
+
+                    </header>
+
+                    @{ decimal balance = (Decimal)Model.PrePaymentAmount - (Decimal)Model.ReceivingItemsValue;}
+                    <div class="jarviswidget" id="wid-id-12" data-widget-colorbutton="false" data-widget-colorbutton="false" data-widget-editbutton="false" data-widget-togglebutton="false" data-widget-deletebutton="false" data-widget-fullscreenbutton="false" data-widget-custombutton="false">
+                        <table border="0" style="width:300px;">
+                            <tr><td>Receiving Number</td><td><strong>@Model.PrePaymentReceivingNumber</strong></td></tr>
+                            <tr><td>Prepayment Number</td><td><strong>@Model.PrePaymentNo</strong></td></tr>
+                            <tr><td>Prepayment Amount</td><td><strong>@Model.Currency  @Convert.ToDecimal(Model.PrePaymentAmount).ToString("#,##0/=")</strong></td></tr>
+                            <tr><td>Supplier</td><td><strong>@Model.SupplierName</strong></td></tr>
+                            <tr><td>Received Item(s) Value</td><td><strong>@Model.Currency @Convert.ToDecimal(Model.ReceivingItemsValue).ToString("#,##0/=")</strong></td></tr>
+                            <tr><td>Balance</td><td><strong>@Model.Currency @balance.ToString("#,##0/=")</strong></td></tr>
+                            <tr><td>Description</td><td><strong>@Model.PrePaymentDesc</strong></td></tr>
+                        </table>
+                        <br>
+                        @if (Model.ReceiveType == IFMIS.Libraries.Constants.BY_QUANTITY)
+                        {
+                            using (Html.BeginForm("EditReceiveItems", "PrePayment", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.PrePaymentId)
+                                @Html.HiddenFor(model => model.PrePaymentReceivingSummaryId)
+                                <div class="form-horizontal">
+
+                                    <table class="table  table-bordered table-hover table-condensed" style="width:100%">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:center;width:4%">#</th>
+                                                <th style="text-align:left;width:18%">Item</th>
+                                                <th style="text-align:left;width:13%">UOM</th>
+                                                <th style="text-align:right;width:13%">Unit Price</th>
+                                                <th style="text-align:right;width:13%">VAT</th>
+                                                <th style="text-align:right;width:13%">Total Amount</th>
+                                                <th style="text-align:center;width:13%">Received Quantity</th>
+                                                <th style="text-align:center;width:13%">Maximum Quantity</th>
+
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @for (var i = 0; i < Model.ReceivedItemsList.Count(); i++)
+                                            {
+                                                var j = i + 1;
+                                                <tr>
+                                                    <td style="text-align:center">@j</td>
+                                                    <td style="width:140px">
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].ItemDesc)
+
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].UOM)
+                                                        @Html.HiddenFor(modelItem => Model.ReceivedItemsList[i].PrePaymentDetailId)
+
+                                                        @Html.HiddenFor(modelItem => Model.ReceivedItemsList[i].Quantity)
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].UnitPrice)
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].VAT)
+                                                    </td>
+                                                    <td style="text-align:right">
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].TotalAmount)
+                                                    </td>
+                                                    <td align="center">
+
+                                                        @Html.EditorFor(modelItem => Model.ReceivedItemsList[i].ReceivedQuantity, new { htmlAttributes = new { @class = "form-control", @required = "required", style = "width:60px;text-align:right", @min = "1", @max = @Model.ReceivedItemsList[i].Quantity } })
+                                                    </td>
+                                                    <td style="text-align:center">
+                                                        @Html.DisplayFor(modelItem => Model.ReceivedItemsList[i].Quantity)
+                                                    </td>
+
+
+                                                </tr>
+                                            }
+                                        </tbody>
+                                    </table>
+
+                                    <div class="col-md-offset-1">
+                                        <a href="@Url.Action("prepaymentreceivinglist","PrePayment")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        <button type="submit" class="btn btn-info" style="margin-right:2px">
+                                            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                        </button>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else if (Model.ReceiveType == IFMIS.Libraries.Constants.BY_AMOUNT)
+                        {
+                            <form id="edit_receiving">
+                                @Html.HiddenFor(model => model.PrePaymentId)
+                                @Html.HiddenFor(model => model.PrePaymentReceivingSummaryId)
+                                <div class="form-horizontal">
+
+                                    <div class="form-group">
+                                        <div class="col-md-1">
+                                            <strong>Edit Amount</strong>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <amount-input name="receive_amount" id="receive_amount" value='@Model.ReceivingItemsValue' style="width:100%;height:36px">
+                                        </div>
+
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-offset-1">
+                                            <a href="@Url.Action("prepaymentreceivinglist","PrePayment")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                            <button type="button" class="btn btn-info edit_amount" style="margin-right:2px">
+                                                <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        }
+
+                        <br />
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+            $(document).ready(function () {
+         $(".edit_amount").click(function () {
+                    var schedule_id = $("#edit_receiving #PrePaymentId").val();
+                    var receiving_id = $("#edit_receiving #PrePaymentReceivingSummaryId").val();
+                    var new_received_amount = parseFloat($("#edit_receiving #_receive_amount").val().split(",").join(""));
+                    if (new_received_amount>0) {
+                        swal({
+                            title: 'Confirmation',
+                            text: "Do you edit this receiving to " + new_received_amount.toLocaleString('en') +" ?",
+                            buttons: [
+                              'No',
+                              'Yes'
+                            ],
+                        }).then(function (isConfirm) {
+                            if (isConfirm) {
+                                var url = '@Url.Action("EditReceivingAmount", "Prepayment")';
+                                var formData = {
+                                    "id": schedule_id,
+                                    "receivingid": receiving_id,
+                                    "amount": new_received_amount
+                                }
+
+                                $.ajax(
+                            {
+                                type: "POST",
+                                url: url,
+                                data: formData,
+                                success: function (response) {
+                                    if (response == "Success") {
+
+                                        swal("Successfully updated!", { icon: "success" })
+                                                  .then((value) => {
+                                                      var url = '@Url.Action("prepaymentreceivinglist", "Prepayment")';
+                                                      window.location.replace(url);
+                                                  });
+
+
+                                    }
+                                    else if (response == "Exceed") {
+                                        swal("Received Amount can not exceed amount in Prepayment");
+
+                                    }
+                                    else {
+
+                                        swal("Failed to Receive");
+                                    }
+                                },
+                                error: function (xhr) {
+                                    swal(error);
+
+                                },
+
+                            });
+                            } else {
+                                swal("Cancelled", "No change was made");
+                            }
+                        });
+
+
+
+
+                    }else{
+                        swal("Please insert amount" + new_received_amount);
+            }
+
+                });
+
+
+                        });
+
+    </script>
+}
+
+
+
+

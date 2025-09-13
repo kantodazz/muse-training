@@ -1,0 +1,247 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetDetail>
+
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .swal-button--confirm {
+        background-color: #4CAF50 !important;
+    }
+
+    .swal-button--cancel {
+        background-color: #F44336 !important;
+        color: #fff !important;
+    }
+
+    .swal-title {
+        font-size: 20px !important;
+    }
+
+    .swal-text {
+        font-size: 15px !important;
+    }
+
+    .swal-icon {
+        width: 66px !important;
+        height: 70px !important;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Budgeted Item Lines</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="widget-body-toolbar">
+
+                                <div class="row">
+
+                                    <div class="col-xs-9 col-sm-5 col-md-5 col-lg-5">
+                                        <div class="input-group">
+                                        </div>
+                                    </div>
+                                   
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <h2></h2>
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th data-hide="phone">ID</th>
+                                        <th data-hide="phone">GLAccount</th>
+                                        <th data-hide="phone,tablet">Account Description</th>
+                                        <th data-hide="phone,tablet">Amount</th>
+                                        <th data-hide="phone,tablet">Currency</th>
+                                        <th data-hide="phone,tablet">Status</th>
+                                        <th data-hide="phone,tablet">Comments</th>
+                                       
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{
+                                        if (ViewBag.InstLevel == 1)
+                                        {
+                                            foreach (var group in Model.GroupBy(i => i.SubVote))
+                                            {
+                                                string c = group.Where(a => a.SubVote == group.Key).Select(a => a.SubVoteDesc).FirstOrDefault();
+
+                                                <h3> @c</h3>
+
+                                            }
+                                        }
+                                        else
+                                        {
+                                            foreach (var group in Model.GroupBy(i => i.CostCentre))
+                                            {
+                                                string c = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+
+                                                <h3> @c</h3>
+
+                                            }
+                                        }
+                                        int cnt = 0;
+                                        string trstatus="";
+                                        foreach (var item in Model)
+                                        {
+                                            cnt = cnt + 1;
+                                            string glaccount = item.GlAccount;
+                                            trstatus = item.OverAllStatus;
+                                            glaccount = glaccount.Replace("|", "-");
+                                            <tr>
+                                                <td>@cnt</td>
+                                               
+                                                <td>@glaccount</td>
+                                                <td>@Html.DisplayFor(modelItem => item.GlAccountDesc)</td>
+                                                <td align="right">@Html.DisplayFor(modelItem => item.OperationalAmount)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.OperationalCurrency)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.OverAllStatus)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.Comments)</td>
+                                               
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+
+                            <div class="panel-footer">
+                                <a href="../budgetdetails/budgetapproval" style="margin-left:0px" type="submit" class="btn btn-info"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                
+                            </div>
+
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+    var datatable_tabletools = $('#datatable_tabletools').dataTable({
+        "autoWidth": true,
+        "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+        "bPaginate": false,
+        "info": true,
+    });
+
+ // GRAB THIS==================================
+    $("#searchbox").on("keyup search input paste cut", function () {
+        datatable_tabletools.DataTable().search(this.value).draw();
+    });
+
+//END HERE ==========================================
+$(function () {
+            $("#cboAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w3-check").prop('checked', true);
+                }
+                else {
+                    $(".w3-check").prop('checked', false);
+                }
+            });
+        })
+        $(function () {
+            $("#cboApprAll").click(function () {
+                if ($(this).is(":checked")) {
+                    $(".w4-check").prop('checked', true);
+                }
+                else {
+                    $(".w4-check").prop('checked', false);
+                }
+            });
+        })
+
+
+
+        $(document).ready(function () {
+
+            // PAGE RELATED SCRIPTS
+
+            // switch style change
+            $('input[name="checkbox-style"]').change(function () {
+                //alert($(this).val())
+                var $this = $(this);
+
+                if ($this.attr('value') === "switch-1") {
+                    $("#switch-1").show();
+                    $("#switch-2").hide();
+                } else if ($this.attr('value') === "switch-2") {
+                    $("#switch-1").hide();
+                    $("#switch-2").show();
+                }
+
+            });
+
+            // tab - pills toggle
+            $('#show-tabs').click(function () {
+                var $this = $(this);
+                if ($this.prop('checked')) {
+                    $("#widget-tab-1").removeClass("nav-pills").addClass("nav-tabs");
+                } else {
+                    $("#widget-tab-1").removeClass("nav-tabs").addClass("nav-pills");
+                }
+
+            });
+
+        });
+    </script>
+}

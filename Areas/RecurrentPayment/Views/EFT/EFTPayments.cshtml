@@ -1,0 +1,191 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.PreFundedBatchVM>
+@{
+    ViewBag.Title = "EFT File Generation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">EFT Payments</div>
+        <div class="panel-body">
+            <table class="table table-bordered table-condensed table-striped table-responsive" style="font-size:12px" id="tblEFTPayment">
+                <thead>
+                    <tr>
+                        <th>
+                            #
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.BatchNo)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.MgsId)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.BatchDesc)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.NoTrx)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.AmountFunded)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.PaymentCategory)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.PrefundingRef)
+                        </th>
+                        <th>
+                            @Html.DisplayNameFor(model => model.OverallStatus)
+                        </th>
+                        <th>Action</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                
+                @{
+                    int i = 0;
+                }
+                @foreach (var item in Model)
+                {
+                    i++;
+                    var filename = item.FileName;
+                    <tr>
+                        <td>
+                            @i
+                        </td>
+                        <td>
+                            <a href="@Url.Action("PaymentsPerBatch","PaymentBatches", new { id = item.PaymentBatchID })">
+                                @Html.DisplayFor(modelItem => item.BatchNo)
+                            </a>
+                        </td>
+                        <td>
+                            @item.MgsId
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BatchDesc)
+                        </td>
+                        <td style="text-align: right">
+                            @Html.DisplayFor(modelItem => item.NoTrx)
+                        </td>
+                        <td style="text-align: right">
+                            @Html.DisplayFor(modelItem => item.AmountFunded)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PaymentCategory)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.PrefundingRef)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-default btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <span class="caret"></span>
+                                    <span class="sr-only">Toggle Dropdown</span>
+                                </button>
+                                <ul class="dropdown-menu" style="width:30px">
+                                    @if (item.OverallStatus == "Pre-funding Completed")
+                                    {
+                                        <li>
+                                            <a target="_blank" href="@Url.Action("BOTPaymentInstructionSlip", "Report",new {id=item.PaymentBatchID})">
+                                                BOT PaySlip
+                                            </a>
+                                        </li>
+                                    }
+                                    else if (item.OverallStatus == "Slip Uploaded" || item.OverallStatus == "REJECTED")
+                                    {
+                                        <li>
+                                            <a href="#" onclick="GenerateEFT(@item.PaymentBatchID,'@item.BatchNo')">
+                                                Send to BOT
+                                            </a>
+                                        </li>
+                                    }
+                                </ul>
+                            </div>
+                        </td>
+                        <td style="text-align: center">
+                            @if (item.OverallStatus == "Pre-funding Completed" || item.OverallStatus == "Slip Uploaded" || item.OverallStatus == "REJECTED")
+                            {
+                                <a href="@Url.Action("UploadBOTSlip","Report",new { id = item.PaymentBatchID})">
+                                    Upload
+                                </a>
+                            }
+                            @if (filename != null)
+                            {
+                                <a target="_blank" href="@Url.Action("DownloadUploadedBOTPaymentSlip", "Report", new { id = item.PaymentBatchID })">
+                                    | Preview
+                                </a>
+                            }
+                        </td>
+                    </tr>
+                }
+
+            </table>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $("#tblEFTPayment").DataTable({
+            });
+        });
+
+        function GenerateEFT(PaymentBatchID, BatchNo) {
+            var r = confirm("Are you sure you want to send to BOT batch " + BatchNo + "?");
+
+            if (r == true) {
+                var url = '@Url.Action("Generate", "EFT")';
+                $("#divLoader").show();
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { ID: PaymentBatchID }
+                })
+                 .done(function (strStatus) {
+                     $("#divLoader").hide();
+                     if (strStatus == "Success") {
+                         alert("EFT File Sent to BOT Successfully!");
+                         window.location.reload();
+                     }
+                     else {
+                         alert(strStatus);
+                     }
+                 });
+            }
+        };
+
+        function Cancel(PaymentBatchID, BatchNo) {
+            var r = confirm("Are you sure you want to cancel the batch " + BatchNo + "?");
+
+            if (r == true) {
+                var url = '@Url.Action("Cancel", "EFT")';
+                $("#divLoader").show();
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { ID: PaymentBatchID }
+                })
+                 .done(function (strStatus) {
+                     $("#divLoader").hide();
+                     if (strStatus == "Success") {
+                         alert("Payment Batch Cancelled Successfully!");
+                         //alert("EFT File Generated Successfully!");
+                         window.location.reload();
+                     }
+                     else {
+                         //alert("Error occured during Net Payment EFT File generation. Please contact the Administrator!");
+                         alert(strStatus);
+                     }
+                 });
+            }
+            //Generate
+        };
+
+    </script>
+}

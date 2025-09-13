@@ -1,0 +1,650 @@
+﻿@model IEnumerable<IFMIS.Areas.Coadmis.DTO.MgtSummaryResponseVM>
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Global Periods List";
+    var i = 0;
+}
+<div id="divLoader"></div>
+<div id="content">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                    usage:<div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+                    data-widget-colorbutton="false"
+                    data-widget-editbutton="false"
+                    data-widget-togglebutton="false"
+                    data-widget-deletebutton="false"
+                    data-widget-fullscreenbutton="false"
+                    data-widget-custombutton="false"
+                    data-widget-collapsed="true"
+                    data-widget-sortable="false"
+                    -->
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-table"></i></span>
+                        <h2> Verification </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                    @*<a class="btn btn-info" onclick="confirmMgtResponse()" style="margin-bottom:10px">
+                                        <i class="glyphicon glyphicon-check"></i> Approve
+                                    </a>*@
+                                    <a class="btn btn-info" onclick="approveMgtResponse()" style="margin-bottom:10px">
+                                        <i class="glyphicon glyphicon-check"></i> Approve
+                                    </a>
+                                </div>
+                            </div>
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_currencies">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>
+                                            Client Name
+                                        </th>
+                                        <th>
+                                            Financial Year
+                                        </th>
+                                        <th>
+                                            Region
+                                        </th>
+                                        <th>
+                                            Level
+                                        </th>
+                                        <th>
+                                            Status
+                                        </th>
+                                        <th>
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>
+                                                @i
+                                            </td>
+                                            <td>
+                                                <input type="checkbox" value="@item.MgtSummaryResponseId" class="checkBoxConfirm">
+                                            </td>
+                                            <td>
+                                                @item.ClientName
+                                            </td>
+                                            <td>
+                                                @item.FinancialYear
+                                            </td>
+                                            <td>
+                                                @item.RegionName
+                                            </td>
+                                            <td>
+                                                @item.CategoryLevelName
+                                            </td>
+                                            <td>
+                                                @item.OverallStatus
+                                            </td>
+                                            <td>
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        @*<li>
+                                                            <a href="#" onclick="confirm('@Url.Action("AssignFindings", "AuditCompletion",new { id = @item.MgtSummaryResponseId,moduleLevel = "Verification", overallStatus = "Verified" , destination = "Reviewer"  })','Verification')"> Verify </a>
+                                                        </li>*@
+                                                        <li>
+                                                            <a href="#" onclick="viewDetails(@item.MgtSummaryResponseId)">
+                                                                Details
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="#" onclick="reject(@item.MgtSummaryResponseId,'Completion Confirmation')">
+                                                                Reject
+                                                            </a>
+                                                        </li>
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!-- Start of modal -->
+<div class="modal fade" id="form-modal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <h3 class="modal-title">
+                    Title
+                </h3>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true"><i fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" id="btnSaveComment">
+                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                    Save
+                </button>
+                <button class="btn btn-info" id="btnApproveComment">
+                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                    Save
+                </button>
+                <button class="btn btn-info" id="btnSaveRejection">
+                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                    Save3 
+                </button>
+                <button class="btn btn-default role-dismiss" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of modal -->
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+
+    var confirmMgtResponse = function () {
+            debugger
+            var csvIds = [];
+
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No record selected!");
+                return;
+            }
+            swal({
+                title: "Approval!",text: "Are you sure you want to Approve?",
+                buttons: ['Yes','No'],
+            }).then(function (isConfirm){
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    addconfirmation1(csvIds)
+                }
+            });
+        }
+
+    function addconfirmation1(csvIds) {
+        $(".modal-title").text("Remarks");
+        $("#btnSaveComment").show();
+        $("#btnSaveAssignment").hide();
+        var url = '@Url.Action("ConfirmAuditCompletion", "AuditCompletion")?ids=' + csvIds;
+        $("#modal-body").load(url, function ()
+            {
+                $("#form-modal").modal({
+                    backdrop: "static",
+                    keyboard: true
+                });
+            });
+    };
+
+    var approveMgtResponse = function () {
+            var csvIds = [];
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No record selected!");
+                return;
+            }
+
+            swal({
+                title: "Submission!",text: "Are you sure you want to Approve?",
+                buttons: ['Yes','No'],
+            }).then(function (isConfirm){
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    addconfirmation(csvIds)
+                }
+            });
+    }
+
+    function addconfirmation(csvIds) {
+        $(".modal-title").text("Approval Remarks");
+        $("#btnSaveComment").hide();
+        $("#btnSaveRejection").hide();
+        $("#btnApproveComment").show();
+        var url = '@Url.Action("ApproveAuditCompletion", "AuditCompletion")?ids=' + csvIds;
+        $("#modal-body").load(url, function ()
+            {
+                $("#form-modal").modal({
+                    backdrop: "static",
+                    keyboard: true
+                });
+            });
+    };
+
+    var viewDetails = function (id) {
+        debugger
+        $("#divLoader").show();
+        window.location.href = '@Url.Action("CompletionDetails", "AuditCompletion")/' + id;
+    }
+
+    $("#btnSaveComment").on("click", function() {
+            $("#btnSaveComment").prop("disabled", true);
+            $("#divLoader").show();
+            $.validator.unobtrusive.parse("#commentForm");
+            if (!$("#commentForm").valid()) {
+                $("#btnSaveComment").prop("disabled", false);
+                $("#divLoader").hide();
+
+                return false;
+            }
+
+            var formData = new FormData();
+            var token = $("[name='__RequestVerificationToken']").val();
+               formData.append("__RequestVerificationToken", token);
+               formData.append("ModuleId", $('#ModuleId').val());
+               formData.append("ModuleName", $('#ModuleName').val());
+               formData.append("OverallStatus", $('#OverallStatus').val());
+               formData.append("Source", $('#Source').val());
+               formData.append("Destination", $('#Destination').val());
+               formData.append("Remarks", $('#Remarks').val());
+               formData.append("IsRejected", $('#IsRejected').val());
+               formData.append("StepNo", $('#StepNo').val());
+               formData.append("FileName", $("#FileName").get(0).files[0]);
+               formData.append("Ids", $('#Ids').val());
+               formData.append("AuditorId", $('#AuditorId').val());
+
+            var url = '@Url.Action("SaveComment", "AuditCompletion")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function(response) {
+                    if (response == "Success") {
+                        swal({
+                            text: "Saved successfuly!",
+                            icon: "success",
+                            button: "OK",
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        }).then(function() {
+                            location.reload();
+                        });
+                    } else if (response.status == "Invalid") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        }).then(function() {
+                            $("#divLoader").hide();
+                        });
+                    } else {
+                        swal({
+                            text: "An error occured while processing your request, please contact system support",
+                            icon: "warning",
+                            button: "OK",
+                            customClass: {
+                                container: 'my-swal'
+                            }
+                        }).then(function() {
+                            $("#divLoader").toggle(false);
+                            $('#form-modal').modal('hide');
+                        });
+                    }
+                },
+                error: function() {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    }).then(function() {
+                        $("#divLoader").hide();
+                    });
+                },
+                complete: function() {
+                    $("#btnSaveComment").prop("disabled", false);
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#btnApproveComment").on("click", function() {
+      $("#btnApproveComment").prop("disabled", true);
+
+        $("#divLoader").show();
+        $.validator.unobtrusive.parse("#commentForm");
+        if (!$("#commentForm").valid()) {
+            $("#btnApproveComment").prop("disabled", false);
+            $("#divLoader").hide();
+
+            return false;
+        }
+
+        var formData = new FormData();
+        var token = $("[name='__RequestVerificationToken']").val();
+            formData.append("__RequestVerificationToken", token);
+            formData.append("ModuleId", $('#ModuleId').val());
+            formData.append("ModuleName", $('#ModuleName').val());
+            formData.append("OverallStatus", "Approved by DA");
+            formData.append("Destination", $('#Name').val());
+            formData.append("Remarks", $('#Remarks').val());
+            formData.append("Ids", $('#Ids').val());
+
+        var url = '@Url.Action("ApproveComment", "AuditCompletion")';
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            processData: false,
+            contentType: false,
+            data: formData,
+            success: function(response) {
+                if (response == "Success") {
+                    swal({
+                        text: "Saved successfuly!",
+                        icon: "success",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    }).then(function() {
+                        location.reload();
+                    });
+                } else if (response.status == "Invalid") {
+                    swal({
+                        text: response.statusDesc,
+                        icon: "warning",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    }).then(function() {
+                        $("#divLoader").hide();
+                    });
+                } else {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "warning",
+                        button: "OK",
+                        customClass: {
+                            container: 'my-swal'
+                        }
+                    }).then(function() {
+                        $("#saveLoader").toggle(false);
+                        $('#form-modal').modal('hide');
+                    });
+                }
+            },
+            error: function() {
+                swal({
+                    text: "An error occured while processing your request, please contact system support",
+                    icon: "error",
+                    button: "OK",
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                }).then(function() {
+                    $("#divLoader").hide();
+                });
+            },
+            complete: function() {
+                $("#btnSaveComment").prop("disabled", false);
+                $("#divLoader").hide();
+            }
+        });
+    });
+
+    var reject = function (id, rejectedTo) {
+        $(".modal-title").text("Rejection");
+        $("#btnSaveComment").hide();       
+        $("#btnApproveComment").hide();
+        $("#btnSaveRejection").show();
+        $("#divLoader").show();
+
+        var url = '@Url.Action("RejectCompletion", "AuditCompletion")?id=' + id + '&rejectedTo=' + encodeURIComponent(rejectedTo);
+
+         $("#modal-body").load(url, function () {
+            $("#form-modal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+            $("#divLoader").hide();
+        });
+    }
+
+    $("#btnSaveRejection").on("click", function () {
+       
+        $.validator.unobtrusive.parse("#commentForm");
+        if (!$("#commentForm").valid()) {
+            $("#divLoader").hide();
+            return false;
+        }
+
+        
+        $("#divLoader").show();
+
+        var url = '@Url.Action("SaveRejection", "AuditCompletion")';
+
+        var model = $("#commentForm").serialize();
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: model,
+            success: function (response) {
+                        if (response == "Success") {
+                            swal({
+                                text: "Rejected Successfuly!",
+                                icon: "success",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        }
+                    },
+            error: function () {
+                swal({
+                    text: "An error occured while processing your request, please contact system support",
+                    icon: "error",
+                    button: "OK",
+                })
+            },
+            complete: function () {
+                $("#divLoader").hide();
+            }
+        });
+    });
+
+    
+
+        $(document).ready(function () {
+         /* // DOM Position key index //
+         l - Length changing (dropdown)
+         f - Filtering input (search)
+         t - The Table! (datatable)
+         i - Information (records)
+         p - Pagination (paging)
+         r - pRocessing
+         < and > - div elements
+         <"#id" and > - div with an id
+         <"class" and > - div with a class
+         <"#id.class" and > - div with an id and class
+         Also see: http://legacy.datatables.net/usage/features
+         */
+                /* BASIC ;*/
+                var responsiveHelper_dt_currencies = undefined;
+                var responsiveHelper_datatable_fixed_column = undefined;
+                var responsiveHelper_datatable_col_reorder = undefined;
+                var responsiveHelper_datatable_tabletools = undefined;
+
+                var breakpointDefinition = {
+                    tablet: 1024,
+                    phone: 480
+                };
+
+                $('#dt_currencies').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_currencies) {
+                            responsiveHelper_dt_currencies = new ResponsiveDatatablesHelper($('#dt_currencies'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_currencies.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_currencies.respond();
+                    }
+                });
+
+                /* END BASIC */
+
+                /* COLUMN FILTER  */
+                var otable = $('#datatable_fixed_column').DataTable({
+                    //"bFilter": false,
+                    //"bInfo": false,
+                    //"bLengthChange": false
+                    //"bAutoWidth": false,
+                    //"bPaginate": false,
+                    //"bStateSave": true // saves sort state using localStorage
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_fixed_column) {
+                            responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_fixed_column.respond();
+                    }
+                });
+
+                // custom toolbar
+                $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+                // Apply the filter
+                $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+                    otable
+                        .column($(this).parent().index() + ':visible')
+                        .search(this.value)
+                        .draw();
+                });
+                /* END COLUMN FILTER */
+
+                /* COLUMN SHOW - HIDE */
+                $('#datatable_col_reorder').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_col_reorder) {
+                            responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_col_reorder.respond();
+                    }
+                });
+
+                /* END COLUMN SHOW - HIDE */
+
+                /* TABLETOOLS */
+                $('#datatable_tabletools').dataTable({
+                    // Tabletools options:
+                    //   https://datatables.net/extensions/tabletools/button_options
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "oTableTools": {
+                        "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                           {
+                               "sExtends": "pdf",
+                               "sTitle": "SmartAdmin_PDF",
+                               "sPdfMessage": "SmartAdmin PDF Export",
+                               "sPdfSize": "letter"
+                           },
+                           {
+                               "sExtends": "print",
+                               "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                           }
+                        ],
+                        "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                    },
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_tabletools) {
+                            responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_tabletools.respond();
+                    }
+                });
+                /* END TABLETOOLS */
+            });
+
+    </script>
+}

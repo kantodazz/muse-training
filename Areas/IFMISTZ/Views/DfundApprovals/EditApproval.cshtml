@@ -1,0 +1,249 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.EditApprovalVM
+@{
+    ViewBag.Title = "Edit Payment Approval";
+}
+
+<div id="divLoader">
+</div>
+<div id="content">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                     usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+                    data-widget-colorbutton="false"
+                    data-widget-editbutton="false"
+                    data-widget-togglebutton="false"
+                    data-widget-deletebutton="false"
+                    data-widget-fullscreenbutton="false"
+                    data-widget-custombutton="false"
+                    data-widget-collapsed="true"
+                    data-widget-sortable="false"
+                        -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> Edit Payment Approval </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form method="post" id="approvalForm" class="form-horizontal" encytpe="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                                @Html.HiddenFor(model => model.DfundApprovalId)
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-8">
+                                        @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control" } })
+                                        @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Description, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-8">
+                                        @Html.TextAreaFor(model => model.Description, new { @class = "form-control" })
+                                        @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.TrxAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-3">
+                                        <div class='input-group'>
+                                            @Html.EditorFor(model => model.TrxAmount, new { htmlAttributes = new { @class = "form-control" } })
+                                            @Html.ValidationMessageFor(model => model.TrxAmount, "", new { @class = "text-danger" })
+                                            <div class="input-group-addon">
+                                                @Html.DropDownListFor(model => model.Currency, Model.Currencies)
+                                                @Html.ValidationMessageFor(model => model.Currency, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <hr />
+                                <div id="divAttachments"></div>
+
+                                <fieldset class="scheduler-border">
+
+                                    <legend class="scheduler-border"><b>Add Attachments</b></legend>
+                                    <div class="form-group">
+                                        @Html.Label("Attachment Name", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-4">
+                                            @Html.Editor("AttachmentName", new { htmlAttributes = new { @class = "form-control" } })
+                                        </div>
+
+                                        @Html.Label("File Name", htmlAttributes: new { @class = "control-label col-md-1" })
+                                        <div class="col-md-3">
+                                            @Html.Editor("FileName", new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @type = "file" } })
+                                        </div>
+                                        <div class="col-md-offset-2">
+                                            <button class="btn btn-info" type="button" style="float: left" id="btnAddAttachment">
+                                                <i class="fa fa-plus"></i>
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <button type="button" class="btn btn-info" id="btnSave" style="float: left">Save</button>
+                                            <a href="@Url.Action("Eoffice")" class="btn btn-default" style="float: left; margin-left: 10px">Back</a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!-- END MAIN CONTENT -->
+@section pagespecific {
+    <script type="text/javascript">
+
+        $(function () {
+
+            $("#TrxAmount").autoNumeric('init');
+
+            // This for dynamic table. Don't know why on load but it works
+            var attachments = [];
+
+            $("#btnAddAttachment").click(function () {
+                if ($("#AttachmentName").val() == "" || $("#FileName").val() == "") {
+                    return false;
+                }
+
+                var attachmentName = $('#AttachmentName').val().trim();
+                var fileName = $('#FileName').get(0).files[0];
+
+                attachments.push({
+                    AttachmentName: attachmentName,
+                    FileName: fileName,
+                });
+
+                GenerateAttachmentsTable();
+            });
+
+            function GenerateAttachmentsTable() {
+                    if (attachments.length > 0) {
+                        var $table = $('<table class="table table-condensed table-stripped table-hover table-bordered"/>');
+                        $table.append('<thead>' +
+                            '<tr><th colspan="4">Attachments</th>' +
+                            '<tr><th>#</th><th style="text-align: center">Attachment Name</th><th style="text-align: center">File Name</th><th style="text-align: center">Action</th></tr>' +
+                            '</thead>');
+                        var $tbody = $('<tbody/>');
+                        var j = 0;
+                        $.each(attachments, function (i, val) {
+                            ++j;
+                            var $row = $('<tr/>');
+                            $row.append($('<td/>').html(j));
+                            $row.append($('<td/>').html(val.AttachmentName));
+                            $row.append($('<td/>').html('<a href="#" onclick=previewFile("'+ val.FileName +'")>Preview</a>'));
+                            var $remove = $('<a href="#"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>');
+                            $remove.click(function (e) {
+                                e.preventDefault();
+                                attachments.splice(i, 1);
+                                GenerateAttachmentsTable();
+                            });
+                            $row.append($('<td/>').html($remove));
+                            $tbody.append($row);
+                        });
+                        $table.append($tbody);
+                        $('#divAttachments').html($table);
+                        //Clear fields
+                        $("#AttachmentName").val("");
+                        $("#FileName").val("");
+                    } else {
+                        $('#divAttachments').html('');
+                        $("#btnAddGlItem").attr("disabled", false);
+                        $("#btnSave").attr("disabled", false);
+                    }
+            }
+
+            $("#btnSave").on("click", function () {
+            $("#btnSave").attr("disabled", true);
+            $.validator.unobtrusive.parse("#approvalForm");
+            if (!$("#approvalForm").valid()) {
+                    $("#btnSave").attr("disabled", false);
+                    return false;
+                }
+
+                $("#divLoader").show();
+
+                var token = $("[name='__RequestVerificationToken']").val();
+
+                var formData = new FormData();
+
+                formData.append("__RequestVerificationToken", token);
+                formData.append("DfundApprovalId", $('#DfundApprovalId').val());
+                formData.append("Title", $('#Title').val());
+                formData.append("Description", $('#Description').val());
+                formData.append("TrxAmount", $('#TrxAmount').val());
+                formData.append("Currency", $('#Currency').val());
+
+                var url = '@Url.Action("EditApproval", "DfundApprovals")';
+                $.ajax({
+                url: url,
+                type: "POST",
+                data: formData,
+                dataType: "JSON",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                            if (response == "Success") {
+                                swal({
+                                    text: "Approval saved successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    window.location = '@Url.Action("Eoffice", "DfundApprovals")';
+                                });
+                            } else {
+                                swal({
+                                    text: response,
+                                    icon: "warning",
+                                    button: "OK",
+                                })
+                            }
+                        },
+                error: function () {
+                            swal({
+                                text: "An error occured while processing your request, please contact system support",
+                                icon: "error",
+                                button: "OK",
+                        })
+                },
+                complete: function () {
+                    $("#btnSave").attr("disabled", false);
+                    $("#divLoader").hide();
+                }
+                });
+            })
+
+            // End of dynamic table
+        });
+
+        var previewFile = function (fileName) {
+            //alert(fileName);
+        };
+
+    </script>
+}

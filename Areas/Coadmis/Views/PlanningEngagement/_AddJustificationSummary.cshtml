@@ -1,0 +1,168 @@
+﻿@model IFMIS.Areas.Coadmis.Models.RiskAssessementVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "summaryCommentForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.HiddenFor(model => model.PlanningEngagementId)
+        @*@Html.HiddenFor(model=>model.FinancialYear)*@
+        @Html.HiddenFor(model => model.ClientName)
+        @Html.HiddenFor(model => model.ClientId)
+        <div class="form-group">
+            <label class="control-label col-md-2">Question<span class="redStar">*</span></label>
+            <div class="col-md-8">
+                <select id="QuestionnaireId" name="QuestionnaireId" class="form-control select2" required="required">
+                    <option value="">Select Question</option>
+                    @foreach (var item in ViewBag.QuestionnaireList)
+                    {
+                        <option value="@item.QuestionnaireId">@item.QuestionnairName</option>
+                    }
+                </select>
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">Question Response<span class="redStar">*</span></label>
+            <div class="col-md-8">
+                @Html.DropDownList("QuestionnairResponse", new List<SelectListItem>{
+                                        new SelectListItem{ Text="--Select Answer Type ---", Value = "" },
+                                        new SelectListItem{ Text="Yes", Value = "Yes" },
+                                        new SelectListItem{ Text="No", Value = "No" },
+                                        }, new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.QuestionnairResponse, "", new { @class = "text-danger" })
+            </div>
+            @*<div id="riskAssign" style="display: none">
+                <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">Risk Identified<i class="fa fa-times" style="color:white"></i><span class="redStar">*</span></label>
+                <div class="col-md-3">
+                    <a class="search-btn" onclick="ShowAddMoreRiskIdentify()" id="searchbtn" href="#" style="display:block;border:1px solid #ccc;padding:8px">
+                        <i class="fa fa-paperclip search-icon"></i>
+                        &nbsp; Add Risk(s) <span id="added_riskIdentify"></span>
+                    </a>
+                </div>
+            </div>*@
+        </div>
+        <div class="form-group">
+            <div class="col-md-8"></div>
+            <div class="col-md-3">
+                @*<a href="@Url.Action("PlanningEngagementlist", "PlanningEngagement")" style="margin-right:5px" type="submit" class="btn btn-info pull-left">
+            <i class="glyphicon glyphicon-arrow-left"></i> Back
+        </a>
+        <a href="javascript:history.back()" style="margin-right:5px" class="btn btn-info pull-left">
+            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+            Back
+        </a>*@
+                @*<button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+                <button type="submit" class="btn btn-info" id="saveRiskAssertationForm">
+                    <i class="fa fa-save"></i>Save
+                    <img src="~/Content/img/loading.gif" class="loadingImg" />
+                </button>*@
+            </div>
+        </div>
+
+    
+    </div>
+}
+
+<script>
+
+        $(document).ready(function() {
+            $('#QuestionnaireId, #QuestionnairResponse').select2({
+                dropdownParent: $('#summaryCommentForm')
+            });
+        });
+
+        
+
+
+    //Clear Code above
+    $("#QuestionnairResponse").change(function () {
+        debugger;
+        var selectedValue = $("#QuestionnairResponse").val();
+
+        if (selectedValue == "Yes") {
+            $("#riskAssign").show();
+        }
+        else {
+            $("#riskAssign").hide();
+        }
+    });
+
+         //
+
+        function ShowAddMoreRiskIdentify() {
+            //$("#AddRiskModel").modal("show");
+            var id = 7;
+            debugger;
+            $("#divLoader").toggle(true);
+           var url = '@Url.Action("AddPossibleRisk", "PlanningEngagement")';
+            url += '?Id=' + id;
+            $("#AddRiskModel").show();
+            $("#divLoader").toggle(false);
+            $("#summaryCommentBody").load(url, function () {
+                $("#summaryComment").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        };
+
+    //Count input char
+    $('#JustificationOfRisk').on("keyup", function () {
+        var count = $('#JustificationOfRisk').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#JustificationOfRiskCount').text(parseInt(numChars));
+    });
+
+    $("#addSummaryCommentData").on('click', function () {
+        debugger;
+        var riskResponseSummaryId = $("#RiskResponseSummaryId").val();
+        var justificationOfRisk = $("#JustificationOfRisk").val();
+
+
+        if (riskResponseSummaryId == '' || justificationOfRisk == '') {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("RiskResponseSummaryId", riskResponseSummaryId);
+        formdata.append("JustificationOfRisk", justificationOfRisk);
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdateRiskSummaryResponse", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Comment Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Estimate!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

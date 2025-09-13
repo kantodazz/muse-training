@@ -1,0 +1,886 @@
+﻿@{
+    ViewBag.Title = "Approve Payment File";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    table td:nth-child(8) {
+        text-align: center;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 120px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div style="display:flex; justify-content:space-between">
+                                <div>
+                                    <button class="btn btn-info" id="confirm" onclick="confirmPayment()">
+                                        <i class="glyphicon glyphicon-ok"></i> Approve
+                                    </button>
+                                </div>
+                                @*@if (ViewBag.ServerName == "Serengeti")
+        {*@
+                                <div>
+                                    <strong>Vote: </strong> <select id="voteCodes" style="background-color:#ECF3F8"></select>
+                                </div>
+                                @*}*@
+                                <div>
+                                    <strong>Payer Bank Acc: </strong> <select id="bankAccounts" style="background-color:#ECF3F8"></select>
+                                </div>
+                                <div>
+                                    <strong>SBC: </strong> <select id="sbc" style="background-color:#ECF3F8"></select>
+                                </div>
+                                <div>
+                                    <div id="infoPanel">
+                                        <div class="info-box"><strong id="selectedItems">No Item(s) Selected</strong></div>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Payment No</th>
+                                        <th>Num Trx</th>
+                                        <th>Total Amount</th>
+                                        <th>Payer Bank Account</th>
+                                        <th>SBC</th>
+                                        <th>Payment Method</th>
+                                        <th>Send to PO At</th>
+                                        <th>Status</th>
+                                        <th>Remarks</th>
+                                        <th></th>
+                                        <th>
+                                      @*  <input type="checkbox" id="checkall" onchange="checkAll()" />*@
+                                        </th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- Edit Pending Voucher ----------------->
+<div class="modal fade" id="editModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Edit Pending Voucher</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:10px">
+                        <table class="table table-striped">
+                            <tr>
+                                <td colspan="1">
+                                    <form class="well form-horizontal">
+                                        <fieldset>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Payment in Respect Of</label>
+                                                <div class="col-md-8 inputGroupContainer" style="padding-bottom:15px">
+                                                    <div class="input-group">
+                                                        <textarea rows="3" style="width:230px;" id="Comments"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Invoice No</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input style="width:230px" type="text" id="InvoiceNo" placeholder="Optional">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Control Number</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input id="ControlNumber" style="width:230px;padding-bottom:33px" type="text">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </form>
+                                </td>
+                                <td colspan="1">
+                                    <form class="well form-horizontal">
+                                        <fieldset>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Short Description</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <textarea rows="3" id="PaymentDescription"
+                                                                  style="width:230px;"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Apply Date</label>
+                                                <div class="col-md-4 inputGroupContainer">
+                                                    <div class="input-group"><input type="date" required id="ApplyDate" /></div>
+                                                </div>
+                                                <div class="col-md-4" style="padding:10px;left:30px">
+                                                    (<strong id="ApplyDateOld"></strong>)
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Invoice Date</label>
+                                                <div class="col-md-4 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input type="date" required id="InvoiceDate" />
+                                                        <input type="hidden" required id="PaymentVoucherId" />
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-4" style="padding:10px;left:30px">
+                                                    (<strong id="InvoiceDateOld"></strong>)
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Payment Method</label>
+                                                <div class="col-md-8 inputGroupContainer" style="padding-bottom:2px">
+                                                    <div class="input-group">
+                                                        <select id="PaymentMethod">
+                                                            <option>EFT</option>
+                                                            <option>Cheque</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </form>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn action-btn" onclick="postEditFormData()"
+                            style="background-color:#2196F3;color:white;width:100px;">
+                        Save
+                    </button>
+                    <button class="btn action-btn" data-dismiss="modal" style="width:100px;">
+                        Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------- Conferm Pending Voucher ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Conferm Pending Voucher</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <table id="dt_payee_details" class="table table-bordered table-condensed"></table>
+                        <table class="table table-striped">
+                            <tr>
+                                <td colspan="1">
+                                    <form class="well form-horizontal">
+                                        <fieldset>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Payment in Respect Of</label>
+                                                <div class="col-md-8 inputGroupContainer" style="padding-bottom:15px">
+                                                    <div class="input-group">
+                                                        <textarea placeholder="Enter Voucher Comments" rows="3"
+                                                                  style="width:230px;" id="Comments1" disabled></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Invoice No</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input style="width:230px" type="text" id="InvoiceNo1" placeholder="Optional" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Control Number</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input id="ControlNumber1" style="width:230px;" type="text" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Short Description</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <textarea rows="3" id="PaymentDescription1"
+                                                                  style="width:230px;" disabled></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </form>
+                                </td>
+                                <td colspan="1">
+                                    <form class="well form-horizontal">
+                                        <fieldset>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Sub Budget Class</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input id="SubBudgetClass1" style="width:230px;" type="text" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Total Amount</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <span class="input-group-addon">
+                                                            <strong id="currency">TZS</strong>
+                                                        </span><input id="total_voucher_amount1" type="number" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Apply Date</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group"><input type="text" disabled id="ApplyDate1" /></div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Invoice Date</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input type="text" disabled id="InvoiceDate1" />
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label">Payment Method</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        <input id="PaymentMethod1" style="width:100px;" type="text" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </fieldset>
+                                    </form>
+                                </td>
+                            </tr>
+                        </table>
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed" width="100%"></table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn action-btn" data-dismiss="modal" style="width:100px;" onclick="confirmDialog('x')">
+                        Confirm
+                    </button>
+                    <button class="btn action-btn" data-dismiss="modal" style="width:100px;" onclick="confirmDelete('x')">
+                        Delete
+                    </button>
+                    <button class="btn action-btn" data-dismiss="modal" style="width:100px;" onclick="editPendingVoucher('x')">
+                        Edit
+                    </button>
+                    <button class="btn action-btn" data-dismiss="modal" style="width:100px;">
+                        Dismiss
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="viewModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Voucher Information</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Institution Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-4">
+                                        <table>
+                                            <tr>
+                                                <th>Institution Name: </th>
+                                                <td id="_InstitutionName"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <table>
+                                            <tr>
+                                                <th>InstitutionCode:</th>
+                                                <td id="_InstitutionCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-4">
+                                        @*<table>
+                                                <tr>
+                                                    <th>Vote:</th>
+                                                    <td id="_Vote"></td>
+                                                </tr>
+                                            </table>*@
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_view" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Legal Number</th>
+                                    <th>Payee Name</th>
+                                    <th>Description</th>
+                                    <th>Payee Bank Account</th>
+                                    <th>SBC</th>
+                                    <th>Payee Bank Name</th>
+                                    <th>Paying Bank</th>
+                                    <th>Paying Account</th>
+                                    <th>Amount</th>
+                                    <th>CALCULATIONS</th>
+                                    <th></th>
+                                    <th>Source Module</th>
+                                </tr>
+                            </thead>
+                        </table>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script>
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        $("#bankAccounts").change(function () {
+            filterTableData(this.value.trim())
+            checkedRows = []
+            toggleConfirmButton()
+            $("#checkall").prop('checked', false)
+            $("#selectedItems").text("No Item(s) Selected");
+        })
+
+        $("#voteCodes").change(function () {
+            filterTableData()
+            checkedRows = []
+            toggleConfirmButton()
+            $("#checkall").prop('checked', false)
+            $("#selectedItems").text("No Item(s) Selected");
+        })
+
+        $("#sbc").change(function () {
+            filterTableData()
+            checkedRows = []
+            toggleConfirmButton()
+            $("#checkall").prop('checked', false)
+            $("#selectedItems").text("No Item(s) Selected");
+        })
+
+        var data = [];
+        var globalPayeeId = null;
+        $(document).ready(function () {
+            loadTableData();
+        });
+        function viewAttachment(PaymentSummaryId) {
+            window.location.href =
+                '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + PaymentSummaryId + '&&sourceModule=PaymentSummary';
+        }
+        function actionTemplate(d) {
+            return '<div class="btn-group" id="drop-' + d.PaymentSummaryId + '">\
+                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                         <span class="caret"></span\
+                         <span class="sr-only"></span>\
+                        </button>\
+                        <ul class="dropdown-menu">\
+                          <li> <a href="#" onclick= "openViewDialog(' + d.PaymentSummaryId + ')">View</a></li>\
+                          <li><a href="#" onclick= "reject(' + d.PaymentSummaryId + ')">Reject</a></li>\
+                           <li><a href="/Content/uploads/' + d.PaymentSlipFilePath + '">View Slip</a></li>\
+                           <li><a href="#" onclick="viewAttachment(' + d.PaymentSummaryId + ')">Additional Attachments</a></li>\
+                        </ul>\
+                    </div>\
+                 <img src="/Content/img/loading.gif" id="saveLoader-' + d.PaymentSummaryId + '" class="loading-gif"/>\
+            '
+        }
+
+        function loadTableData() {
+            var bankAccounts = []
+            var voteCodes = []
+            var sbcs = []
+            $("#loader").text("Loading please wait...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetPaymentSummary", "PaymentOffice")',
+                data: { source: "Approval", overallStatus: "Verified in Payment Office" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    for (var i = 0; i < data.length; i++) {
+                        var bankAcc = data[i]["PayerBankAccount"] == "9921180001" ? data[i]["SubTsaBankAccount"] : data[i]["PayerBankAccount"]
+                        var voteCode = data[i].InstitutionCode;
+                        var sbc = data[i].SubBudgetClass;
+                        if (!bankAccounts.includes(bankAcc)) {
+                            bankAccounts.push(bankAcc);
+                        }
+                        if (!voteCodes.includes(voteCode)) {
+                            voteCodes.push(voteCode);
+                        }
+                        if (!sbcs.includes(sbc)) {
+                            sbcs.push(sbc);
+                        }
+                    }
+                    createBankAccountsFilter(bankAccounts);
+                    createVoteCodesFilter(voteCodes);
+                    createSBCFilter(sbcs);
+                    $("#voteCodes").trigger('change');
+                    $("#sbc").trigger('change');
+                    if (data.length == 0) {
+                        $("#loader").text("No record found.")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function createBankAccountsFilter(bankAccounts) {
+            var bankAccSelect = document.getElementById("bankAccounts")
+            bankAccounts.forEach(bankAcc => {
+                let option = document.createElement('option')
+                option.value = bankAcc
+                option.text = bankAcc
+                bankAccSelect.appendChild(option);
+            });
+        }
+
+        function createVoteCodesFilter(voteCodes) {
+            var voteCodeSelect = document.getElementById("voteCodes")
+            if (voteCodeSelect) {
+                voteCodes.forEach(voteCode => {
+                    let option = document.createElement('option')
+                    option.value = voteCode
+                    option.text = voteCode
+                    voteCodeSelect.appendChild(option);
+                });
+            }
+        }
+
+        function createSBCFilter(sbcs) {
+            var sbcSelect = document.getElementById("sbc")
+            if (sbcSelect) {
+                sbcs.forEach(sbc => {
+                    if (sbc) {
+                        let option = document.createElement('option')
+                        option.value = sbc
+                        option.text = sbc
+                        sbcSelect.appendChild(option);
+                    }
+                });
+            }
+        }
+
+        function filterTableData(query) {
+            let bankAccount = $("#bankAccounts").val()
+            let _data = data.filter(v=> {
+                if (v.PayerBankName.includes("TSA")) {
+                    if (v.SubTsaBankAccount == bankAccount) {
+                        return v
+                    }
+                } else if (v.PayerBankAccount == bankAccount) {
+                    return v
+                }
+            })
+            let voteCode = $("#voteCodes").val()
+            if (voteCode) {
+                _data = _data.filter(v => v.InstitutionCode == voteCode)
+            }
+            let sbc = $("#sbc").val()
+            if (sbc) {
+                _data = _data.filter(v => v.SubBudgetClass == sbc)
+            }
+            dt_voucher_listing.fnClearTable();
+            for (var i = 0; i < _data.length; i++) {
+                dt_voucher_listing.fnAddData([i + 1,
+                  _data[i]["PaymentNo"],
+                  _data[i]["NumTrx"],
+                  toLabel(_data[i]["OperationalAmount"]),
+                  _data[i]["SubBudgetClass"],
+                  _data[i]["PayerBankAccount"],
+                  _data[i]["PaymentMethod"],
+                  _data[i]["FSentToPOAt"],
+                  _data[i]["OverallStatus"],
+                  _data[i]["RejectedReason"],
+                  actionTemplate(_data[i]),
+                  '<input  type="checkbox" id="row-' + _data[i].PaymentSummaryId + '" onchange="rowChecked(' + _data[i].PaymentSummaryId + ')"/>'
+                ]);
+                $("#saveLoader-" + _data[i].PaymentSummaryId + "").toggle(false)
+            }
+        }
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleConfirmButton();
+        }
+
+        function checkAll() {
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    checkedRows.push(i);
+                    $("#row-" + i).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    $("#row-" + i).prop('checked', false);
+                }
+            }
+            toggleConfirmButton();
+        }
+
+        $("#confirm").attr('disabled', true);
+
+        function toggleConfirmButton() {
+            var TotalAmount = 0;
+            if (checkedRows.length > 0) {
+                checkedRows.forEach(rowId=> {
+                    var row = data.filter(v=>v.PaymentSummaryId == rowId)[0];
+                    TotalAmount = TotalAmount + toNumber(row.OperationalAmount);
+                });
+
+                $("#confirm").attr('disabled', false);
+                $("#selectedItems").text(checkedRows.length + " Item(s) Selected ~ Total: " + toLabel(TotalAmount));
+            } else {
+                $("#confirm").attr('disabled', true);
+                $("#selectedItems").text("No Item(s) Selected");
+            }
+        }
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        function confirmPayment() {
+            swal({
+                text: "Approved Selected Item(s)?",
+                buttons: ["NO", "YES"],
+            }).then((willGenerate) => {
+                if (willGenerate) {
+                    $("#confirm").attr('disabled', true);
+                    postConfimedPayment();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postConfimedPayment() {
+            var url = '@Url.Action("ApprovePaymentFile", "PaymentOffice")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentSummaryIds": checkedRows },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Approved successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var dt_view = $('#dt_view').dataTable();
+
+        $("#dt_view_wrapper .dt-toolbar").remove();
+
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_view.DataTable().search(this.value).draw();
+        });
+
+        function openViewDialog(PaymentSummaryId) {
+            var d = data.filter(v=>v.PaymentSummaryId == PaymentSummaryId)[0];
+            $("#_InstitutionName").text(d["InstitutionName"])
+            $("#_InstitutionCode").text(d["InstitutionCode"])
+            $("#reasonId").text(d["RejectedReason"] ? d["RejectedReason"] : "-")
+            viewData(d["PaymentSummaryId"]);
+            $("#viewModal").modal("show");
+        }
+
+        function sourceModule(d) {
+            switch (d["SourceModule"]) {
+                case "Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Accrual Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Prepayment":
+                    return '<a href="@Url.Action("PreviewPrepayment","Prepayment")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Imprest":
+                    return '<a href="@Url.Action("ImprestDetails","Imprest")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "BulkPayment":
+                    return '<a href="@Url.Action("PaymentDetails", "PaymentBatches")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Loan":
+                    return '<a href="@Url.Action("PreviewLoanTracker","Loan")/' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                default:
+                    return d["SourceModule"] + withholdingTemplate(d);
+            }
+        }
+        function viewData(Id) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("getpaymentvoucher", "PaymentVoucher")' + "/?overallStatus=Generated&&paymentSummaryId=" + Id + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    dt_view.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_view.fnAddData([i + 1,
+                           d[i]["PVNo"],
+                           d[i]["Payeename"],
+                           d[i]["PaymentDesc"],
+                            d[i]["PayeeBankAccount"],
+                            d[i]["SubBudgetClass"],
+                           d[i]["PayeeBankName"],
+                           d[i]["PayerBankName"],
+                           d[i]["PayerBankAccount"],
+                           toLabel(d[i]["OperationalAmount"]),
+                           calculate(d[i]),
+                           '<a target="_blank" href="@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + d[i]["PaymentVoucherId"] + '&&sourceModule='+d[i]["SourceModule"]+'"><i class="fa fa-file-pdf-o"></i></a>',
+                           sourceModule(d[i]),
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function reject(PaymentSummaryId) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + PaymentSummaryId + "").toggle(true)
+                    $("#drop-" + PaymentSummaryId + "").toggle(false)
+                    confirmRejection(PaymentSummaryId, remark);
+                };
+            });
+        }
+
+
+        function confirmRejection(Id, remark) {
+            var url = '@Url.Action("RejectPaymentFileApproval", "PaymentOffice")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentSummaryId": Id, "remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}

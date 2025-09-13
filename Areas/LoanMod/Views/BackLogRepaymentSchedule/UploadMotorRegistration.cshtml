@@ -1,0 +1,161 @@
+﻿@model IFMIS.Areas.LoanMod.Models.UploadMotorRegistrationVM
+@{
+    ViewBag.Title = "Upload Motor Registration";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div class="widget-body " style="padding-top:10px">
+                        <div>
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "Upload" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    <div class="row" style="padding:12px">
+                                        @Html.LabelFor(model => model.FileName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-4">
+                                            @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <table>
+
+                                        <tr>
+                                            <td class="form-label">
+                                                Template with Sample Data
+                                                <i class="fa fa-times" style="color:white"></i>
+                                            </td>
+                                            <td>
+                                                <a href="~/Uploads/BackLogTemplate/MotorRegistrationTemplate.xlsx"><i class="glyphicon glyphicon-download-alt"></i>Download</a>
+                                            </td>
+                                        </tr>
+                                    </table>
+
+                                    <div class="form-actions">
+                                        <div class="row">
+                                            <div class="col-md-3">
+                                                <button id="uploadbtn" type="button" class="btn btn-info" style="text-align:left" onclick="upload()">
+                                                    <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                                    Upload
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                            }
+
+                        </div>
+                    </div>
+
+                </div>
+
+            </article>
+        </div>
+        <!-- Start of div loader-->
+        <div align="center" id="divLoader" style="text-align: center; display: none">
+            <img src="~/Media/Images/loader.gif" width="100" height="100" />
+        </div>
+        <!-- End of div loader-->
+    </section>
+</div>
+
+
+@section pagespecific{
+    <script>
+
+        var uploadRepayment = function () {
+            if (window.FormData !== undefined) {
+
+                if (!$("#Upload").valid()) {
+                    return false;
+                }
+
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                }
+                $("#uploadbtn").prop('disabled', true);
+                $("#divLoader").show();
+                var url = '@Url.Action("UploadMotorRegistration", "BackLogRepaymentSchedule")';
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (data, status, jqXHR) {
+                        if (data.response == "Success") {
+                            $("#divLoader").hide();
+                            $("#uploadbtn").prop('disabled', false);
+                            swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                window.location.href = '@Url.Action("UploadMotorRegistration", "BackLogRepaymentSchedule")';
+                            });
+
+                        } else if (data.response == "InvalidFormat") {
+                            $("#divLoader").hide();
+                            $("#uploadbtn").prop('disabled', false);
+                            swal("Invalid file format, file format should be MS Excel!", { icon: "warning" }).then((e) => {
+                                window.location.href = '@Url.Action("UploadMotorRegistration", "BackLogRepaymentSchedule")';
+                            });
+
+                        } else {
+                            swal(data.response , { icon: "warning" }).then((e) => {
+                                window.location.href = '@Url.Action("UploadMotorRegistration", "BackLogRepaymentSchedule")';
+                            });
+                            $("#divLoader").hide();
+                            $("#uploadbtn").prop('disabled', false);
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                        $("#divLoader").hide();
+                        $("#uploadbtn").prop('disabled', false);
+                    }
+                });
+            };
+        };
+
+
+        function upload() {
+
+            swal({
+                title: "Upload",
+                text: "Are you sure you want to Upload Back Log for Moto Registration ?",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    uploadRepayment();
+                }
+            });
+            $('#confirmModal').modal('hide');
+
+        }
+
+
+    </script>
+}
+
+
+
+
+

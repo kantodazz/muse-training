@@ -1,0 +1,266 @@
+﻿@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanApplicationVM>
+@{
+    ViewBag.Title = "Appraiser List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_appraisal_list" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Application No</th>
+                                        <th style="width:30px;">Pending (Days)</th>
+                                        <th>Customer Name</th>
+                                        <th>Appraiser</th>
+                                        <th>Phone Number</th>
+                                        <th>Email</th>
+                                        <th>Stage</th>
+                                        <th>Title</th>
+                                        <th style="width:30px;">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_appraisal_list = $('#dt_appraisal_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_appraisal_list.DataTable().search(this.value).draw();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getFullYear() +','+ (dt.getMonth() + 1)+',' +dt.getDate();
+            }
+        }
+
+        var dateDifferenceInDays = function (date1, date2) {
+            const oneDay = 24 * 60 * 60 * 1000; // hours*minutes*seconds*milliseconds
+            const firstDate = new Date(date2);
+            const secondDate = new Date(date1);
+            const diffDays = Math.round(Math.abs((firstDate - secondDate) / oneDay));
+            return diffDays;
+        }
+
+        var data = [];
+        var LoanApplicationId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetLoanAccessorAssignedList", "LoanApplication")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_appraisal_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    var AssignedDate = ToJavaScriptDate(data[i]["AssignedDate"]);
+                    var CurrentDate = ToJavaScriptDate(data[i]["CurrentDate"]);
+                    dt_appraisal_list.fnAddData([i + 1,
+                       data[i]["ApplicationNo"],
+                       dateDifferenceInDays(AssignedDate, CurrentDate),
+                       data[i]["CustomerName"],
+                       data[i]["Fullname"],
+                       data[i]["PhoneNo"],
+                       data[i]["Email"],
+                       data[i]["Stage"],
+                       data[i]["Title"],
+                      '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + data[i]["LoanApplicationId"]+ '">View</a></li>\
+                                 <li><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        /* END BASIC */
+        function cancelDialog(i) {
+            swal({
+                title: 'Cancel Assignment for selected Appraiser ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelLoanAssignment(data[i]["LoanApplicationAssignmentId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelLoanAssignment(id) {
+          var url = '@Url.Action("CancelLoanAppraiser", "LoanApplication")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response)
+                         .then((value) => {
+                             window.location.href = '@Request.Url.ToString()';
+                         });
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error)
+                         .then((value) => {
+                             window.location.href = '@Request.Url.ToString()';
+                         });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+    </script>
+}

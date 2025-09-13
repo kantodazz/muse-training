@@ -1,0 +1,171 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ReconciliationPosted>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Approved Reconcilliation List </h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body" style="padding-top:10px">
+
+
+                            <table id="dt_basic" class="table table-bordered table-hover table-condensed">
+                                <thead style="white-space:nowrap">
+                                    <tr>
+                                        <th>#</th>
+
+                                        <th>
+                                            Account Number
+                                        </th>
+                                        <th>
+                                            Account Name
+                                        </th>
+                                        <th>
+                                            Bank Balance
+                                        </th>
+                                        <th>
+                                            Adjusted Balance
+                                        </th>
+
+                                        <th>
+                                            Cash Book Balance
+                                        </th>
+
+                                        <th>
+                                            Reconciliation Date
+                                        </th>
+                                        <th>
+                                            Check Date
+                                        </th>
+
+                                        <th>
+                                            Overall Status
+                                        </th>
+
+
+                                    </tr>
+                                </thead>
+                                @{
+
+                                    int i = 0;
+
+                                }
+
+                                @foreach (var item in Model)
+                                {
+                                    i++;
+                                    <tr>
+                                        <td>@i</td>
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.AccountNumber)
+                                        </td>
+                                        <td style="font-size:11px">
+                                            @Html.DisplayFor(modelItem => item.AccountName)
+                                        </td>
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.ClosingBalanceBank)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.AdjustedBalance)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.ClosingBalanceGL)
+                                        </td>
+                                        <td>
+                                            @string.Format("{0:  dd/MM/yyyy}", item.ReconciliationDate)
+
+                                        </td>
+
+                                        <td>
+                                            @string.Format("{0:  dd/MM/yyyy}", item.CheckDate)
+
+                                        </td>
+
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+
+                                       
+
+                                    </tr>
+                                }
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+@section pagespecific{
+    <script>
+        $(document).ready(function () {
+            var responsiveHelper_dt_basic = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+        })
+
+        var approval = function (id) {
+            var url = '@Url.Action("Approval", "Reconcilliation")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        alert("Approved successfully ");
+                        location.reload();
+                    }
+                    else {
+                        alert("Failed to Approve ,DbException");
+                    }
+                },
+                error: function (xhr) {
+                    
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+    </script>
+}

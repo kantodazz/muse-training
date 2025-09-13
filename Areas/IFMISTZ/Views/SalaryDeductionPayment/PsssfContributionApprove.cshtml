@@ -1,0 +1,362 @@
+﻿@{
+    ViewBag.Title = "Approve";
+}
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Claim Reference</th>
+                                        <th>Check Date</th>
+                                        <th>ContributionCode</th>
+                                        <th>NumTrx</th>
+                                        <th>TotalEmployerContrn</th>
+                                        <th>TotalMonthlySalary</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="voucherModal" style="left:4%">
+    <div class="modal-dialog" style="width:60%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Generate Voucher</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div style="display: flex; justify-content: space-between">
+                            <div> Total Amount: <input type="text" disabled id="totalAmount" /></div>
+                            <div>Balance Amount: <input type="text" disabled id="balanceAmount"/></div>
+                            <div>Amount tobe paid: <amount-input id="amountTobePaid"/></div>
+                        </div>
+                        <br />
+                        <div class="infoPanel">
+                            <h4>Paid Vouchers</h4>
+                            <table id="dt_table_vouchers" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>PvNo</th>
+                                        <th>OverallStatus</th>
+                                        <th>Amount</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                    <button type="submit" class="btn btn-info" onclick="generateVoucher()">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        var dt_table_vouchers = $('#dt_table_vouchers').dataTable();
+        $("#dt_table_vouchers_wrapper .dt-toolbar").remove();
+
+         var dt_table = $('#dt_table').dataTable();
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+
+        function loadData() {
+
+            $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetPendingPsssfContributions", "SalaryDeductionPayment")',
+            contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                data: { status: "Authorized,Rejected from Voucher,Awaiting Control Number,Control Number Received, Partially Paid" },
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    var id = data[i].Id
+                    dt_table.fnAddData([i+1,
+                        data[i].ClaimRef,
+                        data[i].CheckDateFormatted,
+                        data[i].ContributionCode,
+                        data[i].NumTrx,
+                        toLabel(data[i].TotalEmployerContribution),
+                        toLabel(data[i].TotalMonthlySalary),
+                        data[i].OverallStatus,
+                        `<div class="btn-group" id="drop-${id}">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span><span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "viewDetails(${id})">Details</a></li>\
+                             ${rectionAction(id)}\
+                             ${approveAction(id)}\
+                             ${controlNumberAction(id)}\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-${id}" class="loading-gif"/>`
+                  ]);
+                    $("#saveLoader-" + id + "").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }
+
+        function controlNumberAction(id) {
+            var item = data.filter(a => a.Id == id)[0];
+            if (item.ControlNumber || item.OverallStatus == 'Awaiting Control Number') {
+                return ''
+            }
+            return `<li><a href="#" onclick="requestControlNumber(${id})">Request Ctrl Number</a></li>`
+        }
+
+        function rectionAction(id) {
+            var item = data.filter(a => a.Id == id)[0];
+            if (item.ControlNumber || item.OverallStatus == 'Awaiting Control Number') {
+                return ''
+            }
+            return `<li><a href="#" onclick="reject(${id})">Reject</a></li>`
+        }
+
+        function approveAction(id) {
+            var item = data.filter(a => a.Id == id)[0];
+            if (!item.ControlNumber) {
+                return ''
+            }
+            return `<li><a href="#" onclick="approve(${id})">Pay</a></li>`
+        }
+
+        function viewDetails(id) {
+           url = '@Url.Action("PsssfContributionDetails", "SalaryDeductionPayment")';
+           window.location.href = `${url}/?id=${id}`
+       }
+
+        loadData()
+
+        function reject(id) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + id + "").toggle(true)
+                    $("#drop-" + id + "").toggle(false)
+                    rejected(id, remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function rejected(id, remark) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ActionPsssfContributions", "SalaryDeductionPayment")',
+                data: { id, status: "Rejected by Approver", remark, amount: 0 },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Rejected Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var psssfContributionSummaryId = 0;
+         var expensedAmount = 0;
+        function approve(id){
+            psssfContributionSummaryId = id;
+            GetPaidVouchers(id);
+            $("#voucherModal").modal('show');
+        }
+        
+        $("#amountTobePaid").on("keyup", function () {
+            var totalAmount = toNumber($("#totalAmount").val());
+            var amountTobePaid = toNumber($("#_amountTobePaid").val());
+           $("#balanceAmount").val(toLabel(totalAmount - amountTobePaid - expensedAmount));
+       });
+
+       
+        function GetPaidVouchers(id){
+            var item = data.filter(a=> a.Id == id)[0];
+            var totalAmount = item.TotalEmployerContribution;
+            $("#totalAmount").val(toLabel(totalAmount));
+            $("#balanceAmount").val(toLabel(totalAmount));
+            expensedAmount = 0;
+             $.ajax({
+                 type: "GET",
+                 url: '@Url.Action("GetPaidVouchers", "SalaryDeductionPayment")',
+                 data: { id },
+                 contenttype: "application/json; charset=utf-8",
+                 datatype: "json",
+                 success: function (response) {
+                     var data = response.data;
+                     dt_table_vouchers.fnClearTable(); 
+                     for (var i = 0; i < data.length; i++) {
+                         expensedAmount += data[i].OperationalAmount;
+                         dt_table_vouchers.fnAddData([i+1,
+                             data[i].PVNo,
+                             data[i].OverallStatus,
+                             toLabel(data[i].OperationalAmount),
+                             data[i].CreatedAtFormatted,
+                         ]);
+                         }
+                         $("#balanceAmount").val(toLabel(totalAmount-expensedAmount));
+                 },
+    failure: function (error) {
+        swal(error);
+    }
+});
+}
+
+
+        function generateVoucher() {
+            var id = psssfContributionSummaryId;
+            swal({
+                title: 'Are you sure?',
+                buttons: ['NO','YES'],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + id + "").toggle(true)
+                    $("#drop-" + id + "").toggle(false)
+                    confirmed(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function confirmed(id) {          
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ActionPsssfContributions", "SalaryDeductionPayment")',
+                data: { id, status: "Approved", amount: toNumber($("#_amountTobePaid").val() || 0) },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#saveLoader-" + id + "").toggle(false)
+                    $("#drop-" + id + "").toggle(true)
+                    if (response == "Success") {
+                        swal("Voucher Created Successfully!", { icon:"success" })
+                        .then((e) => { window.location.reload()});
+                    }else {
+                        swal(response);
+                        }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function requestControlNumber(id) {
+            swal({
+                title: 'Are you sure?',
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + id + "").toggle(true)
+                    $("#drop-" + id + "").toggle(false)
+                    requestControlNo(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function requestControlNo(id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("RequestControlNumberEmployerDeduction", "SalaryDeductionPayment")',
+                data: { id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Requested Successfully!", { icon: "success" })
+                            .then((e) => window.location.reload());
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}

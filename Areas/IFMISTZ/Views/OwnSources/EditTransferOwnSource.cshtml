@@ -1,0 +1,376 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.FundTransferSummary
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Own Source Transfer </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+                        <div class="widget-body">
+
+                            <form action="" method="post" id="create-bill-form" class="form-horizontal">
+                                @Html.AntiForgeryToken()
+                                <fieldset>
+
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label"> Fund Type  </label>
+                                        <div class="col-md-3">
+                                            <input class="form-control" type="text" readonly="readonly" value="" name="fundSource" id="fundSource">
+                                        </div>
+                                        <label class="col-md-2 control-label"> Sub Budget Class </label>
+                                        <div class="col-md-5">
+                                            <select id="SubBudgetClass" class="form-control" required="required">
+                                                <option value="" required="required" selected="selected">Please choose sub budget class</option>
+                                                @foreach (var item in ViewBag.subBudgetClassList)
+                                                {
+                                                    <option value='@item.SubBudgetClass'>
+                                                        @item.SubBudgetClass - @item.SubBudgetClassDesc
+                                                    </option>
+                                                }
+                                            </select>
+
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label"> Bank Account From </label>
+                                        <div class="col-md-3">
+                                            <input class="form-control" type="text" value="" name="bankAccount" id="bankAccount" disabled autocomplete="off">
+                                        </div>
+
+                                        <label class="col-md-2 control-label">  Bank Account To </label>
+                                        <div class="col-md-5">
+                                            <select id="bankAccountTo" class="form-control" required="required">
+                                                <option value="" required="required" selected="selected">Please choose Bank To </option>
+                                                @foreach (var banks in ViewBag.banks)
+                                                {
+                                                    <option value='@banks.AccountNumber'>
+                                                        @banks.AccountNumber - @banks.AccountName
+                                                    </option>
+                                                }
+                                            </select>
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+
+                                        <label class="col-md-2 control-label"> Total Amount</label>
+                                        <div class="col-md-3">
+                                            <input onkeyup="" class="form-control" type="text" value="" readonly="readonly"  name="totalAmount" id="totalAmount">
+                                        </div>
+                                        <label class="col-md-2 control-label"> Amount </label>
+                                        <div class="col-md-5">
+                                            <input onkeyup="ValidateEntry()" class="form-control" type="text" name="Amount" id="Amount" autocomplete="off">
+                                            <a href="#" id="exceedMsg" style="display:none;color:red">Amount Exceed Available Balance </a>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Description</label>
+                                        <div class="col-md-3">
+                                            <textarea class="form-control" name="Description" id="Description"></textarea>
+                                        </div>
+                                        <label class="col-md-2 control-label">  </label>
+                                        <div class="col-md-5">
+                                            <input class="form-control" type="hidden" value="@ViewBag.ownSourceSummaryId" readonly="readonly" name="summaryId" id="summaryId">
+                                            <input class="form-control" type="hidden" value="@ViewBag.reference" readonly="readonly" name="reference" id="reference">
+                                        </div>
+                                    </div>
+
+                                   
+                                </fieldset>
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-12">
+                                            <div class="col-md-2">
+                                            </div>
+                                            <div class="col-md-10">
+                                                <a href='@Url.Action("approvedownsource", "OwnSources")' style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                                &nbsp; &nbsp; &nbsp; &nbsp; &nbsp;
+                                                <button class="btn btn-info" id="savebtn" type="button" style="float: left">
+                                                    <i class="fa fa-save"></i>
+                                                    Save
+                                                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                </button>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+@section pagespecific {
+    <script type="text/javascript">
+
+        function getUrlVars() {
+            var vars = {};
+            var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function (m, key, value) {
+                vars[key] = value;
+            });
+            return vars;
+        }
+
+        
+        $(document).ready(function () {
+            debugger;
+
+            $('[data-toggle="tooltip"]').tooltip();
+
+
+            var fundsourceId = 4;
+            var url = "GetFundSourceType/?FundSourceId=" + fundsourceId;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#fundingType").empty();
+                    $("#fundingType").append(response);
+                }
+            })
+        });
+
+        $("#expenditureClass").change(function () {
+            debugger
+            var fundsourceId = $(this).val();
+
+
+
+            var url = "GetFundSourceType/?FundSourceId=" + fundsourceId;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#fundingType").empty();
+                    $("#fundingType").append(response);
+
+
+                }
+            });
+
+
+        });
+
+        function ValidateEntry() {
+            debugger;
+            var amount = parseFloat($("#Amount").val());
+            var total = parseFloat($("#totalAmount").val());
+            if (amount > total) {
+                $("#Amount").css({ 'color': 'red' });
+                $("#savebtn").attr("disabled", true);
+                $("#exceedMsg").show();
+            }
+            else {
+                $("#Amount").css({ 'color': 'black' });
+                $("#savebtn").attr("disabled", false);
+                $("#exceedMsg").hide();
+            }
+        };
+
+
+
+
+        $("#fundingType").change(function () {
+
+            debugger
+            var fundtype = $(this).val();
+
+            var url = "GetFundBudgetClass/?fundtype=" + fundtype;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#budgetClass").empty();
+                    $("#budgetClass").append(response);
+                }
+            });
+
+
+        });
+
+
+
+
+        $("#budgetClass").change(function () {
+            debugger;
+            var budgetClass = $(this).val();
+            var url = "GetReference/?budgetClass=" + budgetClass;
+
+            $("#FundingRefNo").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (referenceNo) {
+                        return {
+                            referenceNo: referenceNo
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.references }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        $("#FundingRefNo").change(function () {
+
+            var fundReferenceNo = $(this).val();
+            // var budgetclass = $(this).val();
+            var url = "GetFundComponent/?fundReferenceNo=" + fundReferenceNo;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#Component").empty();
+                    $("#Component").append(response);
+                }
+            });
+
+
+        });
+
+
+        $("#Component").change(function () {
+
+            debugger;
+            var fundReferenceNo = $("#FundingRefNo").val();
+            var component = $(this).val();
+            var url = "GetComponentAmount/?fundReferenceNo=" + fundReferenceNo + "&&component=" + component;
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    if (response[0] == "Success") {
+                        //$(".widget-body #ComponentName").val(response[1]);
+                        //$(".widget-body #budgetClass").val(response[2]);
+                        $(".widget-body #operationalAmount").val(response[1]);
+                    }
+                }
+            });
+
+        });
+
+
+        $("#saveLoader").toggle(false);
+        $("#savebtn").click(function () {
+            debugger;
+            var subbudgetClass = $("#expenditureClass option:selected").text();
+            var transferType = "Own Source";
+            var category = "Bank";
+            var data = {
+                "BankAccountFrom": $("#bankAccount").val(),
+                "BankAccountTo": $("#bankAccountTo").val(),
+                "TotalBaseAmount": $("#totalAmount").val(),
+                "FundType": $("#fundSource").val(),
+                "SubBudgetClassTo": $("#SubBudgetClass").val(),
+                "TransferDescription": $("#Description").val(),
+                "TransferType": transferType,
+                "TransferCategory":category,
+                "BaseAmount": $("#Amount").val(),
+                "JournalTypeId": $("#summaryId").val(),
+                "TransferRefNum": $("#reference").val()
+            }
+            console.log(data);
+            var url = '@Url.Action("CreateTransfer", "OwnSources")';
+            var urlList = '@Url.Action("approvedownsource", "OwnSources")';
+            $("#savebtn").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#savebtn").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Transfer Saved Successfully!", { icon: "success" })
+                                            .then((value) => {
+                                                window.location.href = urlList;
+                                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#savebtn").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+
+
+        });
+
+
+
+    </script>
+}

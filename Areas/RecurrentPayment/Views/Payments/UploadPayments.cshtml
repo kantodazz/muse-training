@@ -1,0 +1,139 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.UploadPaymentsVM
+
+@{
+    ViewBag.Title = "Upload Payments";
+}s
+
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">Upload Payments</div>
+        <div class="panel-body">
+
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "paymentForm" }))
+            {
+                @Html.AntiForgeryToken()
+                <div class="form-horizontal">
+                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            Batch No
+                            @Html.DropDownListFor(model => model.PaymentBatchId, Model.PaymentBatches, "Select Payment Batch", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.PaymentBatchId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            Department
+                            @Html.DropDownListFor(model => model.DepartmentId, new SelectList(""), "Select Department", new { @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                            @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding:12px">
+                        <div class="col-md-4">
+                            <button type="button" class="btn btn-flat btn-default" onclick="uploadPayments()">
+                                <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                Upload
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            }
+
+        </div>
+
+        <!-- Start of div loader-->
+        <div id="divLoader" style="text-align: center; display: none">
+            <img src="~/Media/Images/ajax_loader.gif" />
+        </div>
+        <!-- End of div loader-->
+
+    </div>
+</div>
+
+@section Scripts{
+
+    <script>
+
+        $("#PaymentBatchId").change(function () {
+
+            var id = $(this).val();
+
+            var url = "GetDeptsPerPaymentBatch/" + id;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#DepartmentId").empty();
+                    $("#DepartmentId").append(response);
+                }
+            })
+        });
+
+        var uploadPayments = function () {
+
+            if (window.FormData !== undefined) {
+
+                if (!$("#paymentForm").valid()) {
+                    return false;
+                }
+
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("PaymentBatchId", $("#PaymentBatchId").val());
+                    data.append("DepartmentId", $("#DepartmentId").val());
+                    data.append("FileName", file[0]);
+                }
+
+                var url = '@Url.Action("UploadPayments", "Payments")';
+
+                $("#divLoader").show();
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (data, status, jqXHR) {
+                        if (data.response == "Success") {
+                            alert("Successfully uploaded!");
+                            $("#divLoader").hide();
+                            location.reload();
+                        } else if (data.response == "InvalidFormat") {
+                            alert("Invalid file format, file format should be MS Excel!");
+                            $("#divLoader").hide();
+                        } else if (data.response == "InvalidSchema") {
+                            alert(data.errMsg);
+                            $("#divLoader").hide();
+                        }
+                        else {
+                            alert("Unknown error, contact system admin!");
+                            $("#divLoader").hide();
+                        };
+                    },
+                    error: function (err) {
+                        alert(err.statusText)
+                        $("#divLoader").hide();
+                    }
+                });
+            };
+        };
+
+    </script>
+}
+

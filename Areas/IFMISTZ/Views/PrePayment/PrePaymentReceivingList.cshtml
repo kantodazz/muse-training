@@ -1,0 +1,300 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PrePaymentVM>
+@{
+    ViewBag.Title = "Pending Prepayments  Receiving List";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <br/>
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div class="row">
+
+                                <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                    <div class="input-group">
+                                        <a href="@Url.Action("ReceivingItems", "PrePayment")" class="btn btn-info" style="width:120px;border-radius:1px;">
+                                            <i class="fa fa-plus"></i>Add New
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_prepayment">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%"></th>
+                                        <th style="text-align:left;">Receiving #</th>
+                                        <th style="text-align:left">PrepaymentNo</th>
+                                        <th style="text-align:right">Receiving Amount</th>
+                                        <th style="text-align:right">Remaining Amount</th>
+                                        <th style="text-align:left">Currency</th>
+                                        <th style="text-align:center">Status</th>
+                                        <th style="text-align:center">Action</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @{var i = 0;}
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                    <tr>
+                                        <td style="text-align:right">
+                                            @i
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.ReceivingNumber)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.PrePaymentNo)
+                                        </td>
+                                        <td style="text-align:right">
+
+                                            @Html.DisplayFor(modelItem => item.ReceivedAmount)
+
+                                        </td>
+                                        <td style="text-align:right">
+
+                                            @Html.DisplayFor(modelItem => item.Balance)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.OperationalCurrency)
+                                        </td>
+                                        <td style="text-align:center">
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+                                        <td style="text-align:left">
+
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a href="@Url.Action("PreviewReceiving", "PrePayment",new {id=item.ReceivingSummaryId})" class="btn-xs edit">
+                                                            <i class="fa fa-search-minus"></i>  Preview
+                                                        </a>
+                                                    </li>
+                                                    <li style="text-align:left">
+                                                        <a href="@Url.Action("AttachmentEntry", "PaymentVoucherAttachments",new {groupId=item.ReceivingSummaryId,sourceModule="Prepayment" })" class="btn-xs edit">
+                                                            <i class="fa fa-edit"></i>  Attachments
+                                                        </a>
+                                                    </li>
+                                                    <li>
+                                                        <a href="#" onclick="confirmDialog(@item.ReceivingSummaryId)"> <i class="fa fa-edit"></i> Confirm</a>
+                                                    <li>
+
+                                                    <li>
+                                                        <a href="#" onclick="cancelDialog(@item.ReceivingSummaryId)"> <i class="fa fa-edit"></i> Cancel</a>
+                                                    <li>
+
+                                                </ul>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+
+                                        }
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<div class="modal fade" id="PrepaymentRejection">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h5 align="center">Rejected Receiving Prepayment: <span id="PrepaymentNo"></span></h5>
+            </div>
+
+            <div class="modal-body form-horizontal">
+
+                <div class="form-group">
+                    <div class="col-md-7">
+                        <span id="Remarks"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+           /// $(document).ready(function () {
+                var dt_prepayment = $('#dt_prepayment').dataTable();
+
+
+                $("#dt_prepayment .dt-toolbar").remove();
+
+        $(".rejected_prepayment").on('click', function () {
+            alert(0);
+                    var reason = $(this).data('reason');
+                      var pno = $(this).data('pno');
+                      console.log('reason' + reason);
+                      console.log('pno' + pno);
+
+                    $("#prepayment_number").text(pno);
+                    $("#reason").text(reason);
+        });
+
+        function rejectedDialog(i) {
+            $("#Remarks").text(data[i]["ApprovalStatus"]);
+            $("#PrepaymentNo").text(data[i]["PrePaymentNo"]);
+            $('#PrepaymentRejection').modal('show');
+        }
+
+        function confirmDialog(id) {
+            swal({
+                title: 'Prepayment Receiving Confirmation ?',
+                text: "Do you what to confirm this receiving",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmPrepayment(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmPrepayment(id) {
+            var url = '@Url.Action("ConfirmReceiving", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Confirming Prepayment", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function cancelDialog(id) {
+            swal({
+                title: 'Prepayment Receiving Cancellation',
+                text: "Do you what to cancel Receiving ,This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+               if (isConfirm) {
+                    cancelPrepayment(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelPrepayment(id) {
+            var url = '@Url.Action("CancelReceiving", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                       swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Cancelling Receiving Prepayment", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+           ///});
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}
+
+
+
+

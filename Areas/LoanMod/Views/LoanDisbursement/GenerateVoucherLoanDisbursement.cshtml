@@ -1,0 +1,218 @@
+﻿@{
+    ViewBag.Title = "Generate Voucher";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<link href="~/Content/css/loan-authorization.css" rel="stylesheet" />
+<style>
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <button class="btn btn-info" id="generate" onclick="generateVoucher()">
+                                        <i class="fa fa-file-text-o"></i> Generate
+                                    </button>
+                                </div>
+                                <div class="col-md-1"></div>
+                                <div class="col-md-5">
+                                    <div id="infoPanel">
+                                        <div class="info-box"><strong id="selectedItems">No Item(s) Selected</strong></div>
+                                    </div>
+                                </div>
+                                <div class="col-md-1"></div>
+                                    <div class="col-md-3">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search searchIcon"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                        </div>
+                                    </div>
+                                </div>
+                            <table id="dt_Loan_listing" 
+                                   class="table table-bordered table-condensed table-amount">                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Application No</th>
+                                        <th>Applicant Name</th>
+                                        <th>Approved Amount</th>
+                                        <th>Disbursed Amount</th>
+                                        <th>Product Type</th>
+                                        <th>OverAll Status</th>
+                                        <th>Created At</th>
+                                        <th style="width:20px"></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+        var data = []
+        function loadData() {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetLoanApplications2", "LoanDisbursement")',
+                data: {
+                    status1: 'Submitted in Loan Disbursement',
+                    status2: '',
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_Loan_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_Loan_listing.fnAddData([i + 1,
+                         data[i].a.ApplicationNo,
+                         data[i].b.CustomerName,
+                         toLabel(data[i].a.LoanApprovedAmount||0),
+                         toLabel(data[i].a.DisbursedAmount||0),
+                         data[i].a.RepaymentSource,
+                         data[i].a.OverAllStatus,
+                         data[i].a.FCreatedAt,
+                         '<input  type="checkbox" id="row-' + i + '" onchange="rowChecked(' + i + ')"/>'
+                        ]);
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        loadData();
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleGenerateButton();
+        }
+
+        function checkAll() {
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    checkedRows.push(i);
+                    $("#row-" + i).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    $("#row-" + i).prop('checked', false);
+                }
+            }
+            toggleGenerateButton();
+        }
+
+        $("#generate").attr('disabled', true);
+
+        function toggleGenerateButton() {
+            var TotalAmount = 0;
+            if (checkedRows.length > 0) {
+                var data = dt_Loan_listing.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                    TotalAmount = TotalAmount + toNumber(row[3]);
+                });
+                $("#generate").attr('disabled', false);
+                $("#selectedItems").text(checkedRows.length + " Item(s) Selected ~ Total: " + toLabel(TotalAmount));
+            } else {
+                $("#generate").attr('disabled', true);
+                $("#selectedItems").text("No Item(s) Selected");
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        function generateVoucher() {
+            swal({
+                text: "Generate Selected Item(s)?",
+                buttons: ["NO", "YES"],
+            }).then((willGenerate) => {
+                if (willGenerate) {
+                    postGeneratedVoucher();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postGeneratedVoucher() {
+            var Ids = []
+            checkedRows.forEach(index=> {
+                Ids.push(data[index].a.LoanApplicationId);
+            })
+
+            var url = '@Url.Action("GenerateVoucher", "LoanDisbursement")';
+            $.ajax({
+                url: url,
+                data: {Ids},
+                type: 'POST',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                   // $("#saveForm").prop('disabled', true);
+                    //$("#saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((m) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error)
+                }
+            });
+        }
+
+        function toLabel(number) {
+            return number.toLocaleString(undefined, {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            })
+        }
+
+        function toNumber(number) {
+            return parseFloat(number.toString().split(",").join(""))
+        }
+    </script>
+}

@@ -1,0 +1,412 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.BudgetDetail
+@{
+    ViewBag.Title = "New Budget Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .searchContainer {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .searchIcon {
+        padding: 0.5rem;
+    }
+
+    .searchBox {
+        border: 0;
+        /*padding: 0.5rem 0.5rem 0.5rem 0;*/
+        padding: 8px;
+        flex: 1;
+    }
+
+    .searchButton {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        /*padding: 0.5rem;*/
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .action-btn {
+        width: 100px;
+        /*background-color:#2196F3;*/
+        color: white;
+    }
+
+    .action-btn2 {
+        border-radius: 10px;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Add New Budget Line</h2>
+                    </header>
+                    <div>
+                        @using (Html.BeginForm())
+                        {
+                            @Html.AntiForgeryToken()
+
+                            <div class="widget-body " style="padding-top:10px">
+                                @if (ViewBag.Error != null)
+                                {
+                                    <div class="well form-horizontal">
+                                        <div class="form-group">
+                                            <h3 style="color:red">@ViewBag.Error</h3>
+                                        </div>
+                                    </div>
+                                }
+
+                                <table class="table table-striped">
+                                    <tr>
+                                        <td colspan="1">
+
+                                            <fieldset>
+                                                <div class="well form-horizontal">
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4">Budget Ceiling</label>
+                                                        <div class="col-md-8">
+                                                            <select id="budgetSummaryId" name="budgetSummaryId" class="form-control" required>
+                                                                <option value="" selected="selected">Select Budget Ceiling</option>
+                                                                @foreach (var ceiling in ViewBag.budgetCeilings)
+                                                                {
+                                                                    <option value='@ceiling.BudgetSummaryId'>
+                                                                        @ceiling.BudgetJournalCodeDesc - @ceiling.SubBudgetClass - @ceiling.FundingSource
+                                                                        - @string.Format("{0:#,0.00}", ceiling.BudgetBalance)
+                                                                    </option>
+                                                                }
+                                                            </select>
+
+
+                                                        </div>
+                                                    </div>
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4">Apply Date</label>
+                                                        <div class="col-md-8">
+                                                            <div class="flatpickr date-group">
+                                                                <input type="text" placeholder="Select Date.."
+                                                                       data-input
+                                                                       style="width:200px;padding-left:10px;border:none;height:31px"
+                                                                       autocomplete="off" id="ApplyDate" name="ApplyDate" />
+                                                                <input type="text" required
+                                                                       style="height:0px;width:0px;border-color:rgba(251, 251, 251,0)"
+                                                                       id="ApplyDate_tween" />
+                                                                <a class="input-group-addon" title="open" data-toggle href="#"
+                                                                   style="float:right;height:32px;padding:5px;width:40px">
+                                                                    <i class="fa fa-calendar"></i>
+                                                                </a>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4">Amount</label>
+                                                        <div class="col-md-6">                                                            
+                                                            @Html.EditorFor(model => model.OperationalAmount, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })                                                            
+                                                            @Html.ValidationMessageFor(model => model.OperationalAmount, "", new { @class = "text-danger" })
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </td>
+                                        <td colspan="1">
+
+                                            <fieldset>
+                                                <div class="well form-horizontal">
+
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4">
+                                                            GL Account
+                                                        </label>
+                                                        <div class="col-md-6">
+                                                            <div class="input-group">
+                                                                <span class="input-group-addon" onclick="SearchGLaccount()"><i class="fa fa-search"></i></span>
+                                                                @Html.EditorFor(model => model.GlAccount, new { htmlAttributes = new { @class = "form-control", @required = "required", @readonly = "readonly", @placeholder = "No Account Selected", @onclick = "SearchGLaccount()" } })
+                                                                @Html.ValidationMessageFor(model => model.GlAccount, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div class="form-group">
+                                                        <label class="control-label col-md-4">GL Account Description</label>
+                                                        <div class="col-md-6">
+                                                            @Html.EditorFor(model => model.GlAccountDesc, null, new { htmlAttributes = new { @class = "form-control", @required = "required", @readonly = "readonly" } })
+                                                            @Html.ValidationMessageFor(model => model.GlAccountDesc, "", new { @class = "text-danger" })
+
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </fieldset>
+                                        </td>
+                                    </tr>
+                                </table>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div clss="col-md-4">
+
+                                        </div>
+                                        <div class="col-md-6">
+                                            <button type="button" class="btn btn-info" id="back" style="float:left; margin-right:5px">
+                                                <i class="glyphicon glyphicon-arrow-left"></i>@Html.ActionLink("Back", "index", "budgetdetails", new { area = "ifmistz" }, null)
+                                            </button>
+                                            <button type="submit" class="btn btn-info" id="form_submision" style="float:left">
+                                                <i class="fa fa-save"></i>
+                                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        }
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- Search Glaccounts ----------------->
+<div class="modal fade" id="GlaccountModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search GLAccount</h3>
+            </div>
+            <div class="modal-body">
+
+                <table class="table" id="dt_search_glaccount">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>GfsCode</th>
+                            <th>GLAccount</th>
+                            <th>Description</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary btn-150" data-dismiss="modal">
+                    Dismiss
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--- HIDDEN SECTION -->
+
+@section pagespecific {
+
+    <script type="text/javascript">
+        $('#OperationalAmount').autoNumeric('init');
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        var sbc;
+        var costctr;
+        var activty;
+        var theUrl = "@ViewBag.Error";
+
+
+        $(document).ready(function () {
+            $("#Book").attr('value', 'BUDGET');
+
+            $("#form_submision").click(function () {
+                if ($("#GlAccount").val() == "") {
+
+                    swal("GLAccount is not selected")
+                    return
+                }
+            });
+
+
+        });
+        $(function () {
+            $('#ApplyDate').val(new Date().toDateInputValue());
+
+        });
+
+
+        var dt_search_glaccount = $('#dt_search_glaccount').dataTable({
+            "autoWidth": true,
+            "searching": true,
+            "bPaginate": false,
+            "info": true,
+        });
+        function validateAccount() {
+            var a = document.getElementById("GlAccount").value;
+            if (a == "" || a == null) {
+                swal("Please Select GLAccount!");
+                return;
+            }
+        }
+        function resetform() {
+            document.getElementById("JournalType").value = "";
+            document.getElementById("ApplyDate").value = "";
+            document.getElementById("SubBudgetClass").value = "";
+            document.getElementById("OperationalAmount").value = "";
+            document.getElementById("GlAccount").value = "";
+        }
+
+        function isNumberKey(evt) {
+            var charCode = (evt.which) ? evt.which : event.keyCode
+            if (charCode > 31 && (charCode < 48 || charCode > 57))
+                return false;
+
+            return true;
+        }
+
+
+        $("#fundSource").change(function () {
+
+            debugger
+            var fundsourceId = $(this).val();
+
+            var url = "GetFundSourceType/?FundSourceId=" + fundsourceId;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#fundingType").empty();
+                    $("#fundingType").append(response);
+
+
+                }
+            });
+
+
+        });
+
+
+        function getglAccount(budgetSummaryId) {
+
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetBudgetGl", "BudgetDetails")' + "/?budgetSummaryId=" + budgetSummaryId + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    var data = response;
+                    dt_search_glaccount.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_search_glaccount.fnAddData([i,
+                           data[i]["DrGfsCode"],
+                           data[i]["DrCoa"].split("|").join("-"),
+                           data[i]["DrCoaDesc"],
+
+                           '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+
+                        ]);
+                    }
+                }
+            });
+        }
+
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+        function SearchGLaccount() {
+            var budgetSummaryId = $("#budgetSummaryId").val();
+            console.log(budgetSummaryId);
+            getglAccount(budgetSummaryId);
+
+            $('#GlaccountModal').modal('show');
+        }
+
+        function payeeClicked(rowId) {
+            var data = dt_search_glaccount.DataTable().rows().data();
+            var row = data.rows(rowId).data()[0];
+            console.log(row[2]);
+
+            $("#GlAccount").attr('value', row[2].split("-").join("|"));
+            $("#GlAccountDesc").attr('value', row[3]);
+            //dt_basic.fnAddData([row["DrGfsCode"], row["DrCoa"], row["DrCoaDesc"]]);
+            $("#GlaccountModal").modal("hide");
+        }
+
+        $("#OperationalAmount1").on("keyup input paste cut", function () {
+            $("#OperationalAmount").val(this.value.split(",").join(""))
+            $("#OperationalAmount1").val(inputThousandSeparator(this.value))
+        })
+
+        var OldVal = 0
+        function inputThousandSeparator(NewVal) {
+            if (NewVal) {
+                try {
+                    NewVal = parseFloat(NewVal.split(",").join(""))
+                    if (typeof NewVal == 'number'
+                        && !Number.isNaN(NewVal)) {
+                        OldVal = NewVal;
+                        return NewVal.toLocaleString()
+                    } else {
+                        return OldVal
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            }
+        }
+        $("form").submit(function () {
+            $("#saveLoader").toggle(true);
+            $('#form_submision').attr("disabled", true);
+        });
+
+        $("#saveLoader").toggle(false);
+        $("#form_submision").prop('disabled', false);
+
+        $("#ApplyDate").on("keyup search input paste cut", function () {
+            $("#ApplyDate_tween").val(this.value);
+        });
+    </script>
+}

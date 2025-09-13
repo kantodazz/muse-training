@@ -1,0 +1,106 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.CeilingSummaryVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitCeiling(this)" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.InstitutionId)
+    @Html.HiddenFor(model => model.FundCategoryId)
+    @Html.HiddenFor(model => model.Currency)
+    <div class="row">
+
+        <div class="form-horizontal">
+            <div class="form-group">
+                @Html.LabelFor(model => model.CeilingDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+
+                <div class="col-md-10">
+                    @Html.EditorFor(model => model.CeilingDescription, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", rows = "3" } })
+                    @Html.ValidationMessageFor(model => model.CeilingDescription, "", new { @class = "text-danger" })
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+
+        <table id="inventories" class="table table-bordered table-hover table-condensed col-md-10" style="margin-left:10px">
+            <thead>
+                <tr>
+                    <th style="text-align:center;width:4%">#</th>
+                    <th style="text-align:left;width:70%">Cost Center</th>
+                    <th style="text-align:center;width:26%">Amount</th>
+
+                </tr>
+            </thead>
+
+            <tbody>
+                @for (var i = 0; i < Model.CostCentersList.Count(); i++)
+                {
+                    var j = i + 1;
+                    <tr>
+                        <td style="text-align:center">@j</td>
+                        <td>
+                            @Html.HiddenFor(modelItem => Model.CostCentersList[i].InstitutionSubLevelId)
+                            @Html.HiddenFor(modelItem => Model.CostCentersList[i].CostCenter)
+                            @Html.HiddenFor(modelItem => Model.CostCentersList[i].CostCenterName)
+                            @Html.DisplayFor(modelItem => Model.CostCentersList[i].CostCenter)-@Html.DisplayFor(modelItem => Model.CostCentersList[i].CostCenterName)
+                        </td>
+
+                        <td align="center">
+                            @Html.EditorFor(modelItem => Model.CostCentersList[i].Amount, new { htmlAttributes = new { @class = "form-control amount", style = "width:100px;height:27px", min = 0, @onkeyup = "enteredQuantity(this)" } })
+                        </td>
+
+
+
+                    </tr>
+                }
+                <tr>
+                    <td colspan="2" align="right">
+                        <span id="total_amount"></span>
+                    </td>
+                    <td align="center">
+                        <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+                            <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                        </button>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+}
+<script>
+
+     function SubmitCeiling(formData) {
+               $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveCeiling", "ContractCeiling")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                    $("#save_button").prop('disabled', false);
+                    if (response == "Success") {
+                        swal("Data saved successfully", { icon: "success" })
+                            .then((value) => {
+                       var url = '@Url.Action("PendingCeiling", "ContractCeiling")';
+                               window.location.replace(url);
+                               });
+                    }
+                    else {
+                        swal(response);
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+    }
+    $(".amount").autoNumeric('init');
+</script>
+
+
+

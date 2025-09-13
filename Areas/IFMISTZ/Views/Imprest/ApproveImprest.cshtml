@@ -1,0 +1,246 @@
+﻿@{
+    ViewBag.Title = "Approve Imprest";
+}
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_imprest_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Imprest No</th>
+                                        <th>Payee Code</th>
+                                        <th>Payee Name</th>
+                                        <th>Impres Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Voucher Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@{ Html.RenderPartial("_VoucherListDialogs"); }
+@section pagespecific{
+
+    <script>
+        var dt_imprest_listing = $('#dt_imprest_listing').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_imprest_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_imprest_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_payee_details = $('#dt_payee_details').dataTable({
+            'sDom': 't',
+            "autoWidth": false,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "columns": [
+                { title: "Payee Name" },
+                { title: "Payee code" },
+                { title: "Bank Name" },
+                { title: "Bank Account No" },
+                { title: "Address" }]
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+        var dt_imprest_item = $('#dt_imprest_item').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": []
+        });
+
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetImprestApproval", "Imprest")/?overallStatus=Examined',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_imprest_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_imprest_listing.fnAddData([i + 1,
+                       data[i]["ImprestNo"],
+                       data[i]["PayeeCode"],
+                       data[i]["PayeeName"],
+                       data[i]["ImprestTypeDesc"],
+                       data[i]["OperationalAmount"].toLocaleString(),
+                       data[i]["OverallStatus"],
+                        data[i]["VoucherStatus"],
+                         '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                              <li><a href="#" onclick="viewAttachment(' + i + ')">View Attachment</a></li>\
+                             <li><a href="#" onclick="accept(' + i + ')">Approve</a></li>\
+                              <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                        </ul>\
+                  </div>\
+                      <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function reject(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(data[i]["ImprestId"], remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, remark) {
+            var url = '@Url.Action("RejectImprestByApprover", "Imprest")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "ImprestId": Id, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: 'success' }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function accept(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Approve this Imprest?',
+                text: "This Process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmAcceptance(data[i]["ImprestId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmAcceptance(i) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("ApproveImprest", "Imprest")',
+                data: { "ImprestId": i },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: 'success' }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function viewAttachment(i) {
+            window.location.href =
+                '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["ImprestId"] + '&&sourceModule=' + "Imprest";
+        }
+    </script>
+}

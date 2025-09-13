@@ -1,0 +1,183 @@
+﻿@model IEnumerable<IFMIS.Areas.Coadmis.Models.CoadmisSystemDocument>
+@{
+    ViewBag.Title = "System Document List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<!-- MAIN CONTENT -->
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px;">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <!-- widget content -->
+                    <div class="widget-body">
+                        @Html.AntiForgeryToken()
+                        <div class="row">
+                            <div class="col-md-6">
+                               @* <a href="@Url.Action("CreateSystemDocument", "CoadmisSystemDocument")" style="margin-left:15px" class="btn btninfo">
+                                    <i class="fa fa-lg fa-fw fa-plus"></i>Add New
+                                </a>*@
+
+                                <a class="btn btn-info" style="margin-left:15px" href='@Url.Action("CreateSystemDocument", "CoadmisSystemDocument")'>
+                                    <i class="glyphicon glyphicon-plus"></i> Add New
+                                </a>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="search-box">
+                                </div>
+                            </div>
+                        </div>
+
+
+                        <table id="datatable" class="table table-bordered table-hover table-condensed">
+                            <thead style="border-bottom:1px solid white;">
+                                <tr>
+                                    <th style="width:10px">#</th>
+                                    <th> Document Name</th>
+                                    <th style="width:30px"> Status</th>
+                                    <th style="width:30px">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @{
+                                    int i = 0;
+                                }
+                                @if (ViewBag.DocumentList != null)
+                                {
+                                    foreach (var item in ViewBag.DocumentList)
+                                    {
+                                        i++;
+                                <tr>
+                                    <td>@i</td>
+                                    <td>@item.DocumentName</td>
+                                    @if (item.IsActive)
+                                    {
+                                        <td>Active</td>
+                                    }
+                                    else
+                                    {
+                                        <td>Inactive</td>
+                                    }
+                                    <td>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                <span class="caret"></span>
+                                                <span class="sr-only">Toggle Dropdown</span>
+                                            </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <a href="@Url.Action("EditSystemDocument", "CoadmisSystemDocument",new {id=item.SystemDocumentId })" class="btn-xs edit">
+                                                        <i class="fa fa-edit"></i>  Edit
+                                                    </a>
+                                                </li>
+
+                                                <li><a href="#" data-toggle="modal" class="sysDocCancellation   delete" data-id=@item.SystemDocumentId data-docname='@item.DocumentName'><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                            </ul>
+                                        </div>
+                                    </td>
+                                </tr>
+                                    }
+
+                                }
+                            </tbody>
+                        </table>
+
+                    </div>
+                    <!-- end widget content -->
+                </div>
+                <!-- end widget div -->
+                <!-- end widget -->
+            </article>
+        </div>
+    </section>
+
+</div>
+
+<!-- PAGE RELATED PLUGIN(S) -->
+
+@section Scripts {
+    <script>
+
+        var datatable = $("#datatable").dataTable();
+        $("#datatable_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#datatable").DataTable().search(this.value).draw();
+            $("#datatable_wrapper .dt-toolbar").remove();
+        });
+
+          $(".sysDocCancellation").on('click', function () {
+            var id = $(this).data('id');
+            var docname = $(this).data('docname');
+            swal({
+                title: 'Cancellation',
+                text: "Do you what to Cancel Document   " + docname + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                var url = '@Url.Action("cancelSystemDocument", "CoadmisSystemDocument")';
+                    $.ajax(
+                   {
+                    type: "POST",
+                    url: url,
+                    data: { id: id, "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val() },
+                    success: function (response) {
+                        if (response == "Success") {
+                        swal("Document Cancelled successfully!", { icon: "success" })
+                                    .then((value) => {
+                                        location.reload();
+                                    });
+                        }
+                        else {
+                            swal("Failed to Cancel Document" + response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+                });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        });
+    </script>
+}

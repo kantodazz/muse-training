@@ -1,0 +1,333 @@
+﻿@{
+    ViewBag.Title = "Pending Journal Adjustment/Transaction Reversal";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("ReverseTransaction", "TransactionAdjustment")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_trxsummary" class="table table-bordered table-condensed table-amount"></table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_trxsummary = $('#dt_trxsummary').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "targets": [1],
+                "visible": false
+            }],
+            "columns": [
+           {
+               "className": 'details-control',
+               "orderable": false,
+               "data": null,
+               "defaultContent": ''
+           },
+           { title: "TrxId" },
+           { title: "Category" },
+           { title: "Financial Year" },
+           { title: "Legal Number" },
+           { title: "Date" },
+           { title: "Amount" },
+           { title: "Reason" },
+           { title: "Desciption" },
+           { title: "Status" },
+           { title: "" }
+          ]
+        });
+
+        $("#dt_trxsummary_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_trxsummary.DataTable().search(this.value).draw();
+        });
+
+        function loadPaymentDetails() {
+            var url = '@Url.Action("GetTransactionAdjustmentSummary", "TransactionAdjustment")';
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_trxsummary.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_trxsummary.fnAddData([i + 1,
+                            data[i]["TrxAdjustmentSummaryId"],
+                            data[i]["TrxAdjustmentCategory"],
+                            data[i]["FinancialYear"],
+                            data[i]["LegalNumber"],
+                            data[i]["ApplyDateFormatted"],
+                            data[i]["OperationalAmount"].toLocaleString(),
+                            data[i]["AdjustmentReason"],
+                            data[i]["AdjustmentReasonDesc"],
+                            data[i]["RejectionReason"] ? data[i]["OverallStatus"] +"-" + data[i]["RejectionReason"] : data[i]["OverallStatus"],
+                              '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                              <li><a href="#" onclick="confirm(' + i + ')">Confirm</a></li>\
+                              <li><a href="#" onclick="cancel(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadPaymentDetails()
+
+    /**
+    * Show Confirm  Dialog
+    * param  {Int} i - Id of the selected Item
+    */
+        function confirm(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmAdjustmentSummary(
+                        data[i]["TrxAdjustmentSummaryId"],
+                        "Confirmed"
+                        );
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+         * Show Cancel  Dialog
+         * param  {Int} i - Id of the selected Item
+       */
+        function cancel(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmAdjustmentSummary(
+                        data[i]["TrxAdjustmentSummaryId"],
+                        "Cancelled"
+                        );
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmAdjustmentSummary(id,status) {
+            var url = '@Url.Action("ApproveTrxAdjustmentSummary", "TransactionAdjustment")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "TrxAdjustmentSummaryId": id, Status: status},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function initInnerTable(i) {
+            window["dt_view" + i] = $('#dt_view' + i)
+           .dataTable({
+               "sDom": 't',
+               columnDefs: [
+                   { width: 20, targets: 0 },
+                   { width: 700, targets: 1 }
+               ],
+               "columns": [
+                   { title: "#" },
+                   { title: "GlAccount" },
+                   { title: "FundingRefNo" },
+                   { title: "Type" },
+                   { title: "Amount" },
+               ]
+           });
+            $("#dt_view" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_trxsummary tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_trxsummary.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initInnerTable(row.data()[0]);
+                tr.addClass('shown');
+                getTrxDetails(row.data()[0], row.data()[1]);
+            }
+        });
+
+        function getTrxDetails(rowId, TrxId) {
+             var url = '@Url.Action("GetTransactionAdjustmentDetails", "TransactionAdjustment")';
+            $.ajax({
+                type: "get",
+                url: url + '/?TrxId=' + TrxId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        window["dt_view" + rowId]
+                            .fnAddData([i + 1,
+                            d[i]["GlAccount"].split("|").join("-"),
+                            d[i]["FundingRefNo"],
+                            d[i]["TransactionType"].split("|").join("-"),
+                            d[i]["OperationalAmount"].toLocaleString()
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

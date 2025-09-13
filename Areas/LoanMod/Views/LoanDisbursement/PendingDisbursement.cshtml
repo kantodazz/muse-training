@@ -1,0 +1,290 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.LoanBeneficiaryVm>
+
+@{
+    ViewBag.Title = "Loan Disbursement";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Loan No</th>
+                                        <th>Loan Receipient Code</th>
+                                        <th>Loan Receipient Name</th>
+                                        <th>Payee Name</th>
+                                        <th>Loan Code</th>
+                                        <th>Amount</th>
+                                        <th>Created At</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <center><img src="~/Media/Images/ajax_loader.gif" class="loadingImg" /></center>
+                                    @{
+                                        int i = 0;
+                                    }
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                        <tr>
+                                            <td>@i</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanNo)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanReceipientCode)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanReceipientName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.PayeeName)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.LoanTypeDesc)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.OperationalAmount)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.CreatedAt)</td>
+                                            <td>@Html.DisplayFor(modelItem => item.OverallStatus)</td>
+
+                                            <td style="text-align:center">
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+
+                                                        @if (item.OverallStatus.ToUpper() == "PENDING")
+                                                        {
+                                                            <li><a href="#" data-toggle="modal" data-id=@item.LoanBeneficiaryId data-loanno='@item.LoanNo' data-beneficiary='@item.PayeeName' class="loanConfirmation  btn-xs edit"><i class="fa fa-edit"></i> Disburse</a></li>
+
+                                                        }
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        // ============ INIT DATA TABLES START =====================
+        var dt_Loan_listing = $('#dt_Loan_listing').dataTable();
+
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+
+
+        // ********************** INIT DATA TABLES END **********************
+
+        $(".loanConfirmation").on('click', function () {
+            // alert('am heree');
+            var id = $(this).data('id');
+            var beneficiaryName = $(this).data('beneficiary');
+
+            swal({
+                title: 'Disbursement',
+                text: "Do you what to disburse payment for " + beneficiaryName + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("DisbursePayment", "LoanDisbursement")';
+                    $.ajax(
+                    {
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "Success") {
+
+                                swal("Payment Disbursed successfully!", { icon: "success" })
+                                          .then((value) => {
+                                              location.reload();
+                                          });
+
+                            }
+                            else {
+
+                                swal("Failed to confirm ,DbException" + response);
+                            }
+                        },
+                        error: function (xhr) {
+                            swal(error);
+                            $("#divLoader").hide();
+                        },
+
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+
+
+
+
+
+        //=================== CONFIRM START =========================
+
+        /**
+        * Show Confirm Confirmation Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmDialog(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Loan disbursement?',
+                text: "This process cannot be undone. Are you sure?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+
+                if (isConfirm) {
+                    confirmPendingLoan(data[i]["LoanId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmPendingLoan(LoanId) {
+            var url = '@Url.Action("ConfirmLoan", "Loan")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "LoanId": LoanId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+
+    </script>
+}

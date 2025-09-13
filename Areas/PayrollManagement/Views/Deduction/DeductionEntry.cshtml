@@ -1,0 +1,474 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+<div id="content" style="margin-top: 30px;">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false"
+                     data-widget-custombutton="false" data-widget-colorbutton="false"
+                     data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Deduction Entry</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <table style="margin-left: 25%">
+                                <tr>
+                                    <td class="form-label">
+                                        Employee
+                                        <i class="fa fa-times" style="color:white" id="Employee_1"></i>
+                                    </td>
+                                    <td>
+                                        <div class="name-input-container">
+                                            <input type="text" readonly id="Employee" placeholder="No Employee Selected" style="width:260px" />
+                                            <a class="search-btn" onclick="SearchEmployee()"
+                                               href="#" style="float:right">
+                                                <i class="fa fa-search search-icon"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        CheckNo
+                                        <i class="fa fa-times" style="color:white" id="CheckNo_1"></i>
+                                    </td>
+                                    <td>
+                                        <input id="CheckNo" disabled style="width:300px" type="text" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Deduction Code
+                                        <i class="fa fa-times" style="color:white" id="DeductionCode_1"></i>
+                                    </td>
+                                    <td>
+                                        <div style="width:300px">
+                                            @Html.DropDownList("DeductionCodeId", ViewBag.DeductionCodes as SelectList, "Select Deduction Code", new { @class = "form-control" })
+                                        </div>
+                                    </td>
+                                    @*<td>
+                                            <select style="width:300px" id="DeductionCode">
+                                                @foreach (var item in ViewBag.DeductionCodes)
+                                                {
+                                                    <option value="@item.DeductionCodeId">@item.DeductionCodeDescription</option>
+                                                }
+                                            </select>
+                                        </td>*@
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Loan Amount
+                                        <i class="fa fa-times" style="color:white" id="BalanceAmount_1"></i>
+                                    </td>
+                                    <td>
+                                        <amount-input id="BalanceAmount" style="width:300px" type="text" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Deduction Amount
+                                        <i class="fa fa-times" style="color:white" id="DeductionAmount_1"></i>
+                                    </td>
+                                    <td>
+                                        <amount-input id="DeductionAmount" style="width:300px" type="text" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Reason
+                                        <i class="fa fa-times" style="color:white" id="Reason_1"></i>
+                                    </td>
+                                    <td>
+                                        <textarea id="Reason" style="width:300px"></textarea>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="row" style="padding-bottom:10px;padding-left:500px">
+                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                            <i class="glyphicon glyphicon-arrow-left"></i>Back
+                        </a>
+                        <button class="btn btn-info" id="form_submision">
+                            <i class="fa fa-save"></i>Save
+                            <img src="~/Content/img/loading.gif" id="saveLoader" />
+                        </button>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!-----------Search Payee----------------->
+<div class="modal fade" id="payeeModal" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Search Employee</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6"></div>
+                    <div class="col-md-6">
+                        <div class="search-container " style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered table-responsive table-striped" id="dt_search_payee">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>PaymentId</th>
+                            <th>CheckNo</th>
+                            <th>FirstName</th>
+                            <th>Middle Name</th>
+                            <th>LastName</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="payeeModal1" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal"> &times; </a>
+                <h3 class="modal-title"> Search Employee </h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container " style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Search checknumber..." id="searchbox">
+                            <button type="submit" id="button1" class=" btn btn-block btn-primary">Search</button>
+                        </div>
+                    </div>
+                </div>
+                <table class="table table-bordered table-responsive table-striped" id="dt_search_payee">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>PaymentId</th>
+                            <th>CheckNo</th>
+                            <th>FirstName</th>
+                            <th>Middle Name</th>
+                            <th>LastName</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <script>
+
+    $("#saveLoader").toggle(false);
+        var isSubmitted = false
+
+        var dt_search_payee = $('#dt_search_payee').dataTable({
+            "aoColumnDefs": [{ "bVisible": false, "aTargets": [1] }],
+        });
+
+        $("#DeductionCodeId").on("change", function (){
+            debugger
+            if ($("#DeductionCodeId :selected").text()
+                .trim().toLowerCase().includes('contribution')) {
+                $("#_BalanceAmount").prop('disabled', true)
+                $("#_BalanceAmount").val(0);
+                $("#BalanceAmount").val(0);
+            } else {
+                $("#_BalanceAmount").prop('disabled', false)
+            }
+        });
+
+        $("#dt_search_payee_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_search_payee.fnClearTable();
+            } else {
+                searchPayeeTableUpdate(this.value);
+            }
+        });
+
+    function searchPayeeTableUpdate(search) {
+            var url = '@Url.Action("GetPayee", "Deduction")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response){
+                    data = response.data;
+                    dt_search_payee.fnClearTable();
+                    for (var i = 0; i < data.length; i++){
+                        dt_search_payee.fnAddData([i + 1,
+                           data[i]["EmployeeId"],
+                           data[i]["CheckNumber"],
+                           data[i]["FirstName"],
+                           data[i]["MiddleName"],
+                           data[i]["LastName"],
+                           '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var payeeId = null;
+        function payeeClicked(rowId){
+            var data = dt_search_payee.DataTable().rows().data();
+            var row = data[rowId];
+            payeeId = row[1];
+            $("#Employee").val(row[3] + " " + row[4] + " " + row[5]);
+            $("#CheckNo").val(row[2]);
+            $("#payeeModal").modal("hide");
+        }
+
+        $("#form_submision").click(function () {
+            if (voucherSummaryFormValidation()) {
+                try {
+                    var form_data = {
+                        "InitialBalance": $("#_BalanceAmount").val(),
+                        "DeductionAmount": $("#_DeductionAmount").val(),
+                        "DeductionCodeId": $("#DeductionCodeId").val(),
+                        "EmployeeId": payeeId,
+                        "Reason": $("#Reason").val()
+                    }
+
+                          var url = '@Url.Action("DeductionEntry", "Deduction")';
+                            var urlList = '@Url.Action("DeductionList", "Deduction")';
+                            $("#form_submision").prop('disabled', true);
+                            $("#saveLoader").toggle(true);
+                            if (!isSubmitted) {
+                                isSubmitted = true
+                                $.ajax({
+                                    type: "post",
+                                    url: url,
+                                    data: form_data,
+                                    contenttype: "application/json; charset=utf-8",
+                                    datatype: "json",
+                                    success: function (response){
+                                        isSubmitted = false
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        if (response == "Success") {
+                                            swal("Saved Successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    window.location.href = urlList;
+                                                });
+                                        } else if (response == "Initial balance should be greater"){
+                                            swal("Loan amount canot be less than deduction amount!", { icon: "info" })
+                                                .then((value) =>{
+                                                });
+                                        }
+                                        else if (response == "Deduction Exist"){
+                                            swal("Deduction Exist!", { icon: "info" })
+                                                .then((value) => {
+                                                });
+                                        }
+                                        else {
+
+                                            swal(response, { icon: "info" })
+                                                .then((value) => {
+                                                });
+                                        }
+                                    },
+                                    failure: function (error){
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        swal(error);
+                                    }
+                                });
+                            }
+                    } catch (e){
+                        swal("Error Saving. Please consult system administrator!");
+                    }
+                }
+        });
+
+        function SearchEmployee(){
+            $('#payeeModal').modal('show');
+        }
+
+        function voucherSummaryFormValidation() {
+            debugger
+            var dedcode = $("#DeductionCodeId :selected");
+            if ($("#DeductionCodeId :selected")
+              .text()
+              .trim()
+              .toLowerCase().includes('Contribution')){
+                $("#_BalanceAmount").val(0)
+                ("#BalanceAmount").val(0)
+            }
+            //else {
+            //    $("#_BalanceAmount").val('')
+            //    $("#BalanceAmount").val('')
+            //}
+
+            var isNotValid = validateInputsParameters([
+                "#Employee",
+                "#DeductionCodeId",
+                //"#BalanceAmount",
+                "#DeductionAmount",
+                "#Reason"
+            ]);
+
+
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val()) {
+                    return parameterList[i];
+                }
+            }
+
+            return null;
+        }
+
+        $('#button1').click(function () {
+            var search = $("#searchbox").val()
+
+            var url = '@Url.Action("GetPayee", "Deduction")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_search_payee.fnClearTable();
+                    for (var i = 0; i < data.length; i++){
+                        dt_search_payee.fnAddData([i + 1,
+                        data[i]["EmployeeId"],
+                        data[i]["CheckNumber"],
+                        data[i]["FirstName"],
+                        data[i]["MiddleName"],
+                        data[i]["LastName"],
+                        '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        });
+
+        //var payeeId = null;
+        //function payeeClicked(rowId) {
+        //    var data = dt_search_payee.DataTable().rows().data();
+        //    var row = data[rowId];
+        //    E = row[1];
+        //    $("#Employee").val(row[4] + " " + row[5] + " " + row[6]);
+        //    $("#CheckNo").val(row[2]);
+        //    $("#ForceNumber").val(row[3]);
+        //    $("#AccountNumber").val(row[7]);
+        //    $("#DepartmentName").val(row[8]);
+        //    $("#CompanyName").val(row[9]);
+        //    $("#JobCodeName").val(row[10]);
+        //    $("#JobCodeId").val(row[11]);
+        //    $("#EmployeeId").val(row[12]);
+        //    $("#payeeModal").modal("hide");
+        //};
+    </script>
+}

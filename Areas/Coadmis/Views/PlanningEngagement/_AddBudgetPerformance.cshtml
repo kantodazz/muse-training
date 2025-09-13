@@ -1,0 +1,130 @@
+﻿@model IFMIS.Areas.Coadmis.Models.AuditableAreaAssignmentVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "TrendAnalysis" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.HiddenFor(model => model.AuditableAreaMemberId)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FullName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.FullName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.FullName, "", new { @class = "text-danger" })
+            </div>
+
+            @Html.LabelFor(model => model.AuditableAreaName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.AuditableAreaName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Position, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.Position, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.Position, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.PaymentScalePerHrs, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.PaymentScalePerHrs, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.PaymentScalePerHrs, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.EstimateHour, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.EstimateHour, new { htmlAttributes = new { @class = "form-control", @onkeyup = "calculationBudget()" } })
+                @Html.ValidationMessageFor(model => model.EstimateHour, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.EstimateBudget, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.EstimateBudget, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.EstimateBudget, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        
+        
+
+    </div>
+}
+<script>
+
+    //$(function () {
+    //    debugger;
+    //    $(".EstimateBudget").autoNumeric("init");
+    //    $(".PaymentScalePerHrs").autoNumeric("init");
+    //});
+
+    $(document).ready(function () {
+        $(".EstimateBudget").autoNumeric("init");
+        $(".PaymentScalePerHrs").autoNumeric("init");
+    });
+    function calculationBudget() {
+        debugger;
+        var estimateHr = $("#EstimateHour").val();
+        var paymentPerHr = $("#PaymentScalePerHrs").val();
+        var estimateBudget = $("#EstimateBudget").val();
+
+        var result = estimateHr * paymentPerHr
+        document.getElementById('EstimateBudget').value = result;
+    }
+
+    $("#addEstimateCost").on('click', function () {
+        debugger;
+        var id = $("#AuditableAreaMemberId").val();
+        var estimateHour = $("#EstimateHour").val();
+        var estimateBudget = $("#EstimateBudget").val();
+        var paymentPerHr = $("#PaymentScalePerHrs").val();
+
+        if (estimateBudget == '' || estimateHour =='') {
+            swal("Please Fill the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("AuditableAreaMemberId", id);
+        formdata.append("EstimateHour", estimateHour);
+        formdata.append("EstimateBudget", estimateBudget);
+        formdata.append("PaymentScalePerHrs", paymentPerHr);
+       
+        
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdateBudgetPerformanceSummary", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                $("#addCommentsToTrend").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Budget Added Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Comments!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#addCommentsToTrend").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

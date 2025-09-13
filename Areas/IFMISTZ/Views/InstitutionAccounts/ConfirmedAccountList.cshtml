@@ -1,0 +1,484 @@
+﻿
+@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PendingInstitutionAccountVM>
+@{
+    ViewBag.Title = "Confirmed Institution Account List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <hr class="simple" />
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_instAccount_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>No</th>
+                                        <th>Account Number</th>
+                                        <th>Account Name</th>
+                                        <th>Account type</th>
+                                        <th>SubBudgetClass</th>
+                                        <th>Bank Name</th>
+                                        <th>Currency</th>
+                                        <th>Institution Code</th>
+                                        <th>Institution Name</th>
+                                        <th>OverallStatus</th>
+                                        <th style="width:50px">Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="InstitutionAccountId" id="InstitutionAccountId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="ApprovalForm()" id="approvalform">
+                        <i class="fa fa-times"></i>Approval
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="rejectcommentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="InstitutionAccountId" id="InstitutionAccountId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="rejectremarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="rejectremarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="rejectForm()" id="rejectform">
+                        <i class="fa fa-times"></i>Reject
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+@section pagespecific{
+
+    <script>
+        var dt_instAccount_listing = $('#dt_instAccount_listing').dataTable();
+        $("#dt_instAccount_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_instAccount_listing.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("getconfirmedAccountList", "InstitutionAccounts")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                debugger;
+                console.log(response);
+                data = response.data;
+                dt_instAccount_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_instAccount_listing.fnAddData([i + 1,
+                       data[i]["AccountNumber"],
+                       data[i]["AccountName"],
+                       data[i]["AccountType"],
+                       data[i]["SubBudgetClass"],
+                       data[i]["BankName"],
+                       data[i]["Currency"],
+                       data[i]["InstitutionCode"],
+                       data[i]["InstitutionName"],
+                       data[i]["OverallStatus"],
+                         '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="ViewDetails(' + data[i]["InstitutionAccountId"] + ')"> Details</a></li>\
+                                <li><a href="#" onclick="Reject(' + i + ')">Reject</a></li>\
+                                <li><a href="#" onclick="Approval(' + i + ')">Approval</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+                }
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        var AddAttachments = function (id) {
+            window.location = '@Url.Action("AddAttachments", "InstitutionAccounts")/' + id;
+        };
+
+        var ViewDetails = function (id) {
+            $("#divLoader").show();
+            window.location = '@Url.Action("Details", "InstitutionAccounts")/' + id;
+        };
+
+        function Cancel(i, id) {
+            if (i == 'x') i = id;
+            var id = data[i]["InstitutionAccountId"]
+            swal({
+                title: "Confirm Delete",
+                text: "Are you sure you want to delete this record ? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    ConfirmDelete(id);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function ConfirmDelete(id) {
+            //debugger
+            var url = '@Url.Action("AcccountRejection", "InstitutionAccounts")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Record Rejected Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+
+     // ======= Approval Start ========
+        function Approval(i) {
+          debugger
+            $("#InstitutionAccountId").text(data[i]["InstitutionAccountId"]);
+            document.getElementById("InstitutionAccountId").value = data[i]["InstitutionAccountId"];
+            $('#commentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function ApprovalForm() {
+           debugger
+            var institutionAccountId = $("#InstitutionAccountId").val();
+            var remarks = $("#remarks").val();
+            var attachment = $("#attachment").val();
+
+            if (institutionAccountId == '' || remarks == '') {
+                var url = '@Url.Action("AccountsList", "InstitutionAccounts")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (attachment != '') {
+
+                var file = document.querySelector("#attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+            postConfirm(institutionAccountId, remarks);
+        }
+
+        function postConfirm(institutionAccountId, remarks) {
+            debugger
+            //console.log(formData);
+            $(".loadingImg").show();
+            $("#approvalform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("AccountApproval", "InstitutionAccounts")';
+            $.ajax({
+                url: url,
+                data: { institutionAccountId: institutionAccountId, remarks: remarks },
+                type: 'POST',
+                //contentType: false,
+                //processData: false,
+                success: function (response) {
+                    $("#approvalform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#approvalform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#approvalform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        //=============== End Approval    ===============
+
+       //================ rejection Start ==============
+        function Reject(i) {
+          debugger
+            $("#InstitutionAccountId").text(data[i]["InstitutionAccountId"]);
+            document.getElementById("InstitutionAccountId").value = data[i]["InstitutionAccountId"];
+            $('#rejectcommentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function rejectForm() {
+           debugger
+            var institutionAccountId = $("#InstitutionAccountId").val();
+            var remarks = $("#rejectremarks").val();
+            var attachment = $("#attachment").val();
+
+            if (institutionAccountId == '' || remarks == '') {
+                var url = '@Url.Action("AccountsList", "InstitutionAccounts")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (attachment != '') {
+                var file = document.querySelector("#attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+
+            postRejection(institutionAccountId, remarks);
+        }
+
+        function postRejection(institutionAccountId, remarks) {
+            debugger
+            //console.log(formData);
+            $(".loadingImg").show();
+            $("#rejectform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("InstAcccountRejection", "InstitutionAccounts")';
+            $.ajax({
+                url: url,
+                data: { institutionAccountId: institutionAccountId, remarks: remarks },
+                type: 'POST',
+                //contentType: false,
+                //processData: false,
+                success: function (response) {
+                    $("#rejectform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Rejected Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#rejectform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#rejectform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        // =============== End Rejection ===============
+
+    </script>
+}

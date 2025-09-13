@@ -1,0 +1,129 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.AutoReconciliationLog>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Auto Reconciliation Logs List </h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body" style="padding-top:10px">
+                            <table id="dt_basic" class="table table-bordered table-hover table-condensed" width="100%">
+                                <thead style="white-space:nowrap">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Account Number</th>
+                                        <th>Created At</th>
+                                        <th>Ended At</th>
+                                        <th>Status</th>
+                                        <th width="45%">Status Description</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $(document).ready(function () {
+            var responsiveHelper_dt_basic = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $("#dt_basic").DataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                },
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetAutoReconciliationLogs", "Reconcilliation")',
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "AccountNumber" },
+                    {
+                        "mData": "StartTime",
+                        "bSortable": false,
+                        "render": function (startTime, type, row) {
+                            return startTime ? ToJavaScriptDate(startTime) : "";
+                        }
+                    },
+                    {
+                        "mData": "EndTime",
+                        "bSortable": false,
+                        "render": function (endTime, type, row) {
+                            return endTime ? ToJavaScriptDate(endTime) : "";
+                        }
+                    },
+                    {
+                        "mData": "Status",
+                        "bSortable": false,
+                        "render": function (status, type, full, meta) {
+                            if (status == "Success") {
+                                return '<span class="badge" style="background-color: green">' + status + '</span>'
+                            } else {
+                                return '<span class="badge" style="background-color: red">' + status + '</span>'
+                            }
+                        }
+                    },
+                    {
+                        "mData": "StatusDescription",
+                        "bSortable": false,
+                        "render": function (statusDesc, type, full, meta) {
+                            return '<span style="text-align: justify-all;">' + statusDesc + '</span>'
+                        }
+                    },
+                ]
+            });
+
+            function ToJavaScriptDate(value) {
+                if (value != null && value != '') {
+                    var pattern = /Date\(([^)]+)\)/;
+                    var results = pattern.exec(value);
+                    var dt = new Date(parseFloat(results[1]));
+                    return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear()+ ", " + dt.getHours() + ":" + dt.getMinutes() + ":" + dt.getSeconds();
+                }
+            }
+        })
+
+    </script>
+}

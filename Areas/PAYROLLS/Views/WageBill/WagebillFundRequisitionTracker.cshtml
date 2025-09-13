@@ -1,0 +1,180 @@
+﻿
+@{
+    ViewBag.Title = "Fund Requsition Tracker";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div style="display: flex; justify-content:space-between">
+                                <div>
+                                    <div style="display:flex; border: 1px solid #ccc;padding-left: 4px;border-radius: 4px">
+                                        <div>
+                                            <strong>CheckDate:</strong>
+                                            <input type="date" id="checkDate" style="border: none;resize: none" value="@ViewBag.CheckDate"/>
+                                        </div>
+                                        <button style="background-color:#2196F3;color:white;border:none;" onclick="getData()">Search</button>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_salaries">
+                                <thead>
+                                    <tr>
+                                        <th></th>
+                                        <th>Vote Code</th>
+                                        <th style="width:200px">Vote Name</th>
+                                        <th>Gov Num of Employee</th>
+                                        <th>Gov Wagebill Amount</th>
+                                        <th>Para Num of Employee</th>
+                                        <th>Para Wagebill Amount</th>
+                                        <th>Total PE</th>
+                                        <th>CBMS Status</th>
+                                        <th>CBMS Status Desc</th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr style="background:#f5f5f5; color:#000000">
+                                        <td colspan="3" style="text-align:right"><b>Grand Total</b></td>
+                                        <td style="text-align: right"><b id="totalEmployee"></b></td>
+                                        <td style="text-align: right"><b id="totalWagebill"></b></td>
+                                        <td style="text-align: right"><b id="totalParaEmployee"></b></td>
+                                        <td style="text-align: right"><b id="totalParaWagebill"></b></td>
+                                        <td style="text-align: right"><b id="totalPE"></b></td>
+                                        <td></td>
+                                        <td></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="form-actions"></div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script type="text/javascript">
+
+        var dt_salaries = $('#dt_salaries').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        $("#dt_salaries_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_salaries.DataTable().search(this.value).draw();
+        });
+
+        $("#saveLoader").toggle(false)
+        function requestExchequer() {
+            swal({
+                title: "Are you sure?",
+                buttons: ['No','Yes'],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader").toggle(true)
+                    $(".drop").toggle(false)
+                    $("#submitBtn").prop('disabled', true);
+                    $.ajax({
+                        type: "POST",
+                        url: '@Url.Action("RequestExchequer", "WageBill")',
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                            if (response == "Success") {
+                                swal("Sent Successfully!", { icon: "success" }).then((_) => window.location.reload());
+                            } else {
+                                swal(response)
+                            }
+                            $("#saveLoader").toggle(false)
+                            $(".drop").toggle(true)
+                            $("#submitBtn").prop('disabled', false);
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                }
+            });
+        }
+
+        function getData() {
+            var checkDate = $("#checkDate").val() || '@ViewBag.CheckDate'
+            if (!checkDate) {
+                return
+            }
+            $("#loader").text("Loading Please Wait...")
+            $.ajax({
+                type: "GET",
+                data: { checkDate },
+                url: '@Url.Action("GetWageBillDetail", "WageBill")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var data = response.data;
+                    dt_salaries.fnClearTable();
+
+                    var totalParaWagebill =  0;
+                    var totalWagebill = 0;
+                    var totalParaEmployee = 0;
+                    var totalEmployee = 0;
+                    var totalPE = 0;
+
+                    for (var i = 0; i < data.length; i++) {
+                        var item = data[i];
+                        dt_salaries.fnAddData([i + 1,
+                            `<a href="@Url.Action("ParaDetails", "WageBill")/?votecode=${item.VoteCode}">${item.VoteCode}</a>`,
+                            item.VoteName,
+                            toLabel(item.GovNumEmp).split(".")[0],
+                            toLabel(item.GovWagebillAmount),
+                            toLabel(item.ParaNumEmp).split(".")[0],
+                            toLabel(item.ParaWagebillAmount),
+                            toLabel(item.TotalPEIssues),
+                            item.CBMSStatus || 'Pending',
+                            item.CBMSStatus != "Submitted" ? item.CBMSStatusDesc : '-'
+                        ]);
+                        totalParaWagebill += item.ParaWagebillAmount;
+                        totalWagebill += item.GovWagebillAmount;
+                        totalParaEmployee += item.ParaNumEmp;
+                        totalEmployee += item.GovNumEmp;
+                        totalPE += item.TotalPEIssues;
+                    }
+
+                    $("#totalParaWagebill").text(toLabel(totalParaWagebill));
+                    $("#totalWagebill").text(toLabel(totalWagebill));
+                    $("#totalParaEmployee").text(toLabel(totalParaEmployee).split(".")[0]);
+                    $("#totalEmployee").text(toLabel(totalEmployee).split(".")[0]);
+                    $("#totalPE").text(toLabel(totalPE));
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        getData()
+    </script>
+}
+
+
+
+

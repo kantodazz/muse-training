@@ -1,0 +1,16 @@
+﻿<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="LoanRepaymentScheduleRpt.aspx.cs" Inherits="IFMIS.Areas.IFMISTZ.Reports.LoanRepaymentScheduleRpt" %>
+<%@ Register assembly="CrystalDecisions.Web, Version=13.0.3500.0, Culture=neutral, PublicKeyToken=692fbea5521e1304" namespace="CrystalDecisions.Web" tagprefix="CR" %>
+<!DOCTYPE html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head runat="server">
+    <title>LoanRepaymentScheduleRPT</title>
+</head>
+<body>
+    <form id="form1" runat="server">
+    <div>
+        <cr:crystalreportviewer id="LoanRepaymentScheduleRPT" runat="server" autodatabind="true" enabledatabaselogonprompt="False" />
+    </div>
+    </form>
+</body>
+</html>

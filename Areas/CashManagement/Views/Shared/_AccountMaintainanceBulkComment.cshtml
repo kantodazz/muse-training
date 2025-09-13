@@ -1,0 +1,135 @@
+﻿@model IFMIS.Areas.CashManagement.Models.CreateCommentVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "commentForm" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.ModuleId)
+    @Html.HiddenFor(model => model.ModuleName)
+    @Html.HiddenFor(model => model.ModuleLevel)
+    @Html.HiddenFor(model => model.OverallStatus)
+    @Html.HiddenFor(model => model.Source)
+    @Html.HiddenFor(model => model.SourceRole)
+    @Html.HiddenFor(model => model.Destination)
+    @Html.HiddenFor(model => model.DestinationRole)
+    @Html.HiddenFor(model => model.StepNo)
+    @Html.HiddenFor(model => model.StepName)
+    @Html.HiddenFor(model => model.IsRejected)
+    <div class="form-group">
+        (<span style="font-weight:bold;" id="RemarkCount"> 250 </span>)
+        @Html.LabelFor(model => model.Remarks, htmlAttributes: new { @class = "control-label col-md-2" })
+        <i class="fa fa-times" style="color:white" id="Remarks-1"></i>
+
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Remarks, new { @class = "form-control", maxlength = "250" })
+            @Html.ValidationMessageFor(model => model.Remarks, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.FileName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextBoxFor(model => model.FileName, new { @class = "form-control", @type = "file" })
+            @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+
+    @if (Model.OverallStatus == "Sign by SIGNATORY TWO" || Model.OverallStatus == "Sign by SIGNATORY ONE")
+    {
+    <div class="form-group">
+        @Html.LabelFor(model => model.Password, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.PasswordFor(model => model.Password, new { @class = "form-control" })
+            @Html.ValidationMessageFor(model => model.Password, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    }
+
+</div>
+}
+
+<script>
+    $('#Remarks').on("keyup", function () {
+        var count = $('#Remarks').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#RemarkCount').text(parseInt(numChars));
+    });
+
+
+    $("#btnSaveComment").on("click", function () {
+
+        var textResponse;
+        var IsRejected = $("#IsRejected").val();
+
+            $("#divLoader").show();
+            $("#btnSaveComment").prop("disabled", true);
+
+            $.validator.unobtrusive.parse("#commentForm");
+            if (!$("#commentForm").valid()) {
+                $("#divLoader").hide();
+                $("#btnSaveComment").prop("disabled", false);
+                return false;
+            }
+
+            var formData = new FormData();
+
+            formData.append("ModuleId", $('#ModuleId').val());
+            formData.append("ModuleName", $('#ModuleName').val());
+            formData.append("ModuleLevel", $('#ModuleLevel').val());
+            formData.append("OverallStatus", $('#OverallStatus').val());
+            formData.append("Source", $('#Source').val());
+            formData.append("SourceRole", $('#SourceRole').val());
+            formData.append("Destination", $('#Destination').val());
+            formData.append("DestinationRole", $('#DestinationRole').val());
+            formData.append("Remarks", $('#Remarks').val());
+            formData.append("IsRejected", $('#IsRejected').val());
+            formData.append("StepNo", $('#StepNo').val());
+            formData.append("StepName", $('#StepName').val());
+            formData.append("Password", $('#Password').val());
+            formData.append("FileName", $("#FileName").get(0).files[0]);
+
+        var url = '@Url.Action("SaveAccountMaintainanceComment", "AccountMaintenances2")';
+
+        if (IsRejected == "True") {
+            textResponse = "Rejected successfuly!";
+        } else {
+            textResponse = "Confirmed Successfuly!";
+        }
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                processData: false,
+                contentType: false,
+                data: formData,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal({
+                            text:textResponse,
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    } else if (response.status == "Invalid") {
+                        swal({
+                            text: response.statusDesc,
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                })
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                    $("#btnSaveComment").prop("disabled", false);
+                }
+            });
+        });
+</script>

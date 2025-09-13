@@ -1,0 +1,599 @@
+﻿@{
+    ViewBag.Title = "At Source Payment List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+   position: relative;
+  }
+   .loadingImg {
+    margin-left: auto;
+    margin-right: auto;
+    position: absolute;
+    top:50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br/>
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("UploadAtSourcePayment", "AtSourcePayment")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_at_source_payment_list" class="table table-bordered table-condensed table-amount">
+                               
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>At Source Type</th>
+                                        <th>Account From</th>
+                                        <th>Account From Name</th>
+                                        <th>Account To</th>
+                                        <th>Account To Name</th>
+                                        <th>Check Date</th>
+                                        <th>Status</th>
+                                        <th>CntrNo</th>
+                                        <th>No of Transactions</th>
+                                        <th>Total Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="RejectModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <center><h3 class="modal-title">Cancellation of At Source Payment</h3></center>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Remarks (<span style="font-weight:bold;" id="Remarks3Count">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Remarks3" name="Remarks3" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <input type="submit" value="Submit" class="btn btn-info" onclick="cancelAllocationForm()" id="allocationStatus" />
+                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="RemarkDialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Remarks</h4>
+            </div>
+
+            <div class="modal-body">
+                <span id="Remarks"></span>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="add_control_number" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Add Control Number</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "SubmitCntrNum" }))
+            {
+                <div class="modal-body form-horizontal">
+
+                    <br />
+
+                    <input type="hidden" name="Id" id="Id" value="">
+                    <div class="form-group">
+
+                        <div class="col-md-12">
+                            <input type="text" name="ControlNumber" id="ControlNumber" placeholder="Enter Control Number" class="form-control" maxlength="250" autocomplete="off">
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:50%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                     Vote Code Correction
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        //SHOW LOADER ICON
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+
+        var dt_at_source_payment_list = $("#dt_at_source_payment_list").dataTable();
+        $("#dt_at_source_payment_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_at_source_payment_list").DataTable().search(this.value).draw();
+            $("#dt_at_source_payment_list_wrapper .dt-toolbar").remove();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        function ToCheckDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetAtSourcePaymentLists", "AtSourcePayment")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_at_source_payment_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var Display = 'display:none;';
+                    Display = '';
+                    var overallStatus = '';
+
+                    var totalAllocationAmount = data[i]["TotalDeductionAmount"];
+                    if (totalAllocationAmount != null) {
+                        totalAllocationAmount = "<p align='right'>" + toLabel(data[i]["TotalDeductionAmount"]); +"</p>"
+                    } else {
+                        totalAllocationAmount = "<p align='right'>" + data[i]["TotalDeductionAmount"]; +"</p>"
+                    }
+
+                    var totalNoTransactions = "<p align='right'>" + (data[i]["TotalNumEmployees"]); +"</p>";
+
+                    if (data[i]["Remarks"] != null) {
+                        var remarks = '<a href="#" onclick="remarkDialog(' + i + ')"><i class="fa fa-eye"></i>' + data[i]["PayerBankAccount"] + '</a>';
+                    } else {
+                        remarks = data[i]["PayerBankAccount"]
+                    }
+
+                        overallStatus = data[i]["OverallStatus"];
+
+                    dt_at_source_payment_list.fnAddData([i + 1,
+                       data[i]["DeductionType"],
+                       remarks,
+                       data[i]["PayerBankName"],
+                       data[i]["PayeeBankAccountNo"],
+                       data[i]["PayeeAccountName"],
+                       ToJavaScriptDate(data[i]["CheckDate"]),
+                       overallStatus,
+                       data[i]["ControlNumber"],
+                       totalNoTransactions,
+                       totalAllocationAmount,
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("AtSourcePaymentDetails", "AtSourcePayment")/?id=' + data[i]["DeductionByInstitutionId"] + '">Details</a></li>\
+                                <li style="' + Display + '"><a href="#" onclick="addControlNumber(' + data[i]["DeductionByInstitutionId"] + ')">Add CntrNum</a></li>\
+                                <li style = "' + Display + '" > <a href="#" onclick="confirmDialog(' + i + ')">Confirm</a></li >\
+                                <li style="' + Display + '"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+      /***BEGINNING OF DEDUCTION TRANSFER CONFIRMATION***/
+        function confirmDialog(i) {
+            swal({
+                title: 'At Source Payment Confirmation',
+                text: "Are you sure you want to confirm?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false);
+                    confirmAllocationTransfer(data[i]["DeductionByInstitutionId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmAllocationTransfer(deductionByInstitutionId) {
+            var url = '@Url.Action("Confirm", "AtSourcePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": deductionByInstitutionId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response.success == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else if (response.success == "Error") {
+                        swal(response.message, { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                     
+                        var url = '@Url.Action("GetVoteCodeData", "AtSourcePayment")';
+                        $("#divModalBody").load(url, { deductionByVoteId: response.message }, function (response, status, xhr) {
+                            if (status == "error") {
+                                $("#divModalBody").html("Error loading Form for Correcting Vote.");
+                            }
+                            $("#divModal").modal("show");
+                            $("#drop-" + i + "").toggle(true);
+                        });
+
+
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Confirming At Source Payment", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+      /***END OF DEDUCTION TRANSFER CONFIRMATION***/
+        function remarkDialog(i) {
+            $('#RemarkDialog').modal('show');
+            var reason = data[i]["Remarks"];
+            $("#Remarks").text(reason);
+        }
+
+
+        /***BEGINNING OF DEDUCTION TRANSFER REJECTION***/
+
+        var deductionByInstitutionId = null;
+        function cancelDialog(i) {
+            $('#RejectModel').modal('show');
+            $("#saveLoader-" + i + "").toggle(true)
+            $("#drop-" + i + "").toggle(false)
+            deductionByInstitutionId = data[i]["DeductionByInstitutionId"];
+        }
+
+
+        $('#Remarks3').on("keyup", function () {
+            var count = $('#Remarks3').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#Remarks3Count').text(parseInt(numChars));
+        });
+          $("#SubmitCntrNum").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you submit this control number ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("SubmitCntrolNumber", "AtSourcePayment")';
+                            var id = $("#add_control_number #Id").val();
+                            var cntrNum = $("#add_control_number #ControlNumber").val();
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "Id": id,
+                                "ControlNumber": cntrNum
+                            }
+                            $('#add_control_number').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+
+                                    if (cntrNum) {
+                                        swal("Control number saved successfully!", { icon: "success" })
+                                            .then((value) => {
+                                                location.reload();
+                                            });
+                                    } else {
+                                        swal("Control number if previous assigned then removed successfully!", { icon: "success" })
+                                            .then((value) => {
+                                                location.reload();
+                                            });
+                                    }
+
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+        function cancelAllocationForm() {
+            var Remarks = $("#Remarks3").val();
+
+            successMessage = "At Source Payment Cancelled Successfully";
+            failureMessage = "Error in Cancelling At Source Payment";
+
+            if (Remarks == '') {
+                swal("Please Add Remarks");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('DeductionByInstitutionId', deductionByInstitutionId);
+            formData.append('Remarks', Remarks);
+
+            swal({
+                text: "Cancel At Source Payment?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postCancelFormData(formData);
+                } else {
+                    swal("Cancelled", "No change was made");
+                    $("#allocationStatus").prop('disabled', false);
+                }
+            });
+        }
+
+        function postCancelFormData(formData) {
+            $(".loadingImg").show();
+            $("#allocationStatus").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Cancel", "AtSourcePayment")';
+            var urlList = '@Url.Action("AtSourcePaymentLists", "AtSourcePayment")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#RejectModel').modal('hide');
+                    $("#allocationStatus").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal(successMessage, { icon: "success" })
+                            .then((m) => {
+                                //window.location.replace(urlList);
+                                window.location.reload();
+                            });
+                    } else {
+                        $("#allocationStatus").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#allocationStatus").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(failureMessage, { icon: "warning" });
+                }
+            });
+        }
+
+        /***END OF DEDUCTION TRANSFER REJECTION***/
+
+
+
+        var addControlNumber = function (id) {
+            $("#add_control_number #Id").val(id);
+            $('#add_control_number').modal('show');
+        }
+    </script>
+}

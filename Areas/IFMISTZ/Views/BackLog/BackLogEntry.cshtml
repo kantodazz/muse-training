@@ -1,0 +1,279 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+
+    <section id="widget-grid" class="">
+
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>BackLog Entry</h2>
+
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <table style="margin-left: 25%">
+                                <tr>
+                                    <td class="form-label">
+                                        Institution Account
+                                        <i class="fa fa-times" style="color:white" id="InstitutionAccount_1"></i>
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <select id="InstitutionAccount" style="width:300px"></select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        SubBudget Class
+                                        <i class="fa fa-times" style="color:white" id="SubBudgetClass_1"></i>
+                                    </td>
+                                    <td>
+                                        <select id="SubBudgetClass" style="width:300px"></select>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">Funding Reference</td>
+                                    <td>
+                                        <input style="width:300px" type="text" id="FundingRef">
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        ApplyDate
+                                        <i class="fa fa-times" style="color:white" id="ApplyDate_1"></i>
+                                    </td>
+                                    <td>
+                                        <div class="flatpickr date-group" style="display:flex">
+                                            <input type="text" placeholder="Select Date.."
+                                                   data-input
+                                                   style="width:262px;padding-left:10px;border:none"
+                                                   autocomplete="off" id="ApplyDate">
+                                            <a class="input-button" title="open" data-toggle href="#">
+                                                <span class="input-group-addon" style="height:35px"><i class="fa fa-calendar"></i></span>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Financial Year
+                                        <i class="fa fa-times" style="color:white" id="FinancialYear_1"></i>
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <select id="FinancialYear" style="width:300px">
+                                                @foreach (var item in ViewBag.FinancialYearList)
+                                                {
+                                                    <option value="@item.FinancialYearCode">@item.FinancialYearDesc</option>
+                                                }
+                                            </select>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Attach Excel
+                                        <i class="fa fa-times" style="color:white" id="AttachExcel_1"></i>
+                                    </td>
+                                    <td>
+                                        <input id="AttachExcel" style="width:300px" type="file"
+                                               accept="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Empty Template
+                                        <i class="fa fa-times" style="color:white" id="AttachExcel_1"></i>
+                                    </td>
+                                    <td>
+                                        <a href="~/Uploads/BackLogTemplate/BackLogEmptyTemplate.xlsx"><i class="glyphicon glyphicon-download-alt"></i>Download</a>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Sample Data
+                                        <i class="fa fa-times" style="color:white" id="AttachExcel_1"></i>
+                                    </td>
+                                    <td>
+                                        <a href="~/Uploads/BackLogTemplate/BackLogSampleDataTemplate.xlsx"><i class="glyphicon glyphicon-download-alt"></i>Download</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding-bottom:10px">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-6">
+                            <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                            </a>
+                            <button class="btn btn-info" id="form_submision">
+                                <i class="fa fa-save"></i>Save
+                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+
+            </article>
+
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script>
+        $("#saveLoader").toggle(false);
+        var isSubmitted = false
+
+        $("#InstitutionAccount").change(function () {
+            GetSBC();
+        });
+
+        $("#form_submision").click(function () {
+            if ($("#AttachExcel").val() == '' || $("#InstitutionAccount").val() == '' || $("#FundingRef").val() == '') {
+                swal("File,Institution Account,SBC and Funding Ref are Required..!!");
+            } else {
+
+                    try {
+
+                        var formData = new FormData();
+                        var item = $("#SubBudgetClass").val()
+                        var instAccount = $("#InstitutionAccount :selected").text();
+                        var sbcDesc = $("#SubBudgetClass :selected").text()
+                        formData.append('ApplyDate', $("#ApplyDate").val());
+                        formData.append('InstitutionAccountId', $("#InstitutionAccount").val());
+                        formData.append('FundingRef', $("#FundingRef").val());
+                        formData.append('SubBudgetClass', item.split("-")[0]);
+                        formData.append('SubBudgetClassDesc', sbcDesc.split("-")[1]);
+                        formData.append('ExchangeRate', item.split("-")[1]);
+                        formData.append('AccountNumber', instAccount.split("-")[0]);
+                        formData.append('FinancialYear', $("#FinancialYear").val());
+                        formData.append('file', $('input[type=file]')[0].files[0]);
+
+                        $("#form_submision").prop('disabled', true);
+                        $("#saveLoader").toggle(true);
+                        if (!isSubmitted) {
+                            isSubmitted = true
+                            $.ajax({
+                                type: "POST",
+                                url: '@Url.Action("BackLogCreate", "BackLog")',
+                                data: formData,
+                                contentType: false,
+                                processData: false,
+                                success: function (response) {
+                                        isSubmitted = false
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        if (response == "Success") {
+                                            swal("Saved Successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    window.location.href = '@Url.Action("BackLogList", "BackLog")';
+                                                });
+                                        }
+                                        else {
+                                            swal(response);
+                                        }
+                                    },
+                                    failure: function (error) {
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        swal(error);
+                                    }
+                                });
+                            }
+                    } catch (e) {
+                        swal("Error Saving. Please consult system administrator!");
+                    }
+
+            }
+        });
+
+        function GetInstitutionAccounts() {
+            $.ajax({
+                type: "GET",
+                url:'@Url.Action("GetInstitutionAccounts", "BackLog")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    let items = response.data.map(d => ({
+                        value: d.InstitutionAccountId,
+                        text: `${d.AccountNumber}-${d.AccountName}`
+                    }))
+                    addToDropDown(items, "InstitutionAccount");
+                   $("#InstitutionAccount").trigger('change');
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        GetInstitutionAccounts();
+       function GetSBC() {
+            $.ajax({
+                type: "GET",
+                url:  '@Url.Action("GetSBC", "BackLog")',
+                data: { institutionAccount: $("#InstitutionAccount :selected").text().split('-')[0]},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    let items = response.data.map(d => ({
+                        value: `${d.SubBudgetClass}-${d.OperationalExchangeRate}`,
+                        text: `${d.SubBudgetClass}-${d.SubBudgetClassDesc}`
+                    }))
+                    addToDropDown(items, "SubBudgetClass")
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function addToDropDown(items, selectId) {
+            var select = document.getElementById(selectId)
+            select.innerText = ""
+            items.forEach(item=> {
+                let option = document.createElement('option')
+                option.value = item.value
+                option.text = item.text
+                select.appendChild(option);
+            });
+        }
+
+    </script>
+}

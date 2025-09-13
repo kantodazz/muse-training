@@ -1,0 +1,146 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Create Inventory";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Register New Inventory </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div class="row">  <a href="~/Media/Inventories/InventoryImportationFormat.xlsx">&nbsp;&nbsp;&nbsp;<i class="fa fa-download"></i>Download Excel Sample</a></div>
+                            <hr/>
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitInventory(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    <div class="form-group">
+                                        @Html.Label("File", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            <input type="file" class="form-control btn btn-default" id="UploadFile" name="UploadFile" required="required">
+
+                                        </div>
+                                        <label class="control-label col-md-2" for="applyDate">Apply Date</label>
+                                        <div class="col-md-3">
+                                            <input class="form-control text-box single-line" data-val="true" data-val-date="The field apply date must be a date." id="applyDate" name="applyDate" required="required" type="datetime" value="" />
+                                            <span class="field-validation-valid text-danger" data-valmsg-for="applyDate" data-valmsg-replace="true"></span>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <div class="row">
+                                            <div class="col-md-8 col-md-offset-2">
+                                                <a href="@Url.Action("PendingInventories","Inventories")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                                <button type="submit" class="btn btn-info" id="save_button" style="float: left; margin-left: 5px">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+   
+
+        function SubmitInventory(formData) {
+             $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveUploeded", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                      $("#save_button").prop('disabled', false);
+                    if (response == "Success") {
+                        swal("Inventory uploaded  successfully", { icon: "Success" })
+                                    .then((value) => {
+                                       var url = '@Url.Action("PendingInventories", "Inventories")';
+                                        window.location.replace(url);
+                                });
+                    }           
+                    else {
+                        swal(response);
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Inventory ====================
+
+    $(document).ajaxStart(function () {
+        $(".loadingImg").show();
+
+    });
+    //HIDE LOADER ICON
+    $(document).ajaxStop(function () {
+        $(".loadingImg").hide();
+    });
+    </script>
+}
+
+

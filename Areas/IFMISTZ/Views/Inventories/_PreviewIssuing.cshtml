@@ -1,0 +1,193 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Complete Inventory";
+    int i = 0;
+    decimal? total_quantity=0;
+    decimal total_value=0;
+}
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Inventory Details</legend>
+        <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Item Card&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.ItemCard)</div> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Code&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.InventoryCode)</div></div>
+        <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Receiving Number&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.ReceivingNumber)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Item Name&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.ItemName)</div></div>
+        <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Original Quantity&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.Quantity)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Unit of Measure&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.UOM)</div></div>
+        <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Unit Price&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.UnitPrice)  @Html.DisplayFor(model => model.Currency)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Inventory Value&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.InventoryValue) @Html.DisplayFor(model => model.Currency)</div></div>
+        @if (Model.ManufactureDate != null)
+        {
+        <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Manufacture Date&nbsp;&nbsp:</strong>&nbsp;@Convert.ToDateTime(Model.ManufactureDate).ToString("dd/MM/yyyy")</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Expire date&nbsp;&nbsp:</strong>&nbsp;@Convert.ToDateTime(Model.ExpireDate).ToString("dd/MM/yyyy")</div></div>
+
+        }
+        <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Batch Number&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.BatchNo) </div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Source Module&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.SourceModule) @Html.DisplayFor(model => model.Currency)</div></div>
+        <div class="row">
+            @if (Model.StoreName != null)
+            {
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Store Name&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.StoreName)</div>
+
+
+            }
+            @if (Model.IssuedAt != null)
+            {
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Issued At&nbsp;&nbsp:</strong>&nbsp;@Convert.ToDateTime(Model.IssuedAt).ToString("dd/MM/yyyy")</div>
+
+
+            }
+        </div>
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Remains&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.BalanceQuantity)</div>
+
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Status &nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.OverallStatus)</div>
+
+
+        </div>
+        @if (Model.RejectReason != null)
+        {
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Reject Reason&nbsp;&nbsp:</strong>&nbsp;@Html.DisplayFor(model => model.RejectReason)</div>
+
+        </div>
+        }
+    </fieldset>
+
+                        @if (Model.InstitutionLevel == 1)
+                       {
+
+                        <table class="table  table-bordered table-hover table-condensed">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;width:4%">#</th>
+                                    <th style="text-align:left">Main Vote</th>
+                                    <th style="text-align:left">Sub Vote</th>
+                                    <th style="text-align:left">Sub Vote Description</th>
+
+                                    <th style="text-align:center">Quantity</th>
+                                    <th style="text-align:right">Inventory Value</th>
+
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.InsuedInventory)
+                                {
+                                    i++;
+                                   if(item.IssuedQuantity >0){
+                                      total_quantity=total_quantity + item.IssuedQuantity;
+                                }
+                                <tr>
+                                    <td style="text-align:center">@i</td>
+                                    <td>
+                                        @item.MainVote
+
+                                    </td>
+                                    <td>
+                                        @item.SubVote
+
+                                    </td>
+                                    <td>
+                                        @item.SubVoteName
+
+                                    </td>
+
+
+                                    <td style="text-align:center">
+                                        @item.IssuedQuantity
+
+                                    </td>
+                                    <td style="text-align:right">
+                                        @item.InventoryValue @item.Currency
+
+                                    </td>
+
+
+                                </tr>
+                                }
+                                @if(total_quantity >0 && Model.UnitPrice > 0){
+                                total_value=@Convert.ToDecimal(total_quantity) * @Convert.ToDecimal(Model.UnitPrice);
+                                }
+                                <tr><td colspan="4" style="text-align:right"><strong>Total</strong></td><td style="text-align:center"><strong>@total_quantity</strong></td><td style="text-align:right"><strong><strong>@total_value.ToString("#,##0/=") @Html.DisplayFor(model => model.Currency)</strong></strong></td></tr>
+                            </tbody>
+                        </table>
+
+                       }
+                       else
+                       {
+                        <table class="table  table-bordered table-hover table-condensed">
+                            <thead>
+                                <tr>
+                                    <th style="text-align:center;width:4%">#</th>
+                                    <th style="text-align:left">Main Vote</th>
+                                    <th style="text-align:left">Sub Vote</th>
+                                    <th style="text-align:left">Sub Vote Description</th>
+                                    <th style="text-align:left">Cost Centre</th>
+                                    <th style="text-align:left">Cost Centre Description</th>
+                                    <th style="text-align:center">Quantity</th>
+                                    <th style="text-align:right">Inventory Value</th>
+
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                @foreach (var item in Model.InsuedInventory)
+                                {
+                                    i++;
+                                if(item.IssuedQuantity >0){
+                                      total_quantity=total_quantity + item.IssuedQuantity;
+                                }
+                          
+                                <tr>
+                                    <td style="text-align:center">@i</td>
+                                    <td>
+                                        @item.MainVote
+
+                                    </td>
+                                    <td>
+                                        @item.SubVote
+
+                                    </td>
+                                    <td>
+                                        @item.SubVoteName
+
+                                    </td>
+                                    <td>
+                                        @item.CostCentre
+
+                                    </td>
+                                    <td>
+                                        @item.CostCentreDesc
+
+                                    </td>
+
+                                    <td style="text-align:center">
+                                        @item.IssuedQuantity
+
+                                    </td>
+                                    <td style="text-align:right">
+                                        @item.InventoryValue @item.Currency
+
+                                    </td>
+
+
+                                </tr>
+                                }
+                                @if(total_quantity >0 && Model.UnitPrice > 0){
+                                total_value=@Convert.ToDecimal(total_quantity) * @Convert.ToDecimal(Model.UnitPrice);
+                                }
+                                <tr><td colspan="6" style="text-align:right"><strong>Total</strong></td><td style="text-align:center"><strong>@total_quantity</strong></td><td style="text-align:right"><strong><strong>@total_value.ToString("#,##0/=") @Html.DisplayFor(model => model.Currency)</strong></strong></td></tr>
+                            </tbody>
+                        </table>
+                        
+                       }
+
+
+<div class="modal-footer">
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+</div>
+
+
+
+
+
+
+
+
+
+

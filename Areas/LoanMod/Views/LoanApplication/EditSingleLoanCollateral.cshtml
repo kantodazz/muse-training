@@ -1,0 +1,213 @@
+﻿@model IFMIS.Areas.LoanMod.Models.LoanEndorsementVM
+@{
+    ViewBag.Title = "Edit Endorsement";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .form-group {
+        padding-bottom: 10px;
+    }
+
+    .col-md-5 {
+        margin-bottom: 14px;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+                    <!-- widget content -->
+                    <div class="widget-body">
+                        <form>
+                            @Html.AntiForgeryToken()
+                            <input type="hidden" name="LoanEndorsementId" id="LoanEndorsementId" value="@ViewBag.LoanEndorsementId" />
+
+                            <div class="form-horizontal" style="width:80%;">
+
+                                <div class="row" style="padding:1% 5% 0 5%;">
+                                    <div class="col-md-2 col-lg-2 col-sm-2"></div>
+                                    <div class="col-md-8 col-lg-8 col-sm-12 ">
+                                        <table style="height:250px;">
+                                            <tr>
+                                                <td class="form-label">
+                                                    Full Name <span class="redStar">*</span>
+                                                    <i class="fa fa-times" style="color:white"></i>
+                                                </td>
+                                                <td>
+                                                    @Html.TextBoxFor(model => model.EndorsementFullName, new { @Class = "input form-control", @required = "required", style = "width:300px; " })
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td class="form-label">
+                                                    Title <span class="redStar">*</span>
+                                                    <i class="fa fa-times" style="color:white" id="description"></i>
+                                                </td>
+                                                <td>
+                                                    @Html.TextBoxFor(model => model.EndorsementTitle, new { @Class = "input form-control", @required = "required", style = "width:300px; " })
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td class="form-label">Location <span class="redStar">*</span></td>
+                                                <td>
+                                                    @Html.TextBoxFor(model => model.EndorsementLocation, new { @Class = "input form-control", @required = "required", style = "width:300px; " })
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td class="form-label">
+                                                    Endorsement Date <span class="redStar">*</span>
+                                                </td>
+                                                <td>
+                                                    <table>
+                                                        <tr>
+                                                            <td>
+                                                                @Convert.ToDateTime(ViewBag.EndorsementDate).ToString("dd/MM/yyyy")
+                                                                <div class="flatpickr date-group">
+                                                                    <input type="text" placeholder="Select Date.."
+                                                                           data-input
+                                                                           style="width:100px;border:none"
+                                                                           autocomplete="off" name="EndorsementDate" id="EndorsementDate">
+                                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                                        <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                                    </a>
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    </table>
+
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td class="form-label"></td>
+                                                <td>
+
+                                                    <a href="@Url.Action("LoanApplicationList", "LoanApplication")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                                    <button type="button" class="btn btn-info" onclick="editEndorsement()" id="saveEndorsementForm">
+                                                        <i class="fa fa-save"></i>Update
+                                                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-2 col-lg-2 col-sm-2"></div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- END MAIN CONTENT -->
+<!-- End of modal -->
+@section Scripts{
+    <script>
+        $(".saveLoader").toggle(false);
+        $("#saveEndorsementForm").prop('disabled', false);
+
+        function editEndorsement() {
+            $(".saveLoader").toggle(true);
+            $("#saveEndorsementForm").prop('disabled', true);
+            var EndorsementFullName = $("#EndorsementFullName").val();
+            var EndorsementTitle = $("#EndorsementTitle").val();
+            var EndorsementLocation = $("#EndorsementLocation").val();
+            var EndorsementDate = $("#EndorsementDate").val();
+            var LoanApplicationId = '@ViewBag.LoanApplicationId';
+
+            if (EndorsementFullName == '' || EndorsementTitle == '' || EndorsementLocation == '') {
+                swal("Please Fill All the Fields");
+                $(".saveLoader").toggle(false);
+                $("#saveEndorsementForm").prop('disabled', false);
+                return false;
+            }
+
+            if (EndorsementDate == '') {
+                EndorsementDate = '@ViewBag.EndorsementDate';
+            }
+
+            if (/^[a-zA-Z0-9\-_'\s]*$/.test(EndorsementFullName) == false) {
+                swal("Special Characters for Endorsement FullName are not allowed");
+                $(".saveLoader").toggle(false);
+                $("#saveEndorsementForm").prop('disabled', false);
+                return false;
+            }
+
+            if (/^[a-zA-Z0-9\-_'\s]*$/.test(EndorsementTitle) == false) {
+                swal("Special Characters for Endorsement Title are not allowed");
+                $(".saveLoader").toggle(false);
+                $("#saveEndorsementForm").prop('disabled', false);
+                return false;
+            }
+
+            if (/^[a-zA-Z0-9\-_'\s]*$/.test(EndorsementLocation) == false) {
+                swal("Special Characters for Endorsement Location are not allowed");
+                $(".saveLoader").toggle(false);
+                $("#saveEndorsementForm").prop('disabled', false);
+                return false;
+            }
+
+            var formDataObj = new FormData()
+            formDataObj.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formDataObj.append('EndorsementFullName', EndorsementFullName);
+            formDataObj.append('EndorsementTitle', EndorsementTitle);
+            formDataObj.append('EndorsementLocation', EndorsementLocation);
+            formDataObj.append('EndorsementDate', EndorsementDate);
+            formDataObj.append('LoanApplicationId', LoanApplicationId);
+            formDataObj.append('LoanEndorsementId', '@ViewBag.LoanEndorsementId');
+
+            var url = '@Url.Action("EditEndorsement", "LoanApplication")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: formDataObj,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    switch (response) {
+                        case "Success":
+                            swal("Endorsement Updated Successfully!", { icon: "success" })
+                           .then((m) => {
+                               var url = '@Url.Action("CreateLoanApplication", "LoanApplication")';
+                               window.location.replace(url + "?id=" + '@ViewBag.LoanApplicationId');
+                           });
+                            $(".saveLoader").toggle(false);
+                            $("#saveEndorsementForm").prop('disabled', false);
+                            break;
+
+                        default:
+                            swal("An error Occur on updating Endorsement,Please Contact Administrator", { icon: "warning" });
+                            $(".saveLoader").toggle(false);
+                            $("#saveEndorsementForm").prop('disabled', false);
+                    }
+                },
+                failure: function (response) {
+                    swal(response.d, { icon: "warning" });
+                    $(".saveLoader").toggle(false);
+                    $("#saveEndorsementForm").prop('disabled', false);
+                }
+            });
+
+        }
+
+    </script>
+}

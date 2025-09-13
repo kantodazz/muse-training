@@ -1,0 +1,366 @@
+﻿@{
+    ViewBag.Title = "Counterpart Details";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div>
+                            <div>
+                                <table>
+                                    <tr>
+                                        <td>Financial Year: </td>
+                                        <th>@ViewBag.Item.FinancialYear</th>
+                                    </tr>
+                                    <tr>
+                                        <td>GFSCode: </td>
+                                        <th>@ViewBag.Item.GFSCode - @ViewBag.Item.GFSCodeDesc</th>
+                                    </tr>
+                                    <tr>
+                                        <td>Note: </td>
+                                        <th>@ViewBag.Item.Note</th>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="widget-body">
+                            <div style="display: flex; justify-content: space-between">
+                                <div>
+                                    <button class="btn btn-info" onclick="addNewItem()">
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </button>
+                                </div>
+                                <div>
+                                    Elimination Amount:
+                                    <input type="text" disabled
+                                           value="@string.Format("{0:N2}",ViewBag.Item.EliminationAmount)"
+                                           style="font-weight: bold; border: none"
+                                           id="EliminationAmount" />
+                                </div>
+                                <div>
+                                    Available balance:
+                                    <input type="text" disabled style="font-weight: bold; border: none"
+                                           id="totalAmount" />
+                                </div>
+                                <div>
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>InstitutionCode</th>
+                                        <th>InstitutionName</th>
+                                        <th>GFSCode</th>
+                                        <th>GFSCodeDesc</th>
+                                        <th>Elimination Amount</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-6">
+                                    <button class="btn btn-info" style="margin-right:5px" onclick="details('@ViewBag.fy')">
+                                        <i class="glyphicon glyphicon-arrow-left"></i> Back
+                                    </button>
+                                    <button type="submit" class="btn btn-info" id="form_submision" onclick="saveAmounts()">
+                                        <i class="fa fa-save"></i> SAVE
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+    @{ Html.RenderPartial("_ConsoElDialogs"); }
+<script>
+
+    $("#saveNewItemLoader").toggle(false)
+
+    function addNewItem() {
+        $("#itemBalance").val($("#totalAmount").val())
+        $("#_newItemAmount").val(0);
+        $("#newItemAmount").val(0);
+        $('#addNewModal').modal('show');
+    }
+
+    $("#InstitutionCode").on("change", function () {
+        loadDataCounterPartData()
+    });
+
+    $(function () {
+        $("#InstitutionCode").select2({
+            minimumInputLength: 2,
+            width: 'resolve',
+            ajax: {
+                url: '@Url.Action("GetInstitutions", "ConsoElimination")',
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return { term: term };
+                    },
+                results: function (data, page) {
+                    if (data.error) {
+                        swal(data.error)
+                    }
+                    return { results: data.institutions };
+                }
+                }
+            });
+        });
+
+       $("#saveLoader").toggle(false);
+        var dt_table = $('#dt_table').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green"></strong>',
+            },
+        });
+       $("#dt_table_wrapper .dt-toolbar").remove();
+
+       $("#searchbox").on("keyup search input paste cut", function () {
+           dt_table.DataTable().search(this.value).draw();
+       });
+
+        $('#dt_table').on('draw.dt', function () {
+            Object.keys(amounts).forEach(key => {
+                $(`#_${key}`).val(toLabel(amounts[key]))
+                $(`#_${key}`).val(toLabel(amounts[key]))
+            });
+        });
+
+       var data = []
+       var amounts = {}
+
+        function loadData() {
+            $("#loader").text("Loading Please Wait...")
+            $.ajax({
+                     type: "GET",
+                     url: '@Url.Action("GetCounterpart", "ConsoElimination")',
+                     contenttype: "application/json; charset=utf-8",
+                data: {id: '@ViewBag.Item.ConsoInstitutionEliminationSummaryId'},
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    if (!data.length) {
+                        $("#loader").text("No matching records found.")
+                    }
+                    dt_table.fnClearTable();
+
+                    for (var i = 0; i < data.length; i++) {
+                        var key = `${data[i].ConsoEliminDetailId}`;
+                        var EliminationAmount = data[i].ConsoCounterpartActualTotal || 0;
+                        if (EliminationAmount > 0) {
+                            amounts[key] = toNumber(EliminationAmount);
+                        }
+                             dt_table.fnAddData([i + 1,
+                                 data[i].ConsoCounterpartInstCode,
+                                 data[i].ConsoCounterpartEntityDescription,
+                                 data[i].ConsoCounterpartGfsCode,
+                                 data[i].ConsoCounterpartGfsDesc,
+                                 `<amount-input id="${key}" onkeyup="amountChanged('${key}')" value="${toLabel(EliminationAmount) || ''}"/>`,
+                             ]);
+                         }
+                         isAmountValid();
+                     },
+                     failure: function (error) {
+                         swal(error);
+                     }
+                 });
+        }
+
+
+       function amountChanged(key) {
+           amounts[key] = toNumber($(`#_${key}`).val());
+           isAmountValid();
+        }
+
+        function isAmountValid() {
+            var totalAmount = 0
+            Object.keys(amounts).forEach(key => {
+                totalAmount += toNumber(amounts[key])
+            })
+            var eliminationAmount = toNumber($("#EliminationAmount").val());
+            $("#totalAmount").val(toLabel(eliminationAmount-totalAmount));
+
+            if (totalAmount > eliminationAmount) {
+                document.getElementById("totalAmount").style.color = "red";
+            } else {
+                document.getElementById("totalAmount").style.color = "black";
+            }
+            return totalAmount <= eliminationAmount;
+        }
+
+        function saveAmounts() {
+            if (!isAmountValid()) {
+                swal("Total amount cannot exceed elimination amount!")
+                return
+            }
+
+           var form = [];
+            Object.keys(amounts).forEach(key => {
+               form.push({
+                   EliminationAmount: amounts[key],
+                   Id: '@ViewBag.Item.ConsoInstitutionEliminationSummaryId',
+                   ConsoEliminDetailId: key
+               })
+            });
+
+            if (!form.length) {
+                details('@ViewBag.fy');
+                return
+            };
+
+           $("#saveLoader").toggle(true)
+           $("#form_submision").prop('disabled', true)
+           $.ajax({
+               type: "POST",
+               url: '@Url.Action("CreateUpdateEntityAmount", "ConsoElimination")',
+               data: { data: form },
+               contenttype: "application/json; charset=utf-8",
+               datatype: "json",
+               success: function (response) {
+                   if (response == "Success") {
+                       swal("Saved Successfully!", { icon: "success" })
+                           .then((value) => {
+                           details('@ViewBag.fy')
+                       });
+                   } else {
+                       swal(response);
+                   }
+                   $("#saveLoader").toggle(false)
+                   $("#form_submision").prop('disabled', false)
+               },
+               failure: function (error) {
+                   swal(error);
+               }
+           });
+       }
+
+
+        function details(fy) {
+            var url = '@Url.Action("UpdateElimination", "ConsoElimination")'
+
+            window.location.href = `${url}/?fy=${fy}&notes=@ViewBag.notes&reportSubCategId=@ViewBag.reportSubCategId&note=@ViewBag.note`
+        }
+
+       $(document).ready(function () {
+           loadData()
+       });
+
+</script>
+}

@@ -1,0 +1,358 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.AllocationVM
+@{
+    ViewBag.Title = "Upload At Source Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body " style="padding-top:10px">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "uploadAllocation" }))
+                            {
+                                @Html.AntiForgeryToken()
+                            <div class="form-horizontal">
+                                <div class="row" style="padding:12px">
+                                </div>
+
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2">Category</label>
+                                    <div class="col-md-4">
+                                        @Html.DropDownListFor(model => model.CentralPaymentCategoryId, Model.categoryList, "Select Category", new { @class = "form-control", onchange = "getCentralPaymentCategoryName()" })
+                                    </div>
+                                </div>
+                                <div class="row" style="padding:12px">
+                                    @Html.LabelFor(model => model.ExchequerNo, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                    <div class="col-md-4">
+                                        @Html.EditorFor(model => model.ExchequerNo, new { htmlAttributes = new { @class = "form-control" } })
+                                    </div>
+                                </div>
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2">Check Date</label>
+                                    <div class="col-md-4">
+                                        <table>
+                                            <tr>
+                                                <td>
+                                                    <div class="flatpickr2 date-group">
+                                                        <input type="text" placeholder="Select Date.."
+                                                               data-input
+                                                               style="width:100px;border:none"
+                                                               autocomplete="off" name="CheckDate" id="CheckDate">
+                                                        <a class="input-button" title="open" data-toggle href="#">
+                                                            <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                        </a>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="row" style="padding:12px">
+                                    @Html.LabelFor(model => model.FileName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-4">
+                                        @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                                    </div>
+                                </div>
+                                <div class="row" style="padding:12px">
+                                    <label class="control-label col-md-2"></label>
+                                    <div class="col-md-4">
+                                        <a href="@Url.Action("PreviewTobeUploadFile", "AtSourcePayment", new { Filename = "Template.xlsx" })">Download Template</a> &nbsp;&nbsp;&nbsp;&nbsp;
+                                        <a href="@Url.Action("PreviewTobeUploadFile", "AtSourcePayment", new { Filename = "Template2.xlsx" })">Unpaid Salary Template</a>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-3">
+                                            <a class="btn btn-info" href='@Url.Action("AtSourcePaymentLists", "AtSourcePayment")' style="margin-right:5px">
+                                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                            </a>
+                                            <button type="button" class="btn btn-info" id="btnUpload" onclick="upload()" style="width:100px;  color:black">
+                                                <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                                Upload
+                                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            }
+                        </div>
+                        <!-- Start of div loader-->
+                        <div id="divLoader" style="text-align: center; display: none">
+                            <img src="~/Media/Images/ajax_loader.gif" />
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+        $(".flatpickr2").flatpickr({
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            wrap: true,
+           // minDate: "today"
+        });
+
+        var url = null;
+        var urlList = null;
+        $("#saveLoader").toggle(false);
+        function upload() {
+
+            swal({
+                title: "Upload",
+                text: "Are you sure you want to Upload At Source Payment Information? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    uploadAllocation();
+                }
+            });
+        }
+
+        var CategoryName = null;
+        function getCentralPaymentCategoryName() {
+            var option = [];
+            var CategoryId = document.getElementById("CentralPaymentCategoryId").value;
+            if (CategoryId != "Select Category") {
+                $.ajax({
+                    url: '@Url.Action("GetCentralPaymentCategory", "AtSourcePayment")/?id=' + CategoryId,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        CategoryName = data.data.CategoryName;
+                    }
+                });
+            }
+        }
+
+
+        var uploadAllocation = function () {
+            var CategoryId = $("#CentralPaymentCategoryId").val();
+            var CheckDate = $("#CheckDate").val();
+            var exchequerNo = $("#ExchequerNo").val();
+                var FileName = $("#FileName").val();
+
+                if (CategoryId == "" || CategoryId == "Select Category") {
+                    swal("Category is Required", { icon: "warning" });
+                    return false;
+                }
+
+            if (exchequerNo == "") {
+                swal("Exchequer No is Required", { icon: "warning" });
+                    return false;
+                }
+                if (CheckDate == "") {
+                    swal("Check Date is Required", { icon: "warning" });
+                    return false;
+                }
+
+                if (FileName == '') {
+                    swal("Please Attach File (Excel Format)")
+                    return false;
+                }
+                var file = document.querySelector("#FileName");
+                if (/\.(xlsx)$/i.test(file.files[0].name) === false) {
+                    swal("Please Attach File (Excel Format)")
+                    return false;
+                }
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("FileName", file[0]);
+                    data.append("CentralPaymentCategoryId", CategoryId); 
+                    data.append("ExchequerNo", exchequerNo);
+                    data.append("CheckDate", CheckDate);
+                    data.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+                }
+
+                if (CategoryName == "Unpaid Salary") {
+                    url = '@Url.Action("UploadUnpaidSalary", "UnpaidSalary")';
+                    urlList = '@Url.Action("UnpaidSalaryLists", "UnpaidSalary")';
+                } else {
+                    url = '@Url.Action("UploadAtSourcePayment", "AtSourcePayment")';
+                    urlList = '@Url.Action("AtSourcePaymentLists", "AtSourcePayment")';
+                }
+
+
+                $("#saveLoader").toggle(true);
+                $("#btnUpload").prop('disabled', true);
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data,
+                    success: function (response) {
+                        if (response == "Success") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.href = urlList;
+                            });
+
+                        } else if (response == "InvalidFormat") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Invalid file format, file format should be MS Excel", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        } else if (response == "InvalidSize") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Invalid file size, file size should be less than 2MB!", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+
+                        }
+                        else if (response == "DataExist") {
+                            $("#btnUpload").prop('disabled', false);
+                            swal("Some Loan Data already Exist", { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        }
+
+                        else {
+                            $("#btnUpload").prop('disabled', false);
+                            swal(response, { icon: "warning" }).then((e) => {
+                                $("#saveLoader").toggle(false);
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+                        $("#saveLoader").toggle(false);
+                    }
+                });
+
+        };
+
+          $(function () {
+
+            var url = '@Url.Action("GetExchequers", "AtSourcePayment")';
+
+              $("#ExchequerNo").select2({
+                minimumInputLength: 17,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.exchequers }; // data.exchequers returning json data from Controller
+                    }
+                }
+            });
+
+        });
+
+
+    </script>
+}

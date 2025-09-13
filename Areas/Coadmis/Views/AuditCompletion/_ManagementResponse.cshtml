@@ -1,0 +1,167 @@
+﻿@model IFMIS.Areas.Coadmis.DTO.AuditCompletionVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "recommendationsForm" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        <div class="form-group">
+            @Html.HiddenFor(model => model.ClientInformationId)
+            @Html.HiddenFor(model => model.EngagementId)
+            @Html.LabelFor(model => model.AuditableAreaId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.DropDownListFor(model => model.AuditableAreaId, ViewBag.Auditable as SelectList, "Select auditable area", new { @class = "form-control select2" })
+                @Html.ValidationMessageFor(model => model.AuditableAreaId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.FwSummaryFindingId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.DropDownListFor(model => model.FwSummaryFindingId, new SelectList(""), "Select finding", new { @class = "form-control select2" })
+                @Html.ValidationMessageFor(model => model.FwSummaryFindingId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        @*<div class="form-group">
+                @Html.LabelFor(model => model.AuditableAreaName, htmlAttributes: new { @class = "control-label col-md-2" })
+                <div class="col-md-9">
+                    @Html.EditorFor(model => model.AuditableAreaName, new { htmlAttributes = new { @class = "form-control", @readOnly = true } })
+                    @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+                </div>
+            </div>*@
+        <!--<div class="form-group">
+            @Html.LabelFor(model => model.Criteria, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.TextAreaFor(model => model.Criteria, new { @class = "form-control", @cols = 10, @rows = 3, @style = "resize:both;",@readOnly = true })-->
+        <!--@Html.ValidationMessageFor(model => model.Criteria, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Condition, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+            @Html.TextAreaFor(model => model.Condition, new { @class = "form-control", @cols = 10, @rows = 3, @style = "resize:both;", @readOnly = true })-->
+        <!--@Html.ValidationMessageFor(model => model.Condition, "", new { @class = "text-danger" })
+            </div>
+        </div>-->
+        <div class="form-group">
+            @Html.LabelFor(model => model.Consequence, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.TextAreaFor(model => model.Consequence, new { @class = "form-control", @cols = 10, @rows = 3, @style = "resize:both;", @readOnly = true })
+                @Html.ValidationMessageFor(model => model.Consequence, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.Recomendation, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.TextAreaFor(model => model.Recomendation, new { @class = "form-control", @cols = 10, @rows = 3, @style = "resize:both;", @readOnly = true })
+                @Html.ValidationMessageFor(model => model.Recomendation, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.ManagementResponse, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.TextAreaFor(model => model.ManagementResponse, new { @class = "form-control", @cols = 10, @rows = 4, @style = "resize:both;" })
+                @Html.ValidationMessageFor(model => model.ManagementResponse, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.AuditorComment, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-9">
+                @Html.TextAreaFor(model => model.AuditorComment, new { @class = "form-control", @cols = 10, @rows = 4, @style = "resize:both;" })
+                @Html.ValidationMessageFor(model => model.AuditorComment, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.FindingStatusId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-4">
+                @Html.DropDownListFor(model => model.FindingStatusId, new SelectList(""), "Select status", new { @class = "form-control select2" })
+                @Html.ValidationMessageFor(model => model.FindingStatusId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+}
+<script> 
+    $(document).ready(function () {
+        $("#AuditableAreaId,#FindingStatusId,#FwSummaryFindingId").select2({
+            dropdownParent: $("#recommendationsForm")
+        });
+    });
+
+     $("#AuditableAreaId").change(function () {
+            $("#divLoader").show();
+         var id = $(this).val();
+         var clientId = $("#ClientInformationId").val();
+         var url = '@Url.Action("GetFindings", "AuditCompletion")';
+                 url += '?id=' + id + '&clientId=' + clientId;
+            $.ajax({
+            type: "POST",
+            url: url,
+            contentType: "html",
+                success: function (response) {
+                        $("#FwSummaryFindingId").empty();
+                        $("#FwSummaryFindingId").append(response);
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                },
+            error: function (err) {
+                alert(err.statusText);
+            },
+        })
+     });
+
+    $("#FwSummaryFindingId").change(function () {
+        
+        $("#divLoader").show();
+        var url = "@Url.Action("GetResponse", "AuditCompletion")";
+        var id = $("#FwSummaryFindingId").val();
+
+        $.ajax({
+            type: "POST",
+            url: url,
+            data: {
+                id: id
+            },
+            success: function(data, status, jqXHR){
+                if (data.success) {
+                    //document.getElementById('AuditableAreaName').value = data.auditableAreaName;
+                    document.getElementById('Consequence').value = data.consequence;
+                    document.getElementById('Recomendation').value = data.recomendation;
+                    document.getElementById('EngagementId').value = data.engagementId;
+                    getStatus(id);
+                } else {
+                    swal('This does not exist!');
+                    //document.getElementById('AuditableAreaName').value = "";
+                    document.getElementById('Consequence').value = "";
+                    document.getElementById('Recomendation').value = "";                    
+                    document.getElementById('EngagementId').value = "";
+                }
+            }
+          });
+    });
+
+   function getStatus(id){
+           debugger
+       $("#divLoader").show();
+
+       var clientId = $("#ClientInformationId").val();
+
+            var url = '@Url.Action("GetFindingstatus", "AuditCompletion")';
+            url += '?id=' + id + '&clientId=' + clientId;
+
+            $.ajax({
+            type: "POST",
+            url: url,
+            contentType: "html",
+                success: function (response) {
+                    $("#FindingStatusId").empty();
+                    $("#FindingStatusId").append(response);
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                },
+            error: function (err) {
+                swal(err.statusText);
+            },
+        })
+     };
+</script>
+

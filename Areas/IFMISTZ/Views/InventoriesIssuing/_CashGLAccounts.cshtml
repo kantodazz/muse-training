@@ -1,0 +1,247 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryIssuingVM
+<strong>Issuing No:</strong>@Html.DisplayFor(model => model.LegalNumber)
+@if (Model.CashGlAccounts.Where(a=>a.FundBalance >0).Count() == 0)
+{
+<div style="padding-bottom:10px" id="infoPanel">
+    <div class="info-box"><strong>No Gl Accounts to SBC   @Html.DisplayFor(model => model.SubBudgetClass) apply date @Html.DisplayFor(model => model.ApplyDate) </strong></div>
+</div>
+<div class="modal-footer">
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+}
+else
+{
+<table>
+    <tr>
+        <td style="padding:5px">Total Items Amount</td>
+        <td style="padding:5px">
+            <input type="text" disabled id="total_items_amount_partial" value="@Model.InventoryValue">
+        </td>
+
+        <td style="padding:5px">Total Line Amount</td>
+        <td style="padding:5px">
+            <input value="0" type="text" disabled id="total_line_amount_partial">
+        </td>
+
+        <td style="padding:5px">Difference</td>
+        <td style="padding:5px">
+            <input value="0" type="text" disabled id="difference_partial" style="width:250px">
+        </td>
+    </tr>
+</table>
+using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuing(this)" }))
+    {
+@Html.AntiForgeryToken()
+@Html.HiddenFor(model => model.SourceId)
+<div class="row">
+    <div class="col-md-12">
+        <div class="search-container" style="float:right">
+            <i class="fa fa-search"></i>
+            <input type="search" name="search" placeholder="Search..." id="search-box">
+        </div>
+    </div>
+</div>
+<table class="table  table-bordered table-hover table-condensed" id="monentary">
+    <thead>
+        <tr>
+            <th style="text-align:right;width:4%">No</th>
+            <th style="text-align:left">Gl Account</th>
+            <th style="text-align:left">Funding Reference</th>
+            <th style="text-align:center">Fund Balance</th>
+            <th style="text-align:center">Amount</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @{var i = 0;}
+        @foreach (var item in Model.CashGlAccounts.Where(a=>a.FundBalance >0))
+                {
+                    i++;
+
+        <tr id=@i>
+            <td style="text-align:right">
+                @i
+            </td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.GlAccount)
+            </td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.FundingRefNo)
+            </td>
+            <td style="text-align:right">
+                @Html.EditorFor(modelItem => item.FundBalance, new { htmlAttributes = new { @class = "form-control amount", @readonly = "readonly" } })
+            </td>
+            <td style="text-align:center">
+                @Html.EditorFor(modelItem => item.OperationalAmount, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @i + ")", @autocomplete = "off" } })
+            </td>
+
+        </tr>
+                }
+
+    </tbody>
+</table>
+
+    }
+<div class="modal-footer">
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Save</button>
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Cancel</button>
+</div>
+}
+
+
+
+<script type="text/javascript">
+    var monentary_data = $('#monentary').dataTable();
+    $("#monentary_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#monentary").DataTable().search(this.value).draw();
+    });
+    function SubmitCoas(formData) {
+           $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveIssuingBulk", "InventoriesIssuing")';
+            var ajaxConfig = {
+            type: "post",
+            url: url,
+            data: new FormData(formData),
+            success: function (response) {
+            $("#save_button").prop('disabled', false);
+            if (response == "Success") {
+            swal("Data saved successfully", { icon: "success" })
+            .then((value) => {
+            var url = '@Url.Action("PendingRequisition", "InventoriesIssuing")';
+            window.location.replace(url);
+            });
+            }
+            else {
+            swal(response);
+            }
+            }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+            ajaxConfig["contentType"] = false;
+            ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+    }
+    $(".amount").autoNumeric('init');
+
+    var glItemsCharges = [];
+    var sum_total = 0;
+    var total_items_value = @Model.InventoryValue;
+    function amountEntry(e, rowId) {
+        //var $row = $("#" + rowId);
+        //var totalAmount = parseFloat($row.find('input[name="item.TotalAmount"]').val().split(",").join(""));
+        var entered_value = parseFloat(e.value.split(",").join(""));
+        var $row = $("#" + rowId);
+        var fundBalance = parseFloat($row.find('input[name="item.FundBalance"]').val().split(",").join(""));
+
+        if (entered_value > 0) {
+            if (entered_value > fundBalance) {
+              
+                swal("Entered amount can not exceed " + toLabel(fundBalance), { icon: "warning" })
+                    .then((value) => {
+                        e.value = "";
+                    });
+                return;
+            }
+            
+            var i = 0;
+
+            $("#monentary tr").each(function () {
+
+                if (i > 0) {
+                    var value = $(this).children().eq(4).find("input").val().trim().split(",").join("");
+                    var amount = parseFloat(value);
+                    if (amount >0) {
+                        var number = $(this).children().eq(0).text().trim();
+                        var line = $(this).children().eq(1).text().trim();
+                        var funding_ref = $(this).children().eq(2).text().trim();
+       
+                        if (glItemsCharges.length > 0) {
+
+                            //CHECK IF EXIST IN THE ARRAY
+                            var found = false;
+                            for (var j = 0; j < glItemsCharges.length; j++) {
+                                if (glItemsCharges[j].Number == number) {                               
+                                    glItemsCharges[j].ExpenseAmount = amount;
+                                    found = true;
+                                }
+
+                            }
+
+                            if (!found) {
+
+                                glItemsCharges.push({
+                                    "Number": number,
+                                    "GLAccount": line,
+                                    "FundingReference": funding_ref,
+                                    "ExpenseAmount": amount
+                                });
+
+
+                            }
+
+
+                        } else {
+                            glItemsCharges.push({
+                                "Number": number,
+                                "GLAccount": line,
+                                "FundingReference": funding_ref,
+                                "ExpenseAmount": amount
+                            });
+
+
+                        }
+
+                    }
+                    //var value = $(this).children().eq(4).find("input").val().trim().split(",").join("");
+
+                    //if (value != "") {
+                    //    var line = $(this).children().eq(1).text();
+
+                    //    swal("Maso" + line);
+                    //}
+
+                }
+                i++;
+            });
+
+
+
+            for (var j = 0; j < glItemsCharges.length; j++) {
+
+                sum_total = sum_total + glItemsCharges[j].ExpenseAmount;
+
+            }
+
+            var balance = total_items_value - sum_total;
+            if (balance >= 0) {
+                $("#total_line_amount_partial").val(sum_total.toLocaleString('en'));
+                $("#difference_partial").val(balance.toLocaleString('en'));
+            }
+            else {
+                swal("Total Line Amount can not exceed " + total_items_value.toLocaleString('en'));
+                e.value = "";
+
+
+            }
+            //sum_total = sum_total + value;
+            
+            //if (sum_total <= required_total) {
+            //    var balance = required_total - sum_total;
+            //    $("#total_line_amount").val(sum_total.toLocaleString('en'));
+            //    $("#difference").val(balance.toLocaleString('en'));
+            //}
+            //else {
+            //    sum_total = sum_total - value;
+            //    swal("Total  amount can not exceed " + required_total.toLocaleString('en'));
+            //    e.value = "";
+            //}
+        }
+       
+    }
+    $("#total_items_amount").autoNumeric('init');
+</script>
+

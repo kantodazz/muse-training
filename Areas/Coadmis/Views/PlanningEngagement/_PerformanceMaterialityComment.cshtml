@@ -1,0 +1,115 @@
+﻿@model IFMIS.Areas.Coadmis.Models.MaterialityConfigVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "updateRiskAssertionForm" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.PerformanceMaterialityId)
+    <div class="form-group">
+        @Html.LabelFor(model => model.AuditableAreaName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.EditorFor(model => model.AuditableAreaName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.OverallMateriality, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.OverallMateriality, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.OverallMateriality, "", new { @class = "text-danger" })
+        </div>
+        
+        @Html.LabelFor(model => model.ClientFinancialYear, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.ClientFinancialYear, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.ClientFinancialYear, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.RiskRanking, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.RiskRanking, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.RiskRanking, "", new { @class = "text-danger" })
+        </div>
+    
+        @Html.LabelFor(model => model.AnsPerfMateriality, htmlAttributes: new { @class = "control-label col-md-2 required" })
+    <div class="col-md-3">
+        @Html.EditorFor(model => model.AnsPerfMateriality, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.AnsPerfMateriality, "", new { @class = "text-danger" })
+    </div>
+
+    </div>
+    
+    <div class="form-group">
+        @Html.LabelFor(model => model.Comment, htmlAttributes: new { @class = "control-label col-md-2 required" })
+        (<span style="font-weight:bold;" id="CommentCount">250</span>)
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Comment, new { maxlength = 250, @class = "form-control", @rows = 3, @cols = 15 })
+            @Html.ValidationMessageFor(model => model.Comment, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    
+    
+</div>
+}
+<script>
+
+   
+
+    //Count input char
+    $('#Comment').on("keyup", function () {
+        var count = $('#Comment').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#CommentCount').text(parseInt(numChars));
+    });
+
+    
+
+  
+    $("#addperformanceData").on('click', function () {
+
+        var pid = $("#PerformanceMaterialityId").val();
+        var comment = $("#Comment").val();
+
+        if (comment == '' ) {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("PerformanceMaterialityId", pid);
+        formdata.append("Comment", comment);
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdatePerformanceMateriality", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                $("#addperformanceData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } 
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#addperformanceData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

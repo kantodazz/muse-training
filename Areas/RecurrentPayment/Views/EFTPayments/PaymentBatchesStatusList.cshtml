@@ -1,0 +1,294 @@
+@{
+    ViewBag.Title = "Payment Status Lists";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_payment_list" class="table table-bordered table-condensed table-amount">
+
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Batch Number</th>
+                                        <th>MgsID</th>
+                                        <th>Payment Description</th>
+                                        <th>Payment Category</th>
+                                        <th>No of Transactions</th>
+                                        <th>Total Amount</th>
+                                        <th>Attachment</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+<div class="modal fade modal-backdrop-transparent" id="documentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="color: #31708f; background-color: #d9edf7; border-color: #bce8f1; ">
+                <h5 class="modal-title" id="title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:white;">
+                    <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <embed style="height: 70vh !important;" width="100" id="embedDocument" class="embed-responsive-item col-md-12"
+                       src="" allowfullscreen />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        $(".loadingImg").hide();
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+		
+		 function previewDocument(documentUrl, batchNumber) {
+			$("#title").text(batchNumber);
+			var url = '@Url.Content("~/Media/BOTSlip/")' + documentUrl;
+			document.getElementById("embedDocument").setAttribute("src", url);
+			$("#documentModal").modal("show");
+		}
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+
+        //var dt_payment_list = $("#dt_payment_list").dataTable();
+        $("#dt_payment_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_payment_list").DataTable().search(this.value).draw();
+            $("#dt_payment_list_wrapper .dt-toolbar").remove();
+        });
+
+        $(document).ready(function () {
+            $(".saveLoader").toggle(false);
+            BindDataTable();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var BindDataTable = function (response) {
+            $("#dt_payment_list").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetInstPaymentStatusList", "EFTPayments")',
+                "iDisplayLength": 10,
+                "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "fnServerData": function (sSource, aoData, fnCallback) {
+
+                    $.ajax({
+                        type: "Get",
+                        data: aoData,
+                        url: sSource,
+                        success: fnCallback
+                    })
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "BatchNo"},
+                    { "mData": "MgsId"},
+                    { "mData": "BatchDesc"},
+                    { "mData": "PaymentCategory" },
+                    {
+                        "mData": "NoTrx",
+                        "render": function (NoTrx, type, full, meta) {
+                            var num = null;
+                            if (NoTrx == null || NoTrx == 0) {
+                                num = "<p align='right'>0</p>";
+                            }
+                            else {
+                                num = "<p align='right'>" + NoTrx.toLocaleString() + "</p>";
+                            }
+                            return num;
+                        }
+                    },
+
+                    {
+                        "mData": "TotalBatchAmount",
+                        "render": function (TotalBatchAmount, type, full, meta) {
+                            var amount = null;
+                            if (TotalBatchAmount == null) {
+                                amount = "<p align='right'>0</p>";
+                            }
+                            else {
+                                amount = "<p align='right'>" + TotalBatchAmount.toLocaleString() + "</p>";
+                            }
+                            return amount;
+                        }
+                    },
+                    {
+                        "mData": "BOTSlipFileName",
+                        "render": function (BOTSlipFileName, type, full, meta) {
+                            var getAnswer = null;
+                            if (BOTSlipFileName == null) {
+                                getAnswer = "No Attachment";
+                            } else {
+                                getAnswer = "<span style='cursor:pointer' title = 'Preview Document' onclick = 'return previewDocument(`" + full.BOTSlipFileName + "`,`" + full.BatchNo + "`)'" + "><i class='fa fa-eye'>&nbsp;&nbsp;Preview</i></span>";
+                            }
+                            return getAnswer;
+                        }
+                    },
+
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "CreatedAt",
+                        "render": function (CreatedAt, type, full, meta) {
+                            if (CreatedAt != null && CreatedAt != "") {
+                                return ToJavaScriptDate(CreatedAt);
+                            } else {
+                                return "Not Found";
+                            }
+                        }
+                    },
+                    {
+                        "mData": "PaymentBatchID",
+                        "render": function (PaymentBatchID, type, full, meta) {
+                            var sendtoBOT = 'display:none';
+                            if (full.BOTSlipFileName != null) {
+                                sendtoBOT = "";
+                            }
+                               return '<div class="btn-group" id="drop">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret"></span\
+                                <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu dropdown-menu-right">\
+                                    <li><a class="dropdown-item" href="@Url.Action("PaymentBatchStatusDetails", "EFTPayments")/?paymentBatchId=' + full.PaymentBatchID +'">Details</a></li>\
+                                </ul>\
+                            </div>\ ';
+                        }
+                    },
+                ]
+            });
+        }
+    </script>
+}

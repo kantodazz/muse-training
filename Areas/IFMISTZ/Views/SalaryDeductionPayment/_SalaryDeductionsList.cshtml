@@ -1,0 +1,178 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.DeductionByInstitution>
+
+@{
+
+    var i = 0;
+}
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box_partial" autocomplete="off">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table class="table table-bordered table-hover table-condensed" id="dt_deductions_partial">
+                                <thead>
+                                    <tr>
+                                        <th>
+                                            #
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.DeductionType)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PayeeAccountName)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PayeeBankAccountNo)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.PayeeBankName)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.CheckDate)
+                                        </th>
+                                        <th style="text-align:right">
+                                            @Html.DisplayNameFor(model => model.TotalDeductionAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.OverallStatus)
+                                        </th>
+
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                        <tr>
+                                            <td>
+                                                @i
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.DeductionType)
+                                            </td>
+
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PayeeAccountName)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PayeeBankAccountNo)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.PayeeBankName)
+                                            </td>
+                                            <td>
+                                                @Convert.ToDateTime(item.CheckDate).ToString("dd-MM-yyyy")
+                                            </td>
+                                            <td align="right">
+                                                @Html.DisplayFor(modelItem => item.TotalDeductionAmount)
+                                            </td>
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.OverallStatus)
+                                            </td>
+
+                                            <td style="text-align:center">
+
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu" style="text-align:left">
+                                                        <li style="text-align:left">
+                                                            <a href="@Url.Action(" PreviewDeductions", "SalaryDeductionPayment" ,new {id=item.DeductionByInstitutionId })" class="btn-xs edit">
+                                                                <i class="fa fa-search-minus"></i>  Preview
+                                                            </a>
+                                                        </li>
+
+                                                        @if (item.RequestCtrNo == true)
+                                                        {
+                                                        <li>
+                                                            <a href="#" onclick="requestCtrNo(@item.DeductionByInstitutionId)">
+                                                                <i class="fa fa-edit"></i>Request CtrNum
+                                                            </a>
+                                                        </li>
+                                                        }
+                                                        else
+                                                        {
+                                                        if (item.RequireCtrNo == true)
+                                                        {
+                                                        <li>
+                                                            <a href="#" onclick="addControlNumber(@item.DeductionByInstitutionId)">
+                                                                <i class="fa fa-edit"></i>Add CtrNum
+                                                            </a>
+                                                        </li>
+
+                                                        }
+
+                                                        }
+
+                                                        @if (item.PaymentCategory == "Employees")
+                                                        {
+                                                        <li>
+                                                            <a href="#" onclick="paymentType(@item.DeductionByInstitutionId)">
+                                                                <i class="fa fa-edit"></i>Set Payment Type
+                                                            </a>
+                                                        </li>
+                                                        }
+                                                        @if (item.OverallStatus.ToUpper() == "PENDING")
+                                                        {
+                                                        <li>
+                                                            <a href="#" onclick="confirmEntry(@item.DeductionByInstitutionId)">
+                                                                <i class="fa fa-edit"></i>Confirm
+                                                            </a>
+                                                        </li>
+
+                                                        }
+
+
+                                                        @if (item.OverallStatus.ToUpper() == "REJECTED")
+                                                        {
+
+                                                        <li>
+                                                            <a href="#" onclick="confirmRejected(@item.DeductionByInstitutionId,'@item.DeductionType')">
+                                                                <i class="fa fa-edit"></i>Confirm
+                                                            </a>
+                                                        </li>
+
+                                                        }
+
+                                                    </ul>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    }
+
+                                </tbody>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="6" style="text-align:right">TOTAL</th>
+                                        <th style="text-align:right" id="TotalAmount">
+                                            @if (Model.Select(a => a.TotalDeductionAmount).Sum() > 0)
+                                            {
+
+                                                <strong> @Convert.ToDecimal(Model.Select(a => a.TotalDeductionAmount).Sum()).ToString("#,##0.00") </strong>
+
+                                            }
+                                        </th>
+                                        <th colspan="2"></th>
+                                    </tr>
+                                </tfoot>
+                            </table>
+
+
+
+
+    <script type="text/javascript">          
+        var dt_deductions_partial = $('#dt_deductions_partial').dataTable();
+        $("#dt_deductions_partial_wrapper .dt-toolbar").remove();
+        $("#search-box_partial").on("keyup search input paste cut", function () {
+            $("#dt_deductions_partial").DataTable().search(this.value).draw();
+        });
+    </script>

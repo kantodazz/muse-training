@@ -1,0 +1,110 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.PaymentBatch
+
+<link   href="@Server.MapPath("~/Content/css/bootstrap.min.css")" rel="stylesheet" />
+@Html.Partial("_ReportHeader")
+
+<dl class="dl-horizontal">
+    <dt>
+        @Html.DisplayNameFor(model => model.PayStation.PayStationCode)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.PayStation.PayStationCode)
+    </dd>
+    <dt>
+        @Html.DisplayNameFor(model => model.PayStation.PayStationName)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.PayStation.PayStationName)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.BatchNo)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.BatchNo)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.BatchDesc)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.BatchDesc)
+    </dd>
+
+    <dt>
+        @Html.DisplayNameFor(model => model.PaymentCategory)
+    </dt>
+
+    <dd>
+        @Html.DisplayFor(model => model.PaymentCategory)
+    </dd>
+
+</dl>
+<table class="table table-bordered table-condensed table-hover table-responsive table-striped">
+    @{
+        int i = 0;
+        decimal totalAmount = 0, subTotal = 0;
+        string[] paymentStatuses = new string[9] { "PENDING", "CONFIRMED", "VERIFIED", "APPROVED", "Pre-funding Completed", "Sent to BOT", "Received at BOT", "SETTLED", "UNAPPLIED PROCESSED" };
+    }
+    @foreach (var group in Model.Payments.Where(a => paymentStatuses.Contains(a.OverallStatus)).GroupBy(a => a.BenDepartment))
+    {
+        <tr class="group-header">
+            <td colspan="5">@Model.Payments.FirstOrDefault(a => a.BenDepartment == group.Key).BenDepartment</td>
+        </tr>
+        <tr>
+            <th>#</th>
+            <th>Beneficiary Name</th>
+            <th>Swift Code</th>
+            <th>Account No</th>
+            <th>Amount</th>
+        </tr>
+
+
+        subTotal = 0;
+        i = 0;
+        foreach (var item in group.OrderBy(a => a.BeneficiaryName))
+        {
+            i++;
+            totalAmount += decimal.Parse(item.Amount.ToString());
+            subTotal += decimal.Parse(item.Amount.ToString());
+            <tr>
+                <td>
+                    @i
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BankBic)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.BeneficiaryAccountNo)
+                </td>
+                <td style="text-align: right">
+                    @string.Format("{0:#,0.00}", item.Amount)
+                </td>
+            </tr>
+        }
+        <tr>
+            <th colspan="4" style="text-align: center">
+                Sub Total
+            </th>
+            <th style="text-align: right">
+                @string.Format("{0:#,0.00}", subTotal)
+            </th>
+        </tr>
+    }
+    <tr>
+        <th colspan="4" style="text-align: center">
+            Total
+        </th>
+        <th style="text-align: right">
+            @string.Format("{0:#,0.00}", totalAmount)
+        </th>
+    </tr>
+
+</table>

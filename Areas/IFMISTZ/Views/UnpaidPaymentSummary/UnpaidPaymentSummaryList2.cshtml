@@ -1,0 +1,692 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.UnpaidSummaryPayment>
+@{
+    ViewBag.Title = "Unpaid Summary Payment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    /*input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }*/
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .backgroundColor {
+        background: #ff0000;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <hr/>
+                   
+                        <div class="widget-body">
+                            @Html.AntiForgeryToken()
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_loanReceived_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>Vote Code</th>
+                                        <th>Vote Name</th>
+                                        <th>Reference Number</th>
+                                        <th>NoTrx</th>
+                                        <th style="text-align:right">Total Net Amount</th>
+                                        <th style="text-align:right">At Source Amount</th>
+                                        <th style="text-align:right">At Employer</th>
+                                        <th>ss</th>
+                                        <th>Cover letter</th>
+                                        <th>OverallStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Loan Assignment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="ALSLoanSummaryID" id="ALSLoanSummaryID" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Loan Officer
+                                    <i class="fa fa-times" style="color:white" id="userId1"></i>
+
+                                </td>
+                                <td>
+                                    <select name="userId" id="userId" required class="form-control select2">
+                                        @if (ViewBag.LoanOfficerList != null)
+                                        {
+                                            <option value="NULL">Select Loan officer</option>
+                                            foreach (var loanUser in ViewBag.LoanOfficerList)
+                                            {
+                                                <option value='@loanUser.Id'>@loanUser.UserName</option>
+                                            }
+                                        }
+                                    </select>
+                                </td>
+
+                            </tr>
+
+                            <tr>
+
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="AssignForm()" id="assignform">
+                        <i class="fa fa-times"></i>Assign
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="commentModal2" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Return Loan Batch to ALS Portal</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="ALSLoanSummaryID" id="ALSLoanSummaryID" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarksloan1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarksloan" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="ReturnForm()" id="returnform">
+                        <i class="fa fa-times"></i>Submit
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        $(".AssignBtn").attr('disabled', true);
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_loanReceived_list = $('#dt_loanReceived_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            //"Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+            //    "t" +
+            //    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+        var checkedRows = [];
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            toggleAssignButton();
+        }
+
+        function checkAll() {
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < w_data.length; i++) {
+                    var Id = w_data[i].a.LoanApplicationId
+                    checkedRows.push(Id);
+                    $("#row-" + Id).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < w_data.length; i++) {
+                    var Id = w_data[i].a.LoanApplicationId
+                    $("#row-" + Id).prop('checked', false);
+                }
+            }
+            toggleConfirmButton();
+        }
+
+        function toggleAssignButton() {
+            if (checkedRows.length > 0) {
+                var data = dt_loanReceived_list.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                });
+                $("#Assign").attr('disabled', false);
+            } else {
+                $("#Assign").attr('disabled', true);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var LoanAppraiserId = null;
+        var LoanApplicationIds = [];
+        function AssignLoanOfficer() {
+             LoanAppraiserId = document.getElementById("LoanAppraiserId").value;
+            if (LoanAppraiserId == "NULL") {
+                swal("Please Select Appr First", { icon: "warning" });
+                return false;
+            }
+
+            swal({
+                text: "Assign Selected Application(s)?",
+                buttons: ["NO", "YES"],
+            }).then((assign) => {
+                if (assign) {
+                    postAssignLoanOfficer();
+                } else {
+                    swal("Cancelled");
+                }
+            });
+        }
+
+        function postAssignLoanOfficer() {
+            checkedRows.forEach(rowId => {
+                LoanApplicationIds.push(data[rowId]['LoanApplId']);
+            });
+
+            var url = '@Url.Action("AssignApplicationToOfficer", "ALSLoanAssignment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "LoanApplicationIds": LoanApplicationIds, "__RequestVerificationToken": $("[name=__RequestVerificationToken]").val(), "LoanAppraiserId": LoanAppraiserId, "Stage": "@IFMIS.Libraries.Constants.APPLICATION" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Application(s) Assigned successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.href = '@Url.Action("LoanOfficerAssignmentList", "ALSLoanAssignment")';
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        var LoanApplId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetUnpaidPaymentSummaryList", "UnpaidPaymentSummary")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_loanReceived_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    if (data[i]["CheckDate"] != "" && data[i]["CheckDate"] != null) {
+                        batchDate = ToJavaScriptDate(data[i]["CheckDate"]);
+                    }
+                    else {
+
+                        batchDate = "NULL";
+                    }
+
+                    var totalAmount = data[i]["TotalNetAmount"];
+                    if (totalAmount != null) {
+                        totalAmount = "<p align='right'>" + toLabel(data[i]["TotalNetAmount"]); +"</p>"
+                    } else {
+                        totalAmount = "<p align='right'>" + data[i]["TotalNetAmount"]; +"</p>"
+                    }
+
+                    dt_loanReceived_list.fnAddData([i + 1,
+                      /* '<input  type="checkbox" id="row-' + i + '" onchange="rowChecked(' + i + ')"/>',*/
+
+                        data[i]["VoteCode"],
+                        data[i]["VoteName"],
+                        data[i]["ReferenceNumber"],
+                        data[i]["NoOfClaim"],
+                        '<a href="@Url.Action("#", "#")' + "/?typePayment=netAmount&&VoteCode=" + data[i]["VoteCode"] + '">' + totalAmount + '</a>',
+                        '<a href="@Url.Action("#", "#")' + "/?typePayment=AtSource&&VoteCode=" + data[i]["VoteCode"] + '">' + totalAmount + '</a>',
+                        '<a href="@Url.Action("#", "#")' + "/?typePayment=AtEmployer&&VoteCode=" + data[i]["VoteCode"] + '">' + totalAmount + '</a>',
+                        '<a href="@Url.Action("#","#")/' + data[i]["VoteCode"] + '">' + totalAmount + '</a>',
+
+                        '<a href="/Content/uploads/' + data[i]["Attachments"] + '"><i class="fa fa-file-pdf-o"></i></a>',
+                        data[i]["OverallStatus"],
+                        action(i, data[i]["Attachments"])
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        //action
+        function action(i, coverletter) {
+
+            if (coverletter != null) {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="#" onclick="Assign(' + i + ')">Confirm</a></li>\
+                                 <li><a href="@Url.Action("LoanDetails", "ALSLoanAssignment")/?Id=' + data[i]["ALSLoanSummaryID"] + '">Details</a></li>\
+                                 <li><a href="#" onclick="LoanReturn(' + i + ')">Reject</a></li>\
+                                 <li><a href="@Url.Action("PreviewCoverLetter", "ALSLoanAssignment")/?alsLoanSummaryID=' + data[i]["ALSLoanSummaryID"] + '" target="_blank">Priview Cover Letter</a></li>\
+                            </ul>\
+                        </div>\ '
+            }
+            if (coverletter == null) {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="#" onclick="Assign(' + i + ')">Confirm</a></li>\
+                                 <li><a href="@Url.Action("LoanDetails", "ALSLoanAssignment")/?Id=' + data[i]["ALSLoanSummaryID"] + '">Details</a></li>\
+                                 <li><a href="#" onclick="LoanReturn(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\ '
+            }
+        }
+
+
+        //======= Assign Start ========
+        function Assign(i) {
+          debugger
+            $("#ALSLoanSummaryID").text(data[i]["ALSLoanSummaryID"]);
+            document.getElementById("ALSLoanSummaryID").value = data[i]["ALSLoanSummaryID"];
+            $('#commentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function AssignForm() {
+           // debugger
+            var alsLoanSummaryID = $("#ALSLoanSummaryID").val();
+            var userid = $("#userId").val();
+            var remarks = $("#remarks").val();
+
+            if (userid == '') {
+
+                swal("Please select Loan Officer")
+                return false;
+            }
+
+            if (alsLoanSummaryID == '' || remarks == '') {
+                var url = '@Url.Action("", "ALSLoanAssignment")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            postAsignedLoan(alsLoanSummaryID,userid, remarks);
+        }
+
+        function postAsignedLoan(alsLoanSummaryID, userid, remarks) {
+            //console.log(formData);
+            $(".loadingImg").show();
+            $("#assignform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("AssignLoanBatchToOfficer", "ALSLoanAssignment")';
+            $.ajax({
+                url: url,
+                data: { alsSummaryId: alsLoanSummaryID, userId: userid, remark: remarks },
+                type: 'POST',
+                //contentType: false,
+                //processData: false,
+                success: function (response) {
+                    $("#assignform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Batch Assigned successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#assignform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#assignform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+      // =============== End  Assign ===============
+
+      //======= Return Start ========
+        function LoanReturn(i) {
+          debugger
+            $("#ALSLoanSummaryID").text(data[i]["ALSLoanSummaryID"]);
+            document.getElementById("ALSLoanSummaryID").value = data[i]["ALSLoanSummaryID"];
+            $('#commentModal2').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function ReturnForm() {
+           debugger
+            var alsLoanSummaryID = $("#ALSLoanSummaryID").val();
+
+            var remarks = $("#remarksloan").val();
+
+            if (alsLoanSummaryID == '' || remarks == '') {
+                var url = '@Url.Action("", "ALSLoanAssignment")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            postReturnLoan(alsLoanSummaryID, remarks);
+        }
+
+        function postReturnLoan(alsLoanSummaryID,remarks) {
+            //console.log(formData);
+            $(".loadingImg").show();
+            $("#returnform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("ReturnLoanBatchToAslPortal", "ALSLoanAssignment")';
+            $.ajax({
+                url: url,
+                data: { alsSummaryId: alsLoanSummaryID, remark: remarks },
+                type: 'POST',
+                //contentType: false,
+                //processData: false,
+                success: function (response) {
+                    $("#returnform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Returned Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#returnform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#returnform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        // =============== End  Confirmation ===============
+
+        $(".saveLoader").toggle(false);
+
+    </script>
+}
+

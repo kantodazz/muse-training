@@ -1,0 +1,394 @@
+﻿
+@model IFMIS.Areas.IFMISTZ.Models.OutStandingVM
+@{
+    ViewBag.Title = "Reconciliation Status";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+ 
+     .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+   
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    table {
+        margin: 0 auto;
+        width: 100%;
+      /*  clear: both;
+        border-collapse: collapse;*/
+        table-layout: fixed;
+ 
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Cash Book to Bank Manual Matching </h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            @{
+                                int i = 0;
+                                int j = 0;
+                                decimal? totalAmount = 0;
+                                decimal? operationalAmountGL = 0;
+                            }
+                           
+                            <div class="well" style="padding-top:20px">
+                                <div style="padding-left:10px" class="row">
+                                    <div class="col-md-0"></div>
+                                    <div class="col-md-6">
+
+                                        @*<a href="@Url.Action("ReconcilliationStatus","Reconcilliation")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                            Back
+                                        </a>*@
+                                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>Back
+                                        </a>
+
+                                        <button type="button" id="matchbtn2" class="btn btn-info" style="text-align:left" onclick="matching()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            Match
+                                        </button>
+                                    </div>
+                                    <strong id="match">No Transaction(s) Selected to Match</strong>
+                                </div>
+                            </div>
+                                <br />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false"  data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>General Ledger Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedGL">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_basicGL" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:5%">@*<input type="checkbox" class="cbCheckAll1">*@</th>
+                                                                <th style="width:13%">Date</th>
+                                                                <th>Legal Number</th>
+                                                                <th>Document No.</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                        @foreach (var item in Model.GLOutoStandingList)
+                                                        {
+                                                    <tr>
+                                                        <td><input type="checkbox" value="@item.GeneralLadgeID" id="row2-@item.GeneralLadgeID" onchange="rowCheckedY(@item.GeneralLadgeID,@item.OperationalAmountGL)" class="checkBox1"></td>
+                                                        <td style="font-size:11px">@string.Format("{0: dd/MM/yyyy}", item.TransactionDate)</td>
+                                                        <td style="font-size:11px">@item.LegalNumber</td>
+                                                        <td style="font-size:11px">@item.DocumentNo</td>
+                                                        <td style="font-size:10px">@item.DescriptionGL</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00}", item.OperationalAmountGL)</td>
+                                                    </tr>
+                                                            i++;
+                                                        }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false"  data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>Bank Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedBank">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_basicBank" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width:5%">@*<input type="checkbox" class="cbCheckAll">*@</th>
+                                                                <th style="width:13%">Date</th>
+                                                                <th style="width:15%">Bank Ref.</th>
+                                                                <th style="width:15%">Related Ref.</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        @foreach (var item2 in Model.BankOutoStandingList)
+                                                        {
+
+                                                            <tr>
+                                                                <td><input type="checkbox" value="@item2.BankStatementID" id="row-@item2.BankStatementID" onchange="rowCheckedx(@item2.BankStatementID,@item2.Amount)" class="checkBoxBank"></td>
+                                                                <td style="font-size:11px">@string.Format("{0: dd/MM/yyyy}", item2.StatementDate)</td>
+                                                                <td style="font-size:10px">@item2.BankReference</td>
+                                                                <td style="font-size:10px">@item2.RelatedReference</td>
+                                                                <td style="font-size:9px">@item2.TransactionDescription</td>
+                                                                <td style="text-align:right;font-size:11px">@string.Format("{0:#,#.00}", item2.Amount)</td>
+                                                            </tr>
+                                                            j++;
+                                                        }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+                          
+                            </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $("#matchbtn2").attr('disabled', true);
+        var dt_basicBank = $('#dt_basicBank').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+        $("#dt_basicBank_filter").remove();
+        $("#dt_basicBank_wrapper .dt-toolbar").remove();
+        $("#searchboxBank").on("keyup search input paste cut", function () {
+            dt_basicBank.DataTable().search(this.value).draw();
+
+        });
+
+        dt_basicBank.on('draw.dt', function () {
+            checkedRowsBank.forEach(v => {
+                $(`#row-${v.rowId}`).prop("checked", true)
+            })
+        })
+
+        var dt_basicGL = $('#dt_basicGL').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+        $("#dt_basicGL_filter").remove();
+        $("#dt_basicGL_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_basicGL.DataTable().search(this.value).draw();
+        });
+
+        dt_basicGL.on('draw.dt', function () {
+            checkedRowsGL.forEach(v => {
+                $(`#row2-${v.rowId}`).prop("checked", true)
+            })
+        })
+
+        $(document).ready(function () {
+            $('#CheckDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                prevText: '<i class="fa fa-chevron-left"></i>',
+                nextText: '<i class="fa fa-chevron-right"></i>',
+                onSelect: function (selectedDate) {
+                    $('#CheckDate').datepicker('option', selectedDate);
+                }
+            });
+        });
+
+        var search = function () {
+            var AccountNumber = $("#BankAccount").val();
+            var chkDate = $("#CheckDate").val();
+            var url = '@Url.Action("OutStandingList", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { AccountNumber: AccountNumber, chkDate: chkDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                }
+            });
+        };
+
+        $(document).ready(function () {
+            var responsiveHelper_dt_basicBank = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+        })
+
+
+        //=================== NEW MUANDIKO ================
+        var checkedRowsBank = []
+        var checkedRowsGL = []
+
+        function rowCheckedx(rowId, amount) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRowsBank.push({ rowId, amount });
+            } else {
+                checkedRowsBank = checkedRowsBank.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+        function rowCheckedY(rowId, amount) {
+            if ($("#row2-" + rowId).is(":checked")) {
+                checkedRowsGL.push({ rowId, amount });
+            } else {
+                checkedRowsGL = checkedRowsGL.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+        $("#matchbtn2").attr('disabled', true);
+        function matchx() {
+           // debugger
+
+            var GLTotalAmount = 0
+            var BankTotalAmount = 0
+            checkedRowsBank.forEach(v => {
+                BankTotalAmount += v.amount
+            })
+            checkedRowsGL.forEach(v => {
+                GLTotalAmount += v.amount
+            })
+            $("#totalAmountSelectedBank").text(toLabel(BankTotalAmount))
+            $("#totalAmountSelectedGL").text(toLabel(GLTotalAmount))
+
+            if (BankTotalAmount.toFixed(2) == GLTotalAmount.toFixed(2) && BankTotalAmount.toFixed(2) != 0) {
+                $("#match").text("Matched Amount");
+                $("#matchbtn2").attr('disabled', false);
+            } else {
+
+                $("#matchbtn2").attr('disabled', true);
+                $("#match").text("Unmatched Amount");
+            }
+
+        }
+
+
+        function matching() {
+
+            swal({
+                title: "Matching",
+                text: "Are you sure you want to match the transaction.? ",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    GLBankMatch();
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function GLBankMatch() {
+           // debugger
+           // debugger
+            var cashIds = [];
+            var bankIds = [];
+            //cashIds.push(checkedRowsGL.map(v => v.rowId));
+            //bankIds.push(checkedRowsBank.map(v => v.rowId));
+
+            cashIds=checkedRowsGL.map(v => v.rowId);
+            bankIds=checkedRowsBank.map(v => v.rowId);
+
+            if (cashIds.length <= 0 && bankIds.length <= 0) {
+                swal("Select transaction to Match!");
+                return;
+            }
+                var url = '@Url.Action("GlBankMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { cashIds: checkedRowsGL.map(v => v.rowId), bankIds: checkedRowsBank.map(v=>v.rowId) },
+                        success: function (response) {
+                        if (response == "Success") {
+                            swal("Matched Successfully!", { icon: "success" }).then((e) => {
+                                window.location.reload();
+                            });
+                        } else {
+                            swal(response, { icon: "warning" }).then((e) => {
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+
+                    }
+                });
+          
+            };
+    </script>
+
+}

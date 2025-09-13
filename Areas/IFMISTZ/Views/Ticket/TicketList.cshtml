@@ -1,0 +1,909 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.HelpdeskTicketVM>
+
+@{
+    ViewBag.Title = "Pending Tickets";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-envelope-o"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("RegisterTicket", "Ticket")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_helpdesk_ticket_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Institution Name</th>
+                                        <th>Ticket Number</th>
+                                        <th style="width:150px;">Title</th>
+                                        <th>Contact</th>
+                                        <th>Status</th>
+                                        <th>Priority</th>
+                                        <th>Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="CloseTicketModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Close Ticket:<span id="tticket_number2"></span></h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TicketId" id="TicketId" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Description"> Description (<span style="font-weight:bold;" id="DescriptionCount2">250</span>) </label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Description2" name="Description2" style="width:300px;" maxlength="250"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="close_form_submission">
+                    @*<i class="fa fa-save"></i>*@ Close
+                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="TicketInformationModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Ticket Information</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Ticket Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>Institution Name: </th>
+                                                <td id="institutionName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Institution Code:</th>
+                                                <td id="institutionCode"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Module Name:</th>
+                                                <td id="moduleName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Sub Module Name:</th>
+                                                <td id="subModuleName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Ticket Number:</th>
+                                                <td id="ticketNumber"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Source:</th>
+                                                <td id="hostName"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Title:</th>
+                                                <td id="title"></td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>FullName:</th>
+                                                <td id="fullName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Email:</th>
+                                                <td id="email"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>Phone Number:</th>
+                                                <td id="phoneNumber"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Status:</th>
+                                                <td id="status"></td>
+                                            </tr>
+
+                                            <tr>
+                                                <th>Attachment Name:</th>
+                                                <td id="attachmentName">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <th>Priority:</th>
+                                                <td id="priority">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </div>
+
+                                </div>
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table>
+                                            <tr>
+                                                <th>Description</th>
+                                            </tr>
+                                            <tr>
+                                                <td id="descriptions"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <hr />
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <table id="dt_tbl_helpdesk_ticket_listing" class="table table-bordered table-condensed table-amount">
+                                            <thead>
+                                                <tr>
+                                                    <th>#</th>
+                                                    <th>Institution Name</th>
+                                                    <th>Description</th>
+                                                    <th>Status</th>
+                                                    <th>Created Date</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        <br />
+                    </div>
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+
+<div class="modal fade" id="RemarksActivityModal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Ticket:<span id="ticket_number"></span></h4>
+            </div>
+
+            <div class="modal-body form-horizontal">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="TicketNumber" id="TicketNumber" />
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Status"> Status</label>
+                    <div class="col-md-7">
+                        @Html.DropDownList("Status", new List<SelectListItem>{
+                        new SelectListItem{ Text="--Select ---", Value = "" },
+                        new SelectListItem{ Text="RE OPENED", Value = "Assigned" }
+                         }, new { @class = "form-control", style = "width:300px;" })
+
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-3" for="Description"> Description (<span style="font-weight:bold;" id="DescriptionCount">250</span>) </label>
+                    <div class="col-md-7">
+                        <textarea rows="5" id="Description" name="Description" style="width:300px;" maxlength="250"></textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                <button type="submit" class="btn btn-info" id="form_submission">
+                    Save
+                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                </button>
+
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    
+    <script>
+
+        $('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount').text(parseInt(numChars));
+        });
+
+        $('#Description2').on("keyup", function () {
+            var count = $('#Description2').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount2').text(parseInt(numChars));
+        });
+
+
+        var ticketId = null;
+        var ticket_number = null;
+
+        function remarksDialog(i) {
+            var id = data[i]["TicketId"];
+            ticketId = id;
+            ticket_number = data[i]["TicketNumber"];
+            $("#ticket_number").text(ticket_number);
+            $('#RemarksActivityModal').modal('show');
+        }
+
+              $("#saveLoader").toggle(false);
+              $("#form_submission").click(function () {
+                var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "TicketNumber": ticket_number,
+                "Status": $("#Status").val(),
+                "Description": $("#Description").val(),
+                "TicketsId": ticketId
+            }
+
+            var Status = $("#Status").val();
+            var Description = $("#Description").val();
+            if (Status == "") {
+                swal("Status is required", { icon: "warning" })
+                                                        .then((value) => { });
+                return false;
+            }
+
+            if (Description == "") {
+                swal("Description is required", { icon: "warning" })
+                                                        .then((value) => { });
+                return false;
+            }
+            var urlList = null;
+
+            var url = '@Url.Action("Activity", "Ticket")';
+
+            if (Status == "Assigned") {
+               urlList = '@Url.Action("TicketList", "Ticket")';
+            } else {
+                urlList = '@Url.Action("MyTicketList", "Ticket")';
+            }
+            ////var urlList = '@Url.Action("MyTicketList", "Ticket")';
+
+            $("#form_submission").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submission").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket: "+ticket_number+" saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submission").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        ////$(document).ready(function () {
+            $(".saveLoader").toggle(false);
+
+            function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+            }
+
+            var dt_helpdesk_ticket_listing = $('#dt_helpdesk_ticket_listing').dataTable({
+              "fnDrawCallback": function (oSettings) {
+                    $(".loading-gif").toggle(false)
+                },
+                "language": {
+                    "emptyTable": '<span id="loader"><strong>Loading records, please wait...</strong></span>',
+                    "zeroRecords": "No matching records found"
+                },
+                "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+            });
+
+            $("#dt_helpdesk_ticket_listing_wrapper .dt-toolbar").remove();
+
+            $("#searchbox").on("keyup search input paste cut", function () {
+                dt_helpdesk_ticket_listing.DataTable().search(this.value).draw();
+            });
+
+           var dt_tbl_helpdesk_ticket_listing = $('#dt_tbl_helpdesk_ticket_listing').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "language": {
+                "emptyTable": '<span id="tbl_loader"><strong>Loading records, please wait...</strong></span>',
+                "zeroRecords": "No matching records found"
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+        $("#dt_tbl_helpdesk_ticket_listing_wrapper .dt-toolbar").remove();
+
+       var data = [];
+        var TicketId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetTicketList", "Ticket")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                if (data == "" || data == undefined) {
+                    document.getElementById("loader").textContent = "Data  not available in our records";
+                }
+                else {
+                dt_helpdesk_ticket_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                     var displayEdit = 'display:none;';
+                     var displayClose = 'display:none;';
+                     var displayCancel = 'display:none;';
+                     var displayResolved = 'display:none;';
+                     var downloadAttachment = 'display:none;';
+                        var priority = null;
+                        switch (data[i]["Priority"]) {
+                            case "1":
+                                priority = "NORMAL";
+                                break;
+                            case "2":
+                                priority = "HIGH";
+                                break;
+                            case "3":
+                                priority = "<span style='color:red;font-weight:bold'>URGENT</span>";
+                                break;
+                            default:
+                                priority = "NILL";
+                        }
+
+                      if (data[i]["Status"] == '@IFMIS.Libraries.Constants.PENDING') {
+                          displayEdit = '';
+                          displayClose = '';
+                          displayCancel = '';
+                        }
+
+                        if (data[i]["Status"] == 'Resolved') {
+                           displayResolved = '';
+                        }
+                        if (data[i]["AttachmentName"] != null) {
+                           downloadAttachment = '';
+                        }
+
+                    dt_helpdesk_ticket_listing.fnAddData([i + 1,
+                    data[i]["InstitutionName"] + " - (" + (data[i]["InstitutionCode"]) + ")",
+                    data[i]["TicketNumber"] +" "+ data[i]["ModuleName"] + " - (" + data[i]["SubModuleName"] + ")",
+                    data[i]["Title"],
+                    data[i]["Email"] + " ( " + data[i]["PhoneNumber"] + " ) ",
+                    data[i]["Status"],
+                    priority,
+                    ToJavaScriptDate(data[i]["CreatedAt"]),
+                    '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                  <li><a href="#" onclick="openViewDialog(' + i + ')">Preview</a></li>\
+                                  <li style="' + displayEdit + '"><a href="@Url.Action("EditTicket", "Ticket")/?ticketNumber=' + data[i]["TicketNumber"] + '">Edit</a></li>\
+                                  <li style="' + displayClose + '"><a href="#" onclick="closeTicketDialog(' + i + ')">Close</a></li>\
+                                  <li style="' + displayCancel + '" id="decisionList"><a href="#" onclick="cancelTicketDialog(' + i + ')">Cancel</a></li>\
+                                  <li style="' + displayResolved + '"><a href="#" onclick="remarksDialog(' + i + ')">Re-opened</a></li>\
+                                  <li style="' + displayResolved + '"><a href="#" onclick="closeTicketDialog(' + i + ')">Close</a></li>\
+                                  <li style="' + downloadAttachment + '"><a href = "http://' + data[i]['HostName'] + '/Media/HelpDesk/Tickets/' + data[i]["AttachmentName"] + '" target = "_blank" > View Attachment</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+                }
+                }
+
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+
+        $(".ticket_description").on('click', function () {
+            var reason = $(this).data('description');
+            var tNo = $(this).data('ticket');
+            var title = $(this).data('title');
+            $("#tnumber").text(tNo);
+            $("#title").text(title);
+            $("#description").text(reason);
+        });
+
+        var message = '@TempData["Message"]';
+        if (message == "Success") {
+            swal("Ticket Saved Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Updated") {
+            swal("Ticket Updated Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+        if (message == "Error") {
+            swal("Error saving Tickets Entry. Please contact System Administrator", { icon: "warning" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+        }
+
+
+
+        $(".ticketCancellation").on('click', function () {
+            var id = $(this).data('id');
+            var lpo = $(this).data('lpo');
+            swal({
+                title: 'Cancellation',
+                text: "Do you what to Cancel Ticket   " + lpo + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelTicket", "Tickets")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Ticket Cancelled successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to Cancel Ticket" + response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+        $(".ticketClosure").on('click', function () {
+            var id = $(this).data('id');
+            var dmtname = $(this).data('dmtname');
+            swal({
+                title: 'Closure',
+                text: "Do you what to Close Ticket   " + dmtname + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CloseTicket", "Tickets")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id, "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val() },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Ticket Closed Successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+                }
+                else {
+
+                    swal("Failed to Close Ticket" + response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Closed", "No change was made");
+                }
+            });
+
+        });
+
+        $(".close_ticket").on('click', function () {
+            var id = $(this).data('id');
+            var ticket = $(this).data('ticket2');
+            var title = $(this).data('ttitle2');
+            swal({
+                title: 'Ticket Closure',
+                text: "Do you want to Close Ticket: " + ticket,
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $('#CloseTicket').modal('show');
+                    $('#tticket_number2').text(ticket);
+                    $('#ftitle2').text(title);
+                    $('#TicketNumber').val(ticket);
+                    $('#TicketId').val(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+
+        $("#close_form_submission").click(function () {
+            var ticketId = document.getElementById("TicketId").value;
+            var Description = document.getElementById("Description2").value;
+            if (Description == "") {
+                swal("Description is Required.", { icon: "warning" })
+                .then((value) => { });
+                $("#close_form_submission").prop('disabled', false);
+                return
+            }
+            var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "TicketId": ticketId,
+                "Description": Description
+            }
+
+            var url = '@Url.Action("CloseTickets", "Ticket")';
+            document.getElementById("decisionList").style.display = "none";
+            var urlList = '@Url.Action("TicketList", "Ticket")';
+            $("#close_form_submission").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#close_form_submission").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket Closed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#close_form_submission").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        // *************** BEGINNING SHOW VIEW DIALOG ********************
+        function openViewDialog(i) {
+            let attachment = "NILL";
+            let hostNameIpAddress = data[i]["HostName"];
+            let ticketNo = data[i]["TicketNumber"];
+            let desctn = data[i]["Description"];
+            let instName = data[i]["InstitutionName"];
+            let instCode = data[i]["InstitutionCode"];
+            let modName = data[i]["ModuleName"];
+            let subModName = data[i]["SubModuleName"];
+            let fName = data[i]["FirstName"];
+            let mName = data[i]["MiddleName"];
+            let lName = data[i]["LastName"];
+            let eMail = data[i]["Email"];
+            let phone = data[i]["PhoneNumber"];
+            let stats = data[i]["Status"];
+            let hName = data[i]["HostName"];
+            let title = data[i]["Title"];
+            let attchName = data[i]["AttachmentName"];
+            let ticketId = data[i]["TicketId"];
+            var priority = null;
+            switch (data[i]["Priority"]) {
+                case "1":
+                    priority = "NORMAL";
+                    break;
+                case "2":
+                    priority = "HIGH";
+                    break;
+                case "3":
+                    priority = "<span style='color:red;font-weight:bold'>URGENT</span>";
+                    break;
+                default:
+                    priority = "NILL";
+            }
+            $("#institutionName").text(instName);
+            $("#institutionCode").text(instCode);
+            $("#moduleName").text(modName);
+            $("#subModuleName").text(subModName);
+            $("#ticketNumber").text(ticketNo);
+            $("#fullName").text(fName + " " + mName + " " + lName);
+            $("#email").text(eMail);
+            $("#phoneNumber").text(phone);
+            $("#status").text(stats);
+            if (attchName != null) {
+                attachment = '<a href="http://' + hostNameIpAddress + '/Media/HelpDesk/Tickets/' + attchName + '" target="_blank">View Attachment</a>';
+            }
+            $("#attachmentName").html(attachment);
+            $("#descriptions").text(desctn);
+            $("#hostName").text(hName);
+            $("#title").text(title);
+            $("#priority").html(priority);
+            var responseData = [];
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetActivityDescriptionByTicketId", "Ticket")/?ticketId=' + ticketId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    responseData = response.responseData;
+                    if (responseData == "" || responseData == undefined) {
+                        document.getElementById("tbl_loader").textContent = "Data  not available in our records";
+                    } else {
+                        dt_tbl_helpdesk_ticket_listing.fnClearTable();
+                        for (var i = 0; i < responseData.length; i++) {
+                            let institutionName = responseData[i]["InstitutionName"];
+                            let institutionCode = responseData[i]["InstitutionCode"];
+                            let descptn = responseData[i]["Description"];
+                            let overallStatus = responseData[i]["OverallStatus"];
+                            let date = responseData[i]["CreatedAt"];
+                            dt_tbl_helpdesk_ticket_listing.fnAddData([i + 1,
+                            institutionName + " (" + institutionCode + ") ",
+                                descptn,
+                            (overallStatus == "Assigned") ? "Re-opened" : overallStatus,
+                            ToJavaScriptDate(date)
+                            ]);
+                        }
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#TicketInformationModal').modal('show');
+        }
+        // *************** ENDING SHOW VIEW DIALOG ********************
+
+        /******************** BEGINNING OF CLOSE TICKET DIALOG***************************************/
+        var ticketId = null;
+        function closeTicketDialog(i) {
+            $("#tticket_number2").text(data[i]["TicketNumber"]);
+            $("#TicketId").text(data[i]["TicketId"]);
+            ticketId = data[i]["TicketId"];
+            $('#TicketId').val(ticketId);
+            $('#CloseTicketModal').modal('show');
+        }
+        /******************** ENDING OF CLOSE TICKET DIALOG***************************************/
+
+        /******************** BEGINNING OF CANCEL TICKET DIALOG***************************************/
+        function cancelTicketDialog(i) {
+            var ticketId = data[i]["TicketId"];
+            swal({
+                title: 'Cancel Ticket',
+                text: "Do you want to Cancel Ticket: " + data[i]["TicketNumber"],
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var form_data = {
+                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                "id": ticketId
+            }
+
+            var url = '@Url.Action("CancelTicket", "Ticket")';
+            document.getElementById("decisionList").style.display = "none";
+            var urlList = '@Url.Action("TicketList", "Ticket")';
+            $(".saveLoader").toggle(true);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $(".saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Ticket Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $(".saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+        /******************** ENDING OF CANCEL TICKET DIALOG***************************************/
+    </script>
+}

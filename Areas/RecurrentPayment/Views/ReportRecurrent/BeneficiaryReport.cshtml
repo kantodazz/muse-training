@@ -1,0 +1,142 @@
+﻿@*@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.BeneficiaryCategoriesSummary_vw>*@
+
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    tr:nth-of-type(odd) {
+        background-color: #f5f5f5;
+    }
+
+    table {
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+        td:first-child {
+            border-left: 1px solid #cecfd5;
+        }
+
+    thead {
+        background: #395870;
+        color: #fff;
+    }
+
+    tfoot {
+        background-color: #b4fabc;
+        color: #000000;
+    }
+</style>
+
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Beneficiary Report</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Beneficiary Category
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="hidden" id="institutioncode" value="@ViewBag.institutionCode" />
+                                        @Html.DropDownList("BeneficiaryCategory", null, "Select .........", new { @class = "form-control select2" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <input type="button" class="btn btn-info" value="View Report" onclick="PayrollReport()" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section Scripts{
+    <script>
+
+        $(".btnSelectAll").click(function () {
+            $(".checkBox").prop('checked',
+                $(this).prop('checked'));
+        });
+
+        var genBeneficiary = function () {
+
+            var csvIds = [];
+
+            $("input:checkbox.checkBox").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                alert("No record selected!");
+                return;
+            }
+
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "POST",
+                url: "GenerateBeneficiary",
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "Success") {
+                        window.location.href = "Download/" + csvIds;
+                        alert("Unapplied Details Successfully Updated!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        };
+        function PayrollReport() {
+            debugger;
+            var Category = $("#BeneficiaryCategory").val();
+            var InstitutionCode = $("#institutioncode").val();
+            window.open("../../Areas/RecurrentPayment/Reports/BeneficiaryReport.aspx?BeneficiaryCategory=" + Category + "&&InstitutionCode=" + InstitutionCode);
+        }
+    </script>
+}

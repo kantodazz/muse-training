@@ -1,0 +1,908 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PaymentVoucherVM
+@{
+    ViewBag.Title = "Payment File Submission";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .status-pending {
+    }
+
+    .status-approved {
+        font-weight: bold;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false"
+                     data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-8">
+
+                                    <div class="col-md-4">
+                                        <strong>Facility  </strong>
+                                        @Html.TextBoxFor(model => model.FacilityCode, new { @class = "form-control col-md-4", @placeholder = "Select Facility" })
+                                    </div>
+                                    <div class="col-md-4">
+                                        <strong> Payer Bank Account  </strong>
+                                        @Html.TextBoxFor(model => model.PayerAccount, new { @class = "form-control col-md-4", @placeholder = "Select Bank Account" })
+
+                                    </div>
+                                    @*<div class="col-md-4">
+                                            <a class="btn btn-info" id="confirmbtn" onclick="confirmPayment()">
+                                                <i class="glyphicon glyphicon-ok"></i> Confirm
+                                            </a>
+                                        </div>*@
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Funding Ref</th>
+                                        <th>Msg Id</th>
+                                        <th>Num Trx</th>
+                                        <th>Total Amount</th>
+                                        <th>Payer Bank Account</th>
+                                        <th>Confirmed At</th>
+                                        <th width="150">Facility</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- ATTACH SLIP DIALOG ----------------->
+<div class="modal fade" id="attachFileModal">
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Attach Payment Slip</h3>
+            </div>
+
+            <div class="modal-body">
+                <input type="file" name="file" id="file" accept=".pdf" />
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="uploadFile()" style="width:100px;" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="/Content/img/loading.gif" id="saveLoader" />
+                </button>
+                <button class="btn btn-info"
+                        data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="viewModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:95%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Payment Vouchers</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_view" class="table table-bordered table-condensed"></table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="ViewReasonModal">
+    x
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 class="modal-title">  Rejection Reason </h4>
+            </div>
+            <div class="modal-body">
+                <div id="registration-form">
+                    @Html.TextArea("RejectionReason", null, new { @class = "form-control", @readonly = "readonly" })
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+            $(".loading-gif").toggle(false)
+        });
+
+        var dt_payee_details = $('#dt_payee_details').dataTable({
+            "sDom": 't',
+            "autoWidth": false,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "columns": [
+                { title: "Payee Name" },
+                { title: "Payee code" },
+                { title: "Bank Name" },
+                { title: "Bank Account No" },
+                { title: "Address" }]
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+
+        var data = [];
+        var globalPayeeId = null;
+
+        function loadPaymentData() {
+            var voteCodes = []
+            statusTemplate = function (status) {
+                return '<div class="status-approved">' + status + '</div>'
+            }
+
+            actionTemplate = function (i, status,Id,file,reason) {
+                return status == "Approved" ?
+                       '<div class="btn-group" id="drop-' + i + '">\
+                         <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                           <span class="caret"></span\
+                            <span class="sr-only"></span>\
+                         </button>\
+                         <ul class="dropdown-menu">\
+                           <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                            <li><a href="#" onclick="submitFileDialog(' + i + ')">Submit File</a></li>\
+                           <li><a href="#" onclick="reject(' + Id + ')">Reject</a></li>\
+                         </ul>\
+                      </div>\
+                     <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                    : '<div class="btn-group" id="drop-' + i + '">\
+                         <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                           <span class="caret"></span\
+                            <span class="sr-only"></span>\
+                         </button>\
+                         <ul class="dropdown-menu">\
+                           <li><a href="#" onclick= "openReasonDialog(`' + reason + '`)">View Reason</a></li>\
+                           <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                            <li><a href="#" onclick="submitFileDialog(' + i + ')">Submit File</a></li>\
+                           <li><a href="#" onclick="reject(' + Id + ')">Reject</a></li>\
+                         </ul>\
+                      </div>\
+                     <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+
+            $("#loader").text("Loading please wait...")
+           
+             $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetFacilityPaymentFile", "ExternalPayment")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_voucher_listing.fnAddData([i+1,
+                           data[i]["FundingRef"],
+                           data[i]["MsgId"],
+                           data[i]["NumTrx"],
+                           toLabel(data[i]["OperationalAmount"]),
+                           data[i]["PayerBankAccount"],
+                           data[i]["ConfirmedAtFormatted"],
+                            data[i]["FacilityCode"] + ' - ' + data[i]["FacilityName"],
+                           statusTemplate(data[i]["OverallStatus"]),
+                            actionTemplate(i, data[i]["OverallStatus"], data[i]["PaymentFileId"], data[i]["PaymentSlipFilePath"], data[i]["OverallStatusDesc"])
+                        ]);
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                    if(data.length == 0){
+                        $("#loader").text("No record found.")
+                    }
+
+                    createVoteCodesFilter(voteCodes);
+                    $("#FacilityCode").trigger('change');
+                    if (data.length == 0) {
+                        $("#loader").text("No record found.")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        loadPaymentData();
+
+        function createVoteCodesFilter(voteCodes) {
+            var voteCodeSelect = document.getElementById("voteCodes")
+            if (voteCodeSelect) {
+                voteCodes.forEach(voteCode => {
+                    let option = document.createElement('option')
+                    option.value = voteCode
+                    option.text = voteCode
+                    voteCodeSelect.appendChild(option);
+                });
+            }
+        }
+
+        function filterTableData() {
+            let _data = data
+            let voteCode = $("#voteCodes").val()
+            if (voteCode) {
+                _data = _data.filter(v => v.InstitutionCode == voteCode)
+            }
+
+            dt_voucher_listing.fnClearTable();
+            for (var i = 0; i < _data.length; i++) {
+                dt_voucher_listing.fnAddData([i + 1,
+                    _data[i]["FundingRef"],
+                    _data[i]["MsgId"],
+                    _data[i]["NumTrx"],
+                    toLabel(_data[i]["OperationalAmount"]),
+                    _data[i]["PayerBankAccount"],
+                    _data[i]["ConfirmedAtFormatted"],
+                    _data[i]["FacilityCode"] + ' - ' + _data[i]["FacilityDescription"],
+                    statusTemplate(_data[i]["OverallStatus"]),
+                    actionTemplate(i, _data[i]["OverallStatus"], _data[i]["PaymentFileId"], _data[i]["PaymentSlipFilePath"], data[i]["OverallStatusDesc"])
+                ]);
+                $("#saveLoader-" + i + "").toggle(false)
+            }
+        }
+
+
+        var PaymentFileId = null;
+        function attachSlip(i) {
+            PaymentFileId = data[i]["PaymentFileId"];
+            $('#attachFileModal').modal('show');
+        }
+
+        /**
+        * Send upload signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        $("#saveLoader").toggle(false);
+        function uploadFile() {
+            var formData = new FormData();
+            formData.append('PaymentFileId', PaymentFileId);
+            formData.append('file', $('input[type=file]')[0].files[0]);
+            $("#form_submision").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            $.ajax({
+                url: '@Url.Action("AttachSlip", "ExternalPayment")',
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Attached successfully!")
+                          .then((m) => {
+                              $('#attachFileModal').modal('hide');
+                              window.location.reload();
+                          });
+                    } else {
+                        swal(response)
+                         .then((m) => {
+                             $('#attachFileModal').modal('hide');
+                             window.location.reload();
+                         });
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error)
+                     .then((m) => {
+                         $('#attachFileModal').modal('hide');
+                         window.location.reload();
+                     });
+                }
+            });
+        }
+
+        $("#voteCodes").change(function () {
+            filterTableData()
+        })
+
+
+
+        function confirmPendingVoucher(i) {
+            var url = '@Url.Action("ConfirmVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PaymentVoucherId": i },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function approve(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Approve this Payment File?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmPayment(data[i]["PaymentFileId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmPayment(id) {
+            var url = '@Url.Action("ApprovePaymentFile", "PaymentOffice")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentFileId": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var dt_view = $('#dt_view').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "targets": [1],
+                "visible": false
+            }],
+            "columns": [
+           {
+               "className": 'details-control',
+               "orderable": false,
+               "data": null,
+               "defaultContent": ''
+           },
+           { title: "Payee DetailId" },
+           { title: "Payment No" },
+           { title: "Num Trx" },
+           { title: "Total Amount" },
+           { title: "Payer Bank Account" },
+           { title: "Payment Method" },
+           { title: "Approved At" }
+            ]
+        });
+
+        $("#dt_view_wrapper .dt-toolbar").remove();
+
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_view.DataTable().search(this.value).draw();
+        });
+
+        function openViewDialog(i) {
+            viewData(data[i]["PaymentFileId"]);
+            $("#viewModal").modal("show");
+        }
+
+        var d = []
+        function viewAttachment(i) {
+            window.location.href =
+                '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + d[i]["PaymentSummaryId"] + '&&sourceModule=PaymentSummary';
+        }
+        function _actionTemplate(i) {
+            return '<div class="btn-group" id="drop-' + i + '">\
+                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                         <span class="caret"></span\
+                         <span class="sr-only"></span>\
+                        </button>\
+                        <ul class="dropdown-menu">\
+                           <li><a href="/Content/uploads/' + d[i]["PaymentSlipFilePath"] + '">View Slip</a></li>\
+                           <li><a href="#" onclick="viewAttachment('+ i + ')">Additional Attachments</a></li>\
+                        </ul>\
+                    </div>'
+        }
+        function viewData(Id) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetPaymentSummary2", "ExternalPayment")' + "/?PaymentFileId=" + Id + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    dt_view.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_view.fnAddData([i,
+                           d[i]["PaymentFileId"],
+                           d[i]["PaymentNo"],
+                           d[i]["NumTrx"],
+                           toLabel(d[i]["OperationalAmount"]),
+                           d[i]["PayerBankAccount"],
+                           d[i]["PaymentMethod"],
+                           d[i]["CreatedAtFormatted"],
+                          /* _actionTemplate(i)*/
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function initTablePaymentVoucher(i) {
+            window["dt_view_payment_voucher" + i]
+                = $('#dt_view_payment_voucher' + i)
+           .dataTable({
+               "sDom": 't',
+               "columns": [
+                   { title: "#" },
+                   { title: "Reference" },
+                   { title: "Payee Name" },
+                   { title: "Description" },
+                   { title: "Payee Bank Account" },
+                   { title: "Payee Bank Name" },
+                   { title: "Paying Bank" },
+                   { title: "Paying Account" },
+                   { title: "Amount" },
+                   { title: "Source Module" },
+               ]
+           });
+            $("#dt_view_payment_voucher" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_view tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_view.DataTable().row(tr);
+            var format = function (i) {
+                return '<table id="dt_view_payment_voucher' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                row.child(format(row.data()[0])).show();
+                initTablePaymentVoucher(row.data()[0]);
+                tr.addClass('shown');
+                //console.log(d[row.data()[0]])
+                getPaymentVoucher(row.data()[0], d[row.data()[0]]["PaymentSummaryId"]);
+            }
+        });
+        function sourceModule(d) {
+            switch (d["SourceModule"]) {
+                case "Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Accrual Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Prepayment":
+                    return '<a href="@Url.Action("PreviewPrepayment","Prepayment")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Imprest":
+                    return '<a href="@Url.Action("ImprestDetails","Imprest")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "BulkPayment":
+                    return '<a href="@Url.Action("PaymentDetails", "PaymentBatches")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Loan":
+                    return '<a href="@Url.Action("PreviewLoanTracker","Loan")/' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                default:
+                    return d["SourceModule"] + withholdingTemplate(d);
+            }
+        }
+        function getPaymentVoucher(rowId, paymentSummaryId) {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetPaymentVoucher2", "PaymentVoucher")',
+                data: { 'paymentSummaryId': paymentSummaryId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                     _d = response.data;
+                    window["dt_view_payment_voucher" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < _d.length; i++) {
+                        window["dt_view_payment_voucher" + rowId]
+                            .fnAddData([i + 1,
+                                _d[i]["SourceModuleReferenceNo"],
+                                _d[i]["Payeename"],
+                                _d[i]["PaymentDesc"],
+                                _d[i]["PayeeBankAccount"],
+                                _d[i]["PayeeBankName"],
+                                _d[i]["PayerBankName"],
+                                _d[i]["PayerBankAccount"],
+                                toLabel(_d[i]["OperationalAmount"]),
+                                sourceModule(_d[i]),
+                            ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function submitFileDialog(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Submit this Payment File?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    submitFile(data[i]["PaymentFileId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function submitFile(id) {
+            var url = '@Url.Action("SubmitPaymentFile", "PaymentOffice")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentFileId": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("File Submitted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response).then((value) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function reject(i) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(i, remark);
+                };
+            });
+        }
+
+        function confirmRejection(Id, remark) {
+
+            var url = '@Url.Action("RejectPaymentFileSubmission", "ExternalPayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentFileId": Id, "remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+    $(document).ready(function () {
+            $(".cbCheckAllReq").hide();
+            $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+
+            $('[data-toggle="tooltip"]').tooltip();
+            var url = "GetExternalPaymentFacility/?status=Confirmed";
+            $("#FacilityCode").select2({
+                minimumInputLength: 0,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (referenceNo) {
+                        return {
+                            referenceNo: referenceNo
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.facilities }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+
+
+            var url = "GetAllFacilityBank/?status=Confirmed";
+            $("#PayerAccount").select2({
+                minimumInputLength: 0,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (referenceNo) {
+                        return {
+                            referenceNo: referenceNo
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.banks }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+    });
+
+
+        $("#PayerAccount").change(function () {
+            debugger;
+            filterTableDataPayerAccount();
+            $(".cbCheckAllReq").show();
+
+        });
+
+
+
+        $("#FacilityCode").change(function () {
+            filterTableData();
+            $(".cbCheckAllReq").hide();
+
+            debugger;
+            var facility = $(this).val();
+            var url = "GetFacilityBank/?facility=" + facility + "&status=Confirmed";
+
+            $("#PayerAccount").select2({
+                minimumInputLength: 0,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (referenceNo) {
+                        return {
+                            referenceNo: referenceNo
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.banks };
+                    }
+                }
+            });
+        })
+
+        function filterTableDataPayerAccount() {
+            debugger;
+            let _dataAccount = data
+            let voteCode = $("#FacilityCode").val()
+            let payeraccount = $("#PayerAccount").val()
+            if (voteCode) {
+                _dataAccount = _dataAccount.filter(v => v.FacilityCode == voteCode && v.PayerBankAccount == payeraccount);
+            }
+
+            dt_voucher_listing.fnClearTable();
+            for (var i = 0; i < _dataAccount.length; i++) {
+                dt_voucher_listing.fnAddData([i + 1,
+                    _dataAccount[i]["FundingRef"],
+                    _dataAccount[i]["MsgId"],
+                    _dataAccount[i]["NumTrx"],
+                    toLabel(_dataAccount[i]["OperationalAmount"]),
+                    _dataAccount[i]["PayerBankAccount"],
+                    _dataAccount[i]["ConfirmedAtFormatted"],
+                    _dataAccount[i]["FacilityCode"] + ' - ' + _dataAccount[i]["FacilityDescription"],
+                    statusTemplate(_dataAccount[i]["OverallStatus"]),
+                    actionTemplate(i, _dataAccount[i]["OverallStatus"], _dataAccount[i]["PaymentFileId"], _dataAccount[i]["PaymentSlipFilePath"], data[i]["OverallStatusDesc"])
+
+                ])
+                $("#saveLoader-" + i + "").toggle(false)
+            };
+        }
+
+
+        var openReasonDialog = function (reason) {
+            $(".modal-body #RejectionReason").val(reason);
+            $("#ViewReasonModal").modal("show");  // show modal
+        };
+
+    </script>
+}

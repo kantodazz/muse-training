@@ -1,0 +1,149 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.UploadBeneficiariesVM
+
+@{
+    ViewBag.Title = "Upload Payments";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 5%">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+
+                        <h2 style="color:black;">Upload Beneficiaries</h2>
+
+                    </header>
+                    <div>
+                        <div class="widget-body" style="padding-top:10px; width:100%;">
+
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "beneficiariesForm" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            Pay Station
+                                            @Html.DropDownListFor(model => model.PayStationId, Model.PayStations, "Select Pay Station", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.PayStationId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            Department
+                                            @Html.DropDownListFor(model => model.DepartmentId, new SelectList(""), "Select Department", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="row" style="padding:12px">
+                                        <div class="col-md-4">
+                                            <button type="button" class="btn btn-info"  style="float: left;" onclick="uploadBeneficiaries()">
+                                                <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                                                Upload
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts{
+
+    <script>
+
+        $("#PayStationId").change(function () {
+
+            var Id = $(this).val();
+
+            var url = "GetDeptsPerPayStation/" + Id;
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#DepartmentId").empty();
+                    $("#DepartmentId").append(response);
+                }
+            })
+        });
+
+        var uploadBeneficiaries = function () {
+
+            if (window.FormData !== undefined) {
+
+                debugger
+
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("PayStationId", $("#PayStationId").val());
+                    data.append("DepartmentId", $("#DepartmentId").val());
+                    data.append("FileName", file[0]);
+                }
+
+                //var data = $("#paymentForm").serialize();
+                var url = '@Url.Action("UploadBeneficiaries", "Beneficiaries")';
+
+                if (!$("#beneficiariesForm").valid()) {
+                    return false;
+                }
+
+                $("#divLoader").show();
+                debugger
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data
+                }).done(function (response) {
+                    debugger
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        swal("Successfully uploaded!", { icon: "success" })
+                            .then((value) => {
+                                location.reload();
+                            });
+                        
+                    } else if (response == "InvalidFormat") {
+                        swal("Invalid file format, file format should be MS Excel!", { icon: "warning" });
+                    } else if (response == "InvalidSize") {
+                        swal("Invalid file size, file size should be less than 2MB!", { icon: "warning" });
+                    }
+                    else {
+                        swal("Unknown error, contact system admin!", { icon: "warning" });
+                    };
+                }).fail(function (response) {
+                    swal(response, { icon: "warning" });
+                });
+            };
+        };
+
+    </script>
+}
+

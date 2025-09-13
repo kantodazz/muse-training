@@ -1,0 +1,167 @@
+﻿@{
+    ViewBag.Title = "CreateMobileAccount";
+}
+
+<div id="divLoader">
+</div>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Create Mobile Account </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form action="CreateTransfer" method="post" class="form-horizontal" name="transferForm" id="transferForm">
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                               
+                                <div class="form-group">
+                                    @Html.Label("Mobile Operator", htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownList("MobileOperator",null, "Select Category", new { @class = "form-control select2",required=true })
+                                        @Html.ValidationMessage("MobileOperator", "", new { @class = "text-danger" })
+                                    </div>
+
+                                    @Html.Label("Account", htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-4">
+                                        @Html.DropDownList("Account", null, "Select Account", new { @class = "form-control select2", required = true })
+                                        @Html.ValidationMessage("Account", "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-2">
+                                            <button class="btn btn-info" type="button" style="float: left" id="btnSave">
+                                                <i class="fa fa-save"></i>
+                                                Save
+                                            </button>
+                                            <a href="@Url.Action("MobileAccountList", "MobileAccounts" )" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                <i class="fa fa-arrow-left"></i>
+                                                Back
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+
+@section pagespecific{
+    <script>
+        
+        $("#btnSave").click(function () {
+
+            $('#btnSave').prop("disabled", true);
+            $("#divLoader").show();
+
+            if (!$("#transferForm").valid()) {
+                $('#btnSave').prop("disabled", false);
+                $("#divLoader").hide();
+                swal("Please select all input", { icon: "error" });
+                 
+                return false;
+            }
+
+
+            var token = $("[name='__RequestVerificationToken']").val();
+            var data = {
+                mobileOperator: $('#MobileOperator').val(),
+                account: $('#Account').val(),
+                
+            }
+
+            var url = '@Url.Action("CreateMobileAccount", "MobileAccounts")';
+            $.ajax({
+                url: url,
+                type: "POST",
+                //data: JSON.stringify(data),
+                data: data,
+                dataType: "JSON",
+                //contentType: "application/json",
+                contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+                success: function (response) {
+                    //check is successfully save to database
+                    if (response == "Success") {
+                        //will send status from server side
+                        swal({
+                            text: "Mobile Account successfully saved.",
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            window.location = '@Url.Action("MobileAccountList", "MobileAccounts")';
+                        });
+                    }
+                    else if (response == "Duplicate") {
+                        swal({
+                            text: "Mobile with that Account Already Exist!",
+                            icon: "warning",
+                            button: "OK",
+                        });
+                    }
+                    else {
+                        swal({
+                            text: response,
+                            icon: "warning",
+                            button: "OK",
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "Error. Please try again..",
+                        icon: "error",
+                        button: "OK",
+                    })
+                },
+                complete: function () {
+                    $('#btnSave').prop("disabled", false);
+                    $("#divLoader").hide();
+                }
+            });
+        });
+
+    </script>
+}
+

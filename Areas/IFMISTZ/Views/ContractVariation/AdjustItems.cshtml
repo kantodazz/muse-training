@@ -1,0 +1,394 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+    ViewBag.Title = "Preview Contract";
+    var i = 0;
+    decimal? new_contract_amount = 0;
+    new_contract_amount = Model.ContractAmount - Model.VariationAmount;
+}
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Contract Variation</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <fieldset class="scheduler-border" id="contract_details">
+                                <legend class="scheduler-border">Contract Variation Details</legend>
+                                <div id="contract_data">
+                                    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Reg #&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNo)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNumber)</div></div>
+                                    <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractName)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Variation Type&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.VariationType)</div></div>
+                                    <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractAmount) @Html.DisplayFor(model => model.OperationalCurrency)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Variation Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.VariationAmount) @Html.DisplayFor(model => model.OperationalCurrency)</div></div>
+                                    <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>New Contract Amount&nbsp;:</strong>&nbsp;@Convert.ToDecimal(new_contract_amount).ToString("#,##0/=") @Html.DisplayFor(model => model.OperationalCurrency)</div><div class="col-sm-6 col-md-6 col-lg-6">
+    <a href="@Url.Action("EditByDecreasingAmount", "ContractVariation",new {id=Model.ContractVariationId })" class="btn btn-info btn-xs">
+        <i class="fa fa-edit"></i>  Edit Variation
+    </a>
+</div>
+                                    </div>
+                                </div>
+                              
+
+                            </fieldset>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            @if (Model.VariationItemVMs.Count() > 0)
+                            {
+                                <table align="center" class="table table-bordered table-hover table-condensed" style="width:97%">
+                                    <tr data-level='1' style="background:#f5f5f5; color:#000000">
+
+                                        <th style="text-align: center;width:3%">#</th>
+                                        <th colspan="13" style="text-align: left">Remove items from Payment Schedule to match variation </th>
+
+                                    </tr>
+                                    <tbody>
+                                        @foreach (var group in Model.VariationItemVMs.GroupBy(a => a.PaymentScheduleId))
+                                        {
+                                            i++;
+                                            var j = 1;
+                                            decimal variation_balance = @Convert.ToDecimal(group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.VariationAmount).FirstOrDefault());
+                                            decimal? total_variation = group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.TotalAmountVariation).Sum();
+
+                                            <tr data-level='1' style="background:#f5f5f5; color:#000000">
+                                                <th align="center" style="width:3%">@i</th>
+                                                <th colspan="13" style="text-align: left">
+                                                    <span class="sign"></span>&nbsp;&nbsp;&nbsp;@group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.PaymentScheduleName).FirstOrDefault() <strong>
+                                                        <span style="float:right;">
+                                                            Variation Amount:@Convert.ToDecimal(group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.VariationAmount).FirstOrDefault()).ToString("#,##0.00/=")
+                                                        </span>
+                                                    </strong>
+                                                </th>
+
+                                            </tr>
+                                            if (total_variation > 0)
+                                            {
+                                                variation_balance = variation_balance - (decimal)total_variation;
+                                            }
+                                            <tr data-level='2'>
+                                                <th style="text-align: center" colspan="3"></th>
+                                                <th style="text-align: center" colspan="6">Original Items</th>
+                                                <th style="text-align: center" colspan="5">Removed By Variation</th>
+                                            </tr>
+                                            <tr data-level='2'>
+                                                <th style="text-align: center" colspan="2"></th>
+                                                <th style="text-align: left">Item </th>
+                                                <th style="text-align: center">Quantity</th>
+                                                <th style="text-align: right">Unit Price</th>
+                                                <th style="text-align:right">VAT</th>
+                                                <th style="text-align:right">Overhead</th>
+                                                <th style="text-align: right">Total Amount</th>
+                                                <th style="text-align: center">Action</th>
+                                                <th style="text-align: center">Quantity</th>
+                                                <th style="text-align: right">Unit Price</th>
+                                                <th style="text-align:right">VAT</th>
+                                                <th style="text-align:right">Overhead</th>
+                                                <th style="text-align: right">Total Amount</th>
+                                            </tr>
+                                            foreach (var item in group)
+                                            {
+                                                j++;
+                                                string percentage = "NA";
+                                                if (item.Overhead != null)
+                                                {
+                                                    percentage = item.Overhead + "%";
+                                                }
+                                                string percentageVariation = "NA";
+                                                if (item.OverheadVariation != null)
+                                                {
+                                                    percentageVariation = item.OverheadVariation + "%";
+                                                }
+                                                <tr data-level='2'>
+                                                    <td></td>
+                                                    <td style="text-align: center">@j</td>
+                                                    <td>@Html.DisplayFor(modelItem => item.ItemDesc)</td>
+                                                    <td style="text-align: center">@Html.DisplayFor(modelItem => item.Quantity)</td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.UnitPrice) </td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.VAT)</td>
+                                                    <td style="text-align: right">@percentage</td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.TotalAmount)</td>
+                                                    <td style="text-align:center">
+
+                                                        <div class="btn-group">
+
+                                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                                <span class="caret"></span>
+                                                                <span class="sr-only">Toggle Dropdown</span>
+                                                            </button>
+                                                            <ul class="dropdown-menu">
+
+                                                                <li>
+                                                                    @if (item.TotalAmountVariation > 0)
+                                                                    {
+                                                                        <a href="#" onclick="editAdjust(@item.VariationItemId)">
+                                                                            <i class="fa fa-edit"></i>Edit Adjust items
+                                                                        </a>
+
+                                                                    }
+                                                                    else
+                                                                    {
+                                                                        <a href="#" onclick="adjustItem(@item.ContractDetailId,@item.VariationPayScheduleId)">
+                                                                            <i class="fa fa-edit"></i>Adjust items
+                                                                        </a>
+                                                                    }
+
+                                                                </li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                    <td style="text-align: center">@Html.DisplayFor(modelItem => item.QuantityVariation)</td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.UnitPriceVariation) </td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.VATVariation)</td>
+                                                    <td style="text-align: right">
+                                                        @if (item.QuantityVariation != null)
+                                                        {
+                                                            @percentageVariation
+                                                        }
+                                                    </td>
+                                                    <td style="text-align: right">@Html.DisplayFor(modelItem => item.TotalAmountVariation)</td>
+
+                                                </tr>
+
+                                            }
+                                            <tr>
+                                                <th style="text-align: right" colspan="7">Original Payment Schedule(Total)</th>
+                                                <th style="text-align: right">@Convert.ToDecimal(group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.ScheduleAmount).FirstOrDefault()).ToString("#,##0.00/=")</th>
+                                                <th></th>
+                                                <th style="text-align: right" colspan="4">Total</th>
+                                                <th style="text-align: right">
+                                                    @Convert.ToDecimal(group.Where(a => a.PaymentScheduleId == group.Key).Select(a => a.TotalAmountVariation).Sum()).ToString("#,##0.00/=")
+                                                </th>
+                                            </tr>
+                                            <tr><th style="text-align: right" colspan="13">Variation Balance</th><th style="text-align: right">@variation_balance.ToString("#,##0.00/=")</th></tr>
+                                            <tr><th style="text-align: right" colspan="14">&nbsp;</th></tr>
+                                        }
+
+
+
+
+                                    </tbody>
+                                </table>
+
+                            }
+
+
+
+
+
+
+                            <br>
+
+                            <div class="col-md-offset-1">
+
+                                @if (Model.OverallStatus == "Pending" || Model.OverallStatus == "Rejected")
+                                {
+                                    <a href="@Url.Action("PendingVariation","ContractVariation")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                }
+
+                            </div>
+                            <br />
+                            <br />
+                            <br />
+
+
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+                    <div class="col-md-offset-1">
+                        <a href="@Url.Action("PendingVariation", "ContractVariation")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                    </div>
+                  
+                </div>
+            </article>
+         
+        </div>
+    </section>
+    
+</div>
+
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Adjust Items
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+            $(document).ready(function () {
+
+
+
+
+            });
+
+            $(document).ajaxStart(function () {
+                $(".loadingImg").show();
+
+            });
+            //HIDE LOADER ICON
+            $(document).ajaxStop(function () {
+                $(".loadingImg").hide();
+                $("#divModalBody #QuantityVariation").autoNumeric('init');
+                $("#divModalBody #UnitPrice").autoNumeric('init');
+                $("#divModalBody #UnitPriceVariation").autoNumeric('init');
+                $("#divModalBody #TotalAmount").autoNumeric('init');
+                $("#divModalBody #TotalAmountVariation").autoNumeric('init');
+                $("#divModalBody #VAT").autoNumeric('init');
+                $("#divModalBody #VATVariation").autoNumeric('init');
+            });
+        var vatPtg = '@Model.VatPercentage';
+        var vatRatio = vatPtg / 100;
+         var adjustItem = function (id,scheduleId) {
+          var url = '@Url.Action("RemoveItems", "ContractVariation")';
+                $("#divModalBody").load(url, { id, scheduleId }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on adjusting Items, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+
+            };
+            var editAdjust = function (id) {
+            var url = '@Url.Action("EditRemoveItems", "ContractVariation")';
+                $("#divModalBody").load(url, { id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on adjusting Items, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+
+        };
+        function calculateVariation(e) {
+            debugger
+            var quantity = parseFloat((e.value).split(",").join(""));
+            var unitPrice = parseFloat($("#divModalBody #UnitPrice").val().split(",").join(""));
+            var totalAmount = unitPrice * quantity;
+            var vat = 0;
+            var overhead = 0;
+            var vat_ptg = vatRatio;
+            var previous_vat = parseFloat($("#divModalBody #VAT").val().split(",").join(""));
+            if (previous_vat > 0) {
+                vat = vat_ptg * totalAmount;
+                $("#divModalBody #VATVariation").val((vat.toFixed(2)).toLocaleString('en'));
+            }
+            if ($("#divModalBody #Overhead").val() > 0) {
+                var overhead_ptg = parseFloat($("#divModalBody #Overhead").val().split(",").join(""));
+                overhead = overhead_ptg * totalAmount / 100
+                $("#divModalBody #OverheadVariation").val(overhead_ptg);
+            }
+            totalAmount = totalAmount + vat + overhead;
+            var total_amount=totalAmount.toFixed(2);
+            $("#divModalBody #TotalAmountVariation").val(total_amount.toLocaleString('en'));
+        }
+        function variationByUnitPrice(e) {
+            debugger
+            var unitPrice = parseFloat(e.value.split(",").join(""));
+            var quantity = 1;
+             var totalAmount = unitPrice * quantity;
+            var vat = 0;
+            var overhead = 0;
+            var vat_ptg = vatRatio;
+            var previous_vat = parseFloat($("#divModalBody #VAT").val().split(",").join(""));
+            if (previous_vat > 0) {
+                vat = vat_ptg * totalAmount;
+                $("#divModalBody #VATVariation").val((vat.toFixed(2)).toLocaleString('en'));
+            }
+           
+            if ($("#divModalBody #Overhead").val() > 0) {
+                var overhead_ptg = parseFloat($("#divModalBody #Overhead").val().split(",").join(""));
+                overhead = overhead_ptg * totalAmount / 100
+                $("#divModalBody #OverheadVariation").val(overhead_ptg);
+            }
+            totalAmount = totalAmount + vat + overhead;
+            var total_amount = totalAmount.toFixed(2);
+            $("#divModalBody #TotalAmountVariation").val(total_amount.toLocaleString('en'));
+        }
+        function SubmitVariation(formData) {
+            $("#divModalBody #btnSubmit").prop('disabled', true);
+                            var url = '@Url.Action("SaveDeductionItem", "ContractVariation")';
+                           var ajaxConfig = {
+                            type: "post",
+                            url: url,
+                            data: new FormData(formData),
+                               success: function (response) {
+                                $("#divModalBody #btnSubmit").prop('disabled', false);
+                                if (response == "Success") {
+                                    $('#divModal').modal('hide');
+                                    swal("Item saved successfully", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                              });
+                                }
+                                else {
+                                    $("#divModalBody #btnSubmit").prop('disabled', false);
+                                    swal(response);
+                                }
+                            }
+                        }
+
+                        if ($(formData).attr('enctype') == "multipart/form-data") {
+                            ajaxConfig["contentType"] = false;
+                            ajaxConfig["processData"] = false;
+                        }
+                        $.ajax(ajaxConfig);
+                        return false;
+        }
+    </script>
+}
+
+
+
+
+

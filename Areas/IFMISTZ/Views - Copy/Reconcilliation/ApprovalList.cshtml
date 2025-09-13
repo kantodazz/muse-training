@@ -1,0 +1,312 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ReconciliationPosted>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Confirmed Reconciliation List </h2>
+                    </header>
+
+                    <div>
+
+                        <div class="widget-body" style="padding-top:10px">
+
+
+                            <table id="dt_basic" class="table table-bordered table-hover table-condensed">
+                                <thead style="white-space:nowrap">
+                                    <tr>
+                                        <th>#</th>
+
+                                        <th>
+                                            Account Number
+                                        </th>
+                                        <th>
+                                            Account Name
+                                        </th>
+                                        <th>
+                                            Bank Balance
+                                        </th>
+                                        <th>
+                                            Adjusted Balance
+                                        </th>
+
+                                        <th>
+                                            Cash Book Balance
+                                        </th>
+
+                                        <th>
+                                            Reconciliation Date
+                                        </th>
+                                        <th>
+                                            Check Date
+                                        </th>
+
+                                        <th>
+                                            Overall Status
+                                        </th>
+
+
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                @{
+
+                                    int i = 0;
+
+                                }
+
+                                @foreach (var item in Model)
+                                {
+                                    i++;
+                                    <tr>
+                                        <td>@i</td>
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.AccountNumber)
+                                        </td>
+                                        <td style="font-size:11px">
+                                            @Html.DisplayFor(modelItem => item.AccountName)
+                                        </td>
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.ClosingBalanceBank)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.AdjustedBalance)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.ClosingBalanceGL)
+                                        </td>
+                                        <td>
+                                            @string.Format("{0:  dd/MM/yyyy}", item.ReconciliationDate)
+
+                                        </td>
+
+                                        <td>
+                                            @string.Format("{0:  dd/MM/yyyy}", item.CheckDate)
+
+                                        </td>
+
+
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-info btn-xs">Action</button>
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+
+                                                    @*<li><a href="../../Reports/DraftReconciliationRPT.aspx?bank-code=@item.AccountNumber?required-date=@item.CheckDate" target="_blank">Reconcillation Statement</a></li>*@
+                                                    <li><a href="@Url.Action("ApprovalDetails", "Reconcilliation", new { id = item.ReconciliationPostedId })"><i class="fa fa-search-plus"></i>View</a></li>
+                                                    <li><a href="#" onclick="approval('@item.ReconciliationPostedId')"><i class="fa fa-edit"></i>Approve</a></li>
+                                                    <li><a href="#" onclick="reject('@item.ReconciliationPostedId')"><i class="fa fa-trash-o"></i> Reject </a></li>
+                                                </ul>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                }
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+ 
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Rejection Reason</h4>
+            </div>
+            <div class="modal-body">
+                @using (Html.BeginForm("RejectReconciliation", "Reconcilliation", FormMethod.Post, new { enctype = "multipart/form-data" }))
+            {
+                    @Html.AntiForgeryToken()
+                    <div class="modal-body">
+                        <div class="form-horizontal">
+                            <div class="form-group">
+                                <div class="col-md-8">
+                                    <textarea class="form-control"></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+            <div class="modal-footer">
+                <button value="Save" class="btn btn-info pull-left"><i class="fa fa-save"></i> Save </button>
+                <button class="btn btn-default delete-cancel pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Approve</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Approve? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+    <script>
+        $(document).ready(function () {
+            var responsiveHelper_dt_basic = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+      
+        })
+
+
+        function ApproveReconcilliation(id) {
+            var url = '@Url.Action("ApproveReconciliation", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+
+                        swal(response + "An error has occured, contact system support");
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+
+        function approval(i, id) {
+            if (i == 'x') i = id;
+            swal({
+                title: "Approve",
+                text: "Are you sure you want to Approve? ",
+                buttons: [
+                  'Yes',
+                  'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    ApproveReconcilliation(i);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function reject(i, id) {
+            swal({
+                title: "Rejection Reason",
+                closeOnClickOutside: false,
+                content: "input",
+                buttons: [
+                  'Cancel',
+                  'Save'
+                ],
+            }).then((value) => {
+                var inputValue = `${value}`;
+                if (inputValue == "null") {
+                    swal("Cancelled");
+                }
+                else {
+                    rejectReasons(i, `${value}`)
+                }
+            });
+        }
+
+        var rejectReasons = function (id, reason) {
+            var rejectionReason = reason;
+            $.ajax({
+                type: "POST",
+                url: "RejectReconciliation",
+                data: { ids: id, reason: rejectionReason },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Rejection Successfully Saved", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+
+                        swal(response + "An error has occured, contact system support");
+                        window.location.reload();
+                    }
+                },
+                error: function (xhr) {
+                    //console.log(xhr.responseText);
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        };
+      
+    </script>
+}

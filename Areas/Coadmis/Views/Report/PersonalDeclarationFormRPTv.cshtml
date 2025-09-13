@@ -1,0 +1,203 @@
+﻿
+@{
+    ViewBag.Title = "Personal Declaration Form Report";
+    ViewBag.Description = "form wizards";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+
+}
+
+<style>
+    .input {
+        border-width: 1px 0 1px 1px;
+        border-color: #ccc;
+        border-style: solid;
+        width: 110px;
+        height: 32px;
+    }
+
+    span {
+        cursor: pointer;
+    }
+</style>
+
+
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+
+        </div>
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Personal Declaration Form Report Parameters</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+                                <div class="form-group" id="ClientSearch">
+                                    <div class="control-label col-md-2">
+                                        Client
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input id="Client" name="Client" class="form-control padding-left-10" type="search" placeholder="Search Client by Name or Code" />
+                                    </div>
+                                </div>
+                                <div class="form-group" id="YearName">
+                                    <div class="control-label col-md-2">
+                                        Financial Year
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select name="Year" id="Year" class="select2 form-control padding-left-10">
+                                            <option value=""> -- Select Financial Year -- </option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <hr class="simple" />
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <button type="submit" class="btn action-btn btn btn-info" onclick="LetterOfCommentsRPT()">
+                                            View Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+@section scripts
+{
+    <script>
+        getCoascoClients();
+        function LetterOfCommentsRPT() {
+            var Client = $("#Client").val().trim(),
+                Year = $("#Year").val().trim(),
+                url = "@ViewBag.UrlName" + "PersonalDeclarationFormRPT.aspx";
+
+            var isNotSupplied = validateReportParameters(["#Client", "#Year"]);
+              
+
+            if (isNotSupplied)
+                $(isNotSupplied).attr("style", "border: 1px solid red");
+            else
+            {
+                var queryString = "ClientId=" + Client + "&Year=" + Year + "&DeclarationId=" + "ALL";
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("ParameterEncryption", "Report")',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    data: { "query": queryString },
+                    success: function (response) {
+                        window.open(url + response);
+                    }
+                });
+            }
+        }
+
+
+        $("#Client").change(function () {
+            var ClientId = $(this).val();
+            var url = "GetClientFinancialYear/?ClientId=" + ClientId;
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#Year").empty();
+                    $("#Year").append(response);
+                }
+            });
+        });
+
+
+        function validateReportParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i]).attr("style", "border: 1px solid #ccc");
+                }
+            }
+            resetStyle(parameterList);
+
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+
+
+        function getCoascoClients() {
+            var url = "GetClients/";
+            $("#Client").select2({
+                minimumInputLength: 3,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (searchTerm) {
+                        return {
+                            searchTerm: searchTerm
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.clients }; // data.clients returning json data from Controller
+                    }
+                }
+            });
+        }
+
+
+    </script>
+}

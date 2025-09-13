@@ -1,0 +1,317 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.StockTakingSummaryVM
+@{
+    ViewBag.Title = "Inventories StockTaking";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title  </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <a class="btn btn-info" href="#" onclick="SearchInventoryCard()">
+                                        <i class="glyphicon glyphicon-plus"></i> Item Card
+                                    </a>
+                                </div>
+                            </div>
+                            <fieldset class="scheduler-border" id="contract_details">
+                                <legend class="scheduler-border">Stock Taking</legend>
+                                <div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Legal Number&nbsp;:</strong>@Html.DisplayFor(model => model.LegalNumber)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Created At&nbsp;:</strong>@Convert.ToDateTime(Model.CreatedAt).ToString("dd/MM/yyyy")</div></div>
+                                <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Department&nbsp;:</strong>@Html.DisplayFor(model => model.Department) </div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Status&nbsp;:</strong>@Html.DisplayFor(model => model.OverallStatus)</div></div>
+                                <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Item Card processed&nbsp;:</strong>@Model.StockTakingDetails.Count() out of @Html.DisplayFor(model => model.SystemItemCards)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Status&nbsp;:</strong>@Html.DisplayFor(model => model.OverallStatus)</div></div>
+                            </fieldset>                               
+                            <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-offset-1">
+                                            <a href="@Url.Action("PendingStockTaking","Inventories")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div align="center">
+                                    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                                </div>
+
+
+
+
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<!----------- Search  Item Card----------------->
+<div class="modal fade" id="search_item_card" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Item Card</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+                    <div class="row">
+
+                        <div class="search-container" style="float:right">
+                            <i class="fa fa-search"></i>
+                            <input type="search" name="search" placeholder="Search..." id="search-box">
+                        </div>
+
+                    </div>
+                    <table id="dt_inventories" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th style="width:40%">Item Card</th>
+                                <th style="text-align:center">Available Quantity</th>
+                                <th>UOM</th>
+                                <th style="text-align:center">Action</th>
+                            </tr>
+                        </thead>
+                        @{var i = 0;}
+                        @foreach (var item in Model.ItemCards)
+                        {
+                            i++;
+                    <tr>
+                        <td style="text-align:right">
+                            @i
+                        </td>
+                        <td style="text-align:left">
+                            @Html.DisplayFor(modelItem => item.ItemCard)
+                        </td>
+                        <td style="text-align:center">
+                            @Html.DisplayFor(modelItem => item.AvailableQuantity)
+                        </td>
+                        <td style="text-align:left">
+                            @Html.DisplayFor(modelItem => item.UOM)
+                        </td>
+                        <td style="text-align:center">
+                            <a href="@Url.Action("Export", "Inventories",new {StockTakingSummaryId=Model.StockTakingSummaryId,InventoryItemCardId=item.InventoryItemCardId})">
+                                <i class="glyphicon glyphicon-download"></i>Download
+                            </a>
+                        </td>
+                    </tr>
+                        }
+                        </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+        var dt_inventories = $("#dt_inventories").dataTable();
+        $("#dt_inventories_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_inventories").DataTable().search(this.value).draw();
+            $("#dt_inventories_wrapper .dt-toolbar").remove();
+        });
+
+        function SubmitInventory(formData) {
+            var coaId = $("#CoaId").val();
+            if (!coaId) {
+                swal("Please select GL Accounts!!!");
+                return false;
+            }
+             $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveInventory", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                      $("#save_button").prop('disabled', false);
+                    if (result == "Success") {
+                        swal("Inventory submitted  successfully", { icon: "Success" })
+                                    .then((value) => {
+                                       var url = '@Url.Action("PendingInventories", "Inventories")';
+                                        window.location.replace(url);
+                                });
+                    }
+                    else if (result == "storerequired") {
+                            swal("Please enter store name");
+                    }
+                    else if (result == "daterequired") {
+                         swal("Please select both Manufacture and Expire date");
+                    }
+                   else if(result=="ItemCard Not exist"){
+                        swal("ItemCard Not exist");
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        function SearchInventoryCard() {
+
+            $('#search_item_card').modal('show');
+        }
+        function ItemCardClicked(id) {
+            $('#search_item_card').modal('hide');
+        }
+
+
+            //SHOW LOADER ICON
+    $(document).ajaxStart(function () {
+        $(".loadingImg").show();
+
+    });
+    //HIDE LOADER ICON
+    $(document).ajaxStop(function () {
+        $(".loadingImg").hide();
+    });
+
+        function ItemCardSelected(rowId) {
+            $('#selected_gls').empty();
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var row = data[rowId];
+            $("#CoaId").val(row[1]);
+            $("#glItemsModal").modal("hide");
+
+        }
+    </script>
+}
+
+

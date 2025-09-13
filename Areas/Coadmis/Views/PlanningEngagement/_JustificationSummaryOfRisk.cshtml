@@ -1,0 +1,118 @@
+﻿@model IFMIS.Areas.Coadmis.Models.RiskAssessementVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "summaryCommentForm" }))
+{
+    @Html.AntiForgeryToken()
+    <div class="form-horizontal">
+        @Html.HiddenFor(model => model.RiskResponseSummaryId)
+        <div class="form-group">
+            @Html.LabelFor(model => model.AuditableAreaName, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-8">
+                @Html.EditorFor(model => model.AuditableAreaName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.RiskRanking, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.RiskRanking, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.RiskRanking, "", new { @class = "text-danger" })
+            </div>
+            @Html.LabelFor(model => model.AssertionRiskRanking, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.AssertionRiskRanking, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.AssertionRiskRanking, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.RiskFactor, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-3">
+                @Html.EditorFor(model => model.RiskFactor, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                @Html.ValidationMessageFor(model => model.RiskFactor, "", new { @class = "text-danger" })
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.RiskDescription, htmlAttributes: new { @class = "control-label col-md-2 required" })
+            <div class="col-md-8">
+                @Html.TextAreaFor(model => model.RiskDescription, new { maxlength = 250, @class = "form-control", @rows = 3, @cols = 15, @readonly = true })
+                @Html.ValidationMessageFor(model => model.RiskDescription, "", new { @class = "text-danger" })
+            </div>
+
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.JustificationOfRisk, htmlAttributes: new { @class = "control-label col-md-2 required" })
+            (<span style="font-weight:bold;" id="JustificationOfRiskCount">250</span>)
+            <div class="col-md-8">
+                @Html.TextAreaFor(model => model.JustificationOfRisk, new { maxlength = 250, @class = "form-control", @rows = 3, @cols = 15 })
+                @Html.ValidationMessageFor(model => model.JustificationOfRisk, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+    </div>
+}
+<script>
+
+
+
+    //Count input char
+    $('#JustificationOfRisk').on("keyup", function () {
+        var count = $('#JustificationOfRisk').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#JustificationOfRiskCount').text(parseInt(numChars));
+    });
+
+    $("#addSummaryCommentData").on('click', function () {
+        debugger;
+        var riskResponseSummaryId = $("#RiskResponseSummaryId").val();
+        var justificationOfRisk = $("#JustificationOfRisk").val();
+
+
+        if (riskResponseSummaryId == '' || justificationOfRisk == '') {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("RiskResponseSummaryId", riskResponseSummaryId);
+        formdata.append("JustificationOfRisk", justificationOfRisk);
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdateRiskSummaryResponse", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Comment Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Estimate!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

@@ -1,0 +1,172 @@
+﻿@model IFMIS.Areas.Coadmis.Models.KeyPersonnel
+@{
+    ViewBag.Title = "Key Personnel List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<div id="divLoader"></div>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Key Personnel List </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+                        <a href="@Url.Action("CreateKeyPersonnel", "KeyPersonnel")" class="btn btn-info">
+                            <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>
+                            Add Personnel
+                        </a>
+
+                        <hr />
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblPersonnel">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Full Name</th>
+                                        <th>Category</th>
+                                        <th>Position</th>
+                                        <th>Status</th>
+                                        <th>Client</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script>
+        var datatable = $("#tblPersonnel").dataTable();
+
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetKeyPersonnel", "KeyPersonnel")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                datatable.fnClearTable();
+                for (var i = 0; i < data.length; i++)
+                    {
+                        datatable.fnAddData([i + 1,
+                            data[i]["FirstName"] + " " + data[i]["LastName"],
+                            data[i]["CategoryType"],
+                            data[i]["Position"],
+                            data[i]["OperationalStatus"],
+                            data[i]["Client"],
+                            '<div class="btn-group" id="drop-' + i + '">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                    <li><a href="@Url.Action("Details", "KeyPersonnel")?id='+ data[i]["KeyPersonId"] + '">Details</a></li>\
+                                    <li><a href="@Url.Action("Edit", "KeyPersonnel")?id='+ data[i]["KeyPersonId"] + '">Edit</a></li>\
+                                    <li><a href="#" onclick="deletePersonnel('+ data[i]["KeyPersonId"] + ')">Cancel</a></li>\
+                                </ul>\
+                            </div>\ '
+                        ]);
+                }
+            },
+            failure: function (error)
+            {
+                swal(error);
+            }
+        });
+
+        //Delete action start here
+        function deletePersonnel(id) {
+            swal({
+                text: "Are you Sure you want to delete this personnel",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteKeyPersonnel(id);
+                } else {
+                    swal("Cancelled", "No changes was made");
+                }
+            });
+
+        }
+
+        function deleteKeyPersonnel(id) {
+             var url = '@Url.Action("Delete", "KeyPersonnel")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Key Personnel deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

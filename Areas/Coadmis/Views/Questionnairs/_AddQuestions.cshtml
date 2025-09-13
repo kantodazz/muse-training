@@ -1,0 +1,207 @@
+﻿@model IFMIS.Areas.Coadmis.Models.QuestionnairVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "addQuestionFrom" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.QuestionnairTypeId)
+    @Html.HiddenFor(model => model.QuestionnnairTitleGrpId)
+    <div class="form-group">
+        @Html.LabelFor(model => model.QuestionnairTypeName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.EditorFor(model => model.QuestionnairTypeName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.QuestionnairTypeName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.Title, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.EditorFor(model => model.Title, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.Title, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.QuestionnnairSubTitleGrpId, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.DropDownList("QuestionnnairSubTitleGrpId", ViewBag.SubTitles as SelectList, "Select sub group", new { @class = "form-control select2" })
+            @Html.ValidationMessageFor(model => model.QuestionnnairSubTitleGrpId, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Question<span class="redStar">*</span></label>
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.QuestionnairName, new { @Class = "form-control", @required = "required",@row=5, @col=50 })
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Answer Type<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.DropDownList("AnswerType", new List<SelectListItem>{
+              new SelectListItem{ Text="Select Answer Type ---", Value = "" },
+              new SelectListItem{ Text="Text", Value = "Text" },
+              new SelectListItem{ Text="Radio Button", Value = "Radio Button" },
+               }, new { @class = "form-control select2", @required = "required" })
+            @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+        </div>
+
+        <label class="control-label col-md-2">Options Value<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            <a class="search-btn" onclick="OptionalValues()" id="searchbtn" href="#" style="display:block;border:1px solid #ccc;padding:8px">
+                <i class="fa fa-fw fa-lg fa-question"></i>
+                &nbsp; Add Choice Value(s) <span id="added_ChoiceValue"></span>
+            </a>
+        </div>
+    </div>
+    
+</div>
+}
+
+<script>
+    $(document).ready(function () {
+        $("select").select2();
+
+        $(function () {
+            $('#AccountEstimateId, #OverallAssessement').select2({
+                dropdownParent: $('#modalEditAccountEst')
+            });
+        });
+    });
+
+    ///Add option value start here
+    function OptionalValues() {
+        $("#AddOptionalValue").modal("show");
+    };
+
+    var dt_options = $('#dt_options').dataTable();
+    $("#dt_options_wrapper .dt-toolbar").remove();
+    $("#dt_options_wrapper .dt-toolbar-footer").remove();
+
+    var alloptions = []
+    var choicesValues = []
+    var countOptions = 0;
+
+    function addOptions() {
+        debugger;
+        if ($("#OptionalValue").val() == "") {
+            swal("Option already exist", { icon: "warning" });
+            return false;
+        }
+
+        var optionalValue = $('#OptionalValue').val().trim();
+
+        if (choicesValues.find(a => a.ValuedOptionToSave === optionalValue) === undefined) {
+            choicesValues.push({
+                ValuedOptionToSave: optionalValue,
+
+            });
+        } else {
+            return false;
+        }
+
+        GenerateSavedOptionsTable();
+    }
+
+    function GenerateSavedOptionsTable() {
+        if (choicesValues.length > 0) {
+            var $table = $('<table class="table table-condensed table-stripped table-hover table-bordered"/>');
+            $table.append('<thead>' +
+                '<tr><th colspan="3">Choice Values</th>' +
+                '<tr><th>#</th><th style="display:none;">Id</th><th style="text-align: center">Choice Title</th><th style="text-align: center">Action</th></tr>' +
+                '</thead>');
+            var $tbody = $('<tbody/>');
+            var j = 0;
+            $.each(choicesValues, function (i, val) {
+                ++j;
+                var $row = $('<tr/>');
+                $row.append($('<td/>').html(j));
+                $row.append($('<td/>').html(val.ValuedOptionToSave));
+                var $remove = $('<a href="#"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>');
+                $remove.click(function (e) {
+                    e.preventDefault();
+                    choicesValues.splice(i, 1);
+                    GenerateSavedOptionsTable();
+                });
+                $row.append($('<td/>').html($remove));
+                $tbody.append($row);
+            });
+            $table.append($tbody);
+            $('#divOptionValues').html($table);
+            $("#OptionalValue").val("");
+            $("#saveOptionValue").attr("disabled", false);
+        } else {
+            $('#divOptionValues').html('');
+            $("#saveOptionValue").attr("disabled", true);
+        }
+
+        $("#added_ChoiceValue").text(choicesValues.length);
+    }
+
+    //End here
+
+    $("#saveLoader").toggle(false);
+        $("#addQuestions").click(function ()
+        {
+            debugger;
+            var questionnairTypeId = $("#QuestionnairTypeId").val();
+            var questionnairName = $("#QuestionnairName").val();
+            var questionnnairSubTitleGrpId = $("#QuestionnnairSubTitleGrpId").val();
+
+            if (questionnairTypeId == '' || questionnairName =='') {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("QuestionnairTypeId", $("#QuestionnairTypeId").val());
+            formdata.append("QuestionnnairSubTitleGrpId", $("#QuestionnnairSubTitleGrpId").val());
+            formdata.append("QuestionnairName", $("#QuestionnairName").val());
+            formdata.append("ParentId", $("#QuestionnnairTitleGrpId").val());
+            formdata.append("AnswerType", $("#AnswerType").val());
+
+            for (var i = 0; i < choicesValues.length; i++) {
+                formdata.append("OptionValueDatas[" + i + "].ValuedOptionToSave", choicesValues[i].ValuedOptionToSave);
+            }
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+             var url = '@Url.Action("SaveMainQuestion", "Questionnairs")';
+            var urlList = '@Url.Action("QuestionnairTitleGrp", "Questionnairs")';
+            $("#saveQuestionnairType").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#saveQuestionnairType").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    } else if (response =="Dublicate") {
+                        swal("Question already exist!", { icon: "warning" });
+                        return false;
+                    } else if (response =="No Subtitle") {
+                        swal("Please select questionnaire group sub title", { icon: "warning" });
+                        return false;
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveEngagementRole").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        })
+
+</script>

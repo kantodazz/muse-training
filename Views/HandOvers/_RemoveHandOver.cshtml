@@ -1,0 +1,83 @@
+﻿@model IFMIS.Models.RemoveHandOverVM
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { id = "formRemoveHandOver" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+        @Html.HiddenFor(model => model.HandOverId)
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Remarks, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextAreaFor(model => model.Remarks, new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.Remarks, "", new { @class = "text-danger" })
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+
+    $("#btnRemoveHandOver").on("click", function () {
+        $("#divLoader").show();
+        $("#btnRemoveHandOver").prop("disabled", true);
+
+        $.validator.unobtrusive.parse("#formHandOver");
+        if (!$("#formRemoveHandOver").valid()) {
+        $("#divLoader").hide();
+            $("#btnRemoveHandOver").prop("disabled", false);
+            return false;
+        }
+
+        var token = $("[name='__RequestVerificationToken']").val();
+
+        var formData = new FormData();
+
+        formData.append("__RequestVerificationToken", token);
+        formData.append("HandOverId", $('#HandOverId').val());
+        formData.append("Remarks", $('#Remarks').val());
+
+        var url = '@Url.Action("RemoveHandOver", "HandOvers")';
+
+        $.ajax({
+        type: "POST",
+        url: url,
+        processData: false,
+        contentType: false,
+        data: formData,
+        success: function(response) {
+            if (response == "Success")
+            {
+            swal({
+            text: "Hand over process successfully removed!",
+            icon: "success",
+            button: "OK",
+            }).then(function() {
+            location.reload();
+            });
+            }
+            else
+            {
+            swal({
+            text: response,
+            icon: "warning",
+            button: "OK",
+        })
+        }
+        },
+        error: function() {
+                swal({
+                text: "An error occured while processing your request, please contact system support",
+                icon: "error",
+                button: "OK",
+            })
+        },
+        complete: function() {
+            $("#divLoader").hide();
+            $("#btnRemoveHandOver").prop("disabled", false);
+                }
+            });
+    });
+</script>

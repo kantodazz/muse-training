@@ -1,0 +1,488 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PurchaseSummaryVM
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+
+@if (Model.PurchaseItemsList.Count() > 0)
+{
+    var i = 0;
+
+<span>&nbsp;&nbsp;&nbsp;</span>
+<div class="accordion-body">
+    <table class="table table-hover">
+        <thead>
+            <tr>
+                <th colspan="9">
+                    <button type="button" class="btn btn-info pull-right" id="items_charge">
+                        <i class="fa fa-plus"></i> <span class="hidden-mobile">Add GL Account</span>
+                    </button>
+                </th>
+                <th style="text-align: right"><input type="checkbox" class="cbCheckAllItems" /></th>
+            </tr>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Item</th>
+                <th scope="col">Category</th>
+                <th scope="col">Class</th>
+                <th style="text-align: center">Quantity</th>
+                <th scope="col" style="text-align: center">UOM</th>
+                <th scope="col" style="text-align: right">Unit Price</th>
+                <th scope="col" style="text-align:right">VAT</th>
+                <th scope="col" style="text-align:right">Total Amount</th>
+                <th scope="col" style="text-align:center;width:8%">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var item in Model.PurchaseItemsList)
+                {
+                    i++;
+
+
+            <tr>
+                <td align="center">
+                    @i
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ItemName)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ItemCategory)
+                </td>
+                <td>
+                    @Html.DisplayFor(modelItem => item.ItemClass)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => item.Quantity)
+                </td>
+                <td align="center">
+                    @Html.DisplayFor(modelItem => item.UOM)
+                </td>
+                <td align="right">
+                    @Html.DisplayFor(modelItem => item.UnitPrice)
+                </td>
+                <td align="right">
+                    @Html.DisplayFor(modelItem => item.VAT)
+                </td>
+                <td align="right">
+                    @Html.DisplayFor(modelItem => item.TotalAmount)
+                </td>
+                <td style="text-align: center">
+                    <input type="checkbox" value=@item.TotalAmount class="checkItem" id=@item.PurchaseOrderDetailId>
+                </td>
+
+            </tr>
+
+
+
+                }
+        </tbody>
+    </table>
+</div>
+}
+
+<!----------- Search  GL----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Gl Item(s)</h3>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding:5px">Total Items Amount</td>
+                        <td style="padding:5px">
+                            <input type="text" disabled id="total_items_amount">
+                        </td>
+
+                        <td style="padding:5px">Total Line Amount</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="total_line_amount">
+                        </td>
+
+                        <td style="padding:5px">Difference</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="difference" style="width:250px">
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_gl">
+                            </div>
+                        </div>
+                    </div>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Expenditure Line Item</th>
+                                <th>Item Description</th>
+                                <th id="BalanceTitle">Fund Balance</th>
+                                <th>Funding Reference</th>
+                                <th>SubLevelCode</th>
+                                <th>Expense Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btn_save_items_charge">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script>
+    //CHECK ALL ITEMS
+    $(document).on('click', '.cbCheckAllItems', function () {
+        $(".checkItem").prop('checked',
+            $(this).prop('checked'));
+    });
+    var dt_search_gl_item = $('#dt_search_gl_item').dataTable();
+    $(document).ready(function () {
+        $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+    });
+
+
+    var form_data_status = [];
+    var all_amounts = {};
+    var total_balance = 0;
+    var glItemsCharges = [];
+    var sum_total = 0;
+
+    //=============SEARCH GL ACCOUNTS ==================
+    $("#search_gl").on("keyup search input paste cut", function () {
+        var itemIds = [];
+        var sum = 0;
+        $("input:checkbox.checkItem").each(function () {
+            if ($(this).prop("checked")) {
+                itemIds.push($(this).val());
+                sum = sum + parseFloat($(this).val());
+
+            }
+
+        });
+
+        dt_search_gl_item.DataTable().search(this.value).draw();
+    });
+
+
+    $("#items_charge").on('click', function () {
+        glItemsCharges = [];
+        sum_total = 0;
+        var itemIds = [];
+        var sum = 0;
+        $("input:checkbox.checkItem").each(function () {
+            if ($(this).prop("checked")) {
+                itemIds.push($(this).val());
+                sum = sum + parseFloat($(this).val());
+            }
+
+        });
+
+        if (itemIds.length == 0) {
+
+            swal("No Item Selected!");
+            return;
+        } else {
+            $("#total_line_amount").val("");
+            $("#total_items_amount").val(sum.toLocaleString('en'));
+            $("#difference").val(sum.toLocaleString('en'));
+            dt_search_gl_item.fnClearTable();
+            $("#glItemsModal").modal();
+            searchGLTableUpdate();
+
+        }
+
+    });
+
+
+
+    function amountChanged(e) {
+        debugger
+        var max_value = parseFloat(e.max);
+        var entered_value = parseFloat(e.value.split(",").join(""));
+       
+        if (entered_value >= 0) {
+            if (max_value >= entered_value) {
+
+                sum_total = 0;
+
+                var i = 0;
+                
+                $("#dt_search_gl_item tr").each(function () {
+
+                    
+                    if (i > 0) {
+                        var value = $(this).children().eq(6).find("input").val().trim().split(",").join("");
+                        if (value != "") {
+
+                            var expense_amount = parseFloat($(this).children().eq(3).text().split(",").join(""));
+
+                            var amount = parseFloat(value);
+
+                            //INSERT INTO ARRAY
+                            var line = "";
+                            line = $(this).children().eq(1).text().split("-").join("|");
+                            var item_description = $(this).children().eq(2).text();
+                            var expense_amount = parseFloat($(this).children().eq(3).text().split(",").join(""));
+                            var funding_ref = $(this).children().eq(4).text();
+                            var sub_level_code = $(this).children().eq(5).text();
+                            if (glItemsCharges.length > 0) {
+
+                                //CHECK IF EXIST IN THE ARRAY
+                                var found = false;
+                                for (var j = 0; j < glItemsCharges.length; j++) {
+                                    if (glItemsCharges[j].ExpenditureLineItem == line && glItemsCharges[j].FundingReference == funding_ref) {
+                                        glItemsCharges[j].BaseAmountDetail = amount;
+                                        found = true;
+                                    }
+
+                                }
+
+                                if (!found) {
+
+                                    glItemsCharges.push({
+                                        "ExpenditureLineItem": line,
+                                        "ItemDescription": item_description,
+                                        "ExpenseAmount": expense_amount,
+                                        "FundingReference": funding_ref,
+                                        "BaseAmountDetail": amount,
+                                        "SublevelCode": sub_level_code
+                                    });
+
+
+                                }
+
+
+                            } else {
+
+                                glItemsCharges.push({
+                                    "ExpenditureLineItem": line,
+                                    "ItemDescription": item_description,
+                                    "ExpenseAmount": expense_amount,
+                                    "FundingReference": funding_ref,
+                                    "BaseAmountDetail": amount,
+                                    "SublevelCode": sub_level_code
+                                });
+
+
+                            }
+
+
+
+
+                        }
+                    }
+
+
+                    i++;
+                });
+
+                for (var j = 0; j < glItemsCharges.length; j++) {
+
+                    sum_total = sum_total + glItemsCharges[j].BaseAmountDetail;
+                    console.log("length" + glItemsCharges[j].ExpenditureLineItem + ":" + glItemsCharges[j].BaseAmountDetail);
+
+                }
+                
+                var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+                var balance = total_items_value - sum_total;
+                if (balance >= 0) {
+                    $("#total_line_amount").val(sum_total.toLocaleString('en'));
+                    $("#difference").val(balance.toLocaleString('en'));
+                }
+                else {
+                    swal("Total Line Amount can not exceed " + total_items_value.toLocaleString('en'));
+                    e.value = "";
+
+
+                }
+            } else {
+                swal("Expense Amount can not exceed " + max_value.toLocaleString('en'));
+                e.value = "";
+
+
+            }
+        }
+    }
+
+
+
+    function searchGLTableUpdate() {
+          debugger
+            var subBudgetClass = '@(Model.SubBudgetClass)';
+             var accrual = '@(Model.Accrual)';
+            var accuralPayment = false;
+
+            if (accrual == "YES") {
+                accuralPayment = true;
+            }
+             var url = '@Url.Action("GetFundbalance", "PaymentVoucher")';
+
+            var parent_code = "UNKNOWN";
+            var sub_warant_code = "UNKNOWN";
+          var isStPayment = '@(Model.StPayment)';
+        if (isStPayment == "YES") {
+            parent_code = '@(Model.ParentInstitutionCode)';
+            sub_warant_code = '@(Model.SubWarrantCode)';
+        }
+
+
+               var fundBalanceParams = {
+                subBudgetClass,
+                instCode: parent_code,
+                subWarrantCode: sub_warant_code,
+                IsAccrualVoucher: accuralPayment
+            };
+            $.ajax({
+                type: "get",
+                url: url,
+                data: fundBalanceParams,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    //=== UPDATE SEARCH GI TABLE ====
+                    data = response.data;
+                    dt_search_gl_item.fnClearTable();
+                    if (accrual == "YES") {
+                        for (var i = 0; i < data.length; i++) {
+                                   var amount = 0;
+                            if (data[i]["BudgetBalance"] > 0) {
+                                amount = data[i]["BudgetBalance"];
+                            }
+                           dt_search_gl_item.fnAddData([i + 1,
+                           data[i]["GlAccount"].split("|").join("-"),
+                           data[i]["GlAccountDesc"],
+                            toLabel(data[i]["BudgetBalance"] || 0),
+                           'NA',
+                           data[i]["SublevelCode"],
+                           '<amount-input placeholder="Amount" max="' + amount + '"  onkeyup="amountChanged(this)" />'
+                        ]);
+                    }
+                    } else {
+
+                          for (var i = 0; i < data.length; i++) {
+                           dt_search_gl_item.fnAddData([i + 1,
+                           data[i]["GlAccount"].split("|").join("-"),
+                           data[i]["GlAccountDesc"],
+                           toLabel(data[i]["FundBalance"]),
+                           data[i]["FundingRefNo"],
+                           data[i]["SublevelCode"],
+                           '<amount-input placeholder="Amount" max="' + data[i]["FundBalance"] + '"  onkeyup="amountChanged(this)" />'
+                        ]);
+                                          }
+
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        //==============END SEARCH GL ACCOUNT====================
+
+     $("#btn_save_items_charge").click(function () {
+        var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+            sum_total = sum_total.toFixed(2);
+        if (glItemsCharges.length == 0) {
+            swal("Please Enter Amount !");
+        }
+        else if (total_items_value != sum_total) {
+            swal("Please Total Line Amount must be equal to " + total_items_value.toLocaleString('en') + " !");
+        }
+        else {
+            $('#glItemsModal').modal('hide');
+            var itemIds = [];
+
+
+                $("input:checkbox.checkItem").each(function () {
+                    if ($(this).prop("checked")) {
+                        itemIds.push($(this).attr('id'));
+                    }
+                });
+
+
+
+            var id = $("#ReceivingSummaryId").val();
+
+
+            var form_data = {
+                "ReceivingSummaryId": id,
+                "PurchaseOrderIds": itemIds,
+                "VoucherDetails": glItemsCharges
+            }
+
+            $("#btn_save_items_charge").prop('disabled', true);
+            var url = '@Url.Action("ItemsReceivedCharge", "Procurement")';
+            $.ajax(
+{
+    type: "POST",
+    url: url,
+    data: form_data,
+    success: function (response) {
+        $("#btn_save_items_charge").prop('disabled', false);
+        if (response == "Success") {
+                 swal("GL Account(s) assigned successfully", { icon: "success" })
+                            .then((value) => {
+                                location.reload();
+                            });
+                                        }
+           else {
+            swal(response);
+            }
+    },
+    error: function (xhr) {
+        $("#btn_save_items_charge").prop('disabled', false);
+        swal("An error has occured, contact system support");
+        $("#divLoader").hide();
+    },
+
+});
+
+        }
+
+    });
+</script>

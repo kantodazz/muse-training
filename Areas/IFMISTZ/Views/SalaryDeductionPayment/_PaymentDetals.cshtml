@@ -1,0 +1,122 @@
+﻿@model  IFMIS.Areas.IFMISTZ.Models.PaymentBatchVM
+<style>
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+@if (Model.BatchNo != null)
+{
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Payment Details</legend>
+
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.BatchNo)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.BatchNo)</strong></div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.PaymentCategory)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.PaymentCategory)</strong></div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.NoTrx)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.NoTrx)</strong></div>
+        </div>
+        <div class="row">
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong> @Html.DisplayNameFor(model => model.TotalAmount)&nbsp;:</strong><strong>@Html.DisplayFor(model => model.TotalAmount)</strong></div>
+        </div>
+
+    </fieldset>
+    <fieldset class="scheduler-border">
+        <legend class="scheduler-border">Payment Status</legend>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Status</th>
+                    <th style="text-align:center">No Of Transaction</th>
+                </tr>
+            </thead>
+            <tbody>
+                @{var i = 0;}
+                @foreach (var item in Model.PaymentsStatus.GroupBy(a => a))
+                {
+                    i++;
+                    <tr>
+                        <td>
+                            @i
+                        </td>
+                        <td>
+                            @item.Key
+                        </td>
+                        <td align="center">
+                            @if (item.Key == "SETTLED")
+                            {
+                                <a href="#" onclick="paymentDetails(@Model.PaymentBatchID,'@item.Key')"><span class="badge inbox-badge margin-right-13" style="background-color:#379d1d">@Model.PaymentsStatus.Count(a => a == item.Key)</span></a>
+                            }
+                            else if (item.Key == "UNAPPLIED")
+                            {
+                                <a href="#" onclick="paymentDetails(@Model.PaymentBatchID,'@item.Key')"><span class="badge inbox-badge margin-right-13" style="background-color:#8a0808">@Model.PaymentsStatus.Count(a => a == item.Key)</span></a>
+
+                            }
+                            else
+                            {
+                                <a href="#" onclick="paymentDetails(@Model.PaymentBatchID,'@item.Key')"><span class="badge inbox-badge margin-right-13" style="background-color:gray">@Model.PaymentsStatus.Count(a => a == item.Key)</span></a>
+
+                            }
+
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+    </fieldset>
+}
+else
+{
+    <div style="padding-bottom:10px" id="infoPanel">
+        <div class="info-box">@Html.DisplayFor(model => model.PaymentCategory) not yet approved to create payment batch.Data still with status @Html.DisplayFor(model => model.OverallStatus)</div>
+    </div>
+
+}
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Preview
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+<script>
+
+    var paymentDetails = function (id,status) {
+
+         var url = '@Url.Action("PaymentDetails", "SalaryDeductionPayment")';
+            $("#divModalBody").load(url, { id: id,status:status }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on accessing this details, contact system support.");
+                }
+                dt_preview_deduction = $('#divModalBody #dt_preview_deductions').dataTable();
+                    $("#dt_preview_deductions_wrapper .dt-toolbar").remove();
+                $("#divModal").modal("show");
+            });
+
+
+    };
+</script>

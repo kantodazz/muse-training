@@ -1,0 +1,82 @@
+﻿@model CreateRoleVM
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "formRole" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Name, htmlAttributes: new { @class = "control-label col-md-3" })
+            <div class="col-md-7">
+                @Html.EditorFor(model => model.Name, new { htmlAttributes = new { @class = "form-control" } })
+                @Html.ValidationMessageFor(model => model.Name, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.SystemModuleId, htmlAttributes: new { @class = "control-label col-md-3" })
+            <div class="col-md-7">
+                @Html.DropDownListFor(model => model.SystemModuleId, Model.SystemModuleIds, "Select Module", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.SystemSubModuleId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(model => model.SystemSubModuleId, htmlAttributes: new { @class = "control-label col-md-3" })
+            <div class="col-md-7">
+                @Html.DropDownListFor(model => model.SystemSubModuleId, new SelectList(""), "Select Sub Module", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.SystemSubModuleId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-3 col-md-10">
+                @Html.CheckBoxFor(model => model.IsAdminRole)
+                @Html.DisplayNameFor(model => model.IsAdminRole)
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-3 col-md-10">
+                @Html.CheckBoxFor(model => model.IsSharedRole)
+                @Html.DisplayNameFor(model => model.IsSharedRole)
+            </div>
+        </div>
+    </div>
+
+}
+
+<script>
+
+    $("#SystemModuleId").change(function () {
+
+        $("#divLoader").show();
+        var systemModuleId = $("#SystemModuleId").val();
+        var url = '@Url.Action("GetSubModulesByModuleId", "SystemModule")';
+        $.ajax({
+            type: "GET",
+            url: url,
+            data: { id: systemModuleId },
+            success: function (data, status, jqXHR) {               
+                $("#SystemSubModuleId option").remove();
+                $("#SystemSubModuleId").append('<option value="">Select Sub Module</option>');
+                $.each(data.systemSubModules, function (i, systemSubModule) {
+                    $("#SystemSubModuleId").append('<option value="'
+                    + systemSubModule.SystemSubModuleId + '">'
+                    + systemSubModule.SubModuleName + '</option>');
+                });
+                $("#SystemSubModuleId").select2("val", "");
+            },
+            error: function () {
+                swal({
+                        text: "An error occurred while processing your request, contact system support",
+                        icon: "error",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+            },
+            complete: function () {
+                $("#divLoader").hide();
+            }
+        });
+    });
+</script>

@@ -1,0 +1,268 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+
+}
+
+<fieldset class="scheduler-border">
+    <legend class="scheduler-border"> Details</legend>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Legal Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.LegalNumber)</div>
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Desription&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PaymentDescription)</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PaymentAmount)</div>
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PayeeCode)</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Code&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PayeeCode)</div>
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Account Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PayeeBankAccount)</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Account Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PayeeAccountName)</div>
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Status&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.OverallStatus)</div>
+    </div>
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Bank Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.PayeeBankName)</div>
+    </div>
+    @if (Model.ParentInstitutionCode != null)
+    {
+        <div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Parent Institution&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ParentInstitutionCode) - @Html.DisplayFor(model => model.ParentInstitutionName)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>SubWarant&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.SubWarrantCode) - @Html.DisplayFor(model => model.SubWarrantDescription)</div></div>
+    }
+    <div class="row">
+        @if (Model.RejectionReason != null)
+        {
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Rejection Reason&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.RejectionReason)</div>
+        }
+        @if (Model.RejectionSolution != null)
+        {
+            <div class="col-sm-6 col-md-6 col-lg-6"><strong>Solution Taken&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.RejectionSolution)</div>
+        }
+    </div>
+</fieldset>
+<div align="center">
+    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+</div>
+
+<fieldset class="bordered">
+    <legend class="scheduler-border">Change</legend>
+
+
+    <div>
+
+        <div class="row">
+
+            <div class="col-md-2">
+                &nbsp;&nbsp;&nbsp;Retention
+            </div>
+            <div>
+
+                <div class="col-md-2">
+
+                    @Html.DropDownListFor(model => model.RetentionBy, Model.RetentionByList, "Select transfer", new { @class = "form-control" })
+                </div>
+
+
+                <div class="col-md-2">
+                    <div class="internal_transfer" style="display:none">
+
+                        @Html.DropDownListFor(model => model.SubBudgetClassTo, Model.SubBudgetClassList, "Select SubBudgetClass", new { @class = "form-control" })
+                    </div>
+                    <div class="bank_transfer" style="display:none">
+
+                        @Html.DropDownListFor(model => model.BankAccountTo, Model.AccountToList, "Select Bank Account", new { @class = "form-control" })
+
+                    </div>
+                </div>
+
+                <div class="col-md-1 submit_retention" style="display:none">
+                    <button type="button" id="save_retention" class="btn btn-info" style="margin-right:2px">
+                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                    </button>
+
+                </div>
+
+            </div>
+
+
+        </div>
+        <hr />
+    </div>
+    <br />
+</fieldset>
+
+
+<div class="modal-footer">
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+</div>
+
+<script type="text/javascript">
+
+
+   $(function () {
+                    $("#RetentionBy").change(function (e) {
+                        var retentionBy = $("#RetentionBy").val();
+                        if (retentionBy == "BankTransfer") {
+                            $(".bank_transfer").show();
+                            $(".internal_transfer").hide();
+                            $(".submit_retention").show();
+                        } else if (retentionBy == "InternalTransfer") {
+                            $(".bank_transfer").hide();
+                            $(".internal_transfer").show();
+                            $(".submit_retention").show();
+                        }
+                        else {
+                            $(".bank_transfer").hide();
+                            $(".internal_transfer").hide();
+                            $(".submit_retention").hide();
+                        }
+                    });
+                });
+
+
+
+            //Save retention
+            $(function () { // this will be called when the DOM is ready
+                $("#save_retention").click(function () {
+                        var summary_id = @Model.RetentionPaymentId;
+                        var retentionBy = $("#RetentionBy").val();
+                        if (!retentionBy) {
+                            swal("Please select Tranfer Category");
+                            return;
+                        }
+                        if (retentionBy == "BankTransfer") {
+
+                            var bank_account = $("#BankAccountTo").val();
+                            if (!bank_account) {
+                                swal("Please select Bank Account");
+                                return;
+                            }
+
+                            $("#save_retention").prop('disabled', true);
+                            var form_data = {
+                                "id": summary_id,
+                                "retentionBy": retentionBy,
+                                "bankAccount": bank_account
+                            }
+                            swal({
+                                title: 'Confirmation',
+                                text: "Save retention information ?",
+                                buttons: [
+                                  'No',
+                                  'Yes'
+                                ],
+                            }).then(function (isConfirm) {
+                                if (isConfirm) {
+                                    var url = '@Url.Action("SaveRetention", "Retention")';
+                                    $.ajax(
+                                {
+                                    type: "POST",
+                                    url: url,
+                                    data: form_data,
+                                    success: function (response) {
+                                        if (response == "Success") {
+                                            swal("Saved  successfully!", { icon: "success" })
+                                                                                   .then((value) => {
+                                                                                       location.reload();
+
+                                                                                   });
+
+                                        }
+                                        else if (response == "Setup") {
+                                            swal("Chart of Account setup is incomplete. COA with GFS Retention for subbudget class 301 is missing. Please contact Administrator!");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                        else if (response == "Exceed") {
+                                            swal("Retention can not exceed or be equal to amount payable");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                        else {
+
+                                            swal("Failed to save ,DbException");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                    },
+                                    error: function (xhr) {
+                                        swal(error);
+                                        $("#save_retention").prop('disabled', false);
+                                    },
+
+                                });
+                                } else {
+                                    swal("Cancelled", "No change was made");
+                                    $("#save_retention").prop('disabled', false);
+                                }
+                            });
+                        } else {
+
+                            var sbc = $("#SubBudgetClassTo").val();
+                            if (!sbc) {
+                                swal("Please select SubBudgetClass");
+                                return;
+                            }
+                            $("#save_retention").prop('disabled', true);
+                            var form_data = {
+                                "id": summary_id,
+                                "retentionBy": retentionBy,
+                                "SubBudgetClass": sbc
+                            }
+                            swal({
+                                title: 'Confirmation',
+                                text: "Save retention information ?",
+                                buttons: [
+                                  'No',
+                                  'Yes'
+                                ],
+                            }).then(function (isConfirm) {
+                                if (isConfirm) {
+                                    var url = '@Url.Action("SaveRetention", "Retention")';
+                                    $.ajax(
+                                {
+                                    type: "POST",
+                                    url: url,
+                                    data: form_data,
+                                    success: function (response) {
+                                        if (response == "Success") {
+
+                                            swal("Saved  successfully!", { icon: "success" })
+                                                  .then((value) => {
+                                                      location.reload();
+
+                                                  });
+                                        }
+                                        else if (response == "Exceed") {
+                                           swal("Retention can not exceed or be equal to amount payable");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                     else if (response == "Setup") {
+                                            swal("Chart of Account setup is incomplete. COA with GFS Retention for subbudget class 301 is missing. Please contact Administrator!");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                        else {
+
+                                            swal("Failed to save ,DbException");
+                                            $("#save_retention").prop('disabled', false);
+                                        }
+                                    },
+                                    error: function (xhr) {
+                                        swal(error);
+                                        $("#save_retention").prop('disabled', false);
+                                    },
+
+                                });
+                                } else {
+                                    swal("Cancelled", "No change was made");
+                                    $("#save_retention").prop('disabled', false);
+                                }
+                            });
+
+                        }
+
+
+
+                });
+            });
+
+</script>
+
+
+

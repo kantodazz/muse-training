@@ -1,0 +1,306 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+
+    <section id="widget-grid" class="">
+
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Attachments</h2>
+
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <table style="margin-left: 25%">
+                                <tr>
+                                    <td class="form-label">
+                                        Title
+                                        <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                    </td>
+                                    <td>
+                                        <div class="input-group">
+                                            <input id="Title" style="width:300px" type="text" />
+                                        </div>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        Description
+                                        <i class="fa fa-times" style="color:white" id="Description_1"></i>
+                                    </td>
+                                    <td>
+                                        <input id="Description" style="width:300px" type="text" />
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td class="form-label">
+                                        File (PDF only)
+                                        <i class="fa fa-times" style="color:white" id="File_1"></i>
+                                    </td>
+                                    <td>
+                                        <input id="File" style="width:300px" type="file" accept=".pdf" />
+
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td></td>
+                                    <td>
+                                        <div style="float:right">
+                                            <button class="btn btn-info" id="form_submision">
+                                                <i class="glyphicon glyphicon-plus"></i>Add
+                                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                            <hr />
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>File</th>
+                                        <th>Created At</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding-bottom:10px">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-6">
+                            <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                            </a>
+                            <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                <i class="fa fa-save"></i>Finish
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </article>
+
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script>
+        $("#saveLoader").toggle(false);
+        var isSubmitted = false
+
+          var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+        var data = []
+        function loadData() {
+         $.ajax({
+            type: "get",
+            data: {
+                     groupId: '@ViewBag.groupId',
+                     sourceModule: '@ViewBag.sourceModule'
+             },
+
+            url: '@Url.Action("AttachmentsGet", "GovernmentAccounts")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_table.fnAddData([i + 1,
+                       data[i]["Title"],
+                       data[i]["Description"],
+                        //'<a href="/Content/uploads/' + data[i]["FileName"] + '"><i class="fa fa-file-pdf-o"></i></a>',
+                        '<a href="@Url.Action("PreviewAttachment", "OpeningAccounts")/?governmentAttachmentId=' + data[i]["GovernmentAttachmentId"] + '" target = "_blank" ><i class="fa fa-file-pdf-o"></i></a>',
+                       data[i]["CreatedAtFormatted"],
+                        '<a href="#" onclick="remove(' + i + ')">\
+                         <i class="glyphicon glyphicon-trash"></i></a>',
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+          });
+        }
+        loadData();
+
+        $("#form_submision").click(function () {
+
+                if (voucherSummaryFormValidation()) {
+
+                    try {
+
+                          var formData = new FormData();
+                          formData.append('Title', $("#Title").val());
+                          formData.append('Description', $("#Description").val());
+                          formData.append('GroupId', '@ViewBag.groupId');
+                          formData.append('SourceModule', '@ViewBag.sourceModule');
+                          formData.append('file', $('input[type=file]')[0].files[0]);
+
+
+                            var url = '@Url.Action("AttachmentCreate", "GovernmentAccounts")';
+                            $("#form_submision").prop('disabled', true);
+                            $("#saveLoader").toggle(true);
+                            if (!isSubmitted) {
+                                isSubmitted = true
+                                $.ajax({
+                                    type: "post",
+                                    url: url,
+                                    data: formData,
+                                    contentType: false,
+                                    processData: false,
+                                    success: function (response) {
+                                        isSubmitted = false
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        if (response == "Success") {
+                                            swal("Saved Successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    window.location.reload();
+                                                });
+                                        }
+                                        else {
+                                            swal(response);
+                                        }
+                                    },
+                                    failure: function (error) {
+                                        $("#form_submision").prop('disabled', false);
+                                        $("#saveLoader").toggle(false);
+                                        swal(error);
+                                    }
+                                });
+                            }
+                    } catch (e) {
+                        swal("Error Saving. Please consult system administrator!");
+                    }
+                }
+
+        });
+
+         function remove(i) {
+            swal({
+                title: "Remove this File?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    deleteItemConfirmed(data[i]["GovernmentAttachmentId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("AttachmentRemove", "GovernmentAccounts")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Removed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        function voucherSummaryFormValidation() {
+
+            var isNotValid = validateInputsParameters([
+                "#Title",
+                "#Description",
+                "#File",
+            ]);
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+
+    </script>
+}

@@ -1,0 +1,258 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+@{
+    ViewBag.Title = "Gacs Budget Transactions";
+}
+
+<style>
+        .search-btn {
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 5px;
+            padding-right: 10px;
+            width: 40px;
+        }
+
+        .name-input-container {
+            display: inline-flex;
+            flex: 1 1 300px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .search-container {
+            background-color: white;
+            color: black;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px;
+            padding-right: 10px;
+            padding-left: 10px;
+        }
+
+        input[type=search] {
+            padding: 4px;
+            border: hidden;
+        }
+
+
+        td {
+            padding: 5px;
+        }
+
+        .tooltip1 {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+            .tooltip1 .tooltiptext {
+                visibility: hidden;
+                padding: 8px;
+                border: solid 1px #ccc;
+                border-radius: 6px;
+                padding: 5px 0;
+                position: absolute;
+                z-index: 1;
+                top: -40px;
+                left: 110%;
+                box-shadow: 0 4px 8px 0 rgba(0,0,0,0.2);
+                transition: 0.3s;
+                background-color: white;
+            }
+
+                .tooltip1 .tooltiptext::after {
+                    content: "";
+                    position: absolute;
+                    top: 50%;
+                    right: 100%;
+                    margin-top: -5px;
+                    border-width: 5px;
+                    border-style: solid;
+                    border-color: transparent white transparent transparent;
+                }
+
+        .closetip {
+            border: 0;
+            outline: 0;
+            color: #808080;
+            left: 0;
+            border-radius: 100%;
+        }
+
+        .amount-input {
+            border: 1px solid #ccc;
+            outline: none;
+            border-radius: 3px;
+        }
+
+        /*.tooltip1:target .tooltiptext {
+      visibility: visible;
+    }*/
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div><strong>Financil Year:</strong> @ViewBag.Summary.FiscalYear</div>
+                                    <div><strong>Note:</strong> @ViewBag.Summary.NoteId - @ViewBag.Summary.NoteDesc</div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Original Budget	</th>
+                                        <th>Final Budget</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <hr />
+                            <div>
+                                <a class="btn btn-info" href='@Url.Action("DataEntry", "GacsTransactions")' style="margin-right:5px">
+                                    <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+        var dt_table = $('#dt_table').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        var data = []
+        function LoadData() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetGacsBugetTrx", "GacsTransactions")',
+                data: { TrxSummaryID: '@ViewBag.TrxSummaryID' },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if(response.error){
+                        swal(response.error)
+                    } else {
+                        data = response.data;
+                        displayData()
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        LoadData()
+
+        function EditBox(amount, Id, label, status) {
+            if (status == 'Confirmed') {
+               // return amount
+            }
+            return `<a class="tooltip1" onclick="showDialog('${Id}_${label}')">${amount}
+                    <div class ="tooltiptext" id="${Id}_${label}">
+                      <div style="display:flex;flex-direction:row-reverse;padding-right:8px">
+                          <button class ="closetip" onclick="closeDialog('${Id}_${label}')">x</button>
+                      </div>
+                      <div style="padding:8px">
+                         <amount-input id='Amount_${Id}_${label}' class ="amount-input"/>
+                      </div>
+                      <div style="display:flex;flex-direction:row-reverse;padding-right:8px">
+                          <button onclick="updateTrx(${Id},'${label}')" style="background-color:#82D4FA;border-radius:2px;outline:none;color:white">SAVE</button>
+                      </div>
+                    </div>
+                   </a>`
+        }
+
+        function updateTrx(Id, label) {
+            var amount = $(`#Amount_${Id}_${label}`).val()
+            if (amount || amount == 0) {
+                data = data.filter(a=> {
+                    if (a.BudgetTrxID == Id) {
+                        a[label] = amount
+                    }
+                    return a
+                })
+                closeDialog(`${Id}_${label}`);
+                displayData();
+                updateBackend({ Id, label, amount });
+            }
+        }
+
+        function updateBackend(params) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("UpdateBudgetTrx", "GacsTransactions")',
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response != "Success") {
+                        swal(response).then(_=>window.location.reload())
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function showDialog(Id) {
+            document.getElementById(Id).style.visibility = "visible"
+        }
+
+        function closeDialog(Id) {
+            setTimeout(() => {
+                document.getElementById(Id).style.visibility = "hidden"
+            },1)
+        }
+
+        function displayData() {
+            dt_table.fnClearTable();
+            for (var i = 0; i < data.length; i++) {
+                var Id = data[i].BudgetTrxID
+                var status = data[i].OverallStatus
+                dt_table.fnAddData([i + 1,
+                   EditBox(toLabel(data[i]["OriginalBudget"]), Id, "OriginalBudget", status),
+                   EditBox(toLabel(data[i]["FinalBudget"]), Id, "FinalBudget", status),
+                ]);
+            }
+        }
+
+    </script>
+}

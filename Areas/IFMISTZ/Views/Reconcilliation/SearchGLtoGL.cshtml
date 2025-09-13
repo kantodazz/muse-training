@@ -1,0 +1,245 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.GLtoGLVM
+@{
+    ViewBag.Title = "SearchReconciliation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>General Ledger Matching</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "postglglmatching" }))
+                                {
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-horizontal">
+
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.BankAccount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.DropDownListFor(model => model.BankAccount, Model.AccountNumberNameList, "Select Account Number", new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.BankAccount, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.CheckDate, htmlAttributes: new { @class = "control-label col-md-2 " })
+                                        <div class="col-md-5">
+                                            <div class="input-group date col-md-5">
+                                                @Html.EditorFor(model => model.CheckDate, new { @class = "form-control datepicker" })
+                                                <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                            </div>
+                                            @Html.ValidationMessageFor(model => model.CheckDate, "", new { @class = "text-danger" })
+                                            <br /><br />
+                                            <button type="button" class="btn btn-info" onclick="search()">
+                                                <span class="glyphicon preview3" aria-hidden="true"></span>
+                                                Search
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                            <hr />
+                            <div id="searchResults" style="margin-top: 20px; display: none">
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $(document).ready(function () {
+
+            $('#CheckDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                prevText: '<i class="fa fa-chevron-left"></i>',
+                nextText: '<i class="fa fa-chevron-right"></i>',
+                onSelect: function (selectedDate) {
+                    $('#CheckDate').datepicker('option', selectedDate);
+                }
+            });
+        });
+        var checkedRows = [];
+        var search = function () {
+            checkedRows = [];
+            var AccountNumber = $("#BankAccount").val();
+            var chkDate = $("#CheckDate").val();
+            var url = '@Url.Action("GLtoGLOutStanding", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { AccountNumber: AccountNumber, chkDate: chkDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                }
+            });
+        };
+
+
+        $(document).on("click", ".cbCheckAll1", function () {
+            $(".checkBox1").prop('checked',
+              $(this).prop('checked'));
+        });
+
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkBoxBank").prop('checked',
+              $(this).prop('checked'));
+        });
+
+
+        var matching = function () {
+            var bankIds = [];
+
+            $("input:checkbox.checkBox1").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                
+                }
+            });
+        
+           
+            $("input:checkbox.checkBoxBank").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                }
+            });
+
+            if (bankIds.length <= 0) {
+                alert("Select transaction to Match!");
+
+                return;
+            }
+
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                var url = '@Url.Action("GLtoGLMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { bankIds: bankIds },
+                    success: function (response) {
+                        if (response == "Success") {
+                            //alert("successfully.");
+                            //location.reload();
+                            if ($('.modal-header').hasClass('alert-info')) {
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                            }
+                            $('.success-message').html('Matched successfully');
+
+
+                        }
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    },
+                });
+            })
+        };
+
+
+        $(document).ready(function () {
+            var responsiveHelper_dt_basicBank = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+        })
+
+
+        //===BANK====
+        function rowChecked(rowId) {
+            debugger
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            console.log(checkedRows);
+            totalAmountSelected();
+            match();
+        }
+
+        $("#matchbtn3").attr('disabled', true);
+        function match() {
+            var x = $("#selectedItems").text();
+            var y = $("#totalAmountSelectedBank").text();
+
+            x = parseFloat(x.split(",").join(""));
+            y = parseFloat(y.split(",").join(""));
+
+            if (x == y && y != 0) {
+                $("#match").text("Matched Amount");
+                $("#matchbtn3").attr('disabled', false);
+            } else {
+
+                $("#matchbtn3").attr('disabled', true);
+                $("#match").text("UNMatched Amount");
+            }
+        }
+
+        function totalAmountSelected() {
+         
+            var TotalAmount = 0;
+            if (checkedRows.length > 0) {
+                var data = dt_basicBank.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                    TotalAmount = TotalAmount + parseFloat(row[5].split(",").join(""));
+                    console.log(row[4]);
+                });
+
+                $("#totalAmountSelectedBank").text(TotalAmount.toLocaleString());
+            } else {
+
+                $("#totalAmountSelectedBank").text(0);
+            }
+        }
+        //=====END BANK====//
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        function checkAll(rowId) {
+            var data = dt_basicGL.DataTable().rows().data();
+            if ($("#row2-" + rowId).is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    if (i !== rowId)
+                        $("#row2-" + i).prop('disabled', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    $("#row2-" + i).prop('disabled', false);
+                }
+            }
+            debugger
+            var row = data.rows(rowId).data()[0];
+            $("#totalAmountSelectedGL").text(row[5].toLocaleString());
+        
+        }
+
+    </script>
+
+}

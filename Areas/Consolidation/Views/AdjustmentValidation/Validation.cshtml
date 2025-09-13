@@ -1,0 +1,438 @@
+﻿@{
+    ViewBag.Title = "Validation";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    @Html.DropDownList("Institutionlist", null, "Institution", new { @class = "form-control  select2", style = "width:300px;text-align:left", required = "required" })
+                                    @*<input type="text" name="InstitustionCode" placeholder="InstitustionCode" id="InstitustionCode" class="form-control">*@
+                                </div>
+                               <div class="col-md-3">
+                                    <input type="text" name="FinancialYear" placeholder="Financial Year(ex.2025 or ALL)" id="FinancialYear" class="form-control" required>
+                               </div>
+                                    @* <div class="col-md-2">
+                                        <input type="datetime" name="datefrom" placeholder="date from" id="datefrom" class="form-control">
+                                    </div>
+                                    <div class="col-md-2">
+                                        <input type="datetime" name="dateto" placeholder="date to" id="dateto" class="form-control">
+                                    </div>*@
+                                <div class="col-md-3">
+                                    <a class="btn btn-info" onclick="track()" id="track">
+                                        Validate
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                    </a>
+                                </div>
+                            </div>
+                            <br />
+                            <br />
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_trxsummary" class="table table-bordered table-condensed table-amount"></table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var adjustment_Details = $('#adjustmentDetails').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": []
+        });
+
+        var dt_trxsummary = $('#dt_trxsummary').dataTable({
+            "data": [],
+            "columnDefs": [
+                {
+                    "targets": [1,2,6,7,8],
+                    "className": "text-left" 
+                },
+                {
+                    "targets": [3,4,5], // Target the 7th column (index 6)
+                    "className": "text-right" 
+                }
+            ],
+            "columns": [
+           //{
+           //    "className": 'details-control',
+           //    "orderable": false,
+           //    "data": null,
+           //    "defaultContent": ''
+           //},
+           { title: "#" },
+           { title: "Institution" },
+           /*{ title: "InstitutionName" },*/
+           { title: "Financial Year" },
+           { title: "Debit Amount" },
+           { title: "Credit Amount" },
+           { title: "NetChange Amount" },
+           { title: "IsBalanced" },
+           { title: "OverallStatus" },
+           { title: "Mismatch GfsCode List" }
+           //{ title: "Action" }
+          ]
+        });
+
+
+
+        $("#dt_trxsummary_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_trxsummary.DataTable().search(this.value).draw();
+        });
+
+
+        $("#saveLoader").toggle(false);
+        function track() {
+            debugger
+            var url = '@Url.Action("GetAdjustmentValidation", "AdjustmentValidation")';
+            var FinancialYear = $("#FinancialYear").val();
+            var InstitustionCode = $("#Institutionlist").val();
+            if (FinancialYear.toLowerCase() == "all") {
+                FinancialYear = 1900;
+            }
+            $("#saveLoader").toggle(true);
+            $('#track').attr("disabled", true);
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                data: { InstitustionCode: InstitustionCode, FinancialYear: FinancialYear },
+                success: function (response) {
+                    debugger
+                    $("#saveLoader").toggle(false);
+                    $('#track').attr("disabled", false);
+                    data = response.data;
+                    dt_trxsummary.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_trxsummary.fnAddData([i + 1,
+                            data[i]["InstitutionCode"] + "-" + data[i]["InstitutionName"],
+                            data[i]["FinancialYear"],
+                            data[i]["DebitAmount"].toLocaleString(),
+                            data[i]["CreditAmount"].toLocaleString(),
+                            data[i]["NetChangeAmount"].toLocaleString(),
+                            data[i]["IsBalanced"],
+                            data[i]["OverallStatus"],
+                            data[i]["MismatchGfsCodeList"]
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function openViewDialog(i) {
+            debugger
+            globalPayeeId = i;
+
+            $("#_Institutionname").text(data[i]["InstitutionName"]);
+            $("#_InstitutionCode").text(data[i]["InstitutionCode"]);
+            $("#_CategoryName").text(data[i]["AdjustmentCategory"]);
+            $("#_FinancialYear").text(data[i]["FinancialYear"]);
+            $("#_LegalNumber").text(data[i]["LegalNumber"]);
+            $("#_ApplyDate").text(data[i]["ApplyDateFormatted"]);
+            $("#_Reason").text(data[i]["AdjustmentReason"]);
+            $("#_Description").text(data[i]["AdjustmentReasonDesc"]);
+            $("#_Status").text(data[i]["OverallStatus"]);
+
+            if (data[i]["ReverseReasonDesc"] == null) {
+                $("#revesDesc").hide();
+            } else {
+                $("#revesDesc").show();
+                $("#_revesDesc").text(data[i]["ReverseReasonDesc"]);
+            }
+
+            adjustment_Details.fnClearTable();
+            var DRTotalAmount = 0;
+            var CRTotalAmount = 0;
+            var imprestDetailsIds = [];
+            var k=0
+            adjustment_Details.fnClearTable();
+            data[i]["ConsoAdjustementDetails"].forEach(row => {
+                k = k + 1;
+                adjustment_Details.fnAddData([
+                    k,
+                    row["GfsCode"],
+                    row["GFSCodeDesc"],
+                    row["TransactionType"],
+                    row["TransactionType"]=="DR"?row["AdjustmentAmount"].toLocaleString():"",
+                    row["TransactionType"] == "CR"?row["AdjustmentAmount"].toLocaleString():"",
+                ]);
+                DRTotalAmount = DRTotalAmount + parseFloat(row["TransactionType"] == "DR" ? row["AdjustmentAmount"]: 0);
+                CRTotalAmount = CRTotalAmount + parseFloat(row["TransactionType"] == "CR" ? row["AdjustmentAmount"] : 0);
+                imprestDetailsIds.push(row["ImprestDetailId"]);
+            });
+            var footerRow = $('<tr>');
+
+            // Add footer cells with calculated values
+            footerRow.append('<td></td>');
+            footerRow.append('<td colspan="3">Total</td>');
+            footerRow.append('<td style="text-align:left">' + DRTotalAmount.toLocaleString() + '</td>');
+            footerRow.append('<td style="text-align:left">' + CRTotalAmount.toLocaleString() + '</td>');
+
+            // Append the footer row to the DataTable
+            $('#adjustmentDetails tbody').append(footerRow);
+            $('#confirmModal').modal('show');
+        }
+
+
+        function confirm(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Approve this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmAdjustmentSummary(data[i]["TrxAdjustmentSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancel(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Reject this Adjustment/Reversal?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    cancellAdjustmentSummary(data[i]["TrxAdjustmentSummaryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+        function cancellAdjustmentSummary(Id) {
+            var url = '@Url.Action("ConfirmTrxAdjustmentSummary", "ConsoAdjustment")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { Id, status: "Reject" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function confirmAdjustmentSummary(Id) {
+            var url = '@Url.Action("ConfirmTrxAdjustmentSummary", "ConsoAdjustment")'
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { Id, status:"Approve" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function initInnerTable(i) {
+            window["dt_view" + i] = $('#dt_view' + i)
+           .dataTable({
+               "sDom": 't',
+               columnDefs: [
+                   { width: 20, targets: 0 },
+                   { width: 700, targets: 1 }
+               ],
+               "columns": [
+                   { title: "#" },
+                   { title: "GlAccount" },
+                   { title: "FundingRefNo" },
+                   { title: "Type" },
+                   { title: "Amount" },
+               ]
+           });
+            $("#dt_view" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        //$('#dt_trxsummary tbody').on('click', 'td.details-control', function () {
+        //    debugger
+        //    //var details =data[]
+        //    var tr = $(this).closest('tr');
+        //    var row = dt_trxsummary.DataTable().row(tr);
+        //    var format = function (i) {
+        //        return '<table id="dt_view' + i + '" class="table table-bordered table-condensed"></table>';
+        //    }
+
+        //    if (row.child.isShown()) {
+        //        row.child.hide();
+        //        tr.removeClass('shown');
+        //    }
+        //    else {
+        //        row.child(format(row.data()[0])).show();
+        //        initInnerTable(row.data()[0]);
+        //        tr.addClass('shown');
+        //        getTrxDetails(row.data()[0], row.data()[1]);
+        //    }
+        //});
+
+        function getTrxDetails(rowId, TrxId) {
+             var url = '@Url.Action("GetTransactionAdjustmentDetails", "ConsoAdjustment")';
+            $.ajax({
+                type: "get",
+                url: url + '/?TrxId=' + TrxId,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    window["dt_view" + rowId]
+                        .fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        window["dt_view" + rowId]
+                            .fnAddData([i + 1,
+                            d[i]["GlAccount"].split("|").join("-"),
+                            d[i]["FundingRefNo"],
+                            d[i]["TransactionType"].split("|").join("-"),
+                            d[i]["OperationalAmount"].toLocaleString()
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

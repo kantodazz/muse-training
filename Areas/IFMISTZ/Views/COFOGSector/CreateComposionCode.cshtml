@@ -1,0 +1,289 @@
+﻿<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .row-align {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: space-between;
+    }
+
+    .center {
+        display: flex;
+        align-content: center;
+        justify-content: center;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <article class="col-sm-12 col-md-12 col-lg-12">
+
+            <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                <header>
+                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                    <h2>Create Composition Code</h2>
+                </header>
+                <div class="widget-body">
+                    <div class="center">
+                        <table>
+                            <tr>
+                                <td class="form-label">Sector</td>
+                                <td>
+                                    <select id="Sector" style="width:300px">
+                                        @foreach (var item in ViewBag.Sector)
+                                        {
+                                            <option value='@item.ID'>@item.SectorName</option>
+                                        }
+                                    </select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">Sub Sector</td>
+                                <td>
+                                    <select id="SubSector" style="width:300px"></select>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">Code</td>
+                                <td>
+                                    <input style="width:300px" type="text" id="Code" placeholder="096-0000-0-0000-00000000">
+                                </td>
+                            </tr>
+                        </table>
+
+                    </div>
+                    <br />
+                    <div>
+                        <div class="center">
+                            <a class="btn btn-info" href='@Url.Action("cofogcompositioncode", "COFOGSector")' style="margin-right:5px">
+                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-info" id="form_submision" onclick="CreateCode()">
+                                <i class="fa fa-save"></i>Save
+                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </article>
+    </section>
+</div>
+
+
+
+@section pagespecific{
+    <script>
+
+        $(function () {
+            $("#Sector").trigger("change")
+            $("#saveLoader").toggle(false)
+        })
+
+        $("#Sector").change(function () {
+            GetSubSector(this.value)
+        })
+
+        function GetSubSector(sectorId) {
+            $.ajax({
+                type: "GET",
+                data: {sectorId},
+                url: '@Url.Action("GetSubSectorDefinition", "COFOGSector")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var subSector = response.data;
+                    var list = document.getElementById("SubSector")
+                    list.innerHTML = ''
+                    subSector.forEach(sub=> {
+                        list.appendChild(createOption(sub.SubSectorName, sub.ID))
+                    })
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function CreateCode() {
+            if (!$("#Code").val()) {
+                swal("Please provide Exclusion Code")
+                return
+            }
+            if (validateExclusionCode($("#Code").val())) {
+                $("#saveLoader").toggle(true)
+                $("#form_submision").prop('disabled', true);
+                $.ajax({
+                    type: "GET",
+                    data: {
+                        SectorID: $("#Sector").val(),
+                        SubSectorID: $("#SubSector").val(),
+                        Code: $("#Code").val()
+                    },
+                    url: '@Url.Action("SaveCompositionCode", "COFOGSector")',
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        $("#saveLoader").toggle(false)
+                        $("#form_submision").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = '@Url.Action("COFOGCompositionCode", "COFOGSector")';
+                                });
+                        } else {
+                            $("#form_submision").prop('disabled', false);
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        $("#form_submision").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        swal(error);
+                    }
+                });
+            }
+        }
+
+        function createOption(text,value) {
+            var option = document.createElement('option')
+            option.value = value;
+            option.text = text;
+            return option;
+        }
+
+        function validateExclusionCode(code) {
+            if (!code) {
+                swal("Exclusion code is required..!")
+                return false
+            }
+
+            if (code.length != "046-2001-0-0000-00000000".length) {
+                swal("Invalid code length..!")
+                return false
+            }
+
+            try{
+                var _code = code.split("-")
+                if(_code[0].length != 3){
+                    swal("Invalid 1st block length..!")
+                    return false
+                }
+
+                if (_code[1].length != 4) {
+                    swal("Invalid 2nd block length..!")
+                    return false
+                }
+
+                if (_code[2].length != 1) {
+                    swal("Invalid 3rd block length..!")
+                    return false
+                }
+
+                if (_code[3].length != 4) {
+                    swal("Invalid 4th block length..!")
+                    return false
+                }
+
+                if (_code[4].length != 8) {
+                    swal("Invalid last block length..!")
+                    return false
+                }
+            } catch (e) {
+                swal("Invalid Exclusion code..!")
+                return false
+            }
+            return true
+        }
+
+    </script>
+}
+
+

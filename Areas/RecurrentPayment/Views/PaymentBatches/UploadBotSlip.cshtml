@@ -1,0 +1,107 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.UploadBotSlipVM
+
+@{
+    ViewBag.Title = "Upload BOT Pay Slip";
+}
+
+<div class="panel panel-default">
+    <!-- Default panell contents -->
+    <div class="panel-heading">Upload BOT Pay Slip</div>
+    <div class="panel-body">
+
+        @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", id = "botSlipForm" }))
+            {
+            @Html.AntiForgeryToken()
+            <div class="form-horizontal">
+                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+                @Html.HiddenFor(model => model.PaymentBatchId)
+
+                <div class="row" style="padding:12px">
+                    <div class="col-md-4">
+                        @Html.TextBoxFor(model => model.FileName, new { type = "file", @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.FileName, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+
+                <div class="row" style="padding:12px">
+                    <div class="col-md-4">
+                        <button type="button" class="btn btn-flat btn-default" onclick="uploadBotSlip()">
+                            <span class="glyphicon glyphicon-upload" aria-hidden="true"></span>
+                            Upload
+                        </button>
+                    </div>
+                </div>
+            </div>
+        }
+
+    </div>
+
+    <!-- Start of div loader-->
+    <div id="divLoader" style="text-align: center; display: none">
+        <img src="~/Media/Images/ajax_loader.gif" />
+    </div>
+    <!-- End of div loader-->
+
+</div>
+
+@section Scripts{
+
+    <script>
+
+        var uploadBotSlip = function () {
+
+            if (window.FormData !== undefined) {
+
+                var data = new FormData();
+                var file = $("#FileName").get(0).files;
+
+                if (file.length > 0) {
+                    data.append("PaymentBatchId", $("#PaymentBatchId").val());
+                    data.append("FileName", file[0]);
+                }
+
+                var url = '@Url.Action("UploadBotSlip", "PaymentBatches")';
+
+                if (!$("#botSlipForm").valid()) {
+                    return false;
+                }
+
+                $("#divLoader").show();
+
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    processData: false,
+                    contentType: false,
+                    data: data
+                }).done(function (response) {
+                    if (response == "Success") {
+                        alert("Successfully uploaded!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    } else if (response == "InvalidFormat") {
+                        alert("Invalid file format, file format should be PDF!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    } else if (response == "InvalidSize") {
+                        alert("Invalid file size, file size should be less than 2MB!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    }
+                    else {
+                        alert("Unknown error, contact system admin!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    };
+                }).error(function (response) {
+                    alert(response);
+                    $("#divLoader").hide();
+                    location.reload();
+                });
+            };
+        };
+
+    </script>
+}
+

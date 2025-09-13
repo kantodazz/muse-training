@@ -1,0 +1,552 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.BanktoBankVM
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Bank to Bank Manual Matching </h2>
+                    </header>
+                    <div>
+                        <div class="table-responsive">
+                            @{
+                                int i = 0;
+                                int j = 0;
+                                decimal? totalAmount = 0;
+                                decimal? operationalAmountGL = 0;
+                            }
+                            <div class="well" style="padding-top:20px">
+                                <div style="padding-left:10px" class="row">
+                                    <div class="col-md-0"></div>
+                                    <div class="col-md-6">
+
+                                        @*<a href="@Url.Action("ReconcilliationStatus","Reconcilliation")" class="btn btn-info">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                            Back
+                                        </a>*@
+                                        <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>Back
+                                        </a>
+
+                                        <button type="button" id="matchbtn" class="btn btn-info" style="text-align:left" onclick="matching()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            Match
+                                        </button>
+
+                                    </div>
+                                    <strong id="match">No Transaction(s) Selected to Match</strong>
+                                </div>
+                            </div>
+                            <hr />
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false" data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>DR Bank Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedBankDr">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_BankDR" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                        <thead>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th>Date</th>
+                                                                <th>Legal Number</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+                                                        @foreach (var item in ViewBag.DR)
+                                                   {
+                                                    <tr>
+                                                        <td>@item.TransactionType</td>
+                                                        @*<td><input type="checkbox" value="@item.BankStatementID" id="row2-@i" onchange="rowChecked2(@i)" class="checkBox1"></td>*@
+                                                        <td><input type="checkbox" value="@item.BankStatementID" id="row-@item.BankStatementID" onchange="rowCheckedDR(@item.BankStatementID,@item.Amount)" class="checkBox1"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item.StatementDate)</td>
+                                                        <td>@item.RelatedReference</td>
+                                                        <td style="font-size:9px">@item.TransactionDescription</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.Amount)</td>
+                                                    </tr>
+                                                      i++;
+                                                    }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+                            <div class="col-md-6">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false"  data-widget-fullscreenbutton="false">
+                                                <header>
+                                                    <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                                    <h2>CR Bank Outstanding List </h2>
+                                                </header>
+                                                <div class="widget-body" style="padding-top:10px">
+                                                    <div class="row">
+
+                                                        <div class="col-md-5">
+                                                            <div id="infoPanel">
+                                                                <div class="info-box">
+                                                                    <label>Total:</label>
+                                                                    <strong id="totalAmountSelectedBankCR">No Item(s) Selected</strong>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-md-7">
+                                                            <div class="searchContainer" style="float:right">
+                                                                <i class="fa fa-search searchIcon"></i>
+                                                                <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <table id="dt_BankCR" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+
+                                                        <thead>
+                                                            <tr>
+                                                                <th></th>
+                                                                <th></th>
+                                                                <th>Date</th>
+                                                                <th>Legal Number</th>
+                                                                <th>Description</th>
+                                                                <th style="text-align:right">Amount</th>
+                                                            </tr>
+                                                        </thead>
+
+                                                        @foreach (var item2 in ViewBag.CR)
+                                                  {
+
+                                                    <tr>
+                                                        <td>@item2.TransactionType</td>
+                                                        @*<td><input type="checkbox" value="@item2.BankStatementID" id="row-@j" onchange="rowChecked(@j)" class="checkBoxBank"></td>*@
+                                                        <td><input type="checkbox" value="@item2.BankStatementID" id="row2-@item2.BankStatementID" onchange="rowCheckedCR(@item2.BankStatementID,@item2.Amount)" class="checkBoxBank"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item2.StatementDate)</td>
+                                                        <td>@item2.RelatedReference</td>
+                                                        <td style="font-size:9px">@item2.TransactionDescription</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item2.Amount)</td>
+                                                        @*<td style="text-align:right">@string.Format("{0:#,0.00}", item2.Amount)</td>*@
+                                                    </tr>
+                                                      j++;
+                                                    }
+
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        $("#matchbtn").attr('disabled', true);
+        var dt_BankCR = $('#dt_BankCR').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+
+        $("#dt_BankCR_wrapper .dt-toolbar").remove();
+        $("#searchboxBank").on("keyup search input paste cut", function () {
+            dt_BankCR.DataTable().search(this.value).draw();
+        });
+
+        var dt_BankDR = $('#dt_BankDR').dataTable({
+            scrollY: 400,
+            paging: false
+        });
+
+        $("#dt_BankDR_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_BankDR.DataTable().search(this.value).draw();
+        });
+
+        $(document).ready(function () {
+
+            $('#CheckDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                prevText: '<i class="fa fa-chevron-left"></i>',
+                nextText: '<i class="fa fa-chevron-right"></i>',
+                onSelect: function (selectedDate) {
+                    $('#CheckDate').datepicker('option', selectedDate);
+                }
+            });
+        });
+        var checkedRows = [];
+        var checkedRows2 = [];
+        var search = function () {
+            checkedRows = [];
+            checkedRows2 = [];
+            var AccountNumber = $("#BankAccount").val();
+            var chkDate = $("#CheckDate").val();
+            var url = '@Url.Action("BanktoBankOutStanding", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { AccountNumber: AccountNumber, chkDate: chkDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                }
+            });
+        };
+
+
+
+        //=================== NEW MUANDIKO ================
+
+        var checkedRowsGlDr = []
+        var checkedRowsGlCR = []
+
+        function rowCheckedDR(rowId, amount) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRowsGlDr.push({ rowId, amount });
+            } else {
+                checkedRowsGlDr = checkedRowsGlDr.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+        function rowCheckedCR(rowId, amount) {
+            if ($("#row2-" + rowId).is(":checked")) {
+                checkedRowsGlCR.push({ rowId, amount });
+            } else {
+                checkedRowsGlCR = checkedRowsGlCR.filter(v => v.rowId != rowId)
+            }
+            matchx()
+        }
+
+
+        $("#matchbtn").attr('disabled', true);
+        function matchx() {
+            var GLTotalAmountCR = 0
+            var GLTotalAmountDR = 0
+            checkedRowsGlDr.forEach(v => {
+                GLTotalAmountDR += v.amount
+            })
+            checkedRowsGlCR.forEach(v => {
+                GLTotalAmountCR += v.amount
+            })
+
+            $("#totalAmountSelectedBankDr").text(toLabel(GLTotalAmountDR))
+            $("#totalAmountSelectedBankCR").text(toLabel(GLTotalAmountCR))
+
+            var GLTotalAmountCR1 = GLTotalAmountCR * -1;
+
+            if (GLTotalAmountDR.toFixed(2) == GLTotalAmountCR1.toFixed(2) && GLTotalAmountDR.toFixed(2) != 0) {
+                $("#match").text("Matched Amount");
+                $("#matchbtn").attr('disabled', false);
+            } else {
+
+                $("#matchbtn").attr('disabled', true);
+                $("#match").text("Unmatched Amount");
+            }
+
+        }
+
+
+         function matching() {
+            swal({
+                title: "Matching",
+                text: "Are you sure you want to match the transaction.? ",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    BankBankMatch();
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+
+        function BankBankMatch() {
+            debugger
+            var bankIds1 = [];
+            var bankIds2 = [];
+
+            bankIds1 = checkedRowsGlDr.map(v => v.rowId);
+            bankIds2 = checkedRowsGlCR.map(v => v.rowId);
+
+            var bankIds = [...bankIds1, ...bankIds2]
+
+            console.log(bankIds);
+
+            if (bankIds.length <= 0) {
+                swal("Select transaction to Match!");
+                return;
+            }
+                var url = '@Url.Action("BanktoBankMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { bankIds: bankIds },
+                        success: function (response) {
+                        if (response == "Success") {
+                            swal("Matched Successfully!", { icon: "success" }).then((e) => {
+                                window.location.reload();
+                            });
+                        } else {
+                            swal(response, { icon: "warning" }).then((e) => {
+                                window.location.reload();
+                            });
+                        };
+                    },
+                    error: function (err) {
+                        swal(err.statusText)
+
+                    }
+                });
+
+            };
+
+
+        @*$(document).on("click", ".cbCheckAll1", function () {
+            $(".checkBox1").prop('checked',
+              $(this).prop('checked'));
+        });
+
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkBoxBank").prop('checked',
+              $(this).prop('checked'));
+        });
+
+
+        var matching = function () {
+            var bankIds = [];
+
+            $("input:checkbox.checkBox1").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+
+                }
+            });
+
+
+            $("input:checkbox.checkBoxBank").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                }
+            });
+
+            if (bankIds.length <= 0) {
+                alert("Select transaction to Match!");
+
+                return;
+            }
+
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                var url = '@Url.Action("BanktoBankMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { bankIds: bankIds },
+                    success: function (response) {
+                        if (response == "Success") {
+                            //alert("successfully.");
+                            //location.reload();
+                            if ($('.modal-header').hasClass('alert-info')) {
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                            }
+                            $('.success-message').html('Matched successfully');
+                        }
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    },
+                });
+            })
+        };*@
+
+        $(document).ready(function () {
+            var responsiveHelper_dt_BankCR = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+        })
+
+
+        ////===BANK CR====
+        //function rowChecked(rowId) {
+        //    if ($("#row-" + rowId).is(":checked")) {
+        //        checkedRows.push(rowId);
+        //    } else {
+        //        remove(checkedRows, rowId);
+        //    }
+        //    totalAmountSelectedCr();
+        //    match();
+        //}
+
+        //$("#matchbtn").attr('disabled', true);
+        //function match() {
+        //    var x = $("#totalAmountSelectedBankDr").text();
+        // var y = $("#totalAmountSelectedBank").text();
+
+        //  x = parseFloat(x.split(",").join(""));
+        //  y = parseFloat(y.split(",").join(""));
+
+        //  if (x == y && y!=0) {
+        //      $("#match").text("Matched Amount");
+        //      $("#matchbtn").attr('disabled', false);
+        //  } else {
+
+        //      $("#matchbtn").attr('disabled', true);
+        //      $("#match").text("Unmatched Amount");
+        //  }
+        //}
+
+        //function totalAmountSelectedCr() {
+        //    var TotalAmount = 0;
+        //    if (checkedRows.length > 0) {
+        //        var data = dt_BankCR.DataTable().rows().data();
+        //        checkedRows.forEach(rowId=> {
+        //            var row = data.rows(rowId).data()[0];
+        //            TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+        //        });
+
+        //        $("#totalAmountSelectedBank").text(TotalAmount.toLocaleString());
+        //    } else {
+
+        //        $("#totalAmountSelectedBank").text(0);
+        //    }
+        //}
+        //function remove(array, val) {
+        //    var found = array.indexOf(val);
+        //    while (found !== -1) {
+        //        array.splice(found, 1);
+        //        found = array.indexOf(val);
+        //    }
+        //}
+
+        ////=====END BANK CR====//
+
+        ////===BANK DR====
+        //function rowChecked2(rowId) {
+        //    if ($("#row2-" + rowId).is(":checked")) {
+        //        checkedRows2.push(rowId);
+        //    } else {
+        //        remove2(checkedRows2, rowId);
+        //    }
+        //    totalAmountSelectedDr();
+        //    match();
+        //}
+
+        //function totalAmountSelectedDr() {
+        //    var TotalAmount = 0;
+        //    if (checkedRows2.length > 0) {
+        //        var data = dt_BankDR.DataTable().rows().data();
+        //        checkedRows2.forEach(rowId=> {
+        //            var row = data.rows(rowId).data()[0];
+        //            TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+        //        });
+        //        $("#totalAmountSelectedBankDr").text(TotalAmount.toLocaleString());
+        //    } else {
+
+        //        $("#totalAmountSelectedBankDr").text(0);
+        //    }
+        //}
+
+        //function remove2(array, val) {
+        //    var found = array.indexOf(val);
+        //    while (found !== -1) {
+        //        array.splice(found, 1);
+        //        found = array.indexOf(val);
+        //    }
+        //}
+
+        //function checkAll(rowId) {
+        //    console.log(rowId);
+        //    $("#totalAmountSelectedBankDr").text(0);
+        //    var data = dt_BankDR.DataTable().rows().data();
+        //    if ($("#row2-" + rowId).is(":checked")) {
+        //        for (var i = 0; i < data.length; i++) {
+        //            if (i !== rowId)
+        //                $("#row2-" + i).prop('disabled', true);
+        //        }
+        //        var row = data.rows(rowId).data()[0];
+        //        $("#totalAmountSelectedBankDr").text(row[5].toLocaleString());
+        //        match();
+        //    } else {
+        //        for (var i = 0; i < data.length; i++) {
+        //            $("#row2-" + i).prop('disabled', false);
+        //        }
+        //        $("#totalAmountSelectedBankDr").text(" ");
+        //        match();
+        //    }
+        //}
+
+
+    </script>
+
+}

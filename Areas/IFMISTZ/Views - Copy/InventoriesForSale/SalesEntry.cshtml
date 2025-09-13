@@ -1,0 +1,948 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SaleInventoryVM
+@{
+    ViewBag.Title = "Approved Inventories List";
+}
+<style>
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+
+
+
+<div id="content" ng-app="myModule" ng-controller="myController" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Inventories For Sell Entry </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div class="row">
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    @Html.DropDownList("ItemClassificationId", Model.ItemClassificationsList, "Select inventory class", new { @class = "form-control" })
+
+                                </div>
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    @Html.DropDownListFor(model => model.UOM, Model.UOMList, "Select unit of measure", new { @class = "form-control" })
+                                </div>
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    <div class="input-group"><input class="form-control" id="ItemCard" name="ItemCard" placeholder="Search Item Card" value='' type="text" autocomplete="off" onclick="SearchInventoryCard()" /><span class="input-group-btn"><button class="btn" style="background-color:#2196F3;color:white" id="search" onclick="SearchInventoryCard()">Search</button></span></div>
+                                </div>
+
+                            </div>
+                            <hr>
+
+                            <div align="center">
+                                <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            <div id="request_table" style="display:none">
+                                <table align="center" class="table  table-bordered table-hover table-condensed" id="dt_inventories" style="width:96%">
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:right;width:4%"></th>
+                                            <th style="text-align:left">ID </th>
+                                            <th style="text-align:left">Item Name </th>
+                                            <th style="text-align:left">Unit of Measure</th>
+                                            <th style="text-align:right">Unit Cost Price</th>
+                                            <th style="text-align:left">Currency </th>
+                                            <th style="text-align:center">Available Quantity</th>
+                                            <th style="text-align:center;width:12%">Enter Quantity</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                                <div class="pull-right">
+                                    <button type="button" class="btn btn btn-info" id="saveToCart">
+                                        <i class="fa fa-plus"></i>
+                                        Add to Cart
+                                    </button>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+                                </div>
+                                <br />
+                                <hr>
+
+                            </div>
+                            <div style="padding-top:5px">
+
+                                <table id="selected_inventories" class="table table-bordered
+                                       table-hover table-condensed" width="100%"></table>
+                                <div style="padding-bottom:10px" id="infoPanel">
+                                    <div class="info-box">Shopping Cart</div>
+                                </div>
+                            </div>
+                            <form role="form" name="billForm" class="form-horizontal" ng-submit="createBill(billForm.$valid)" novalidate autocomplete="off">
+                                <fieldset>
+                                                           
+                                    <!-- Start of select 2 customer -->
+                                    <div class="form-group">
+                                        <section>
+                                            <label class="col-md-2 control-label">Customer</label>
+                                            <div class="col col-md-3">
+                                                <input class="form-control" type="text" name="CustomerId" id="CustomerId" placeholder="Select Customer" ng-model="CustomerId" ng-change="getCustomer(CustomerId)" ng-required="IsMainSource">
+                                                <span ng-show="billForm.$submitted || billForm.CustomerId.$touched">
+                                                    <span ng-show="billForm.CustomerId.$error.required" style="color: red">Customer is required</span>
+                                                </span>
+                                            </div>
+                                        </section>
+                                        <section>
+                                            <label class="col-md-2 control-label">Id Type</label>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" name="IdType" id="IdType" placeholder="Id Type" ng-model="IdType" readonly="readonly">
+                                            </div>
+                                        </section>
+                                    </div>
+                                    <!-- End of select 2 customer -->
+                                    <!-- Start of txt customer -->
+                                    <div class="form-group" ng-show="IsMainSource === false">
+                                        <section>
+                                            <label class="col-md-2 control-label">Customer</label>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" name="TxtCustomerName" id="TxtCustomerName" placeholder="Customer Name" ng-model="CustomerName" ng-required="!IsMainSource">
+                                                <span ng-show="billForm.$submitted || billForm.TxtCustomerName.$touched">
+                                                    <span ng-show="billForm.TxtCustomerName.$error.required" style="color: red">Customer is required.</span>
+                                                </span>
+                                            </div>
+                                        </section>
+                                        <section>
+                                            <label class="col-md-2 control-label">Id Type</label>
+                                            <div class="col-md-3">
+                                                <select name="DdlIdTypeId" id="DdlIdTypeId" class="form-control" ng-model="IdTypeId" ng-change="getIdType(IdTypeId)">
+                                                    <option value="">Select Id Type</option>
+                                                    <option ng-repeat="idType in idTypes" value="{{idType.IdTypeId}}">{{idType.IdTypeDesc}}</option>
+                                                </select>
+                                            </div>
+                                        </section>
+                                    </div>
+                                    <!-- End of txt customer -->
+                                    <div class="form-group">
+                                        <section>
+                                            <label class="col-md-2 control-label">Id No</label>
+                                            <div class="col-md-3">
+                                                <input type="text" class="form-control" name="IdNo" id="IdNo" placeholder="Id No" ng-model="IdNo" ng-readonly="IsMainSource">
+                                            </div>
+                                        </section>
+                                    </div>
+                                    <div class="form-group">
+                                        <section>
+                                            <label class="col-md-2 control-label">Phone No</label>
+                                            <div class="col-md-3" ng-class="{ 'has-error' : billForm.PhoneNo.$invalid && submitted }">
+                                                <input class="form-control" type="text" name="PhoneNo" id="PhoneNo" placeholder="Phone Number" ng-model="PhoneNo" ng-readonly="IsMainSource" required ng-pattern="/^\d{10}$/">
+                                                <span ng-show="billForm.PhoneNo.$error.required && submitted" class="help-block">Phone number is required</span>
+                                                <span ng-show="billForm.PhoneNo.$error.pattern && submitted" class="help-block">Phone number is not valid</span>
+                                            </div>
+                                        </section>
+                                        <section>
+                                            <label class="col-md-2 control-label">Email Address</label>
+                                            <div class="col-md-3">
+                                                <input id="EmailAddress" name="EmailAddress" class="form-control" placeholder="Email Address" type="email" ng-model="EmailAddress" ng-readonly="IsMainSource">
+                                                <span ng-show="billForm.$submitted || billForm.EmailAddress.$touched">
+                                                    <span ng-show="billForm.EmailAddress.$error.email" style="color:red">Enter a valid email address</span>
+                                                </span>
+                                            </div>
+                                        </section>
+                                    </div>
+                          
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Add VAT Amount?</label>
+                                        <div class="col-md-10" style="padding-top:8px">
+                                            <input type="checkbox" name="HasVat" id="HasVat">
+                                            <input id="VatApplicable" name="VatApplicable" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">Total Amount</label>
+                                        <div class="col-md-3">
+                                            <input type="text" sg-number-input fraction-size="2" class="form-control" name="OperationalAmount" id="OperationalAmount" placeholder="Amount" ng-model="OperationalAmount" readonly="readonly">
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-2">
+                                          
+                                            <a href="@Url.Action("PendingSales","InventoriesForSale")" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                <i class="fa fa-arrow-left"></i>
+                                                Back
+                                            </a>
+                                            <button type="button" class="btn btn-info" id="form_submision" style="float: left; margin-left: 5px">
+                                                <i class="fa fa-save"></i>Save
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+               
+                        </div>
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<!----------- Search  Item Cards----------------->
+<div class="modal fade" id="search_item_card" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Select Item Card</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+                    @*<div class="row" style="padding-top:1%;padding-bottom:1%">
+                            <div class="col-md-8">
+
+                            </div>
+                            <div class="col-md-4">
+                                <div class="input-group" style="float:right">
+                                    <span class="input-group-addon"><i class="fa fa-search"></i></span>
+                                    <input type="search" name="search" class="form-control" autocomplete="off" placeholder="Search..." id="search_card">
+                                </div>
+                            </div>
+                        </div>*@
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_search_item_card" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>InventoryItemCardId</th>
+                                <th>Item Card</th>
+                                <th>Description</th>
+                                <th>UOM</th>
+                                <th style="text-align:center">Reorder Level</th>
+                                <th style="text-align:center">Available Quantity</th>
+                                <th style="text-align:center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var cartInventories = [];
+        var total_cost = 0;
+        var dt_inventories = $('#dt_inventories').dataTable(
+        );
+          $("#dt_inventories_wrapper .dt-toolbar").remove();
+        var dt_search_item_card = $('#dt_search_item_card').dataTable(
+        {
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1] }],
+    });
+                //$("#dt_search_item_card_wrapper .dt-toolbar").remove();
+               $("#search_item_card").on("keyup search input paste cut", function () {
+                dt_search_item_card.DataTable().search(this.value).draw();
+               });
+        function SearchInventoryCard() {
+                 var class_id = $("#ItemClassificationId").val();
+                if (!class_id) {
+                    swal("Please select inventory class");
+                    return false;
+
+                     }
+               var uom = $("#UOM").val();
+                if (!uom) {
+                    swal("Please select unit of measure");
+                    return false;
+
+                 }
+
+                    $('#search_item_card').modal('show');
+                      dt_search_item_card.fnClearTable();
+                      SearchItemCards(class_id,uom);
+                }
+               $("#search_card").on("keyup search input paste cut", function () {
+                            if (!this.value) {
+                                dt_search_item_card.fnClearTable();
+                            } else {
+                                SearchItemCards(this.value);
+                            }
+                    });
+        function SearchItemCards(id,uom) {
+                 var formData = { "id": id,"uom": uom };
+                 var url = '@Url.Action("GetItemCards", "InventoriesForSale")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: formData,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                           if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                data = response.data;
+                               dt_search_item_card.fnClearTable();
+                               if (data.length == 0) {
+                                   swal("No any inventory for sale by this class and unit of measure selected");
+                                   return;
+                                  }
+                               for (var i = 0; i < data.length; i++) {
+
+                                   dt_search_item_card.fnAddData([i + 1,
+                                    data[i]["InventoryItemCardId"],
+                                    data[i]["ItemCard"],
+                                    data[i]["ItemDescription"],
+                                    data[i]["UOM"],
+                                    '<div align="center"><span class="badge">'+data[i]["OrderLevel"]+'</span></div>',
+                                    '<div align="center"><span class="badge">'+data[i]["AvailableQuantity"]+'</span></div>',
+                                    '<div align="center"><a href="#" onclick="ItemCardClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a></div>'
+                                    ]);
+
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                        }
+        function ItemCardClicked(rowId) {
+                    var data = dt_search_item_card.DataTable().rows().data();
+                    var row = data[rowId];
+                  $("#search_item_card").modal("hide");
+                   dt_inventories.fnClearTable();
+                    InventoriesByItemCard(row[1]);
+             }
+            function InventoriesByItemCard(id) {
+                 var formData = { "id": id };
+                 var url = '@Url.Action("GetInventories", "InventoriesForSale")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: formData,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                           if (response == "DbException") {
+                               swal("Db Exception,Please contact technical supporter ");
+                           }
+                           else {
+                               $("#request_table").show();
+                                data = response.data;
+                               for (var i = 0; i < data.length; i++) {
+
+                                   dt_inventories.fnAddData([i + 1,
+                                        data[i]["InventoryDetailId"],
+                                        data[i]["ItemName"],
+                                        data[i]["UOM"],
+                                        '<span style="float:right">' + toLabel(data[i]["UnitSalePrice"]) + '</span>',
+                                         data[i]["Currency"],
+                                        '<div align="center">' + data[i]["BalanceQuantity"] + '</div>',
+                                        '<div align="center"><input type="text" class="form-control" style = "width:70px;height:27px"  min = 0 max="' + data[i]["BalanceQuantity"] + '" autocomplete = "off" onkeyup = "enteredQuantity(this)"></div>'
+                                     ]);
+
+
+
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+            }
+
+         
+        // =========== End Save Add Inventories ====================
+        function WriteOff(formData) {
+            var url = '@Url.Action("WriteOff", "Inventories")';
+            $('#WriteOff').modal('hide');
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    if (result == "Success") {
+                        swal("Data saved successfully", { icon: "Success" })
+                                                                   .then((value) => {
+                                                                       location.reload();
+                                                                   });
+                    }
+                    else if (result == "Exceed") {
+                        swal("Failed,You can not write off more than quantity available in the store");
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Write Off Inventories ====================
+            $(document).ready(function () {
+
+                $(".inventoryConfirm").on('click', function () {
+                    var id = $(this).data('id');
+                    var inventoryno = $(this).data('inventoryno');
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to confirm Invenory issuing " + inventoryno + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmIssuing", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully!", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal("Failed to confirm ,DbException");
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+                });
+        
+
+            });
+              $(function () {
+            $('#UnitCost').autoNumeric('init');
+            //$('#Quantity').autoNumeric('init', { mDec: '0' });
+            //$('#OperationalAmount').autoNumeric('init');
+
+            var url = '@Url.Action("GetCustomers", "Bills")';
+
+            $("#CustomerId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.customers }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+     
+
+        var confirmIssuing = function (id) {
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to confirm this Invenory issuing ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmIssuing", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully!", { icon: "success" })
+                                .then((value) => {
+                                           dt_inventories.fnClearTable();
+                                       var item_card=$("#ItemCard").val();
+                                         updateInventories(item_card);
+                                      });
+
+
+                        }
+                        else {
+
+                            swal("Failed to confirm ,DbException");
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+        function enteredQuantity(e) {
+            var max_value = parseFloat(e.max);
+            var entered_value = parseFloat(e.value);
+            if (entered_value <= max_value) {
+              if (entered_value > 0) {
+                  var i = 0;
+
+                  $("#dt_inventories tr").each(function () {
+                      if (i > 0) {
+                          var value = $(this).children().eq(7).find("input").val().trim();
+                          if (value != "" || value != null) {
+                              var quantity = parseFloat(value);
+                       
+                              var id = $(this).children().eq(1).text().trim();
+                              var item = $(this).children().eq(2).text().trim();
+                              var uom = $(this).children().eq(3).text().trim();
+                              var price = parseFloat($(this).children().eq(4).text().trim().split(",").join(""));
+                              var total = price * quantity;
+                              var total_amount = total.toFixed(2);
+                              var currency = $(this).children().eq(5).text().trim();
+                                if (cartInventories.length > 0) {
+
+                                //CHECK IF EXIST IN THE ARRAY
+                                var found = false;
+                                for (var j = 0; j < cartInventories.length; j++) {
+                                    if (cartInventories[j].InventoryDetailId == id) {
+                                        cartInventories[j].Quantity = quantity;
+                                        cartInventories[j].TotalAmount = total_amount;
+                                        found = true;
+                                    }
+
+                                }
+
+                                if (!found) {
+                                   
+                                      cartInventories.push({
+                                        "InventoryDetailId": id,
+                                        "ItemName": item,
+                                        "UOM": uom,
+                                        "UnitSalePrice": price,
+                                        "Quantity": quantity,
+                                        "TotalAmount": total_amount,
+                                        "Currency": currency
+                                    });
+
+                                   
+                                }
+
+
+                            } else {
+                                
+                                    cartInventories.push({
+                                        "InventoryDetailId": id,
+                                        "ItemName": item,
+                                        "UOM": uom,
+                                        "UnitSalePrice": price,
+                                        "Quantity": quantity,
+                                        "TotalAmount": total_amount,
+                                        "Currency": currency
+                                    });
+
+                                
+                            }
+                           
+
+
+
+                            }
+                     
+                      }
+                         i++;
+                    });            
+                }
+            
+            }else {
+                e.value = "";
+                swal("Quantity must be a number at least equals to "+max_value);
+                return false;
+            }
+
+        //var maxQuantity = $("#divModalBody #BalanceQuantity").val();
+        //var i = 0;
+        //var sum = 0;
+        //$("#inventories tr").each(function () {
+        //    if (i > 0) {
+        //        if ($(this).children().eq(4).find("input").val()) {
+        //        var value = $(this).children().eq(4).find("input").val();
+        //        if (value != "") {
+        //            if (parseFloat(value)) {
+        //                sum = sum + parseFloat(value);
+        //            }
+        //            else {
+        //                e.value = "";
+        //            }
+        //        }
+        //         }
+        //    }
+        //    i++;
+
+        //$("#total_issuing").text(sum);
+        //if (sum > maxQuantity) {
+        //    swal("Total can not exceed quantity remains in store i.e " + maxQuantity);
+        //    sum = sum - parseFloat(e.value);
+        //    e.value = "";
+        //    $("#total_issuing").text(sum);
+
+        //}
+
+        }
+
+
+
+                  // =========== Start Save Inventory Information====================
+
+        function SubmitIssuing(formData) {
+                  $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveInventoryIssuing", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    $("#save_button").prop('disabled', false);
+                    if (result == "Success") {
+                        swal("Issuing saved successfully", { icon: "Success" })
+                                    .then((value) => {
+                                        $("#divModal").modal("hide");
+                                         dt_inventories.fnClearTable();
+                                          var item_card=$("#ItemCard").val();
+                                         updateInventories(item_card);
+                                    });
+                    }
+                    else if (result == "NoQuantity") {
+                            swal("Please enter quantity");
+                    }
+                    else if (result == "Exceed") {
+                            swal("Exceed available quantity");
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+
+           function SubmitIssuingTwo(formData) {
+                  $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("IssueRemainsInventory", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    $("#save_button").prop('disabled', false);
+                    if (result == "Success") {
+                        swal("Issuing saved successfully", { icon: "Success" })
+                                    .then((value) => {
+                                        $("#divModal").modal("hide");
+                                         dt_inventories.fnClearTable();
+                                          var item_card=$("#ItemCard").val();
+                                         updateInventories(item_card);
+                                    });
+                    }
+                    else if (result == "NoQuantity") {
+                            swal("Please enter quantity");
+                    }
+                    else if (result == "Exceed") {
+                            swal("Exceed available quantity");
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+       // =========== End Save Inventory Information ====================
+  
+
+
+        $(document).on('click', '#saveToCart', function () {
+            if (cartInventories.length > 0) {
+                
+                    $("#form_submision").show();
+                    $("#infoPanel").hide();
+                      $('#selected_inventories').empty();
+                       $('<tr style="background:#f5f5f5; color:#000000"><th style="text-align: center;width:5%">No</th><th>ID</th><th>Item Name</th><th style="width:12%">Unit of Measure</th><th style="width:10%">Currency</th><th style="text-align: center;width:7%">Quantity</th><th style="text-align:right;width:12%">Unit Price</th><th style="text-align:right;width:12%">Total Cost</th></tr>').appendTo('#selected_inventories');
+                  var j = 0;
+                  var total_quantity = 0;
+                   total_cost = 0;
+                         $.each(cartInventories, function (i, d) {
+                             j++;
+                           total_quantity = total_quantity + d.Quantity;
+                           total_cost = total_cost + parseFloat(d.TotalAmount);
+                             $('<tr><td align="center">' + j + '</td><td>' + d.InventoryDetailId + '<td>' + d.ItemName + '</td><td>' + d.UOM + '</td><td>' + d.Currency + '</td><td align="center">' + d.Quantity + '</td><td align="right">' + d.UnitSalePrice.toLocaleString('en') + '</td><td align="right">' + parseFloat(d.TotalAmount).toLocaleString('en') + '</td></tr>').appendTo('#selected_inventories');
+
+                         });
+                     $('<tr><td colspan="5" align="right"><strong>Total</strong></td><td align="center"><strong>' + total_quantity + '</strong></td><td></td><td align="right"><strong>' + parseFloat(total_cost.toFixed(2)).toLocaleString('en') + '</strong></td></tr>').appendTo('#selected_inventories');
+
+                if ($("#HasVat").is(":checked")) {
+                var vat = '@(Model.VATPtg)';
+                var total_amount = total_cost + total_cost * vat;
+                   $("#OperationalAmount").val(total_amount.toLocaleString('en'));
+                    }
+                    else {
+                           $("#OperationalAmount").val(total_cost.toLocaleString('en'));
+                    }
+             
+            }
+        });
+              //Manage VAT
+        $("#HasVat").change(function (e) {
+          $("#VatApplicable").val(e.target.checked ? "YES" : "NO");
+            if ($(this).is(":checked")) {
+                var vat = '@(Model.VATPtg)';
+                var total_amount = total_cost + total_cost * vat;
+                   $("#OperationalAmount").val(total_amount.toLocaleString('en'));
+            }
+            else {
+                   $("#OperationalAmount").val(total_cost.toLocaleString('en'));
+            }
+        });
+
+
+
+        $(document).on('click', '#form_submision', function () {
+            if (cartInventories.length > 0) {
+                var customerId = $("#CustomerId").val();
+                 var vatChecked="";
+                if (customerId > 0) {
+                       if ($("#HasVat").is(":checked")) {
+                           vatChecked = "Yes";
+                            }
+                       else {
+                           vatChecked = "No";
+                    }
+          //Save Data to Database
+                   var form_data = {
+                "CustomerId": customerId,
+                "VatChecked": vatChecked,
+                "CartInventories": cartInventories
+            }
+            $("#form_submision").prop('disabled', true);
+            var url = '@Url.Action("SaveInventoriesSale", "InventoriesForSale")';
+            $.ajax(
+{
+    type: "POST",
+    url: url,
+    data: form_data,
+    success: function (response) {
+        $("#form_submision").prop('disabled', false);
+           if (response == "Success") {
+                 swal("Data saved successfully", { icon: "success" })
+                            .then((value) => {
+                              var url = '@Url.Action("PendingSales", "InventoriesForSale")';
+                                        window.location.replace(url); 
+                            });
+                                        }
+           else {
+               swal(response);
+            }
+    },
+    error: function (xhr) {
+        $("#btn_save_items_charge").prop('disabled', false);
+        //console.log(xhr.responseText);
+        swal("An error has occured, contact system support");
+        $("#divLoader").hide();
+    },
+
+});
+          //End Save data to database
+
+
+
+                } else {
+          swal("Please select customer");
+                }
+            }
+            else {
+                swal("Please add inventories to shopping cart");
+            }
+        });
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

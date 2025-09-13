@@ -1,0 +1,261 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.CentralPaymentCategory>
+
+@{
+    ViewBag.Title = "Central Payment Category List";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @if (User.IsInRole("System Setup"))
+                                    {
+                                        <a class="btn btn-info" href='@Url.Action("CreateCentralPaymentCategory", "CentralPaymentCategory")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add New
+                                        </a>
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box2">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_central_payment_category_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Category Name</th>
+                                        <th>Payer Account Name</th>
+                                        <th>Payer Account No</th>
+                                        <th>Payee Account Name</th>
+                                        <th>Payee Account No</th>
+                                        <th>Payee BIC</th>
+                                        <th>Payee Bank Name</th>
+                                        <th>Sub Budget Class</th>
+                                        @if (User.IsInRole("System Setup"))
+                                        {
+                                            <th>Action</th>
+                                        }
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+         //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        // ============ INIT DATA TABLES START =====================
+        var dt_central_payment_category_list = $('#dt_central_payment_category_list').dataTable();
+
+        $("#dt_central_payment_category_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box2").on("keyup search input paste cut", function () {
+            $("#dt_central_payment_category_list").DataTable().search(this.value).draw();
+            $("#dt_central_payment_category_list_wrapper .dt-toolbar").remove();
+        });
+
+        // ********************** INIT DATA TABLES END **********************
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetCentralPaymentCategoryList", "CentralPaymentCategory")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_central_payment_category_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    dt_central_payment_category_list.fnAddData([i + 1,
+                       data[i]["CategoryName"],
+                       data[i]["PayerAccountName"],
+                       data[i]["PayerAccountNo"],
+                       data[i]["PayeeAccountName"],
+                       data[i]["PayeeAccountNo"],
+                       data[i]["PayeeBIC"],
+                       data[i]["PayeeBankName"], 
+                       data[i]["SubBudgetClass"],
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("EditCentralPaymentCategory", "CentralPaymentCategory")/?id=' + data[i]["CentralPaymentCategoryId"] + '">Edit</a></li>\
+                                <li><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function cancelDialog(i) {
+            swal({
+                title: 'Central Payment Category Cancellation ?',
+                text: "Do you want to Cancel Central Payment Category : " + data[i]["CategoryName"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelCentralPaymentCategory(data[i]["CentralPaymentCategoryId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelCentralPaymentCategory(centralPaymentCategoryId){
+            var url = '@Url.Action("CancelCentralPaymentCategory", "CentralPaymentCategory")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": centralPaymentCategoryId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal("Error Cancelling Central Payment Category", { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Cancelling Central Payment Category", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}
+

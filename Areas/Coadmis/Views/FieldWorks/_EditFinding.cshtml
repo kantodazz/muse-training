@@ -1,0 +1,177 @@
+﻿@model IFMIS.Areas.Coadmis.Models.FwSummaryFinding
+@using (Html.BeginForm("UpdateFinding", "FieldWorks", FormMethod.Post, new { id = "fieldWorkForm", enctype = "multipart/form-data" }))
+ {
+@Html.AntiForgeryToken()
+
+<div class="form-horizontal">
+
+    <hr />
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(a=>a.FwSummaryFindingId)
+    <div class="form-group">
+        @Html.Label("Finding Nature", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @*@Html.DropDownList("FindingNature2", ViewBag.FindingNatures as SelectList, Model.FindingNature, new { @class = "form-control" })*@
+            <select class="form-control" name="FindingNature" id="FindingNature2">
+                @*<option value="@Model.FindingNature"> @Model.FindingNature </option>*@
+                @if (ViewBag.FindingNatures != null)
+                {
+                    foreach (var item in (SelectList)ViewBag.FindingNatures)
+                    {
+                        <option value="@item.Value"> @item.Text </option>
+                    }
+                }
+            </select>
+        </div>
+
+        @Html.Label("Is Material ?", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            <select class="form-control select2" name="IsMaterial" id="ismaterial2">
+                <option value="@Model.IsMaterial"> @Model.IsMaterial </option>
+                <option value="Yes"> Yes </option>
+                <option value="No"> No </option>
+            </select>
+        </div>
+    </div>
+
+
+    <div class="form-group" id="basisOptions2">
+        @Html.Label("Finding Category", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            <select class="form-control" name="OpinionBasisClass" id="opBasisClass2">
+                <option value=" @Model.OpinionBasisClass"> @Model.OpinionBasisClass </option>
+            </select>
+        </div>
+
+        @Html.Label("Opinion Basis", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            <select class="form-control" name="OpinionBasis" id="opbasis2">
+                <option value="@Model.OpinionBasis"> @Model.OpinionBasis </option>
+            </select>
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Finding Name", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.FindingName, new { @class = "form-control"})
+
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Finding Description", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.FindingNameDescription, new { @class = "form-control"})
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("Condition", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Condition, new { @class = "form-control"})
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Criteria", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Criteria, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("Causes", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Causes, new { @class = "form-control" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.Label("Implications (Consequence)", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Consequence, new { @class = "form-control" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.Label("Recommendation", htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.TextAreaFor(model => model.Recommendation, new { @class = "form-control" })
+        </div>
+    </div>
+
+
+    <div class="form-group">
+        <label class="col-md-2 control-label" style="font-weight:normal;text-align:right">
+
+            <i class="fa fa-asterisk" style="color:white;width:5px;height:5px" id="errorProjectDesc"></i>
+        </label>
+        <div class="col-md-8">
+            @*<a class="btn btn-info" href="#" type="submit">
+                <i class="glyphicon glyphicon-floppy-disk"></i> Save
+            </a>*@
+            <button type="submit" class="btn btn-info">Save</button>
+            <button class="btn btn-default role-dismiss" data-dismiss="modal">Close</button>
+
+        </div>
+
+    </div>
+    <br />
+
+</div>
+ }
+
+<script>
+
+    $("#FindingNature2").change(function () {
+        $("#opBasisClass2").empty();
+            debugger
+            var id = $(this).val();
+
+            var url = '@Url.Action("GetFindingCategory", "FieldWorks")';
+            var params = { "findingnatureId": id };
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    $("#opBasisClass2").empty();
+                    $("#opBasisClass2").append(response);
+                }
+            })
+        });
+
+        $("#ismaterial2").change(function () {
+            var ismaterial = $("#ismaterial2").val();
+            if (ismaterial == "Yes") {
+                $("#basisOptions2").show();
+            }
+            else {
+                $("#basisOptions2").hide();
+            }
+        });
+
+    $("#opBasisClass2").change(function () {
+            debugger
+            var id = $(this).val();
+            var url = '@Url.Action("GetFindingOpinionBasis", "FieldWorks")';
+             var params = { "findingcategoryId": id };
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    $("#opbasis2").empty();
+                    $("#opbasis2").append(response);
+                }
+            })
+        });
+
+
+
+</script>

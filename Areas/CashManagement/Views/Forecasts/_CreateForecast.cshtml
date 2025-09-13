@@ -1,0 +1,218 @@
+﻿@model IFMIS.Areas.CashManagement.Models.CreateForecastVM
+
+@using (Html.BeginForm("", "", FormMethod.Post, new { id = "form" }))
+{
+    @Html.AntiForgeryToken()
+
+    <div class="form-horizontal">
+        @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.ApplyDate, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-5">
+                @Html.EditorFor(model => model.ApplyDate, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                @Html.ValidationMessageFor(model => model.ApplyDate, "", new { @class = "text-danger" })
+            </div>
+        </div>        
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FundFlowCategoryId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-6">
+                @Html.DropDownListFor(model => model.FundFlowCategoryId, Model.FundFlowCategoryIds, "Select Fund Flow Category", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.FundFlowCategoryId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.FundFlowSubCategoryId, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-6">
+                @Html.DropDownListFor(model => model.FundFlowSubCategoryId, new SelectList(""), "Select Fund Flow Sub Category", new { @class = "form-control" })
+                @Html.ValidationMessageFor(model => model.FundFlowSubCategoryId, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.OperationalAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-5">
+                <div class='input-group'>
+                    @Html.EditorFor(model => model.OperationalAmount, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                    @Html.ValidationMessageFor(model => model.OperationalAmount, "", new { @class = "text-danger" })
+                    <span class="input-group-addon">
+                        @Html.DropDownListFor(model => model.OperationalCurrency, Model.Currencies)
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
+<script>
+    $(function () {
+        $("#OperationalAmount").autoNumeric('init');
+
+        $("#ApplyDate")
+        .wrap('<div class="input-group">')
+        .datepicker({
+            dateFormat: "yy-mm-dd",
+            changeMonth: true,
+            changeYear: true,
+            showOn: "both",
+            buttonImage: '@Url.Content("~/Content/img/calendar.gif")',
+            maxDate: "+0D"
+        })
+        .next("button").button({
+            icons: { primary: "ui-icon-calendar" },
+            label: "Select Date",
+            text: false
+        })
+        .addClass("btn btn-default")
+        .wrap('<span class="input-group-btn">')
+        .find('.ui-button-text')
+        .css({
+            'visibility': 'hidden',
+            'display': 'inline'
+        });
+    });
+
+    $("#GovernmentId").change(function () {
+            $("#divLoader").show();
+            var governmentId = $("#GovernmentId").val();
+            if (governmentId == "") {
+                $("#divLoader").hide();
+                return;
+            }
+            var url = '@Url.Action("GetFundFlowCategoryByGov", "FundFlowCategories")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    id: governmentId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#FundFlowCategoryId option").remove();
+                        $("#FundFlowCategoryId").append('<option value="">Select Fund Flow Category</option>');
+                        $.each(data.fundFlowCategories, function (i, fundFlowCategory) {
+                            $("#FundFlowCategoryId").append('<option value="'
+                                + fundFlowCategory.FundFlowCategoryId + '">'
+                                + fundFlowCategory.CategoryName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            //location.reload();
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+    });
+
+    $("#FundFlowCategoryId").change(function () {
+            $("#divLoader").show();
+            var fundFlowCategoryId = $("#FundFlowCategoryId").val();
+            if (fundFlowCategoryId == "") {
+                $("#divLoader").hide();
+                return;
+            }
+            var url = '@Url.Action("GetFundFlowSubCategoryByFundFlowCategory", "FundFlowSubCategories")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: {
+                    id: fundFlowCategoryId
+                },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#FundFlowSubCategoryId option").remove();
+                        $("#FundFlowSubCategoryId").append('<option value="">Select Fund Flow Sub Category</option>');
+                        $.each(data.fundFlowSubCategories, function (i, fundFlowSubCategory) {
+                            $("#FundFlowSubCategoryId").append('<option value="'
+                                + fundFlowSubCategory.FundFlowSubCategoryId + '">'
+                                + fundFlowSubCategory.SubCategoryName + '</option>');
+                        });
+                    }
+                },
+                error: function () {
+                    swal({
+                            text: "An error occurred while processing your request, contact system support",
+                            icon: "error",
+                            button: "OK",
+                        }).then(function () {
+                            //location.reload();
+                        });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        });
+
+    $("#btnSave").on("click", function () {
+        $("#btnSave").attr("disabled", true);
+        $.validator.unobtrusive.parse("#form");
+        if (!$("#form").valid()) {
+            $("#btnSave").attr("disabled", false);
+            return false;
+        }
+
+        $("#divLoader").show();
+
+        var token = $("[name='__RequestVerificationToken']").val();
+
+        var formData = new FormData();
+
+        formData.append("__RequestVerificationToken", token);
+        formData.append("ApplyDate", $("#ApplyDate").val());
+        formData.append("FundFlowSubCategoryId", $('#FundFlowSubCategoryId').val());
+        formData.append("OperationalAmount", $('#OperationalAmount').val());
+        formData.append("OperationalCurrency", $('#OperationalCurrency').val());
+
+        var url = '@Url.Action("CreateForecast", "Forecasts")';
+        $.ajax({
+            url: url,
+            type: "POST",
+            //data: JSON.stringify(Object.fromEntries(formData)),
+            data: formData,
+            dataType: "JSON",
+            //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+            //cache: false,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response == "Success") {
+                    swal({
+                        text: "Forecast saved successfully!",
+                        icon: "success",
+                        button: "OK",
+                    }).then(function () {
+                        window.location = '@Url.Action("PendingForecast", "Forecasts")';
+                    });
+                } else {
+                    swal({
+                        text: response,
+                        icon: "warning",
+                        button: "OK",
+                    })
+                }
+            },
+            error: function () {
+                swal({
+                    text: "An error occured while processing your request, please contact system support",
+                    icon: "error",
+                    button: "OK",
+                })
+            },
+            complete: function () {
+                $("#btnSave").attr("disabled", false);
+                $("#divLoader").hide();
+            }
+        });
+    });
+</script>

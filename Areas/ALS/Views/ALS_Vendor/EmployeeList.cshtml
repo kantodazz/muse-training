@@ -1,0 +1,523 @@
+﻿
+@{
+    ViewBag.Title = "Vendor List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+
+
+
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <a href="@Url.Action("UploadVendor","ALS_Vendor")" class="btn btn-info">
+                                <span class="glyphicon glyphicon-plus"></span>
+                               Import Vendor
+                            </a>
+                           
+                            <hr class="simple" />
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchEmployee()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_Statement_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vendor Code</th>
+                                        <th>Vendor Name</th>
+                                        <th>Vote</th>
+                                        <th>Net Salary</th>
+                                        <th>Salary Scale</th>
+                                        <th>Acount Number</th>
+                                        <th>Acount Name</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+<div class="modal fade" id="commentModal" style="left:4%">
+    <div class="modal-dialog" style="width:45%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Edit Salary Scale</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="VendorID" id="VendorID" />
+                        <fieldset disabled>
+                            <legend>Details:</legend>
+                            <label for="CheckNo" style="margin-left:35px">Vendor Code:</label>
+                            <input type="text" style="margin-left: 50px; width:300px" id="CheckNo" name="CheckNo"><br><br>
+                            <label for="VendorName" style="margin-left:35px">Vendor Name:</label>
+                            <input type="text" style="margin-left: 48px;width:300px" id="VendorName" name="VendorName"><br><br>
+                            <label for="SalaryScale" style="margin-left:35px">Salary Scale:</label>
+                            <input type="text" style="margin-left: 54px;width: 300px" id="SalaryScale" name="SalaryScale"><br><br>
+                        </fieldset>
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    <label for="NewSalaryScale"> New Salary Scale:</label>
+                                    <i class="fa fa-times" style="color:white" id="NewSalaryScale1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" id="NewSalaryScale" class="input" style="width:300px" /><br />
+                                    </div>
+                                </td>
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="SaveForm()" id="saveForm">
+                        <i class="fa fa-times"></i>Save
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ApprovalModal" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Comment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="VendorID" id="VendorID" />
+                        <input type="hidden" name="CheckNo" id="CheckNo" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarks1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarks" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="ApproveForm()" id="approveform">
+                        <i class="fa fa-times"></i>Confirm
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section pagespecific{
+
+    <script>
+
+        var dt_Statement_listing = $('#dt_Statement_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("#dt_Statement_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Statement_listing.DataTable().search(this.value).draw();
+        });
+        $("#dt_Statement_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+
+        });
+
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("getEmployeeList", "ALS_Vendor")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_Statement_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_Statement_listing.fnAddData([i + 1,
+                        data[i]["CheckNo"],
+                        data[i]["VendorName"],
+                        data[i]["Vote"],
+                        toLabel(data[i]["NetSalary"]),
+                        data[i]["SalaryScale"],
+                        data[i]["BenAccountNum"],
+                        data[i]["BenAccountName"],
+                        action(i, data[i]["EditStatus"])
+                        
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+
+
+
+
+
+
+        function searchEmployee() {
+
+            var keywords = $("#searchbox").val();
+
+            if (keywords == '') {
+                var url = '@Url.Action("EmployeeList", "ALS_Vendor")';
+                swal("Search Parameter is Required");
+                return false;
+            }
+
+
+            $("#loader").text("Loading......")
+            $.ajax({
+            type: "get",
+            url: '@Url.Action("getEmployeeListByParameter", "ALS_Vendor")' + "/?keywords=" + $('#searchbox').val() + "",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_Statement_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_Statement_listing.fnAddData([i + 1,
+                        data[i]["CheckNo"],
+                        data[i]["VendorName"],
+                        data[i]["Vote"],
+                        toLabel(data[i]["NetSalary"]),
+                        data[i]["SalaryScale"],
+                        data[i]["BenAccountNum"],
+                        data[i]["BenAccountName"],
+                        action(i, data[i]["EditStatus"])
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+
+                if (data.length == 0) {
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+    }
+
+
+
+           //action
+        function action(i, overallStatus) {
+
+            if (overallStatus == null || overallStatus == "Approved") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="#" onclick="SaveSalaryScale(' + i + ')">Edit Salary Scale</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+            if (overallStatus == "Pending") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="SaveSalaryScale(' + i + ')">Edit Salary Scale</a></li>\
+                                <li><a href="#" onclick="SalaryScaleApproval(' + i + ')">Confirm</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+        }
+
+     // =============== Save SalaryScale Start ==================
+        function SaveSalaryScale(i) {
+
+            $("#SalaryScale").text(data[i]["SalaryScale"]);
+            document.getElementById("SalaryScale").value = data[i]["SalaryScale"];
+
+            $("#CheckNo").text(data[i]["CheckNo"]);
+            document.getElementById("CheckNo").value = data[i]["CheckNo"];
+
+            $("#VendorName").text(data[i]["VendorName"]);
+            document.getElementById("VendorName").value = data[i]["VendorName"];
+
+            $("#VendorID").text(data[i]["VendorID"]);
+            document.getElementById("VendorID").value = data[i]["VendorID"];
+            $('#commentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function SaveForm() {
+
+            var vendorID = $("#VendorID").val();
+            var newSalaryScale = $("#NewSalaryScale").val();
+            var checkNumber = $("#CheckNo").val();
+
+
+            if (vendorID == '' || newSalaryScale == '' || checkNumber=='') {
+                var url = '@Url.Action("EmployeeListList", "ALS_Vendor")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            postSalaryScale(vendorID, newSalaryScale, checkNumber);
+        }
+
+        function postSalaryScale(vendorID, newSalaryScale, checkNumber) {
+            $(".loadingImg").show();
+            $("#saveForm").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("EditSalaryScale", "ALS_Vendor")';
+            $.ajax({
+                url: url,
+                data: { vendorID: vendorID, newSalaryScale: newSalaryScale, checkNumber: checkNumber },
+                type: 'POST',
+                success: function (response) {
+                    $("#saveForm").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Save successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#saveForm").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#saveForm").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        // =============== End SalaryScale ===============
+
+
+
+     // ===============  Approval Start ==================
+        function SalaryScaleApproval(i) {
+
+            $("#CheckNo").text(data[i]["CheckNo"]);
+            document.getElementById("CheckNo").value = data[i]["CheckNo"];
+            $("#VendorID").text(data[i]["VendorID"]);
+            document.getElementById("VendorID").value = data[i]["VendorID"];
+            $('#ApprovalModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function ApproveForm() {
+
+            var vendorID = $("#VendorID").val();
+            var remarks = $("#remarks").val();
+            var attachment = $("#attachment").val();
+            var checkNumber = $("#CheckNo").val();
+
+
+            if (vendorID == '' || checkNumber=='') {
+                var url = '@Url.Action("EmployeeListList", "ALS_Vendor")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+
+            if (attachment != '') {
+
+                var file = document.querySelector("#attachment");
+                if (/\.(pdf)$/i.test(file.files[0].name) === false) {
+                    swal("Please Upload Attachment in PDF Format)");
+                    return false;
+                }
+            }
+            postApprove(vendorID, checkNumber, remarks);
+        }
+
+        function postApprove(vendorID, checkNumber, remarks) {
+            $(".loadingImg").show();
+            $("#approveform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("SalaryScaleConfirmation", "ALS_Vendor")';
+            $.ajax({
+                url: url,
+                data: { vendorID: vendorID, checkNumber: checkNumber, remarks: remarks },
+                type: 'POST',
+                success: function (response) {
+                    $("#approveform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#approveform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#approveform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+        // =============== End  Approval      ================
+
+
+
+
+
+    </script>
+}
+

@@ -1,0 +1,239 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Complete Inventory";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Issuing Inventory </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p align="left">
+                                Inventory Code &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.InventoryCode)</strong></span><br />
+                                Receiving Number &nbsp;:<span><strong>@Html.DisplayFor(model => model.ReceivingNumber)</strong></span><br />
+                                Item Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.ItemName)</strong></span><br />
+                                Original Quanity&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.Quantity)</strong></span><br />
+                                Unit of Measure &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.UOM)</strong></span><br />
+                                Value &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.InventoryValue) @Html.DisplayFor(model => model.Currency)</strong></span><br />
+                                Batch Number &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.BatchNo)</strong></span><br />
+                                Manufacture Date &nbsp;:<span><strong>@Convert.ToDateTime(Model.ManufactureDate).ToString("dd/MM/yyyy")</strong></span><br />
+                                Expire Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Convert.ToDateTime(Model.ExpireDate).ToString("dd/MM/yyyy")</strong></span><br />
+                                Remains in Store &nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.BalanceQuantity)</strong></span><br />
+
+                            </p>
+
+                        </div>
+                        @Html.HiddenFor(model => model.InstitutionLevel)
+                        @if (Model.InstitutionLevel == 1)
+                        {
+                            using (Html.BeginForm("IssueRemainsInventory", "Inventories", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.InventoryDetailId)
+                                <div class="form-horizontal">
+                                    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:60%">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:center;width:4%">#</th>
+                                                <th style="text-align:left;width:10%">Sub Vote</th>
+                                                <th style="text-align:left;width:54%">Sub Vote Description</th>
+                                                <th style="text-align:left;width:16%">Previous Issued</th>
+                                                <th style="text-align:left;width:16%">Quantity</th>
+
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+                                            {
+                                                var j = i + 1;
+                                                <tr>
+                                                    <td style="text-align:center">@j</td>
+                                                    <td style="width:140px">
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubVote)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].SubVote)
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].SubVoteName)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].SubVoteName)
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].IssuedQuantity)
+                                                    </td>
+
+                                                    <td>
+                                                        @Html.EditorFor(modelItem => Model.InventoryIssuings[i].CurrentIssued, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, @onkeyup = "enteredQuantity(this)" } })
+                                                    </td>
+
+
+
+                                                </tr>
+                                            }
+                                            <tr><td colspan="4" align="right">Total quantity issuing</td><td align="center"><span id="total_issuing"></span></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-offset-1">
+                                    <a href="@Url.Action("IssueInventories", "Inventories")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>
+
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            using (Html.BeginForm("IssueRemainsInventory", "Inventories", FormMethod.Post))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.InventoryDetailId)
+                                <div class="form-horizontal">
+                                    <table id="inventories" class="table table-bordered table-hover table-condensed" style="width:60%">
+                                        <thead>
+                                            <tr>
+                                                <th style="text-align:center;width:4%">#</th>
+                                                <th style="text-align:left;width:20%">Cost Center</th>
+                                                <th style="text-align:left;width:44%">Cost center Desc</th>
+                                                <th style="text-align:left;width:16%">Previous Issued</th>
+
+                                                <th style="text-align:left;width:16%">Quantity</th>
+
+                                            </tr>
+                                        </thead>
+
+                                        <tbody>
+                                            @for (var i = 0; i < Model.InventoryIssuings.Count(); i++)
+                                            {
+                                                var j = i + 1;
+                                                <tr>
+                                                    <td style="text-align:center">@j</td>
+                                                    <td style="width:140px">
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].CostCentre)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].CostCentre)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].SubVote)
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].CostCentreDesc)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].CostCentreDesc)
+                                                        @Html.HiddenFor(modelItem => Model.InventoryIssuings[i].SubVoteName)
+                                                    </td>
+                                                    <td>
+                                                        @Html.DisplayFor(modelItem => Model.InventoryIssuings[i].IssuedQuantity)
+                                                      </td>
+
+                                                    <td>
+                                                        @Html.EditorFor(modelItem => Model.InventoryIssuings[i].CurrentIssued, new { htmlAttributes = new { @class = "form-control", style = "width:70px;height:27px", min = 0, @onkeyup = "enteredQuantity(this)" } })
+                                                    </td>
+
+
+
+                                                </tr>
+                                            }
+                                            <tr><td colspan="4" align="right">Total quantity issuing</td><td align="center"><span id="total_issuing"></span></td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="col-md-offset-1">
+                                    <a href="@Url.Action("IssueInventories", "Inventories")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                    <button type="submit" id="save_button" class="btn btn-info" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>
+
+                                </div>
+                            }
+                        }
+
+
+                        <br />
+                        <br />
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+    var institutionLevel = '@(Model.InstitutionLevel)';
+    var maxQuantity = '@(Model.BalanceQuantity)';
+    function enteredQuantity(e) {
+        var i = 0;
+        var sum = 0;
+        $("#inventories tr").each(function () {
+            if (i > 0) {
+                if ($(this).children().eq(4).find("input").val()) {
+                var value = $(this).children().eq(4).find("input").val();
+                if (value != "") {
+                    if (parseFloat(value)) {
+                        sum = sum + parseFloat(value);
+                    }
+                    else {
+                        e.value = "";
+                    }
+                }
+                 }
+            }
+            i++;
+        });
+        $("#total_issuing").text(sum);
+        if (sum > maxQuantity) {
+            swal("Total can not exceed quantity remains in store i.e " + maxQuantity);
+            sum = sum - parseFloat(e.value);
+            e.value = "";
+            $("#total_issuing").text(sum);
+
+        }
+
+    }
+
+
+    </script>
+
+}
+
+
+
+
+
+
+
+

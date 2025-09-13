@@ -1,0 +1,358 @@
+﻿@model IFMIS.Areas.CashManagement.Models.EditStandingImprestVM
+
+@{
+    ViewBag.Title = "Edit Standing Imprest";
+}
+
+<div id="divLoader">
+</div>
+<div id="content">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                     usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+                    data-widget-colorbutton="false"
+                    data-widget-editbutton="false"
+                    data-widget-togglebutton="false"
+                    data-widget-deletebutton="false"
+                    data-widget-fullscreenbutton="false"
+                    data-widget-custombutton="false"
+                    data-widget-collapsed="true"
+                    data-widget-sortable="false"
+                        -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> Edit Standing Imprest </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <form method="post" id="form" class="form-horizontal" encytpe="multipart/form-data">
+                                @Html.AntiForgeryToken()
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                @Html.HiddenFor(model => model.StandingImprestId)
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.FinancialYear, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-3">
+                                        @Html.EditorFor(model => model.FinancialYear, new { htmlAttributes = new { @class = "form-control", @readonly = "true" } })
+                                        @Html.ValidationMessageFor(model => model.FinancialYear, "", new { @class = "text-danger" })
+                                    </div>
+                                    @Html.LabelFor(model => model.OperationalAmount, htmlAttributes: new { @class = "control-label col-md-1" })
+                                    <div class="col-md-4">
+                                        <div class='input-group'>
+                                            @Html.EditorFor(model => model.OperationalAmount, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.OperationalAmount, "", new { @class = "text-danger" })
+                                            <span class="input-group-addon">
+                                                @Html.DropDownListFor(model => model.OperationalCurrency, Model.Currencies)
+                                            </span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.Remarks, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-8">
+                                        (<span style="font-weight:bold;" id="RemarkCount">500 Characters Remaining</span>)
+                                        @Html.TextAreaFor(model => model.Remarks, new { @class = "form-control", maxlength = "500" })
+                                        @Html.ValidationMessageFor(model => model.Remarks, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <hr />
+                                <table class="table table-bordered table-condensed table-hover table-responsive table-striped">
+                                    <thead>
+                                        <tr>
+                                            <th colspan="4">Attachments</th>
+                                        </tr>
+                                        <tr>
+                                            <th>#</th>
+                                            <th>Attachment Name</th>
+                                            <th>Preview</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int i = 0;
+                                        }
+                                        @foreach (var item in Model.StandingImprestAttachments)
+                                        {
+                                            i++;
+                                            <tr>
+                                                <td>@i</td>
+                                                <td>@item.AttachmentName</td>
+                                                <td style="text-align: center">
+                                                    <a href="@Url.Action("ViewStandingImprestAttachment", "StandingImprests", new { id = item.StandingImprestAttachmentId })" target="_blank">
+                                                        <span class="glyphicon glyphicon-download-alt" aria-hidden="true"></span>
+                                                    </a>
+                                                </td>
+                                                <td style="text-align: center">
+                                                    <a href="#" onclick="removeAttachment(@item.StandingImprestAttachmentId)">
+                                                        <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                                                    </a>
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+
+                                <hr />
+                                <div id="divAttachments"></div>
+
+                                <fieldset class="scheduler-border">
+                                    <legend class="scheduler-border"><b>Add Attachments</b></legend>
+                                    <div class="form-group">
+                                        @Html.Label("Attachment Name", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-4">
+                                            @Html.Editor("AttachmentName", new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                        </div>
+
+                                        @Html.Label("File Name", htmlAttributes: new { @class = "control-label col-md-1" })
+                                        <div class="col-md-3">
+                                            @Html.Editor("FileName", new { htmlAttributes = new { @class = "form-control", @type = "file" } })
+                                        </div>
+                                        <div class="col-md-offset-2">
+                                            <button class="btn btn-info" type="button" style="float: left" id="btnAddAttachment">
+                                                <i class="fa fa-plus"></i>
+                                                Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                </fieldset>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <button type="button" class="btn btn-info" id="btnSave" style="float: left">
+                                                <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                                                Save
+                                            </button>
+                                            <a href="@Url.Action("pendingstandingimprests")" class="btn btn-default" style="float: left; margin-left: 10px">
+                                                <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                                Back
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </form>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!-- END MAIN CONTENT -->
+@section pagespecific {
+    <script type="text/javascript">
+
+        $(function () {
+            $("#OperationalAmount").autoNumeric('init');
+        });
+
+        $('#Remarks').on("keyup", function () {
+            var count = $('#Remarks').val().split('');
+            var numChars = 500 - parseInt(count.length);
+            $('#RemarkCount').text(parseInt(numChars) + " Characters Remaining");
+
+            if (numChars == 0) {
+                $("#Remarks").addClass("input-has-exceeded");
+            } else {
+                $("#Remarks").removeClass("input-has-exceeded");
+            }
+        });
+
+        var removeAttachment = function (id) {
+            swal({
+                text: "Are you sure you want to delete this attachment?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    $("#divLoader").show();
+                    var url = '@Url.Action("DeleteStandingImprestAttachment", "StandingImprests")/' + id;
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "Success") {
+                                swal({
+                                    text: "Attachment deleted successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                            else {
+                                swal({
+                                    text: "An error occurred while processing your request. ",
+                                    icon: "warning",
+                                    button: "OK",
+                                }).then(function () {
+                                    location.reload();
+                                });
+                            }
+                        },
+                        error: function (response) {
+                            swal({
+                                text: response,
+                                icon: "error",
+                                button: "OK",
+                            }).then(function () {
+                                location.reload();
+                            });
+                        },
+                        complete: function () {
+                            $("#divLoader").hide();
+                        }
+                    });
+                }
+            });
+        };
+
+        $("#btnAddAttachment").click(function () {
+            if ($("#AttachmentName").val() == "" || $("#FileName").val() == "") {
+                return false;
+            }
+
+            var attachmentName = $('#AttachmentName').val().trim();
+            var fileName = $('#FileName').get(0).files[0];
+
+            $("#divLoader").show();
+
+            var token = $("[name='__RequestVerificationToken']").val();
+
+            var formData = new FormData();
+
+            formData.append("__RequestVerificationToken", token);
+            formData.append("ModuleId", $("#StandingImprestId").val());
+            formData.append("AttachmentName", attachmentName);
+            formData.append("FileName", fileName);
+
+            var url = '@Url.Action("AddStandingImprestAttachment", "StandingImprests")';
+            $.ajax({
+            url: url,
+            type: "POST",
+            //data: JSON.stringify(Object.fromEntries(formData)),
+            data: formData,
+            dataType: "JSON",
+            //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+            //cache: false,
+            processData: false,
+            contentType: false,
+            success: function (response) {
+                if (response == "Success") {
+                    swal({
+                        text: "Attachment saved successfully!",
+                        icon: "success",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                } else {
+                    swal({
+                        text: response,
+                        icon: "warning",
+                        button: "OK",
+                    })
+                }
+            },
+            error: function () {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                    })
+            },
+            complete: function () {
+                $("#btnSave").attr("disabled", false);
+                $("#divLoader").hide();
+            }
+            });
+        });
+
+        $("#btnSave").on("click", function () {
+            $("#btnSave").attr("disabled", true);
+            $.validator.unobtrusive.parse("#form");
+            if (!$("#form").valid()) {
+                $("#btnSave").attr("disabled", false);
+                return false;
+            }
+
+            $("#divLoader").show();
+
+            var token = $("[name='__RequestVerificationToken']").val();
+
+            var formData = new FormData();
+
+            formData.append("__RequestVerificationToken", token);
+            formData.append("StandingImprestId", $("#StandingImprestId").val());
+            formData.append("FinancialYear", $('#FinancialYear').val());
+            formData.append("OperationalAmount", $('#OperationalAmount').val());
+            formData.append("OperationalCurrency", $('#OperationalCurrency').val());
+            formData.append("Remarks", $('#Remarks').val());
+
+            var url = '@Url.Action("EditStandingImprest", "StandingImprests")';
+            $.ajax({
+                url: url,
+                type: "POST",
+                //data: JSON.stringify(Object.fromEntries(formData)),
+                data: formData,
+                dataType: "JSON",
+                //contentType: 'application/x-www-form-urlencoded; charset=utf-8',
+                //cache: false,
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal({
+                            text: "Standing imprest saved successfully!",
+                            icon: "success",
+                            button: "OK",
+                        }).then(function () {
+                            window.location = '@Url.Action("PendingStandingImprests", "StandingImprests")';
+                        });
+                    } else {
+                        swal({
+                            text: response,
+                            icon: "warning",
+                            button: "OK",
+                        })
+                    }
+                },
+                error: function () {
+                    swal({
+                        text: "An error occured while processing your request, please contact system support",
+                        icon: "error",
+                        button: "OK",
+                    })
+                },
+                complete: function () {
+                    $("#btnSave").attr("disabled", false);
+                    $("#divLoader").hide();
+                }
+            });
+        });
+
+    </script>
+}

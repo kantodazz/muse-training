@@ -1,0 +1,216 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.BanktoBankVM
+@{
+    ViewBag.Title = "";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:1em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="table-responsive">
+                    @{
+                                int i = 0;
+                                int j = 0;
+                                decimal? totalAmount = 0;
+                                decimal? operationalAmountGL = 0;
+                    }
+                    <div class="well" style="padding-top:20px">
+                        <div style="padding-left:10px" class="row">
+                            <div class="col-md-0"></div>
+                            <div class="col-md-6">
+                                <button type="button" id="matchbtn" class="btn btn-info" style="text-align:left" onclick="matching()">
+                                    <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                    Match 
+                                </button>
+                                
+                            </div>
+                            <strong id="match">No Transaction(s) Selected to Match</strong>
+                        </div>
+                    </div>
+                    <hr />
+                    <div class="col-md-6">
+                        <section id="widget-grid">
+                            <div class="row">
+                                <article class="col-sm-12 col-md-12 col-lg-12">
+                                    <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false" data-widget-collapsed="false">
+                                        <header>
+                                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                            <h2>DR Bank Outstanding List </h2>
+                                        </header>
+                                        <div class="widget-body" style="padding-top:10px">
+                                            <div class="row">
+                                                <div class="col-md-5">
+                                                    <div id="infoPanel">
+                                                        <div class="info-box">
+                                                            <label>Total:</label>
+                                                            <strong id="selectedItems">No Item(s) Selected</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-7">
+                                                    <div class="searchContainer" style="float:right">
+                                                        <i class="fa fa-search searchIcon"></i>
+                                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <table id="dt_basicGL" class="table table-bordered table-hover table-condensed">
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th>Date</th>
+                                                        <th>Legal Number</th>
+                                                        <th>Description</th>
+                                                        <th style="text-align:right">Amount</th>
+                                                    </tr>
+                                                </thead>
+                                                @foreach (var item in ViewBag.DR)
+                                                   {
+                                                    <tr>
+                                                        <td>@item.TransactionType</td>
+                                                        <td><input type="checkbox" value="@item.BankStatementID" id="row2-@i" onchange="checkAll(@i)" class="checkBox1"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item.StatementDate)</td>
+                                                        <td>@item.RelatedReference</td>
+                                                        <td style="font-size:9px">@item.TransactionDescription</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.Amount)</td>
+                                                    </tr>
+                                                      i++;
+                                                    }
+
+                                            </table>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+
+
+                    <div class="col-md-6">
+                        <section id="widget-grid">
+                            <div class="row">
+                                <article class="col-sm-12 col-md-12 col-lg-12">
+                                    <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                                        <header>
+                                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                                            <h2>CR Bank Outstanding List </h2>
+                                        </header>
+                                        <div class="widget-body" style="padding-top:10px">
+                                            <div class="row">
+
+                                                <div class="col-md-5">
+                                                    <div id="infoPanel">
+                                                        <div class="info-box">
+                                                            <label>Total:</label>
+                                                            <strong id="totalAmountSelectedBank">No Item(s) Selected</strong>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-md-7">
+                                                    <div class="searchContainer" style="float:right">
+                                                        <i class="fa fa-search searchIcon"></i>
+                                                        <input type="search" name="search" placeholder="Search..." id="searchboxBank">
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <table id="dt_basicBank" class="table table-bordered table-hover table-condensed">
+
+                                                <thead>
+                                                    <tr>
+                                                        <th></th>
+                                                        <th></th>
+                                                        <th>Date</th>
+                                                        <th>Legal Number</th>
+                                                        <th>Description</th>
+                                                        <th style="text-align:right">Amount</th>
+                                                    </tr>
+                                                </thead>
+
+                                                @foreach (var item2 in ViewBag.CR)
+                                                  {
+
+                                                    <tr>
+                                                        <td>@item2.TransactionType</td>
+                                                        <td><input type="checkbox" value="@item2.BankStatementID" id="row-@j" onchange="rowChecked(@j)" class="checkBoxBank"></td>
+                                                        <td>@string.Format("{0: dd/MM/yyyy}", item2.StatementDate)</td>
+                                                        <td>@item2.RelatedReference</td>
+                                                        <td style="font-size:9px">@item2.TransactionDescription</td>
+                                                        <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item2.Amount)</td>
+                                                    </tr>
+                                                      j++;
+                                                    }
+
+                                            </table>
+                                        </div>
+                                    </div>
+                                </article>
+                            </div>
+                        </section>
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Matching</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to match the transaction.?</p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Ok</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+ 
+    $("#matchbtn").attr('disabled', true);
+    
+    var dt_basicBank = $('#dt_basicBank').dataTable();
+    $("#dt_basicBank_wrapper .dt-toolbar").remove();
+    $("#searchboxBank").on("keyup search input paste cut", function () {
+        dt_basicBank.DataTable().search(this.value).draw();
+    });
+
+    var dt_basicGL = $('#dt_basicGL').dataTable();
+    $("#dt_basicGL_wrapper .dt-toolbar").remove();
+    $("#searchbox").on("keyup search input paste cut", function () {
+        dt_basicGL.DataTable().search(this.value).draw();
+    });
+</script>

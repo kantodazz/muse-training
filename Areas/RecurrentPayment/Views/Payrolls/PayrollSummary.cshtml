@@ -1,0 +1,131 @@
+﻿@model IEnumerable<GEFTP.Models.geftp_confirm_payrollSummary_vw>
+@{
+    ViewBag.Title = "Index";
+}
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panel contents -->
+        <div class="panel-heading">
+            <h3 class="panel-title"> Payroll </h3>
+        </div>
+
+        <div style="margin-left:15px;margin-top:20px">
+            @*@{
+                var checkDate = DateTime.Parse(Request["checkDate"]);
+            }*@
+            <strong>Payroll Month: </strong>@ViewBag.CheckDate
+        </div>
+        <div class="col-md-2 pull-right">
+            <a href="@Request.UrlReferrer" class="btn btn-default">
+                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                Back
+            </a>
+        </div>
+        <div class="panel-body">
+            <hr />
+            <table class="table" id="tblDataList">
+                <thead>
+                    <tr>
+                        <th>
+                            @Html.DisplayNameFor(model => model.BeneficiaryCategory)
+                        </th>
+                        <th style="text-align: center">
+                            @Html.DisplayNameFor(model => model.NumEmp)
+                        </th>
+                        <th style="text-align: center">
+                            @Html.DisplayNameFor(model => model.OriginalNetAmount)
+                        </th>
+                        <th style="text-align: center">
+                            @Html.DisplayNameFor(model => model.TotalAllowanceAmount)
+                        </th>
+                        <th style="text-align: center">
+                            @Html.DisplayNameFor(model => model.TotalDeductionAmount)
+                        </th>
+                        <th style="text-align: center">
+                            @Html.DisplayNameFor(model => model.FinalNetAmount)
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr>
+                            <td>
+                                <a href="@Url.Action("PayrollBeneficiaries", "Payrolls", new { benCat = item.BeneficiaryCategory, checkDate = item.CheckDate })">
+                                    @Html.DisplayFor(modelItem => item.BeneficiaryCategory)
+                                </a>
+                            </td>
+                            <td align="right">
+                                @Html.DisplayFor(modelItem => item.NumEmp)
+                            </td>
+                            <td align="right">
+                                @Html.DisplayFor(modelItem => item.OriginalNetAmount)
+                            </td>
+                            <td align="right">
+                                @Html.DisplayFor(modelItem => item.TotalAllowanceAmount)
+                            </td>
+                            <td align="right">
+                                @Html.DisplayFor(modelItem => item.TotalDeductionAmount)
+                            </td>
+                            <td align="right">
+                                @Html.DisplayFor(modelItem => item.FinalNetAmount)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<!-- Start of modal div -->
+<!-- End of modal div-->
+
+@section Scripts {
+    <script>
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+            });
+
+            $("#tblDataList1").DataTable({
+            });
+        });
+
+        var runPayroll = function () {
+
+            var url = '@Url.Action("RunPayroll", "Payrolls")';
+
+            $("#divLoader").show();
+            $.ajax({
+                url: url,
+                type: "post",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        alert("Payroll Run Successfully!");
+                        $("#divLoader").hide();
+                        window.location = '@Url.Action("Index")';
+                    } else if (response == "InvalidFormat") {
+                        alert("Invalid file format, file format should be MS Excel!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    } else if (response == "InvalidSize") {
+                        alert("Invalid file size, file size should be less than 2MB!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    }
+                    else {
+                        alert("Unknown error, contact system admin!");
+                        $("#divLoader").hide();
+                        location.reload();
+                    };
+                },
+                error: function (response) {
+                    alert(response);
+                    $("#divLoader").hide();
+                    location.reload();
+                }
+            });
+        };
+    </script>
+}

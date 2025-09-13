@@ -1,0 +1,206 @@
+﻿@{
+    ViewBag.Title = "Employee Education Report";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<style>
+    input.error,
+    select.error {
+        border: 1px solid red;
+    }
+
+    label.error {
+        color: red;
+    }
+</style>
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body" style="margin-top: 10px">
+                            <form class="form-horizontal" id="frmCashPayList" method="post">
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Vendor
+                                    </div>
+                                    <div class="col-md-4">
+                                        <input id="Vendor" name="Vendor" class="form-control padding-left-10" type="text" placeholder="Search Vendor by Vendor Code or Name" />
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        WorkStation
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="WorkStation" name="WorkStation" class="select2 form-control padding-left-10">
+                                            <option value=""> -- Select WorkStation -- </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Department
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="Department" name="Department" class="select2 form-control padding-left-10">
+                                            <option value=""> -- Select Department -- </option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-1">
+                                            <button class="btn btn-info" type="submit" id="btnViewReport" style="float: left; margin-left: 105px;">
+                                                <i class="fa fa-save"></i>
+                                                View Report
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+            <!-- END ROW -->
+        </div>
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+@section scripts
+{
+    @Scripts.Render("~/Scripts/libs/jquery.validate.min.js")
+    <script>
+        $(document).ready(function () {
+
+             getVendors();
+
+             function getVendors() {
+                var url = "GetVendors/";
+                $("#Vendor").select2({
+                        minimumInputLength: 3,  // minimumInputLength for sending ajax request to server
+                        width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                        ajax: {
+                            url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                            type: "GET",
+                            dataType: 'json',
+                            data: function (searchTerm) {
+                                return {
+                                    searchTerm: searchTerm
+                                };
+                            },
+                            results: function (data, page) {
+                                return { results: data.vendors }; // data.vendors returning json data from Controller
+                            }
+                        }
+                 });
+             }
+
+            $("#Vendor").change(function () {
+
+                var vendorCode = $(this).val();
+
+                var url = "GetWorkStationsByVendor/?vendorCode=" + vendorCode;
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    contentType: "html",
+                    success: function (response) {
+                        $("#WorkStation").empty();
+                        $("#WorkStation").append(response);
+                    }
+                });
+            });
+
+
+            $("#WorkStation").change(function () {
+
+                var workstationCode = $(this).val(),
+                    checkNo = $("#Vendor").val().trim();
+
+                var url = "GetEmployeeStationDepartments/?workstationCode=" + workstationCode + "&checkNo=" + checkNo;
+
+                $.ajax({
+                    type: "GET",
+                    url: url,
+                    contentType: "html",
+                    success: function (response) {
+                        $("#Department").empty();
+                        $("#Department").append(response);
+                    }
+                });
+            });
+
+            $("#frmCashPayList").validate({
+                rules: {
+                    Vendor: { required: true },
+                    WorkStation: { required: true },
+                    Department: { required: true },
+                },
+
+                submitHandler: function () {
+                    var checkNo = $("#Vendor").val().trim(),
+                        workStation = $("#WorkStation").val().trim(),
+                        department = $("#Department").val().trim(),
+                        queryString = "check-number=" + checkNo + "&dept-code=" + department + "&station-code=" + workStation;
+
+                    $.ajax({
+                        type: "GET",
+                        url: '@Url.Action("ParameterEncryption", "Reports")',
+                        contentType: "application/json; charset=utf-8",
+                        datatype: "json",
+                        data: { "query": queryString },
+                        success: function (response) {
+                            window.open("../Reports/EmployeeEducationList.aspx" + response);
+                        }
+                    });
+
+                    return false;
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,217 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InstitutionListVm
+
+@{
+    ViewBag.Title = "ConsoSubmissionIstitutionStatusRPTv";
+    ViewBag.Description = "form wizards";
+    //Layout = "~/Views/Shared/_Default.cshtml";
+
+}
+
+<style>
+    .input {
+        border-width: 1px 0 1px 1px;
+        border-color: #ccc;
+        border-style: solid;
+        width: 110px;
+        height: 32px;
+    }
+
+    .input_page {
+        border: 1px solid #ccc;
+        width: 145px;
+        height: 32px;
+    }
+
+    span {
+        cursor: pointer;
+    }
+</style>
+<!-- MAIN CONTENT -->
+<div id="content">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+
+        </div>
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Submission Institution Status Parameters </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Server Name
+                                    </div>
+                                    <div class="col-md-5">
+                                        <select id="serverName" name="serverName" class="select2 form-control padding-left-10">
+                                            <option value="">-- Select Server --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Institution
+                                    </div>
+                                    <div class="col-md-5">
+                                        <select id="institution" name="institution" class="select2 form-control padding-left-10">
+                                            <option value="">-- Select Institution --</option>
+                                        </select>
+                                    </div>
+                                </div>
+                                @*<div class="form-group">
+                                    <div class="control-label col-md-2">
+                                        Submitted Years
+                                    </div>
+                                    <div class="col-md-3">
+                                        <select id="submittedyear" name="submittedyear" class="select2 form-control padding-left-10">
+                                            <option value="">-- Submitted Years --</option>
+                                            <option value=4> ALL </option>
+                                            <option value=3> 3 - Years </option>
+                                            <option value=2> 2 - Years </option>
+                                            <option value=1> 1 - Year </option>
+                                            <option value=0> 0 - None </option>
+                                        </select>
+                                    </div>
+                                </div>*@
+                                <hr class="simple" />
+                                <div class="form-group">
+                                    <div class="control-label col-md-2">
+                                    </div>
+                                    <div class="col-md-5">
+                                        <button type="submit" class="btn action-btn btn btn-info" onclick="ConsoIstitutionStatusRPT()">
+                                            View Report
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+@section scripts
+{
+    <script>
+        GetConsoInstitutionServers();
+
+        function ConsoIstitutionStatusRPT() {
+            var serverName = $("#serverName").val().trim(),
+                institution = $("#institution").val().trim(),
+                /*submittedyear = $("#submittedyear").val().trim(),*/
+                url = "@Model.UrlName" + "ConsoSubmissionIstitutionStatusRPT.aspx";
+                //isSubmitted = (submittedyear === "0") ? 0 : ((submittedyear === "4") ? 4 : 1);
+
+            var isNotSupplied = validateReportParameters(["#serverName", "#institution"]), //,"#submittedyear"
+                queryString = "server-name=" + serverName + "&institution=" + institution + "&page-no=" + 1; //"submission-year=" + submittedyear +  "&isSubmitted=" + isSubmitted +
+
+
+            if (isNotSupplied)
+                $(isNotSupplied).attr("style", "border: 1px solid red");
+            else {
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("ParameterEncryption", "Report")',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    data: { "query": queryString },
+                    success: function (response) {
+                        window.open(url + response);
+                    }
+                });
+            }
+        }
+
+        function validateReportParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i]).attr("style", "border: 1px solid #ccc");
+                }
+            }
+            resetStyle(parameterList);
+
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+
+        function GetConsoInstitutionServers() {
+            const url = "GetConsoInstitutionServerList/";
+            $.ajax({
+                type: "GET",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#serverName").empty();
+                    $("#serverName").append(response);
+                }
+            });
+        }
+
+
+        $("#serverName").change(function () {
+            var serverName = $(this).val();
+
+            var url = "GetConsoServerInstitutionList/?serverName=" + serverName;
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                contentType: "html",
+                success: function (response) {
+                    $("#institution").empty();
+                    $("#institution").append(response);
+                }
+            });
+        });
+
+    </script>
+}

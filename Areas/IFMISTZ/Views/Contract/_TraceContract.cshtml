@@ -1,0 +1,257 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{ var i=0;}
+
+<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Reg #&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNo)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractNumber)</div></div>
+<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Amount&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractAmount)@Html.DisplayFor(model => model.OperationalCurrency)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Name&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.SupplierName)</div></div>
+<div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Start Date&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractStartDate)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>End Date&nbsp;:</strong>&nbsp;@Html.DisplayFor(model => model.ContractEndDate)</div></div>
+
+
+    @foreach(var item in Model.ReceivingSummaries){
+i++;
+<table class="table table-bordered table-hover table-condensed">
+    <thead>
+
+        <tr>
+
+            <th>
+               @i : @Html.DisplayNameFor(modelItem => item.ReceivingNumber)
+            </th>
+            <th style="text-align:right">
+                @Html.DisplayNameFor(modelItem => item.ReceivedAmount)
+            </th>
+
+            <th style="text-align:right;">
+                @Html.DisplayNameFor(modelItem => item.CreatedAt)
+            </th>
+            <th style="text-align:center">
+                @Html.DisplayNameFor(modelItem => item.OverallStatus)
+            </th>
+
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>
+                <strong>
+                    @Html.DisplayFor(modelItem => item.ReceivingNumber)
+                </strong>
+            </td>
+            <td style="text-align:right">
+                @Html.DisplayFor(modelItem => item.ReceivedAmount)
+            </td>
+            <td style="text-align:right">
+                @Html.DisplayFor(modelItem => item.CreatedAt)
+            </td>
+
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.OverallStatus)
+            </td>
+
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:right">
+                @Html.DisplayNameFor(modelItem => item.PVNo)
+            </td>
+            <td style="text-align:right">
+                <strong>
+                    @Html.DisplayFor(modelItem => item.PVNo)
+                </strong>
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:right">
+                Voucher Status
+            </td>
+            <td style="text-align:right">
+
+                @Html.DisplayFor(modelItem => item.PaymentVoucher.OverallStatus)
+
+            </td>
+            <td>
+            </td>
+        </tr>
+        <tr>
+            <td colspan="2" style="text-align:right">
+                Voucher Amount
+            </td>
+            <td style="text-align:right">
+
+                @Convert.ToDecimal(item.PaymentVoucher.OperationalAmount).ToString("#,##0/=")
+
+            </td>
+            <td>
+            </td>
+        </tr>
+        @if (item.PaymentVoucher.OperationalWithHoldingAmount > 0)
+        {
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    WithHolding Tax
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.OperationalWithHoldingAmount).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "WithHoldingTax"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="WithHoldingTax").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.RetentionAmount > 0)
+        {
+            <tr>
+
+                <td colspan="2" style="text-align:right">
+                    Retention Amount
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.RetentionAmount).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "Retention"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="Retention").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.AdvancePayment > 0)
+        {
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    Advance Payment
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.AdvancePayment).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "Advance Payment1"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="Advance Payment").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.LiquidatedDamageAmount > 0)
+        {
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    Liquidated Damage
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.LiquidatedDamageAmount).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "Liquidated Damage"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="Liquidated Damage").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.CompensationAmount > 0)
+        {
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    Termination Compensation
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.CompensationAmount).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "Termination Compensation"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="Termination Compensation").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.MiscDeduction > 0)
+        {
+            <tr>
+                <td colspan="2" style="text-align:right">
+                    Misc Deduction
+                </td>
+                <td style="text-align:right">
+
+                    @Convert.ToDecimal(item.PaymentVoucher.MiscDeduction).ToString("#,##0/=")
+
+                </td>
+                <td style="text-align:center">
+                    @if (item.PaymentVoucher.PaymentVoucherDeductions.Any(a => a.DeductionTypeName == "Misc Deduction"))
+                    {
+                        <em>Posted</em>
+                    }
+                    else
+                    {
+                        <a href="#" onclick="repostDeduction(@item.PaymentVoucher.PaymentVoucherId,@item.PaymentVoucher.PaymentVoucherDeductionTypes.Where(a=>a.DeductionTypeName=="Misc Deduction").Select(a=>a.PaymentVoucherDeductionTypeId).FirstOrDefault(),@Model.ContractId)">
+                            <em>Not Posted</em>
+                        </a>
+                    }
+                </td>
+            </tr>
+        }
+        @if (item.PaymentVoucher.NetOperationalAmount > 0)
+        {
+            <tr>
+                <th colspan="2" style="text-align:right">
+                    Net Payable Amount
+                </th>
+                <td style="text-align:right">
+                    <strong>
+                        @Convert.ToDecimal(item.PaymentVoucher.NetOperationalAmount).ToString("#,##0/=")
+                    </strong>
+                </td>
+                <td>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+<br/>
+    }
+

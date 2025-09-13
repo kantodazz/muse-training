@@ -1,0 +1,650 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM>
+@{
+    ViewBag.Title = "Approved Inventories List";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> WriteOff Inventories </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>   
+
+                            <table align="center" class="table  table-bordered table-hover table-condensed" id="dt_inventories" style="width:96%">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%"></th>
+                                        <th style="text-align:left">Inventory Number</th>
+                                        <th style="text-align:left">BatchNo</th>
+                                        <th style="text-align:left">Inventory Description</th>
+                                        <th style="text-align:left">UOM</th>
+                                        <th style="text-align:right">Unit Price(Tsh)</th>
+                                        <th style="text-align:center">Quantity</th>
+                                        <th style="text-align:right">Inventory Value(Tsh)</th>
+                                        <th style="text-align:left">Overall Status</th>
+                                        <th style="text-align:center">Action</th>
+
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{var i = 0;}
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                            decimal quantity = 0;
+                                            if(item.Quantity > 0)
+                                            {
+                                                quantity = (decimal)item.Quantity;
+                                            }
+                                            else
+                                            {
+                                                quantity = 1;
+                                            }
+                                            decimal unit_price=Convert.ToDecimal(item.InventoryValue / quantity);                          
+                                         decimal inventory_value=Convert.ToDecimal(unit_price * item.BalanceQuantity);
+                                   
+                                    <tr>
+                                        <td style="text-align:right">
+                                            @i
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.InventoryCode)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.BatchNo)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.ItemName)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.UOM)
+
+                                        </td>
+                                        <td style="text-align:right">
+                                            @unit_price.ToString("#,##0.00")
+
+                                        </td>
+                                 
+                                        <td style="text-align:center">
+                                            @Html.DisplayFor(modelItem => item.BalanceQuantity)
+                                            @if (item.WriteOffInventory != null)
+                                            {
+                                                <p align="left">
+                                                    <br />
+                                                    <span><em><strong>Write Off quantity: </strong>@Html.DisplayFor(modelItem => item.WriteOffInventory.Quantity)</em></span><br />
+                                                    <span><em>
+    <strong>Clearance: </strong> <a href="@Url.Action("ClearanceAttachment","Inventories",new {Filename=item.WriteOffInventory.Clearance })">Download</a>
+    </em></span><br />
+                                                    <span><em><strong>Reason: </strong>@Html.DisplayFor(modelItem => item.WriteOffInventory.Description)</em></span>
+                                                </p>
+                                            }
+
+                                        </td>
+                                        <td style="text-align:right">
+                                            @inventory_value.ToString("#,##0.00")
+                                        </td>
+
+                                        <td style="text-align:left">
+                                       
+                                                @Html.DisplayFor(modelItem => item.WriteOff)
+                                           
+                                        </td>
+                                        <td style="text-align:center">
+
+                                            <div class="btn-group">
+
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a href="@Url.Action("PreviewInventory", "Inventories",new {id=item.InventoryDetailId})" class="btn-xs edit">
+                                                            <i class="fa fa-search-minus"></i>  Preview Inventory
+                                                        </a>
+                                                    </li>
+
+                                                    @if (item.WriteOff == "Pending")
+                                                    {
+                                                        <li><a href="#" data-toggle="modal" data-id=@item.InventoryDetailId data-inventoryno='@item.InventoryCode' class="writeOffConfirm  btn-xs edit"><i class="fa fa-edit"></i> Confirm</a></li>
+                                                    }
+                                                 
+                                                    else
+                                                    {
+
+                                                        <li><a href="#" data-toggle="modal" data-target="#WriteOff" data-id=@item.InventoryDetailId data-code='@item.InventoryCode' class="WriteOff  btn-xs edit"><i class="fa fa-edit"></i> Write Off Inventories</a></li>
+
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </td>
+
+                                    </tr>
+                                    
+                                    }
+                                </tbody>
+                            </table>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+
+<div class="modal fade" id="WriteOff" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Write Off</h3>
+                <h4 align="center">Ledger Folio <span class="code"></span></h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return WriteOff(this)" }))
+            {
+        <div class="modal-body2 form-horizontal">
+
+            <br />
+
+            <input type="hidden" name="Id" id="Id" value="">
+            <div class="form-group">
+                @Html.Label("Number Of Inventory", htmlAttributes: new { @class = "control-label col-md-4" })
+                <div class="col-md-6">
+                    <input type="number" name="Quantity" id="Quantity" class="form-control" required autocomplete="off" min="1">
+                </div>
+
+            </div>           
+            <div class="form-group">
+                @Html.Label("Clearance", htmlAttributes: new { @class = "control-label col-md-4" })
+                <div class="col-md-6">
+                    <input type="file" class="form-control btn btn-default" id="AttachentFile" name="AttachentFile">
+
+                </div>
+
+            </div>
+            <div class="form-group">
+                @Html.Label("Description", htmlAttributes: new { @class = "control-label col-md-4" })
+                <div class="col-md-6">
+                    <textarea name="Description" id="Description" required rows="4" placeholder="Why do you write off" maxlength="250" class="form-control"></textarea>
+                </div>
+            </div>
+
+        </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        function AddInventories(formData) {
+            var url = '@Url.Action("AddInventories", "Inventories")';
+            $('#AddInventory').modal('hide');
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    if (result == "Success") {
+                        swal("Data saved successfully", { icon: "Success" })
+                                                                   .then((value) => {
+                                                                       location.reload();
+                                                                   });
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Add Inventories ====================
+        function WriteOff(formData) {
+            var url = '@Url.Action("WriteOff", "Inventories")';
+            $('#WriteOff').modal('hide');
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    if (result == "Success") {
+                        swal("Data saved successfully", { icon: "Success" })
+                                                                   .then((value) => {
+                                                                       location.reload();
+                                                                   });
+                    }
+                    else if (result == "Exceed") {
+                        swal("Failed,You can not write off more than quantity available in the store");
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Write Off Inventories ====================
+            $(document).ready(function () {
+                /* // DOM Position key index //
+              l - Length changing (dropdown)
+              f - Filtering input (search)
+              t - The Table! (datatable)
+              i - Information (records)
+              p - Pagination (paging)
+              r - pRocessing
+              < and > - div elements
+              <"#id" and > - div with an id
+              <"class" and > - div with a class
+              <"#id.class" and > - div with an id and class
+              Also see: http://legacy.datatables.net/usage/features
+              */
+                /* BASIC ;*/
+                var responsiveHelper_dt_inventories = undefined;
+                var responsiveHelper_datatable_fixed_column = undefined;
+                var responsiveHelper_datatable_col_reorder = undefined;
+                var responsiveHelper_datatable_tabletools = undefined;
+
+                var breakpointDefinition = {
+                    tablet: 1024,
+                    phone: 480
+                };
+
+                $('#dt_inventories').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_inventories) {
+                            responsiveHelper_dt_inventories = new ResponsiveDatatablesHelper($('#dt_inventories'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_inventories.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_inventories.respond();
+                    }
+                });
+
+                /* END BASIC */
+
+                /* COLUMN FILTER  */
+                var otable = $('#datatable_fixed_column').DataTable({
+                    //"bFilter": false,
+                    //"bInfo": false,
+                    //"bLengthChange": false
+                    //"bAutoWidth": false,
+                    //"bPaginate": false,
+                    //"bStateSave": true // saves sort state using localStorage
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_fixed_column) {
+                            responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_fixed_column.respond();
+                    }
+                });
+
+                // custom toolbar
+                $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+                // Apply the filter
+                $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+                    otable
+                        .column($(this).parent().index() + ':visible')
+                        .search(this.value)
+                        .draw();
+                });
+                /* END COLUMN FILTER */
+
+                /* COLUMN SHOW - HIDE */
+                $('#datatable_col_reorder').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_col_reorder) {
+                            responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_col_reorder.respond();
+                    }
+                });
+
+                /* END COLUMN SHOW - HIDE */
+
+                /* TABLETOOLS */
+                $('#datatable_tabletools').dataTable({
+
+                    // Tabletools options:
+                    //   https://datatables.net/extensions/tabletools/button_options
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "oTableTools": {
+                        "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                           {
+                               "sExtends": "pdf",
+                               "sTitle": "SmartAdmin_PDF",
+                               "sPdfMessage": "SmartAdmin PDF Export",
+                               "sPdfSize": "letter"
+                           },
+                           {
+                               "sExtends": "print",
+                               "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                           }
+                        ],
+                        "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                    },
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_tabletools) {
+                            responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_tabletools.respond();
+                    }
+                });
+                /* END TABLETOOLS */
+
+                $(".inventoryConfirm").on('click', function () {
+                    var id = $(this).data('id');
+                    var inventoryno = $(this).data('inventoryno');
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to confirm Invenory issuing " + inventoryno + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmIssuing", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully!", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal("Failed to confirm ,DbException");
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+                });
+                   
+                $(".addConfirm").on('click', function () {
+                    var id = $(this).data('id');
+                    var inventoryno = $(this).data('inventoryno');
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you confirm added quantity to invetory with Ledger Folio of" + inventoryno + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmAddition", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully!", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal("Failed to confirm ,DbException");
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+                });
+
+                $(".writeOffConfirm").on('click', function () {
+                    var id = $(this).data('id');
+                    var inventoryno = $(this).data('inventoryno');
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you confirm writing off to invetory with Ledger Folio of " + inventoryno + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmWriteOff", "Inventories")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully!", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal("Failed to confirm ,DbException");
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+                });
+                
+
+                $(".AddInventory").on('click', function () {
+                    var id = $(this).data('id');
+                    var code = $(this).data('code');
+                    $(".modal-body #Id").val(id);
+                    $(".code").text(code);
+                });
+
+                $(".WriteOff").on('click', function () {
+                    var id = $(this).data('id');
+                    var code = $(this).data('code');
+                    $(".modal-body2 #Id").val(id);
+                    $(".code").text(code);
+                });
+
+                var $rows = $('#lpo tr');
+                $('#search').keyup(function () {
+                    var val = $.trim($(this).val()).replace(/ +/g, ' ').toLowerCase();
+
+                    $rows.show().filter(function () {
+                        var text = $(this).text().replace(/\s+/g, ' ').toLowerCase();
+                        return !~text.indexOf(val);
+                    }).hide();
+                });
+
+
+                        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+        $(".modal-body #Value").autoNumeric('init');
+        $(".modal-body2 #Value").autoNumeric('init');
+            //function myFunction() {
+            //    // Declare variables
+            //    var input, filter, table, tr, td, i, txtValue;
+            //    input = document.getElementById("lpo_search");
+            //    filter = input.value.toUpperCase();
+            //    table = document.getElementById("lpo");
+            //    tr = table.getElementsByTagName("tr");
+
+            //    // Loop through all table rows, and hide those who don't match the search query
+            //    for (i = 0; i < tr.length; i++) {
+            //        td = tr[i].getElementsByTagName("td")[2];
+            //        if (td) {
+            //            txtValue = td.textContent || td.innerText;
+            //            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+            //                tr[i].style.display = "";
+            //            } else {
+            //                tr[i].style.display = "none";
+            //            }
+            //        }
+            //    }
+            //}
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

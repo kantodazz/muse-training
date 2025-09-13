@@ -1,0 +1,345 @@
+﻿@model IEnumerable<IFMIS.Models.ExchangeRate>
+@{
+    ViewBag.Title = "Home";
+}
+
+<style>
+    h1.ECQQS.F5_KS.emotion-183fhx3.ezakuv35 {
+        font-size: 1rem !important;
+    }
+</style>
+
+
+<!-- MAIN CONTENT -->
+@*<div id="content">
+
+    <iframe src=@ViewBag.IfremUrl
+            frameborder="0"
+            width="110%"
+            height="1000"
+            scrolling="no"
+            allowfullscreen>
+    </iframe>
+
+</div>*@
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                            <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                            <h2>Dashboard</h2>
+                           
+                            <div class="col-md-3" style="float:right;">
+                                @Html.DropDownList("DashboardCategories", null, new { @class = "form-control  select2",@style= "width: 150px; height: 30px" })
+                            </div>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row" id="curre">
+
+                                <div class="col-md-2" style="margin-right:25px">
+                                    @Html.DropDownList("Currencies", null, new { @class = "form-control  select2" })
+                                    @*<input type="date" id="checkdate" class="form-control" placeholder="date" />*@
+                                </div>
+                                <div class="col-md-1" style="margin-top:8px">
+                                    <h4>To</h4>
+                                </div>
+                                <div class="col-md-2">
+                                    <input type="text" id="homecurrency" class="form-control" placeholder="homecurrency" value="TZS" readonly />
+                                </div>
+
+                            </div>
+                            <br />
+                            <div id="iframe-container"></div>
+                            @*<iframe src=@ViewBag.IfremUrl
+                                    frameborder="0"
+                                    width="100%"
+                                    height="1000"
+                                    scrolling="no"
+                                    allowfullscreen>
+                            </iframe>*@
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!-- END MAIN CONTENT -->
+@section Scripts{
+    <script>
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+        var dt_documents = $('#dt_documents').dataTable();
+        $("#dt_documents_wrapper .dt-toolbar").remove();
+
+        $(document).ready(function () {
+            $("#divLoader").show();
+            //$("#curre").hide();
+            var code = $("#DashboardCategories").val();
+            var dDashboard = @ViewBag.DDashboard;
+            if (code == dDashboard) {
+                $("#curre").show();
+            } else {
+                $("#curre").hide();
+            }
+
+            /* // DOM Position key index //
+
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+
+            Also see: http://legacy.datatables.net/usage/features
+            */
+
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sTitle": "SmartAdmin_PDF",
+                            "sPdfMessage": "SmartAdmin PDF Export",
+                            "sPdfSize": "letter"
+                        },
+                        {
+                            "sExtends": "print",
+                            "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                        }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+
+            @*$("#tblNotifications").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetNotifications","Home")',
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "Book" },
+                    { "mData": "ApprovalStatus" },
+                    { "mData": "Count" },
+                ]
+            });*@
+
+            var code = $("#DashboardCategories").val();
+            getifremUrl(code);
+        });
+
+        $("#DashboardCategories").change(function () {
+            $("#divLoader").show();
+            var code = $("#DashboardCategories").val();
+            var dDashboard = @ViewBag.DDashboard;
+            if (code == dDashboard) {
+                $("#curre").show();
+            } else {
+                $("#curre").hide();
+            }
+            getifremUrl(code);
+        });
+
+        $("#Currencies").change(function () {
+            $("#divLoader").show();
+            var code = $("#DashboardCategories").val();
+
+            getifremUrl(code);
+        });
+
+
+
+        function getifremUrl(code) {
+            
+            var instcode = `@ViewBag.InstitutionCode`;
+            var dDashboard = @ViewBag.DDashboard;
+            var codeText = $("#DashboardCategories option:selected").text();
+
+            var url = '@Url.Action("GetIframeUrl", "Home")?institutionCode=' + instcode + '&&dashboardCode=' + code;
+
+            if (code == dDashboard) {
+                var Currency = $("#Currencies").val();
+                url = '@Url.Action("GetIframeUrl", "Home")?institutionCode=' + Currency + '&&dashboardCode=' + code;
+            }
+
+             $.ajax({
+                 type: "get",
+                 url: url,
+                 success: function (response) {
+
+                     // Create an iframe dynamically
+                     var iframe = $('<iframe>', {
+                         src: response,  // URL to load inside the iframe
+                         id: 'myIframe',
+                         frameborder: 0,  // Optional attributes
+                         width: '100%',
+                         height: '1100',
+                         scrolling:'no',
+                     });
+                     if (codeText == "Community Health Worker" || codeText == "Cash Management" || codeText == "Revenue" || codeText =="Budget vs Actual") {
+                         iframe = $('<iframe>', {
+                             src: response,  // URL to load inside the iframe
+                             id: 'myIframe',
+                             frameborder: 0,  // Optional attributes
+                             width: '100%',
+                             height: '1900',
+                             scrolling: 'no',
+                         });
+                     }
+
+                     // Append the iframe to a specific element on the page, for example a div with id "iframe-container"
+                     $('#iframe-container').empty();
+                     $('#iframe-container').append(iframe);
+                     $("#divLoader").hide();
+
+                 },
+                 failure: function (error) {
+                     swal(error);
+                 }
+             });
+        }
+    </script>
+}

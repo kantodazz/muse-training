@@ -1,0 +1,227 @@
+﻿@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanMonitoringVM>
+
+@{
+    ViewBag.Title = "Loan Monitoring";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+   
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                                </div>
+                                <table id="dt_Loan_listing" class="table table-bordered table-condensed table-amount">
+                                    <thead>
+
+                                        <tr><th>#</th>
+                                            <th>Customer Name</th>
+                                            <th>Application Number</th>
+                                            <th>Loan Purpose</th>
+                                            <th>Applied Amount</th>
+                                            <th>Approved Amount</th>
+                                            <th>Disbursed Amount</th>
+                                            <th>Apply Date</th>
+                                            <th>Declaration</th>
+                                            <th>Declaration Date</th>
+                                            <th>OverAllStatus</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                            int i = 0;
+                                        }
+                                        @foreach (var item in Model)
+                                        {
+                                            i++;
+                                            <tr><td>@i</td>
+                                                <td>@Html.DisplayFor(modelItem => item.CustomerName)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.ApplicationNo)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.LoanPurpose)</td>
+                                                <td>@string.Format("{0:#,0.00}", item.AppliedLoanAmount)</td>
+                                                <td>@string.Format("{0:#,0.00}", item.LoanApprovedAmount) </td >
+                                                <td>@string.Format("{0:#,0.00}", item.DisbursedAmount)</td >
+                                                <td> @Html.DisplayFor(modelItem => item.ApplyDate) </td >
+                                                <td> @Html.DisplayFor(modelItem => item.LoanDeclaration) </td >
+                                                <td> @Html.DisplayFor(modelItem => item.LoanDeclarationDate) </td >
+                                                <td> @Html.DisplayFor(modelItem => item.OverAllStatus) </td>
+
+
+                                                <td style = "text-align:center" >
+                                                    <div class="btn-group">
+                                                        <button type = "button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                            <span class="caret"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+                                                            <li><a href="@Url.Action("View","LoanMonitoring",new { id=item.LoanApplicationId })"><i class="fa fa-pencil fa-fw"></i>View</a></li>
+                                                            <li><a href="@Url.Action("UploadAttachment","LoanMonitoring",new { id=item.LoanApplicationId })"><i class="fa fa-pencil fa-fw"></i></a></li>
+                                                           @if (item.OverAllStatus == "Legal" || item.OverAllStatus == "Reschedule" || item.OverAllStatus == "Auctioneer") {
+                                                            <li><a href="#" onclick="LoanApproval(@item.LoanApplicationId)"><i class="fa fa-check-square fa-fw"></i>Approval</a></li> 
+                                                           }
+                                                            <li><a href="#" onclick="Rejected(@item.LoanApplicationId)"><i class="fa fa-check-square fa-fw"></i>Reject</a></li> 
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+
+                                    </tbody>
+                                </table>
+                            </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        var dt_basicGL = $('#dt_Loan_listing').dataTable();
+        $("#dt_Loan_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_Loan_listing.DataTable().search(this.value).draw();
+        });
+
+
+
+        function Approval(id) {
+
+            var url = '@Url.Action("Authorazation", "LoanMonitoring")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Record Confirmed successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else if (response == "DbException") {
+                        swal(response + "An error has occured, contact system support");
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+        function LoanApproval(i, id) {
+         
+                if (i == 'x') i = id;
+                swal({
+                    title: "Confirm",
+                    text: "Are you sure you want to Confirm this record ? ",
+                    buttons: [
+                      'Yes',
+                      'No'
+                    ],
+                    closeOnClickOutside: false,
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        swal("Cancelled", "No change was made");
+                    } else {
+
+                        Approval(i);
+                    }
+                });
+                $('#confirmModal').modal('hide');
+
+            }
+
+
+
+        </script>
+}

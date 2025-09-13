@@ -1,0 +1,279 @@
+﻿@model IEnumerable<IFMIS.Areas.Coadmis.Models.EngagementVM>
+@{
+    ViewBag.Title = "Engagement Assigned to List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <table id="dt_application_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Ref Number</th>
+                                        <th>Engagement</th>
+                                        <th>Financial Year End</th>
+                                        <th>Engagement Date</th>
+                                        <th>Declaration Status</th>
+                                        <th style="width:30px">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+        /* BASIC ;*/
+        var responsiveHelper_dt_application_list = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_application_list = $('#dt_application_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+
+
+        //$("#dt_application_list_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_application_list.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        var declaration = "";
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetEngagementListByAssignMember", "Engagement")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_application_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    debugger;
+                    if (data[i]["IsDeclared"]==true) {
+                        declaration = "Declared";
+                    }
+                    else {
+                        declaration = "Not Attend";
+                    }
+                    dt_application_list.fnAddData(
+                        [
+                            i + 1,
+                            data[i]["EngagementRefNo"],
+                            data[i]["EngagementName"],
+                            data[i]["ClientFinancialYear"],
+                            ToJavaScriptDate(data[i]["StartDate"]) + '~' + ToJavaScriptDate(data[i]["EndDate"]),
+                            declaration,
+                            actionCondition(data[i]["IsDeclared"], data[i]["EngagementTeamMemberId"], data[i]["DeclarationId"],i),
+                        ]
+                    );
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+
+        function actionCondition(isDeclared, engagementTeamMemberId,declarationId, i) {
+            debugger
+            console.log(isDeclared, engagementTeamMemberId);
+            if (isDeclared ==true) {
+                     return '<div class="btn-group id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                            </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="Delete(' + declarationId + ')">Delete Declaration</a></li>\
+                                <li><a href="#" onclick="printForm(' + data[i]["DeclarationId"] + ')">Print Declaration</a></li>\
+                            </ul>\
+                        </div>'
+            } else {
+                  return '<div class="btn-group id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                            </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("EngagementDeclaration", "Engagement")/?id=' + engagementTeamMemberId + '">Make Declaration</a></li>\
+                            </ul>\
+                        </div>'
+            }
+        }
+
+
+        function Delete(i) {
+            swal({
+                title: 'Delete Declaration ?',
+                text: "Are you sure you want to Cancel : This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    DeleteMemberDeclaration(i);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function DeleteMemberDeclaration(id) {
+            debugger;
+            var url = '@Url.Action("DeleteEngDeclaration", "Engagement")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal("Error in Cancelled Declaration", { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error in Cancelled Declaration", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function printForm(DeclarationId) {
+            debugger;
+            queryString = "DeclarationId=" + DeclarationId + "&ClientId=" + "ALL" + "&Year=" + "ALL";
+            reportUrl = "@ViewBag.reportUrlName" + "PersonalDeclarationFormRPT.aspx";
+            $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("ParameterEncryption", "Report")',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    data: { "query": queryString },
+                    success: function (response) {
+                        window.open(reportUrl + response);
+                    }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,503 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.FundReceivingListVM>
+
+@{
+    ViewBag.Title = "Withheld Allocation Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @if (User.IsInRole("WithHeld Entry"))
+                                    {
+                                        <a class="btn btn-info" href='@Url.Action("CreateWithHeldInstruction", "Exchequer")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add New
+                                        </a>
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_withheld_instruction_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Reference No</th>
+                                        <th>From Institution Name</th>
+                                        <th>Vote Code</th>
+                                        <th>To Institution Name</th>
+                                        <th>To Vote Code</th>
+                                        <th>Allocation Date</th>
+                                        <th>Allocated Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="RemarkDialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Remarks</h4>
+            </div>
+
+            <div class="modal-body">
+                <span id="Remarks"></span>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        $("#saveLoaderInstitution").toggle(false);
+        $("#saveForm").prop('disabled', false);
+        $("#LoaderText").hide();
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        var dt_withheld_instruction_list = $("#dt_withheld_instruction_list").dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            },
+            "language": {
+                "emptyTable": '<span id="loader"><strong>Loading records, please wait...</strong></span>',
+                "zeroRecords": "No matching records found"
+            },
+            "Dom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                "t" +
+                "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+            "autoWidth": true,
+        });
+        $("#dt_withheld_instruction_list_wrapper .dt-toolbar").remove();
+
+        var dt_institutions_list = $("#dt_institutions_list").dataTable();
+        $("#dt_institutions_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_withheld_instruction_list").DataTable().search(this.value).draw();
+            $("#dt_withheld_instruction_list_wrapper .dt-toolbar").remove();
+        });
+
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetWithHeldInstructionList", "Exchequer")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                if (data == "" || data == undefined) {
+                    document.getElementById("loader").textContent = "Data  not available in our records";
+                }
+                else {
+                dt_withheld_instruction_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var Display = 'display:none;';
+
+                    if ('@User.IsInRole("WithHeld Entry")') {
+                        Display = '';
+                    }
+                    var allocatedAmount = "<p align='right'>" + toLabel(data[i]["Amount"]); +"</p>";
+
+                    if (data[i]["Remarks"] != null) {
+                        var remarks = '<a href="#" onclick="remarkDialog(' + i + ')"><i class="fa fa-eye"></i>' + data[i]["FundingRefNo"] + '</a>';
+                    } else {
+                        remarks = data[i]["FundingRefNo"]
+                    }
+
+                    dt_withheld_instruction_list.fnAddData([i + 1,
+                        remarks,
+                    data[i]["InstitutionName"],
+                    data[i]["FromVoteCode"],
+                    data[i]["ToInstitutionName"],
+                    data[i]["ToVoteCode"],
+                    ToJavaScriptDate(data[i]["FundingDate"]),
+                        allocatedAmount,
+                    data[i]["Status"],
+                    '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("WithHeldDetails", "Exchequer")/?id=' + data[i]["WithHeldExchequerId"] + '">Details</a></li>\
+                                <li style="' + Display + '"><a href="#" onclick="confirmDialog(' + i + ')">Confirm</a></li>\
+                                <li ><a href="@Url.Action("EditWithHeldInstruction", "Exchequer")/?id=' + data[i]["WithHeldExchequerId"] + '">Edit</a></li>\
+                                <li style="' + Display + '"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+                }
+            }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function remarkDialog(i) {
+            $('#RemarkDialog').modal('show');
+            var reason = data[i]["Remarks"];
+            $("#Remarks").text(reason);
+        }
+
+        var fundReceivingId = null;
+        function removeExchequer(index, id) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveExchequerInstitution", "Exchequer")';
+
+            swal({
+                title: 'Cancel Selected Exchequer Receiving ?',
+                text: "This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: params,
+                        contentType: "application/json; charset=utf-8",
+                        dataType: "json",
+                        success: function (response) {
+                            if (response = "Success") {
+                                updateExchequerTables(fundReceivingId);
+                                swal("Exchequer Receiving Cancelled Successfully!", { icon: "success" });
+                            }
+                        },
+                        failure: function (response) {
+                            alert(response.d);
+                        }
+                    });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+
+        function addExchequerReceiving() {
+            $("#saveLoaderInstitution").toggle(true);
+            $("#saveForm").prop('disabled', true);
+            $("#LoaderText").show();
+
+
+            var institutionName = $("#InstitutionId").val();
+            var Amount = $("#Amount").val();
+            var Amount = $("#Amount").val();
+            var FundReceivingId = fundReceivingId;
+
+
+            if (institutionName == 'Select Institution' || institutionName == '') {
+                swal("Institution Name is Required", { icon: "warning" });
+                $("#saveLoaderInstitution").toggle(false);
+                $("#saveForm").prop('disabled', false);
+                $("#LoaderText").hide();
+                return false;
+            }
+            if (Amount == '') {
+                swal("Amount is Required", { icon: "warning" });
+                $("#saveLoaderInstitution").toggle(false);
+                $("#saveForm").prop('disabled', false);
+                $("#LoaderText").hide();
+                return false;
+            }
+
+            var formData = new FormData();
+            formData.append('InstitutionId', $("#InstitutionId").val());
+            formData.append('Amount', Amount);
+            formData.append('FundReceivingId', FundReceivingId);
+
+            var url = '@Url.Action("saveExchequer", "Exchequer")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: formData,
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    switch (response) {
+                        case "Success":
+                            updateExchequerTables(fundReceivingId);
+                            swal("saved Successfully!", { icon: "success" });
+                            document.getElementById("Amount").value = "";
+                            $('#Amount').val('');
+                            $('#InstitutionId').val('');
+                            $('#InstitutionId').change();
+                            $("#saveLoaderInstitution").toggle(false);
+                            $("#saveForm").prop('disabled', false);
+                            $("#LoaderText").hide();
+                            break;
+
+                        case "Exists":
+                            swal("Exchequer of the Selected Institution Already Exists", { icon: "warning" });
+                            $("#saveLoaderInstitution").toggle(false);
+                            $("#saveForm").prop('disabled', false);
+                            $("#LoaderText").hide();
+                            break;
+
+                        case "Exceed":
+                            swal("Amount Entered Exceed Exchequer Amount", { icon: "warning" });
+                            $("#saveLoaderInstitution").toggle(false);
+                            $("#saveForm").prop('disabled', false);
+                            $("#LoaderText").hide();
+                            break;
+
+                        default:
+                            swal("An error Occur on saving Exchequer,Please Contact Administrator", { icon: "warning" });
+                            $("#saveLoaderInstitution").toggle(false);
+                            $("#saveForm").prop('disabled', false);
+                            $("#LoaderText").hide();
+                    }
+                },
+                failure: function (response) {
+                    swal(response.d, { icon: "warning" });
+                }
+            });
+        }
+
+
+        function confirmDialog(i) {
+            swal({
+                title: 'Confirm Withheld Exchequer ?',
+                text: "Are you sure you want to confirm Withheld: " + data[i]["FundingRefNo"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmWithheld(data[i]["WithHeldExchequerId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmWithheld(withHeldExchequerId) {
+            var url = '@Url.Action("ConfirmExchequer", "Exchequer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "withHeldExchequerId": withHeldExchequerId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Confirming Withheld Exchequer", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function cancelDialog(i) {
+            swal({
+                title: 'Cancel Withheld Exchequer ?',
+                text: "Are you sure you want to Cancel Withheld: " + data[i]["FundingRefNo"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isCancelled) {
+                if (isCancelled) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelWithheld(data[i]["WithHeldExchequerId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelWithheld(withHeldExchequerId) {
+            var url = '@Url.Action("CancelExchequer", "Exchequer")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "withHeldExchequerId": withHeldExchequerId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Cancelling Withheld Exchequer", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}

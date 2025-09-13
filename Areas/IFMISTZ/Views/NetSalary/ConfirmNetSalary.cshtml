@@ -1,0 +1,302 @@
+﻿@{
+    ViewBag.Title = "Confirm Net Salary";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search], input[type=text] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <button class="btn btn-info" id="confirmBtn" onclick="confirm()">
+                                        <i class="fa fa-check"></i> Confirm
+                                    </button>
+                                    <a class="btn btn-info" href="@Url.Action("AtSourceVotePayments","NetSalary", new { status="Pending,Rejected"})">
+                                        <i class="fa fa-file-text"></i> Vote Payments
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th style="width:20px">#</th>
+                                        <th>Batch No</th>
+                                        <th>NumTrx</th>
+                                        <th style="text-align:right">Amount(TZS)</th>
+                                        <th>Check Date</th>
+                                        <th>Status</th>
+                                        <th style="width:10px"></th>
+                                    </tr>
+                                </thead>
+                                <tfoot>
+                                    <tr>
+                                        <th colspan="2" style="text-align:right">TOTAL</th>
+                                        <th  style="text-align:right" id="NumTrx"></th>
+                                        <th style="text-align:right" id="TotalAmount"></th>
+                                        <td colspan="3"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="viewModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:95%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Payment Vouchers</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="row">
+                            <div class="col-md-6">
+                            </div>
+                            <div class="col-md-6">
+                                <div class="search-container" style="float:right">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchboxView">
+                                </div>
+                            </div>
+                        </div>
+                        <table id="dt_view" class="table table-bordered table-condensed">
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script>
+        var dt_table = $('#dt_table').dataTable({
+            "pageLength": 20,
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        var TotalAmount = 0
+        var NumTrx = 0
+        function loadData() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetNetSalaryPaymets", "NetSalary")',
+                contenttype: "application/json; charset=utf-8",
+                data: {
+                    status: [
+                        'Pending',
+                        'Rejected'
+                    ].toString()
+                },
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_table.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        TotalAmount += data[i]["TotalAmount"];
+                        NumTrx += data[i]["NumTrx"]
+                        dt_table.fnAddData([i + 1,
+                           data[i]["BatchNo"],
+                           '<div style="text-align:right">' + data[i]["NumTrx"].toLocaleString() + '</div>',
+                           '<div style="text-align:right">' + toLabel(data[i]["TotalAmount"]) + '</div>',
+                           data[i]["FCreatedAt"],
+                           data[i]["OverallStatus"],
+                           '<div class="btn-group" id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                 <span class="sr-only"></span>\
+                           </button>\
+                           <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "openViewDialog(' + i + ')">Details</a></li>\
+                           </ul>\
+                           </div>\
+                           <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                        ]);
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                    $("#TotalAmount").text(toLabel(TotalAmount));
+                    $("#NumTrx").text(NumTrx.toLocaleString());
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loadData();
+
+        function confirm() {
+            swal({
+                title: 'Confirm this list?',
+                buttons: ['NO','YES'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    confirmAcceptance();
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmAcceptance() {
+            $("#confirmBtn").prop('disabled', true)
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ActionsNetSalary", "NetSalary")',
+                data: {
+                    toStatus: 'Confirmed',
+                    //fromStatus: ['Pending', 'Rejected'].toString()
+                    ids: data.map(v=>v.AtSourcePaymentSummaryId).toString()
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#confirmBtn").prop('disabled', false)
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error)
+                }
+            });
+        }
+
+         //=============== DETAILS
+        var dt_view = $('#dt_view').dataTable({
+            "data": [],
+            "columnDefs": [{
+                "visible": false
+            }],
+            "columns": [
+           {title: "#" },
+           { title: "Vote" },
+           { title: "Num Trx" },
+           { title: "Total Amount" },
+           ]
+        });
+
+        $("#dt_view_wrapper .dt-toolbar").remove();
+
+        $("#searchboxView").on("keyup search input paste cut", function () {
+            dt_view.DataTable().search(this.value).draw();
+        });
+
+        function openViewDialog(i) {
+            viewData(data[i]["AtSourcePaymentSummaryId"]);
+            $("#viewModal").modal("show");
+        }
+
+        function viewData(Id) {
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetNetSalaryDetails", "NetSalary")',
+                data: { Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    d = response.data;
+                    dt_view.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_view.fnAddData([i+1,
+                            d[i]['MainVoteCode']+" - "+d[i]["MainVoteName"],
+                           d[i]["NumTrx"],
+                           toLabel(d[i]["TotalAmount"]),
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

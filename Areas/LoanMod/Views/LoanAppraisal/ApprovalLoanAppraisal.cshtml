@@ -1,0 +1,214 @@
+﻿@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanApplicationVM>
+@{
+    ViewBag.Title = "Appraisal Approval List ";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_appraisal_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Application No</th>
+                                        <th>Customer Name</th>
+                                        <th>Registration Date</th>
+                                        <th>Application Date</th>
+                                        <th>Site Visiting Date</th>
+                                        <th>Applied Amount</th>
+                                        <th>Proposed Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        /* BASIC ;*/
+        var responsiveHelper_dt_loan = undefined;
+        var responsiveHelper_datatable_fixed_column = undefined;
+        var responsiveHelper_datatable_col_reorder = undefined;
+        var responsiveHelper_datatable_tabletools = undefined;
+
+        var breakpointDefinition = {
+            tablet: 1024,
+            phone: 480
+        };
+        /*BEGINNING DATA TABLE*/
+        /*END DATA TABLE*/
+        var dt_appraisal_list = $('#dt_appraisal_list').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        //$("#dt_appraisal_list_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_appraisal_list.DataTable().search(this.value).draw();
+        });
+
+        function ToJavaScriptDate(value) {
+            var pattern = /Date\(([^)]+)\)/;
+            var results = pattern.exec(value);
+            var dt = new Date(parseFloat(results[1]));
+            return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+        }
+
+        var data = [];
+        var LoanApplicationId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetApprovalLoanAppraisalList", "LoanAppraisal")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                console.log(data);
+                dt_appraisal_list.fnClearTable(); 
+                for (var i = 0; i < data.length; i++) {
+
+                    var amount = data[i]["AppliedLoanAmount"];
+                    if (amount != null) {
+                        amount = "<p align='right'>" + toLabel(data[i]["AppliedLoanAmount"]); +"</p>"
+                    } else {
+                        amount = "<p align='right'>" + data[i]["AppliedLoanAmount"]; +"</p>"
+                    }
+
+                    var proposedAmount = data[i]["ProposedAmount"];
+                    if (proposedAmount != null) {
+                        proposedAmount = "<p align='right'>" + toLabel(data[i]["ProposedAmount"]); +"</p>"
+                    } else {
+                        proposedAmount = "<p align='right'>" + data[i]["ProposedAmount"]; +"</p>"
+                    }
+
+                    dt_appraisal_list.fnAddData([i + 1,
+                       data[i]["ApplicationNo"],
+                       data[i]["CustomerName"],
+                       ToJavaScriptDate(data[i]["RegistrationDate"]),
+                       ToJavaScriptDate(data[i]["ApplicationDate"]),
+                       ToJavaScriptDate(data[i]["SiteVisitingDate"]),
+                       amount,
+                       proposedAmount,
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ViewLoanDetails", "ViewLoanApplication")/?Id=' + data[i]["LoanApplicationId"] + '">View</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        /* END BASIC */
+
+    </script>
+}

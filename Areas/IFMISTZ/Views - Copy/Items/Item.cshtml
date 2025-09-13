@@ -1,0 +1,417 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.Item>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .input[type="text"], select {
+        border: 1px solid lightgray;
+        width: 100%;
+        height: 35px;
+    }
+
+    .textarea {
+        border: 1px solid lightgray;
+        width: 100%;
+    }
+
+    .input[type="text"]:focus {
+        border: 1px solid lightblue;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+
+    <section id="widget-grid" class="">
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+
+                        <h2 style="color:black;">Item Name List</h2>
+
+                    </header>
+                    <div>
+                        @if (ViewBag.Error != null)
+                        {
+                            <div class="form-group">
+                                <label class="col-md-4 control-label">Importation Error</label>
+                                <div class="col-md-8">
+
+                                    <p class="help-block">
+                                        @ViewBag.Error
+                                    </p>
+                                </div>
+                            </div>
+                        }
+                      <div class="row">
+                            <div class="col-md-6">
+                                <a class="btn btn-info" href='@Url.Action("Create", "Items")'>
+                                    <i class="glyphicon glyphicon-plus"></i> Add New
+                                </a>
+                                <a class="btn btn-info" onclick="ImportBudget()" href="#">Import Item</a>
+
+                                <a class="btn btn-info" href='@Url.Action("ItemTemplate", "Items")'>
+                                    <i class="glyphicon"></i> Generate Item Template
+                                </a>
+
+                            </div>
+                        </div>
+
+
+                        <div class="widget-body " style="padding-top:10px; width:100%;">
+
+                            <table style="width:100%">
+                                <tr>
+                                    <td colspan="1">
+
+
+                                        <table id="dt_basic" class="table table-condensed table-bordered">
+                                            <thead>
+                                                <tr>
+                                                    <th>No</th>
+                                                    <th>Item Category</th>
+                                                    <th>Item Classfication Name</th>
+                                                    <th>Item Name</th>
+                                                    <th>Action</th>
+                                                </tr>
+                                            </thead>
+                                            @{ int i = 0;}
+                                            <tbody>
+                                                @foreach (var item in Model)
+                                                {
+                                                    i++;
+                                                    <tr>
+                                                        <td>@i</td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemClassification.ItemCategory)
+                                                        </td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemClassification.ClassificationDesc)
+                                                        </td>
+                                                        <td>
+                                                            @Html.DisplayFor(modelItem => item.ItemDescription)
+                                                        </td>
+                                                      
+                                                        <td style="text-align:center">
+
+                                                            <div class="btn-group">
+                                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                                    <span class="caret"></span>
+                                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                                </button>
+                                                                <ul class="dropdown-menu">
+
+                                                                    <li>
+                                                                        <a href="@Url.Action("Edit", "Items",new {id=item.ItemId })" class="btn-xs edit">
+                                                                            <i class="fa fa-edit"></i>  Edit
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a href="@Url.Action("Details", "Items", new {id=item.ItemId })" class="btn-xs edit">
+                                                                            <i class="fa fa-edit"></i>  Details
+                                                                        </a>
+                                                                    </li>
+                                                                    <li>
+                                                                        <a onclick="Cancel(@item.ItemId)" class="btn-xs edit">
+                                                                            <i class="fa fa-edit"></i>  Cancel
+                                                                        </a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                }
+                                            </tbody>
+                                        </table>
+
+                                    <td colspan="1"></td>
+                                </tr>
+                            </table>
+                        </div>
+
+
+
+                    </div>
+                </div>
+
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="budgetModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:60%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Import Item</h3>
+
+            </div>
+            <table width="100%">
+                <tr>
+                    <td colspan="1">
+                        @using (Html.BeginForm("Item", "Items/ImportItem", FormMethod.Post, new { enctype = "multipart/form-data" }))
+                        {
+
+
+                            <fieldset>
+                                @if (ViewBag.Error != null)
+                                {
+                                    <div class="form-group">
+                                        <label class="col-md-4 control-label">Importation Error</label>
+                                        <div class="col-md-8">
+
+                                            <p class="help-block">
+                                                @ViewBag.Error
+                                            </p>
+                                        </div>
+                                    </div>
+                                }
+                                <table style="margin-left:150px; margin-top:50px">
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label" style="text-align:right">Classfication:</label>
+                                                <div class="col-md-8 inputGroupContainer">
+                                                    <div class="input-group">
+                                                        @Html.DropDownList("ItemClassificationId", ViewBag.ItemClassificationId as List<SelectListItem>, "", new { @Class = "input", style = "width:300px; ", required = "required" })
+                                                       </div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr><td height="15px"></td></tr>
+                                    <tr>
+                                        <td>
+                                            <div class="form-group">
+                                                <label class="col-md-4 control-label" style="text-align:right">Import Excel File.</label>
+                                                <div class="col-md-8">
+                                                    <input name="postedFile" type="file" class="btn btn-default" id="postedFile" style="width:300px; height:35px">
+
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                              
+                                <div class="form-actions" style="width:100%; margin-left:1px">
+                                    <div class="row">
+                                        <div class="col-md-7">
+                                            <div style="padding-left:60%">
+                                                <button type="submit" class="btn btn-info action-btn pull-left"
+                                                        style="width:100px;  color:black"
+                                                        id="btn_save_gl_items">
+                                                    <i class="fa fa-file"></i>
+                                                    Import
+                                                </button>
+
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </fieldset>
+                        }
+                    </td>
+                    <td colspan="1"></td>
+                </tr>
+            </table>
+          
+            <br />
+
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+
+        function ImportBudget() {
+            $('#budgetModal').modal('show');
+        }
+
+            $(document).ready(function () {
+
+
+                var responsiveHelper_dt_basic = undefined;
+                var responsiveHelper_datatable_fixed_column = undefined;
+                var responsiveHelper_datatable_col_reorder = undefined;
+                var responsiveHelper_datatable_tabletools = undefined;
+
+                var breakpointDefinition = {
+                    tablet: 1024,
+                    phone: 480
+                };
+
+                $('#dt_basic').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_basic) {
+                            responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_basic.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_basic.respond();
+                    }
+                });
+
+
+                var otable = $('#datatable_fixed_column').DataTable({
+
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_fixed_column) {
+                            responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_fixed_column.respond();
+                    }
+
+                });
+
+                // custom toolbar
+                $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+                // Apply the filter
+                $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                    otable
+                        .column($(this).parent().index() + ':visible')
+                        .search(this.value)
+                        .draw();
+
+                });
+
+                $('#datatable_col_reorder').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_col_reorder) {
+                            responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_col_reorder.respond();
+                    }
+                });
+
+
+                $('#datatable_tabletools').dataTable({
+
+
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "oTableTools": {
+                        "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                           {
+                               "sExtends": "pdf",
+                               "sTitle": "SmartAdmin_PDF",
+                               "sPdfMessage": "SmartAdmin PDF Export",
+                               "sPdfSize": "letter"
+                           },
+                           {
+                               "sExtends": "print",
+                               "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                           }
+                        ],
+                        "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                    },
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+
+                        if (!responsiveHelper_datatable_tabletools) {
+                            responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_tabletools.respond();
+                    }
+                });
+
+
+            })
+
+    function Cancel(i) {
+                status = "Cancelled";
+                swal({
+                    title: "Are you sure?",
+                    text: "Item will be Cancelled!",
+                    buttons: [
+                      'No',
+                      'Yes'
+                    ],
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        ChangeItemStatus(i, status)
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+
+            function ChangeItemStatus(Id, status) {
+                var url = '@Url.Action("ChangeStatus", "Items")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: {
+                        Status: status,
+                        ItemId: Id
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+
+                        if (response == "Success") {
+                            swal("Changed Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response);
+                        }
+
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+
+            }
+</script>
+}
+
+

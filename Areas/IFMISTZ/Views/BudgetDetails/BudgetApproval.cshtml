@@ -1,0 +1,467 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BudgetVM>
+
+@{
+    ViewBag.Title = "Approve Budget";
+}
+
+<style>
+    #jarviswidget .header {
+        background: blueviolet;
+    }
+
+    .submit-btn {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 12px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    
+    .dataTables_filter {
+        display: none;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Approve Budget</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px" id="tableData">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="searchContainer submit-btn" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            @*@{
+                                decimal CielingAmt1 = 0;
+                                decimal CielingAmt2 = 0;
+                            }*@
+                            <table id="datatable_tabletools" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr style="text-align:left">
+                                        <th data-hide="phone">S/N</th>
+                                        <th data-hide="phone,tablet">Department</th>
+                                        <th data-hide="phone,tablet">Sub Budget Class</th>
+                                        <th data-hide="phone,tablet">Amount</th>
+                                        <th data-hide="phone,tablet">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                   
+                                        @if (ViewBag.InstitutionCategory == "Independent Government Department")
+                                        {
+                                            int cnt = 0;
+                                            decimal CielingAmt1 = 0;
+                                            foreach (var group in Model.GroupBy(i => i.SubVote))
+                                            {
+                                                int? fy = group.Where(a => a.SubVote == group.Key).Select(a => a.FinancialYear).FirstOrDefault();
+                                                string c = group.Where(a => a.SubVote == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                                decimal? total = group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount);
+                                                string dept = group.Where(a => a.SubVote == group.Key).Select(a => a.SubVote).FirstOrDefault() + '-' + group.Where(a => a.SubVote == group.Key).Select(a => a.SubVoteDesc).FirstOrDefault();
+                                                int? busid = group.Where(a => a.SubVote == group.Key).Select(a => a.BudgetSummaryId).FirstOrDefault();
+                                                cnt = cnt + 1;
+                                                CielingAmt1 = CielingAmt1 + System.Convert.ToDecimal(group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount));
+                                                //@busid
+                                                var CostCenter = group.Where(a => a.SubVote == group.Key).Select(a => a.SubVote).FirstOrDefault();
+                                                <tr>
+                                                    <td>@cnt</td>
+                                                    <td>
+                                                        <a href="@Url.Action("ConfirmedbudgetDetails", "Budgetdetails", new { Buid = @busid, costctr = @CostCenter })">@dept</a>
+                                                    </td>
+                                                   
+                                                    <td>@group.Where(a => a.SubVote == group.Key).Select(a => a.SuBbudgetClassDesc).FirstOrDefault()</td>
+                                                    <td>@string.Format("{0:#,0.00}", group.Where(a => a.SubVote == group.Key).Sum(a => a.OperationalAmount))</td>
+                                                    <td>
+                                                        <div class="btn-group">
+
+                                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                                                                <span class="caret"></span>
+                                                                <span class="sr-only">Toggle Dropdown</span>
+                                                            </button>
+                                                            <input type="hidden" id="ctr-@cnt" value="@CostCenter" />
+                                                            <ul class="dropdown-menu">
+                                                                <li><a href="#" onclick="approvebudget(@cnt,@busid)">Approve</a></li>
+                                                                <li><a href="#" onclick="reject(@cnt,@busid)">Reject</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+
+                                                </tr>
+                                                
+                                            }
+                                        }
+                                        else
+                                        {
+                                            int cnt = 0;
+                                             decimal CielingAmt2 = 0;
+
+
+                                            foreach (var group in Model.GroupBy(i => i.CostCentre))
+                                            {
+                                                int? fy = group.Where(a => a.CostCentre == group.Key).Select(a => a.FinancialYear).FirstOrDefault();
+                                                string c = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                                decimal? total = group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount);
+                                                string dept = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentreDesc).FirstOrDefault();
+                                                int? busid = group.Where(a => a.CostCentre == group.Key).Select(a => a.BudgetSummaryId).FirstOrDefault();
+                                                cnt = cnt + 1;
+                                                CielingAmt2 = CielingAmt2 + System.Convert.ToDecimal(group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount));
+                                                //@busid
+                                                var CostCenter = group.Where(a => a.CostCentre == group.Key).Select(a => a.CostCentre).FirstOrDefault();
+                                                <tr>
+                                                    <td>@cnt</td>
+                                                    <td>
+                                                        <a href="@Url.Action("ConfirmedbudgetDetails", "Budgetdetails", new { Buid = @busid, costctr = @CostCenter })">@dept</a>
+                                                    </td>
+                                                    <td>@group.Where(a => a.CostCentre == group.Key).Select(a => a.SuBbudgetClassDesc).FirstOrDefault()</td>
+                                                    <td>@string.Format("{0:#,0.00}", group.Where(a => a.CostCentre == group.Key).Sum(a => a.OperationalAmount))</td>
+                                                    <td>
+                                                        <div class="btn-group">
+
+                                                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+
+                                                                <span class="caret"></span>
+                                                                <span class="sr-only">Toggle Dropdown</span>
+                                                            </button>
+                                                            <input type="hidden" id="ctr-@cnt" value="@CostCenter" />
+                                                            <ul class="dropdown-menu">
+                                                                <li><a href="#" onclick="approvebudget(@cnt,@busid)">Approve</a></li>
+                                                                <li><a href="#" onclick="reject(@cnt,@busid)">Reject</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+
+                                                </tr>
+                                                
+                                            }
+                                        }
+                                </tbody>
+                            </table>
+                           
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!--confirm pop up-->
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Approve</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Approve this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div> 
+
+<div class="modal fade" id="rejectModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Rejection Reason</h4>
+            </div>
+   
+                <form id="RejectForm">
+               <input type="hidden" name="id" id="id" value=""/>
+            <input type="hidden" name="CostCenter" id="CostCenter" value="" />
+            <div class="modal-body">
+                <textarea cols="75%" id="Comments" required  name="Comments" rows="5%"></textarea>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" id="form_submision" style="float:left">
+                    <i class="fa fa-save"></i>Save
+                </button>
+                <button class="btn btn-info delete-cancel"  style="float:left" data-dismiss="modal">Cancel</button>
+               
+            </div>
+           </form>
+        </div>
+
+    </div>
+</div>
+@section pagespecific{
+    <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+    <script>
+
+        var datatable_tabletools = $('#datatable_tabletools').dataTable({
+            "autoWidth": true,
+            "searching": true, // MATCH YOUR DATA TABLE PROPERTIES WITH THESE
+            "bPaginate": false,
+            "info": true,
+        });
+
+        // GRAB THIS==================================
+        $("#searchbox").on("keyup search input paste cut", function () {
+            datatable_tabletools.DataTable().search(this.value).draw();
+        });
+
+        //END HERE ==========================================
+
+        var confirmBudget = function (CostCenter,id) {
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                if (CostCenter != "") {
+                    var url = '@Url.Action("ConfirmBudget", "BudgetDetails")';
+                    $.ajax({
+                        url: url,
+                        data: { CostCenter: CostCenter,id:id },
+                        type: "POST",
+                        success: function (response) {
+                            if (response) {
+                                if (response == "Success") {
+                                    //now re-using the boostrap modal popup to show success message.
+                                    //dynamically we will change background colour
+                                    if ($('.modal-header').hasClass('alert-info')) {
+                                        //$('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                        //hide ok button as it is not necessary
+                                        $('.delete-confirm').css('display', 'none');
+                                        $('.delete-cancel').html('Close').click(function () {
+                                            location.reload();
+                                        });
+                                    }
+                                    $('.success-message').html('Confirmed successfully');
+                                }
+                            }
+                        }, error: function (err) {
+                            if (!$('.modal-header').hasClass('alert-danger')) {
+                                $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                                $('.delete-confirm').css('display', 'none');
+                            }
+                            $('.success-message').html(err.statusText);
+                        }
+                    });
+                }
+            });
+        };
+
+       
+        //=================== APPROVE START =========================
+        /**
+        * Show Approve Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function approvebudget(cnt,id) {
+            var CostCenter = $("#ctr-" + cnt).val();
+            swal({
+                title: 'Approve this record ?',
+                text: "This Process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    confirmApproval(CostCenter,id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send Acceptance signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmApproval(CostCenter, id) {
+            var url = '@Url.Action("ApproveBudget", "BudgetDetails")';
+            console.log(CostCenter);
+            console.log(id);
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { costCenter: CostCenter, id: id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** Approve END **************************
+        function reject(cnt,id) {
+            //if (i == 'x') i = globalPayeeId;
+            var CostCenter = $("#ctr-" + cnt).val();
+            console.log(CostCenter);
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    confirmRejection(CostCenter, id, remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        /**
+         * Send Rejection signal to the backend
+         * param  {Int} i - Id of the selected Item
+         */
+        function confirmRejection(CostCenter,Id, remark) {
+            
+            var url = '@Url.Action("RejectBudget", "BudgetDetails")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "costcentre": CostCenter, "id": Id, "comments": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Transaction Rejected Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            }); 
+        }
+
+        var rejectBudget = function (CostCenter, id) {
+            $("#RejectForm #CostCenter").val("");
+            $("#RejectForm #id").val("");
+
+            $("#RejectForm #CostCenter").val($("#ctr-" + CostCenter).val());
+            $("#RejectForm #id").val(id);
+
+            $("#rejectModal").modal('show');
+        };
+
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Approve this record ?');
+        });
+
+        $("#RejectForm").on('submit',function(e){
+            e.preventDefault();
+
+            var reason=$("#Comments").val();
+            if(!reason){
+                alert("Please Enter Reason for Rejection");
+                return;
+            }
+            var formData = $(this).serialize();
+            $('#rejectModal').modal('hide');
+
+            var url = '@Url.Action("RejectBudget", "BudgetDetails")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: "POST",
+                success: function (response) {
+                    if (response) {
+                        if (response == "Success") {
+                            $("#tableData").load(" #tableData");
+
+                            //now re-using the boostrap modal popup to show success message.
+                            //dynamically we will change background colour
+                            if ($('.modal-header').hasClass('alert-info')) {
+                                //$('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                //hide ok button as it is not necessary
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                            }
+                            $('.success-message').html('Rejected successfully');
+
+                        }
+                    }
+                }, error: function (err) {
+                    if (!$('.modal-header').hasClass('alert-danger')) {
+                        $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                        $('.delete-confirm').css('display', 'none');
+                    }
+                    $('.success-message').html(err.statusText);
+                }
+            });
+        }
+        );
+    </script>
+}

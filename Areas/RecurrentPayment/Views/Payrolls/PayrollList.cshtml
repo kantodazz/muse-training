@@ -1,0 +1,333 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.Payroll
+@{
+    ViewBag.Title = "Payroll";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="divLoader"></div>
+<div id="content">
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i></span>
+                        <h2> @ViewBag.Title </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div style="margin-bottom:20px">
+                                @{
+                                    if (Model.OverallStatus == "Pending" || Model.OverallStatus == "Cancelled")
+                                    {
+
+
+                                        <div class="col-md-2">
+                                            <a href="#" class="btn btn-info" onclick="runPayroll()">
+                                                <span class="glyphicon glyphicon-import" aria-hidden="true"></span>
+                                                Run Payroll
+                                            </a>
+                                        </div>
+
+                                        if (Model.OverallStatus == "Cancelled")
+                                        {
+                                            <button type="button" class="btn btn-info btn-flat" onclick="undoPayroll()">
+                                                <span class="glyphicon glyphicon-cross" aria-hidden="true"></span>
+                                                Undo Payroll
+                                            </button>
+                                        }
+
+                                    }
+                                    else if (Model.OverallStatus == "Payroll Confirmed")
+                                    {
+                                        <button type="button" class="btn btn-info btn-flat" disabled>
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            Run Payroll
+                                        </button>
+
+                                    }
+                                    else
+                                    {
+                                        <button type="button" class="btn btn-info btn-flat" onclick="runPayroll()">
+                                            <span class="glyphicon glyphicon-ok" aria-hidden="true"></span>
+                                            Run Payroll
+                                        </button>
+                                        <button type="button" class="btn btn-info btn-flat" onclick="undoPayroll()">
+                                            <span class="glyphicon glyphicon-cross" aria-hidden="true"></span>
+                                            Undo Payroll
+                                        </button>
+                                    }
+                                }
+                                <a href="@Url.Action("Beneficiaries", "Payrolls")" class="btn btn-default pull-right">
+                                    <span class="badge bg-color-red pull-right inbox-badge"> @ViewBag.Employees</span> Employee(s) with negative/Zero Amount
+                                </a>
+                            </div>
+                            <hr>
+                            <table class="table table-bordered table-condensed" id="tblDataList">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.PayrollNumEmp)
+                                        </th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.PayrollDate)
+                                        </th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.SalaryAmount)
+                                        </th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.AllowanceAmount)
+                                        </th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.DeductionAmount)
+                                        </th>
+                                        <th style="text-align: center">
+                                            @Html.DisplayNameFor(model => model.NetAmount)
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.OverallStatus)
+                                        </th>
+                                        <th>
+                                            Action
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>1</td>
+                                        <td align="center">
+                                            <a href="@Url.Action("PayrollDetails", "Payrolls")">
+                                                @Html.DisplayFor(model => model.PayrollNumEmp)
+                                            </a>
+                                        </td>
+                                        <td align="center">
+                                            @Html.DisplayFor(model => model.PayrollDate, "_ShortDateTime")
+                                        </td>
+                                        <td align="center">
+                                            @Html.DisplayFor(model => model.SalaryAmount)
+                                        </td>
+                                        <td align="center">
+                                            @Html.DisplayFor(model => model.AllowanceAmount)
+                                        </td>
+                                        <td align="center">
+                                            @Html.DisplayFor(model => model.DeductionAmount)
+                                        </td>
+                                        <td align="center">
+                                            @Html.DisplayFor(model => model.NetAmount)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(model => model.OverallStatus)
+                                        </td>
+                                        <td>
+                                            <div class="btn-group">
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+                                                    <li>
+                                                        <a href="@Url.Action("PayrollDetails", "Payrolls")">
+                                                            Details
+                                                        </a>
+                                                    </li>
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $("#tblDataList").DataTable({
+                "scrollX": false
+            });
+        });
+
+         var runPayroll = function () {
+
+            var url = '@Url.Action("RunPayroll", "Payrolls")';
+
+            $("#divLoader").show();
+
+            $.ajax({
+                url: url,
+                type: "post",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                               swal({
+                                    text: "Payroll Run Successfully!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                      window.location = '@Url.Action("PayrollList")';
+                                });
+                    }
+                    else {
+                        swal({
+                            text: "Unknown error, contact system admin!",
+                            icon: "info",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    };
+                },
+                error: function (response) {
+                    swal({
+                        text: "Unknown error, contact system admin!",
+                        icon: "info",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                }
+            });
+        };
+
+
+        var undoPayroll = function () {
+
+             var url = '@Url.Action("UndoPayroll", "Payrolls")';
+
+            $("#divLoader").show();
+
+            $.ajax({
+                url: url,
+                type: "post",
+                processData: false,
+                contentType: false,
+                success: function (response) {
+                    $("#divLoader").hide();
+                    if (response == "success") {
+                               swal({
+                                   text: "You Succesfully Undo Payroll!",
+                                    icon: "success",
+                                    button: "OK",
+                                }).then(function () {
+                                      window.location = '@Url.Action("PayrollList")';
+                                });
+                    }
+                    else {
+                        swal({
+                            text: "Unknown error, contact system admin!",
+                            icon: "info",
+                            button: "OK",
+                        }).then(function () {
+                            location.reload();
+                        });
+                    };
+                },
+                error: function (response) {
+                    swal({
+                        text: "Unknown error, contact system admin!",
+                        icon: "info",
+                        button: "OK",
+                    }).then(function () {
+                        location.reload();
+                    });
+                }
+            });
+        };
+
+        var undoPayroll1 = function () {
+            debugger
+            $("#responseModal").modal('show');
+
+            $(".delete-confirm").click(function () {
+
+                var url = '@Url.Action("UndoPayroll", "Payrolls")';
+                $("#divLoader1").show();
+                $.ajax({
+                    url: url,
+                    type: "POST",
+                    success: function (response) {
+                        if (response) {
+                            if (response == "success") {
+                                if ($('.modal-header').hasClass('alert-danger')) {
+                                    $('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('You Succesfully Undo Payroll!');
+                            }
+                        }
+                    },error: function (err) {
+                        if (!$('.modal-header').hasClass('alert-danger')) {
+                            $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                            $('.delete-confirm').css('display', 'none');
+                        }
+                        $('.success-message').html(err.statusText);
+                    }
+                });
+            });
+        };
+    </script>
+}

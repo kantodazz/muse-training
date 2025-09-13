@@ -1,0 +1,177 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.DeductionByInstitutionVM
+@{
+    ViewBag.Title = "Deduction Transfer Details";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<p align="right">  
+    <a href="@Url.Action("PrintSalaryDeduction","SalaryDeductionPayment", new {id=Model.DeductionByInstitutionId})" class="btn btn-info">
+        <span class="glyphicon glyphicon-print"></span>&nbsp;Print
+    </a>
+</p>
+<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Deduction Type &nbsp;:</strong>@Html.DisplayFor(model => model.DeductionType)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Funding Source &nbsp;:</strong>@Html.DisplayFor(model => model.FundingSource)</div></div>
+<div class="row"><div class="col-sm-6 col-md-6 col-lg-6"><strong>Check Date &nbsp;:</strong> @Convert.ToDateTime(Model.CheckDate).ToString("dd-MM-yyyy")</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payment Mode &nbsp;:</strong>@Html.DisplayFor(model => model.PaymentMode)</div></div>
+<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Number of Votes &nbsp;:</strong>@Html.DisplayFor(model => model.NumVotes)</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Total number of Employees&nbsp;:</strong>@Html.DisplayFor(model => model.TotalNumEmployees)</div></div>
+<div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6"><strong>Status&nbsp;:</strong>@Html.DisplayFor(model => model.OverallStatus)</div>
+    @if (Model.ControlNumber != null)
+    {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Control Number&nbsp;:</strong>@Html.DisplayFor(model => model.ControlNumber)</div>
+    }
+</div>
+<div class="row">
+    @if (Model.RejectionReason != null)
+    {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Rejection Reason&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>&nbsp;&nbsp;&nbsp;@Html.DisplayFor(model => model.RejectionReason)</div>
+
+    }
+    @if (Model.SolutionTaken != null)
+    {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Solution Taken&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</strong>&nbsp;&nbsp;&nbsp;&nbsp;@Html.DisplayFor(model => model.SolutionTaken)</div>
+    }
+</div>
+<div class="row">
+    @if (Model.Remarks != null)
+    {
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Remark&nbsp;:</strong>@Html.DisplayFor(model => model.Remarks)</div>
+    }
+</div>
+@if (Model.PaymentType != null)
+{
+    <div class="row">
+
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Payment Type&nbsp;:</strong>@Html.DisplayFor(model => model.PaymentType)</div>
+        
+    </div>
+}
+    <div class="row">
+        <div class="col-md-6"></div>
+        <div class="col-md-6">
+            <div class="search-container" style="float:right">
+                <i class="fa fa-search"></i>
+                <input type="search" name="search" placeholder="Search..." id="search-box">
+            </div>
+        </div>
+    </div>
+    <table id="dt_preview_deductions" class="table table-bordered table-condensed table-amount">
+        <thead>
+            <tr>
+                <td>#</td>
+                <td>Vote Code</td>
+                <th>Vote Name</th>
+                <th style="text-align:right">Number of Employees</th>
+                <th style="text-align:right">Deduction Amount</th>
+
+            </tr>
+        </thead>
+        <tbody>
+            @{
+                int m = 0;
+            }
+
+
+            @foreach (var item in Model.DeductionByVotes)
+            {
+                m++;
+                <tr>
+                    <td>@m</td>
+                    <td>@item.VoteCode</td>
+                    <td>@item.VoteName</td>
+                    <td align="right">@item.NumEmployees</td>
+                    <td align="right">@string.Format("{0:#,0.00}", item.DeductionAmount)</td>
+                </tr>
+            }
+
+
+        </tbody>
+        <tfoot>
+            <tr>
+                <th colspan="3" style="text-align:right">TOTAL</th>
+                <th style="text-align:right">
+                    @Model.TotalNumEmployees
+                </th>
+                <th style="text-align:right">
+                    @string.Format("{0:#,0.00}", Model.TotalDeductionAmount)
+                </th>
+            </tr>
+        </tfoot>
+    </table>
+
+    <div class="modal-footer">
+
+        <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+    </div>
+
+
+
+
+
+

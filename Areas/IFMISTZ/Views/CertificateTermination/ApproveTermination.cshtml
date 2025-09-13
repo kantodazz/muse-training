@@ -1,0 +1,378 @@
+﻿@{
+    ViewBag.Title = "Confirmed Terminations";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    td {
+        padding: 5px;
+    }
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+    .total-amount{
+        float: right;
+    }
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+        .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+       .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+    .wh-holding{
+        color:#008636;
+        font-size:10px;
+    }
+    .bubble-w{
+        width:5px;
+        height:5px;
+        border-radius:100%;
+        background-color:plum;
+        border:1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Contract Number</th>
+                                        <th>Contract Name</th>
+                                        <th>Cash Amount</th>
+                                        <th>Insurance Amount</th>
+                                        <th>Certificate Amount</th>
+                                        <th>Total Amount</th>
+                                        <th width="300px">Reason</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+       var data = []
+        function loaData() {
+        $.ajax({
+            type: "GET",
+            url: '@Url.Action("GetCertificates", "CertificateTermination")',
+            data: { status: 'Confirmed' },
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    const id = data[i].CertificateTerminationId
+                    dt_table.fnAddData([i + 1,
+                        '<a href="@Url.Action("previewcontract", "contract")/' + data[i].ContractId + '">' + data[i].ContractNumber + '</a>',
+                       data[i]["ContractName"],
+                       toLabel(data[i]["CashAmount"]),
+                        toLabel(data[i]["InsuranceAmount"]),
+                        toLabel(data[i]["CertificateAmount"]),
+                        toLabel(
+                            data[i]["CertificateAmount"] +
+                            data[i]["InsuranceAmount"] +
+                            data[i]["CashAmount"]
+                        ),
+                        renderReason(data[i]["Reason"], id),
+                        data[i]["OverallStatus"],
+                        '<a href="#" onclick="viewAttachment(' + id +')"><i class="fa fa-file-pdf-o"></i></a>',
+                        '<div class="btn-group" id="drop-' + id + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick="reject(' + id + ')">Reject</a></li>\
+                             <li><a href="#" onclick="approve(' + id + ')">Approve</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                 ]);
+                    $("#saveLoader-" + id).toggle(false)
+                }
+            },
+            failure: function (e) {
+                alert(e);
+            }
+        });
+        }
+        loaData();
+
+        function approve(Id) {
+            swal({
+                title: 'Approve this termination?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + Id + "").toggle(true)
+                    $("#drop-" + Id + "").toggle(false)
+                    approved(Id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+
+        function approved(id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ApproveTermination", "CertificateTermination")',
+                data: { id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error).then((e) => {
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+
+
+         function cancel(Id) {
+            swal({
+                title: 'Cancel this termination?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + Id + "").toggle(true)
+                    $("#drop-" + Id + "").toggle(false)
+                    cancelConfirmed(Id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+
+        function cancelConfirmed(id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("CancelTermination", "CertificateTermination")',
+                data: { id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    swal(error).then((e) => {
+                        window.location.reload();
+                    });
+                }
+            });
+        }
+
+
+        function reject(id) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + id).toggle(true)
+                    $("#drop-" + id).toggle(false)
+                    confirmRejection(id, remark);
+                };
+            });
+        }
+
+        function confirmRejection(id, remarks) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("RejectTermination", "CertificateTermination")',
+                data: { id, remarks },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function viewAttachment(id) {
+           var url = `@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=${id}&sourceModule=ContractTermination`;
+            window.location.href = url;
+        }
+
+        function attach(id) {
+            var url =  `@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=${id}&&sourceModule=ContractTermination`;
+            window.location.href = url;
+
+        }
+
+        function toNumber(number) {
+            number = number || 0
+            return parseFloat(number.toString().split(",").join(""))
+        }
+
+        function renderReason(reason, id) {
+            if (reason.length < 50) {
+                return reason
+            }
+            return `<p id="r-${id}">${reason.substring(0, 50)}\
+                        <a hreaf="#" onClick=showMore(${id}) style="cursor: pointer">...more</a>
+                    </p>`
+        }
+
+        function showMore(id) {
+            var reason = data.filter(a => a.CertificateTerminationId == id)[0].Reason
+            $(`#r-${id}`)
+                .html(`${reason}<a hreaf="#" onClick=showLess(${id}) style="cursor: pointer">...less</a>`)
+        }
+
+        function showLess(id) {
+            var reason = data.filter(a => a.CertificateTerminationId == id)[0].Reason
+            $(`#r-${id}`)
+                .html(`${reason.substring(0, 50)}<a hreaf="#" onClick=showMore(${id}) style="cursor: pointer">...more</a>`)
+        }
+
+    </script>
+}

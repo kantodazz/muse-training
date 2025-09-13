@@ -1,0 +1,265 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.PrePaymentReceivingSummaryVM
+@{
+    ViewBag.Title = "Prepayment Receiving";
+
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+</style>
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+    
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Prepayment Receiving Attachments</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" />
+                            </div>
+                            <table border="0" style="width:350px;">
+                                <tr><td>Prepayment Number</td><td><b>@Model.PrePaymentNo</b></td></tr>
+                                <tr><td>Receiving Number</td><td><b>@Model.PrePaymentReceivingNumber</b></td></tr>
+                                <tr><td>Receiving Items Value</td><td><b>@Convert.ToDecimal(Model.PrePaymentReceivingItemsValue).ToString("#,##0/=")</b></td></tr>
+                                <tr><td> Apply Date</td><td><b>@Convert.ToDateTime(Model.OrderDate).ToString("dd/MM/yyyy")</b></td></tr>
+                                <tr><td>SupplierName</td><td><b>@Model.SupplierName</b></td></tr>
+                                <tr><td>Description</td><td><b>@Model.PrePaymentDesc</b></td></tr>
+                            </table>
+                            <hr />
+                            @using (Html.BeginForm("ReceivingAttachment", "PrePayment", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return validateForm(this);" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.PrePaymentReceivingSummaryId)
+                                <table class="table table-bordered table-hover table-condensed" style="width:80%">
+                                    <thead>
+                                        <tr>
+                                            <th>Document Name</th>
+                                            <th>Ref/No</th>
+                                            <th>Upload</th>
+                                            <th></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td><input type="text" name="DocumentName[]" class="form-control" required style="width:170px" id="DocumentName" /></td>
+                                            <td><input type="text" name="ReferenceNumber[]" class = "form-control" required style = "width:170px" id="ReferenceNumber" /></td>
+                                            <td><input type="file" value="Upload" name="FileName" class = "form-control" required style = "width:170px" id="FileName" /></td>
+                                            <td><a href="javascript:void(0);" class="add_button" title="Add More Fields"><i class="fa fa-plus"></i></a></td>
+                                        </tr>
+                                      
+                                </tbody>
+                                </table>
+                                <div class="field_wrapper">
+
+                                </div>
+
+
+                                <div class="col-md-offset-1">
+                                    <a href="@Url.Action("PrePaymentReceivingList","PrePayment")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    @*<button type="submit" onclick="this.disabled=true;this.form.submit();this.value='Submitting...';" class="btn btn-info" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>*@
+                                    <button type="submit" name="submit" class="btn btn-info" style="margin-right:2px">
+                                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                    </button>
+                                </div>
+                            }
+                        </div>               <br />
+                        <br />
+
+
+                    </div>
+
+                    @*<div class="field_wrapper">
+                        <div>
+                            <input type="text" name="field_name[]" value="" />
+                            <input type="file" value="Upload" name="file_name[]" />
+                            <a href="javascript:void(0);" class="add_button" title="Add field">Add</a>
+                        </div>
+                    </div>*@
+
+                   
+
+                </div>
+            </article>
+
+            
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        var successMessage = false;
+
+        
+        function validateForm(formObj) {
+
+            var DocumentName = $("#DocumentName").val();
+            var ReferenceNumber = $("#ReferenceNumber").val();
+            var FileName = $("#FileName").val();
+
+            if (FileName != '') {
+                var file = document.querySelector("#FileName");
+                if (/\.(pdf?)$/i.test(file.files[0].name) === false) {
+                    swal("Attachment should be in PDF Format");
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    return false;
+                }
+            }
+
+            if (DocumentName == "") {
+                swal("Document Name is required!", { icon: "warning" });
+                //$("#form_submision").prop('disabled', false);
+                //$("#saveLoader").toggle(false);
+                return false;
+            } else if (ReferenceNumber == "") {
+                swal("Reference Number is required!", { icon: "warning" });
+                //$("#form_submision").prop('disabled', false);
+                //$("#saveLoader").toggle(false);
+                return false;
+            }
+
+            else if (FileName == "") {
+                swal("File Name is required!", { icon: "warning" });
+                //$("#form_submision").prop('disabled', false);
+                //$("#saveLoader").toggle(false);
+                return false;
+            }
+           
+            $(".loadingImg").show();
+            formObj.submit.disabled = true;
+            formObj.submit.value = 'Please Wait...';
+            successMessage = true;
+            return true;
+            
+        }
+
+        $(document).ready(function () {
+
+                $('#InvoiceDate').datepicker({
+                    dateFormat: 'mm/dd/yy',
+                    prevText: '<i class="fa fa-chevron-left"></i>',
+                    nextText: '<i class="fa fa-chevron-right"></i>',
+                    onSelect: function (selectedDate) {
+                        $('#InvoiceDate').datepicker('option', 'minDate', selectedDate);
+                    }
+                });
+                $('#DeliveryDate').datepicker({
+                    dateFormat: 'mm/dd/yy',
+                    prevText: '<i class="fa fa-chevron-left"></i>',
+                    nextText: '<i class="fa fa-chevron-right"></i>',
+                    onSelect: function (selectedDate) {
+                        $('#DeliveryDate').datepicker('option', 'minDate', selectedDate);
+                    }
+                });
+                $('#InspectionReportDate').datepicker({
+                    dateFormat: 'mm/dd/yy',
+                    prevText: '<i class="fa fa-chevron-left"></i>',
+                    nextText: '<i class="fa fa-chevron-right"></i>',
+                    onSelect: function (selectedDate) {
+                        $('#InspectionReportDate').datepicker('option', 'minDate', selectedDate);
+                    }
+                });
+            });
+
+            $(document).ready(function () {
+                var maxField = 8; //Input fields increment limitation
+                var addButton = $('.add_button'); //Add button selector
+                var wrapper = $('.field_wrapper'); //Input field wrapper
+                var fieldHTML = '<div id="myDiv">\
+    <table class="table table-bordered table-hover table-condensed" style="width:80%">\
+    <tbody>\
+    <tr>\
+    <td>\
+    <input type="text" name="DocumentName[]" class = "form-control" required style = "width:170px" id="DocumentName"/>\
+    </td>\
+    <td>\
+    <input type="text" class = "form-control" required style = "width:170px" name="ReferenceNumber[]" id="ReferenceNumber"/>\
+    </td>\
+    <td>\
+    <input type="file" class = "form-control" required style = "width:170px" value="Upload" name="FileName" id="FileName"/>\
+    </td>\
+    <td><a href="javascript:void(0);" class="remove_button" title="Remove This Field" >\
+    <i class="fa fa-times"></i>\
+    </a></td>\
+    </tr></tbody></table>\
+    </div>'; //New input field html
+                var x = 1; //Initial field counter is 1
+
+                //Once add button is clicked
+                $(addButton).click(function () {
+                    //Check maximum number of input fields
+                    if (x < maxField) {
+                        x++; //Increment field counter
+                        $(wrapper).append(fieldHTML); //Add field html
+                    }
+                });
+
+                //Once remove button is clicked
+                $(wrapper).on('click', '.remove_button', function (e) {
+                    var elem = document.getElementById("myDiv");
+                    document.getElementById('myDiv').value = "";
+                    elem.remove();
+                    //alert(elem);
+                   // e.preventDefault();
+                   // $(this).parent('div').remove(); //Remove field html
+                    x--; //Decrement field counter
+
+                   
+                });
+            });
+
+
+
+    </script>
+}
+
+
+
+
+
+

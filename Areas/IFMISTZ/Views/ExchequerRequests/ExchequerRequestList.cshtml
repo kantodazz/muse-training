@@ -1,0 +1,348 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ExchequerRequest>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="divLoader"></div>
+<div id="content">
+
+    <div class="row">
+        @*<div class="col-xs-12 col-sm-9 col-md-9 col-lg-9">
+                <h1 class="page-title txt-color-blueDark">
+
+                    <!-- PAGE HEADER -->
+                    <!--
+                    <i class="fa-fw fa fa-pencil-square-o"></i>
+                    Payments
+                    <span>
+                        >
+                        Bills
+                    </span>
+                        -->
+                </h1>
+            </div>*@
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-success btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <!--
+    <div class="alert alert-block alert-success">
+        <a class="close" data-dismiss="alert" href="#">×</a>
+        <h4 class="alert-heading"><i class="fa fa-check-square-o"></i> Check validation!</h4>
+        <p>
+            You may also check the form validation by clicking on the form action button. Please try and see the results below!
+        </p>
+    </div>
+        -->
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2> Exchequer Requests </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+
+                            <table id="dt_basic" class="table table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>
+                                            Gl Account
+                                        </th>
+                                        <th>
+                                            Expenditure Amount
+                                        </th>
+                                        <th>
+                                            Budget Balance
+                                        </th>
+                                        <th>
+                                            Status
+                                        </th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!--Start of delete confirmation modal section-->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-danger" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm Cancel</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p class="success-message">Are you sure you want to cancel this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info confirm-confirm">Yes</button>
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+<!--Start of details modal section-->
+<div class="modal fade" id="modal-details" tabindex="-1" role="dialog" aria-labelledby="lbl-modal">
+    <div class="modal-dialog" style="width: 80%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lbl-modal-details">Receipt Details</h4>
+            </div>
+            <div class="modal-body" id="modal-details-body" style="padding: 0px">
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-info" id="btnSave">Confirm</button>
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of details modal section-->
+
+@section pagespecific {
+    <script type="text/javascript">
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetExchequers", "ExchequerRequests")';
+            $("#dt_basic").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerParams": function (aoData) {
+                    aoData.push({ "name": "overallStatus", "value": "Pending" });
+                },
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "GlAccountGlAccountDesc" },
+                    {
+                        data: 'ExpenditureAmount',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    {
+                        data: 'BudgetBalance',
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "ExchequerRequestId",
+                        "bSortable": false,
+                        "render": function (Id, type, full, meta) {
+                            return '<div class="btn-group">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret" ></span>\
+                                <span class="sr-only">Toggle Dropdown</span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                <li><a class="dropdown-item" href="@Url.Action("ExchequerRequestsDetails", "ExchequerRequests")/' + Id + '">Details</a><li>\
+                                <li><a class="dropdown-item" href="#" onclick="submitReallocation('+ Id + ')">Request Exchequer</a><li>\
+                                <li><a class="dropdown-item" href="@Url.Action("UserRoles", "Manage")/'+ Id + '">Request Reallocation</a><li>\
+                             </ul>'
+                        }
+                    },
+                ]
+            });
+        };
+
+        var submitReallocation = function (id) {
+             var url = '@Url.Action("SubmitReallocations", "ExchequerRequests")';
+            swal({
+                title: "Submission",
+                text: "Are you sure you want to request exchequer",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    $("#divLoader").show();
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "Success") {
+                                swal("Exchequer Requested Successfully!", { icon: "success" }).then((e) => {
+                                    window.location.reload();
+                                });
+                            } else if (response == "Invalid Json File") {
+                                   swal("Invalid File Format!", { icon: "info" }).then((e) => {
+                                });
+                            }
+                            else if (response == "Failed to send request") {
+                                swal("Failed to send request!", { icon: "info" }).then((e) => {
+                                });
+                            }
+                        },
+                        error: function (xhr) {
+                            swal("An error occurred while processing your request, try again later", { icon: "error" }).then((e) => {
+                                window.location.reload();
+                            });
+                        },
+                        complete: function () {
+                            $("#divLoader").hide();
+                        }
+                    });
+                }
+            });
+        };
+
+        var transferDetails = function (id) {
+            $("#divLoader").show();
+            $("#btnSave").hide();
+            var url = '@Url.Action("TransferDetails", "FundTransfers")/' + id;
+
+            if ($('.modal-header').hasClass('alert-danger')) {
+                $('.modal-header').removeClass('alert-danger').addClass('alert-info');
+            }
+
+            $('.modal-header').html('').html('Transfer Details');
+            $("#modal-details-body").load(url, function () {
+                $("#modal-details").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+                $("#divLoader").hide();
+            });
+        };
+
+        var cancelTransfer = function (id) {
+            swal({
+                title: "Confirmation",
+                text: "Are you sure you want to cancel this transfer?",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+            if (!isConfirm) {
+            $("#divLoader").show();
+            var url = '@Url.Action("DeleteFundTransfer", "FundTransfers")';
+            $.ajax({
+                url: url,
+                data: { id: id },
+                type: "POST",
+                success: function (response) {
+                    if (response) {
+                        if (response == "Success") {
+                            swal("Fund transfer cancelled successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.reload();
+                                });
+                        }
+                    }
+                },
+                error: function (err) {
+                        swal("An error occured while processing your request, try again later", { icon: "error" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+            }
+            });
+        };
+
+        var viewReason = function (id) {
+            var url = '@Url.Action("ViewTransferRejection", "FundTransfers")';
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    if (response[0] == "Success") {
+                        $(".modal-body #RejectionReason").val(response[1]);
+                        $("#ViewReasonModal").modal("show");  // show modal
+                    }
+                    else if (response[0] == "DbException") {
+                        swal("An error has occured, contact system support" + response[1]);
+                        $("#divLoader").hide();
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            })
+        };
+    </script>
+}

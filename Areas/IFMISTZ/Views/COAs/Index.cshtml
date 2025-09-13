@@ -1,0 +1,182 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.COA>
+
+@{
+    ViewBag.Title = "Index";
+}
+<style>
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+
+        </div>
+    </div>
+
+
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>COA Lists</h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                      
+                        <div class="widget-body">
+                            <div class="form-horizontal">
+
+                                <div class="row" style="padding-top:1%;padding-bottom:2%;">
+                                    <div class="col-md-6">
+                                        <a href='@Url.Action("Create", "Coas")' class="btn btn-info" style="width:auto;color:black">
+                                            <i class="fa fa-plus"></i>Add New
+                                        </a>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="search-container submit-btn" style="float:right;">
+                                            <i class="fa fa-search search-icon"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                        </div>
+                                    </div>
+                                </div>
+
+
+                                <div class="widget-body no-padding">
+                                    <table id="dt_basic" class="table table-condensed table-bordered table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>ID</th>
+                                                <th style="width:200px"> GLAccount</th>
+                                                <th>GLAccount Description</th>
+                                               <th style="width:200px">Action</th>
+
+                                            </tr>
+
+                                        </thead>
+
+
+                                    </table>
+
+
+                                </div>
+
+
+
+                                <hr class="simple" />
+
+                            </div>
+                        </div>
+                   
+                    </div>
+                    
+                </div>
+              
+            </article>
+         
+        </div>
+
+    </section>
+ 
+</div>
+
+
+<!-- END MAIN CONTENT -->
+@section pagespecific{
+       <script type="text/javascript">
+        var dt_basic = $('#dt_basic').dataTable();
+        $("#dt_basic_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_basic.fnClearTable();
+            } else {
+                searchPayeeTableUpdate(this.value);
+            }
+        });
+
+        function searchPayeeTableUpdate(search) {
+            var url = '@Url.Action("GetCoatable", "COAs")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_basic.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var editUrl = '@Url.Action("Edit", "Coas")/' + data[i]["CoaId"];
+                        var detailUrl = '@Url.Action("Details", "Coas")/' + data[i]["CoaId"];
+                        var delelUrl = '@Url.Action("Delete", "Coas")/' + data[i]["CoaId"];
+                        dt_basic.fnAddData([i,
+                           data[i]["GlAccount"],
+                           data[i]["GlAccountDesc"],
+                          '<div class="btn-group">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="' + editUrl + '" >Edit</a></li>\
+                             <li><a href="' + detailUrl + '" >Details</a></li>\
+                             <li><a href="' + delelUrl + '" >Delete</a></li>\
+                        </ul>\
+                       </div>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+
+    }
+
+
+
+
+
+

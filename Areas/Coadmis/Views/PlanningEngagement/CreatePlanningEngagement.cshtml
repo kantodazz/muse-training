@@ -1,0 +1,3218 @@
+﻿
+@{@model IFMIS.Areas.Coadmis.Models.EngagementVM
+ViewBag.Title = "Engagement Assignment";
+Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+
+    tr.group,
+    tr.group:hover {
+        background-color: #ddd !important;
+    }
+
+    body {
+        margin-top: 40px;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+
+    button#saveAnswerForm {
+        margin-left: 90%;
+    }
+
+    .swal-modal .swal-text {
+        text-align: center;
+    }
+
+    a:hover, a:focus {
+        text-decoration: none;
+        outline: none;
+    }
+
+    /*.tabs-left li.active {
+        background-color: #5bc0de;
+    }
+
+        .tabs-left li.active a:after {
+            content: "";
+            width: 30px;
+            height: 30px;
+            background: linear-gradient(225deg,#5bc0de 49%, transparent 50%);
+            position: absolute;
+            top: 50%;
+            right: -16px;
+            transform: translateY(-50%) rotate(45deg);
+        }
+
+    .tab-content li.active a:after {
+        content: "";
+        width: 30px;*/
+        /* height: 30px; */
+        /*background: linear-gradient(225deg,#5bc0de 30%, transparent 50%);*/
+        /* position: absolute; */
+        /* align-content: center; */
+        /* top: 50%; */
+        /* right: -16px; */
+        /*transform: translateY(-50%) rotate(135deg);
+    }
+
+    .nav-tabs > li > a {
+        border-radius: 15px;
+        color: #333;
+    }*/
+
+</style>
+
+@*<link href="~/Areas/Coadmis/Scripts/chosen.min.css" rel="stylesheet" />*@
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title For: @Model.EngagementName | @Model.EngagementRefNo</h2>
+                    </header>
+
+                    @Html.HiddenFor(model => model.EngagementId)
+                    @Html.HiddenFor(model => model.ClientInformationId)
+                    @*@ViewBag.PlanningEngagementId*@
+                    @*@Html.TextAreaFor(model => model.PlanningEngagementId)*@
+                    @*<div class="alert alert-info fade in">
+                            <button class="close" data-dismiss="alert">x</button>
+                            <i class="fa-fw fa fa-info"></i>
+                            Engagement Name: @Model.EngagementName | @Model.EngagementRefNo
+                        </div>*@
+                    <br />
+                    <div class="widget-body">
+                        <div class="row">
+                            <div class="tabs-left">
+                                <ul class="nav nav-tabs tabs-left" id="Planning">
+                                    <li class="active"><a href="#tab-r1" data-toggle="tab"><i class="fa fa-fw fa-lg fa-folder-o" aria-hidden="true"></i>General Audit Strategy</a></li>
+                                    <li><a href="#tab-r2" data-toggle="tab"><i class="fa fa-fw fa-lg fa-circle-o-notch" aria-hidden="true"></i>Preliminary Analytical Procedure</a></li>
+                                    @if (Model.TrendAnalysisStageStatus != "NullValue")
+                                    {
+                                        <li><a href="#tab-r3" data-toggle="tab"><i class="fa fa-fw fa-lg fa-paper-plane-o" aria-hidden="true"></i>Risk Assessment</a></li>
+                                        <li><a href="#tab-r4" data-toggle="tab"><i class="fa fa-fw fa-lg fa-child" aria-hidden="true"></i>Member Assignment</a></li>
+                                        <li><a href="#tab-r5" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tasks"></i> Planning Issues</a></li>
+                                        <li><a href="#tab-r6" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tags"></i> Quality Control</a></li>
+
+                                    }
+                                    @*@if (Model.FinancialRiskStatus == "Completed")
+                                        {
+                                            <li><a href="#tab-r4" data-toggle="tab"><i class="fa fa-fw fa-lg fa-child" aria-hidden="true"></i>Member Assignment</a></li>
+                                            <li><a href="#tab-r5" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tasks"></i> Planning Issues</a></li>
+                                            <li><a href="#tab-r6" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tags"></i> Quality Control</a></li>
+                                        }*@
+                                    @*@if (Model.RiskSummaryStatus == "NotNullValue")
+                                        {*@
+                                    @*<li><a href="#tab-r4" data-toggle="tab"><i class="fa fa-fw fa-lg fa-child" aria-hidden="true"></i>Member Assignment</a></li>
+                                        <li><a href="#tab-r5" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tasks"></i> Planning Issues</a></li>
+                                        <li><a href="#tab-r6" data-toggle="tab"><i class="fa fa-fw fa-lg fa-tags"></i> Quality Control</a></li>*@
+                                    @*}*@
+                                </ul>
+
+                                <div class="tab-content">
+                                    <div class="tab-pane active" id="tab-r1">
+                                        <div class="row">
+                                            @Html.Partial("_GeneralAuditStrategy")
+
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-r2">
+                                        <div class="row">
+                                            @Html.Partial("_PreAnalyticalProcedure")
+
+                                        </div>
+                                    </div>
+                                    @*@if (Model.TrendAnalysisStageStatus != "NullValue")
+                                        {*@
+
+                                    <div class="tab-pane" id="tab-r3">
+                                        <div class="row">
+                                            @Html.Partial("_RiskAssessment")
+                                        </div>
+                                    </div>
+                                    @*}
+                                        @if (Model.FinancialRiskStatus == "Completed") {*@
+                                    <div class="tab-pane" id="tab-r4">
+                                        <div class="row">
+                                            @Html.Partial("_MemberAssignment")
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-r5">
+                                        <div class="row">
+                                            @Html.Partial("_PlanningIssues")
+                                        </div>
+                                    </div>
+                                    <div class="tab-pane" id="tab-r6">
+                                        <div class="row">
+                                            @Html.Partial("_QualityControl")
+                                        </div>
+                                    </div>
+                                    @*}*@
+
+                                </div>
+
+                            </div>
+
+
+                        </div>
+                        <div class="form-actions row" style="margin: 10px">
+                            <div class="col-md-1">
+                                <a class="btn btn-default" href='@Url.Action("PlanningengagementList", "PlanningEngagement")'><i class="fa fa-fw fa-lg fa-backward"></i>Back</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="AddEstimateModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Review Account Estimate </h3>
+            </div>
+            <div class="modal-body" style="overflow-x: auto;">
+                <div class="form-horizontal">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Account Estimate<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                <select id="AccountEstimateId" name="AccountEstimateId" class="form-control select2" required="required">
+                                    <option value="">Select Account Estimate</option>
+                                    @foreach (var item in Model.AccountEstimateList)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <label class="control-label col-md-2">Risk Assessment<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.DropDownList("OverallRiskAssessment", new List<SelectListItem>{
+                                                        new SelectListItem{ Text="--Select Answer Type ---", Value = "" },
+                                                        new SelectListItem{ Text="High", Value = "High" },
+                                                        new SelectListItem{ Text="Medium", Value = "Medium" },
+                                                        new SelectListItem{ Text="Low", Value = "Low" },
+                                                        }, new { @class = "form-control select2", @required = "required" })
+                                @Html.ValidationMessageFor(model => model.OverallRiskAssessment, "", new { @class = "text-danger" })
+
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Previous Year Amount<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.PreYearAmount, new { @Class = "input", @required = "required", @type = "number", @min = "0", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+
+                            <label class="control-label col-md-2">Current Year Amount<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.CurYearAmount, new { @Class = "input", @required = "required", @type = "number", @min = "0", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.AuditApproach, htmlAttributes: new { @class = "control-label col-md-2 required" })
+                            (<span style="font-weight:bold;" id="AuditApproachCount">250</span>)
+                            <div class="col-md-8">
+                                @Html.TextAreaFor(model => model.AuditApproach, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+                                @Html.ValidationMessageFor(model => model.AuditApproach, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.DegreeOfestimationncertainty, htmlAttributes: new { @class = "control-label col-md-2 required" })
+                            (<span style="font-weight:bold;" id="UncertintyCount">250</span>)
+                            <div class="col-md-8">
+                                @Html.TextAreaFor(model => model.DegreeOfestimationncertainty, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+                                @Html.ValidationMessageFor(model => model.DegreeOfestimationncertainty, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Method<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.Method, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" id="btnSaveAccountEst" style="margin-bottom:10px">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="margin-bottom:10px">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="AddReviewInternalCtlModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Review Internal Control </h3>
+            </div>
+            <div class="modal-body" style="overflow-x: auto;">
+                <div class="form-horizontal">
+                    <div class="col-sm-12">
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Account Estimate<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                <select id="AccountEstimateId" name="AccountEstimateId" class="form-control select2" required="required">
+                                    <option value="">Select Account Estimate</option>
+                                    @foreach (var item in Model.AccountEstimateList)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                            <label class="control-label col-md-2">Risk Assessment<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.DropDownList("OverallRiskAssessment", new List<SelectListItem>{
+                                                        new SelectListItem{ Text="--Select Answer Type ---", Value = "" },
+                                                        new SelectListItem{ Text="High", Value = "High" },
+                                                        new SelectListItem{ Text="Medium", Value = "Medium" },
+                                                        new SelectListItem{ Text="Low", Value = "Low" },
+                                                        }, new { @class = "form-control select2", @required = "required" })
+                                @Html.ValidationMessageFor(model => model.OverallRiskAssessment, "", new { @class = "text-danger" })
+
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Previous Year Amount<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.PreYearAmount, new { @Class = "input", @required = "required", @type = "number", @min = "0", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+
+                            <label class="control-label col-md-2">Current Year Amount<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.CurYearAmount, new { @Class = "input", @required = "required", @type = "number", @min = "0", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+                        </div>
+
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.AuditApproach, htmlAttributes: new { @class = "control-label col-md-2 required" })
+                            (<span style="font-weight:bold;" id="AuditApproachCount">250</span>)
+                            <div class="col-md-8">
+                                @Html.TextAreaFor(model => model.AuditApproach, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+                                @Html.ValidationMessageFor(model => model.AuditApproach, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            @Html.LabelFor(model => model.DegreeOfestimationncertainty, htmlAttributes: new { @class = "control-label col-md-2 required" })
+                            (<span style="font-weight:bold;" id="UncertintyCount">250</span>)
+                            <div class="col-md-8">
+                                @Html.TextAreaFor(model => model.DegreeOfestimationncertainty, new { maxlength = 250, @class = "form-control", @rows = 2, @cols = 2 })
+                                @Html.ValidationMessageFor(model => model.DegreeOfestimationncertainty, "", new { @class = "text-danger" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Method<span class="redStar">*</span></label>
+                            <div class="col-md-3">
+                                @Html.TextBoxFor(model => model.Method, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" id="btnSaveAccountEst" style="margin-bottom:10px">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="margin-bottom:10px">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="modalEditAccountEst" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Edit Account Estimate</h3>
+            </div>
+            <div class="modal-body" id="modalEditAccountEstBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="updateByEditAccountEstimate">
+                    <i class="fa fa-save"> Update</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="ReviewOfInternalControl" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Review of Internal Control</h3>
+            </div>
+            <div class="modal-body" id="modalReviewInternalControlBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="reviewInternalControl">
+                    <i class="fa fa-save"> Review</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="noteToAccount" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Add Note To Accounts</h3>
+            </div>
+            <div class="modal-body" id="noteToAccountBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addNewNoteToAccounts">
+                    <i class="fa fa-save"> Add</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="riskAssertion" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Risk Assertion</h3>
+            </div>
+            <div class="modal-body" id="riskAssertionBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addRiskAssertionData">
+                    <i class="fa fa-save"> Save</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="performance" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Justification </h3>
+            </div>
+            <div class="modal-body" id="performanceBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addperformanceData">
+                    <i class="fa fa-save"> Save</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="sampleSizeId" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Sample Size </h3>
+            </div>
+            <div class="modal-body" id="sampleBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="SampleSizeModal">
+                    <i class="fa fa-save"></i>Save
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="summaryComment" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Add Justification For Risk</h3>
+            </div>
+            <div class="modal-body" id="summaryCommentBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addSummaryCommentData">
+                    <i class="fa fa-save"> Save</i>
+                </button>
+                <button class="btn btn-info" id="saveRiskAssertationForm">
+                    <i class="fa fa-save"> Save</i>
+                </button>
+                <button class="btn btn-info" id="saveRiskForm">
+                    <i class="fa fa-save"> Save</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="trendAnalysis" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Add Comments</h3>
+            </div>
+            <div class="modal-body" id="trendAnalysisBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addCommentsToTrend">
+                    <i class="fa fa-save"> Add</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="estmateCostData" class="modal fade" style="left:4%">
+    <div class="modal-dialog" style="width:70%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header alert alert-info">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h3 class="modal-title">Add Estimate Cost</h3>
+            </div>
+            <div class="modal-body" id="estimateHrsBody"></div>
+            <div class="modal-footer">
+
+                <button class="btn btn-info" id="addEstimateCost">
+                    <i class="fa fa-save"> Add</i>
+                </button>
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa fa-times"> Close</i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--New Implementation-->
+<!----------- Search  Items ----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Add Note To Accounts</h3>
+            </div>
+            <div class="modal-body">
+                <table id="dt_noteToAccount" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                    <thead>
+                        <tr>
+                            <th> #</th>
+                            <th>Auditable Item</th>
+                            <th>Previous Year Amount</th>
+                        </tr>
+                    </thead>
+                </table>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btn_save_gl_items">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--bStart of Assignment of Member and Create Lead Schedule-->
+<div class="modal fade" id="AddMemberLeadSchedulModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Assign Member with Lead Schedule </h3>
+            </div>
+            <div class="modal-body" style="overflow-x: auto;">
+                <div class="form-horizontal">
+                    <div class="col-sm-12">
+                        @Html.HiddenFor(model => model.EngagementId)
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Member<span class="redStar">*</span></label>
+                            <div class="col-md-8">
+                                <select id="UserId" name="UserId" class="form-control select2" required="required">
+                                    <option value="">Select Full Name</option>
+                                    @foreach (var item in Model.MemberAssignList)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label col-md-2">Auditable Area<span class="redStar">*</span></label>
+                            <div class="col-md-8">
+                                <select id="AuditableAreaId" name="AuditableAreaId" class="form-control select2" required="required">
+                                    <option value="">Select Auditable Area</option>
+                                    @foreach (var item in Model.AuditableAreaAssignList)
+                                    {
+                                        <option value="@item.Value">@item.Text</option>
+                                    }
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group" id="auditableitemList" style="display: none">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10">
+                                <table class='table table-striped table-bordered table-hover'>
+                                    <thead>
+                                        <tr>
+                                            <td><strong>#</strong></td>
+                                            <td><strong>Auditable Item</strong> </td>
+                                            <td><strong>Previous Amount</strong> </td>
+                                            <td><strong>Current Amount</strong> </td>
+                                            <td><strong>Assign</strong> <input type="checkbox" name="checkAll" class="auditableAreaMemberAssignCheckAll" /></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemToAssignlist">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" id="btnSaveAssignment" style="margin-bottom:10px">
+                        <i class="fa fa-save"></i> Add
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="margin-bottom:10px">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!--Add Auditable Item by using selected auditable Area into Lead Schedule-->
+<div class="modal fade" id="AddAuditableItemBySelectedAuditableArea" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Assign Member with Lead Schedule </h3>
+            </div>
+            <div class="modal-body" style="overflow-x: auto;">
+                <div class="form-horizontal">
+                    <div class="col-sm-12">
+                        @*<span id="auditableAreaId" style="display: none"></span>
+                            <span id="userId" style="display:none"></span>*@
+                        @Html.HiddenFor(model => model.SelectedAuditableItemId)
+                        @Html.HiddenFor(model => model.SelectedUserId)
+                        @*/// @Html.HiddenFor(model => model.EngagementId)*@
+                        <div class="form-group" id="auditableitemListSecond">
+                            <div class="col-md-1"></div>
+                            <div class="col-md-10">
+                                <table class='table table-striped table-bordered table-hover'>
+                                    <thead>
+                                        <tr>
+                                            <td><strong>#</strong></td>
+                                            <td><strong>Auditable Item</strong> </td>
+                                            <td><strong>Previous Amount</strong> </td>
+                                            <td><strong>Current Amount</strong> </td>
+                                            <td><strong>Assign</strong> <input type="checkbox" name="checkAll" class="auditableAreaMemberAssignCheckAll" /></td>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="itemToAssignlistSecond">
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div class="col-md-1"></div>
+                        </div>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-info" id="btnSaveItemAssignment" style="margin-bottom:10px">
+                        <i class="fa fa-save"></i> Add
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal" style="margin-bottom:10px">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Add Meeting Notes to Planning-->
+<div class="modal fade" id="AddNotePlnMeetingModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Planning Meeting Notes </h3>
+            </div>
+            <div class="modal-body" style="overflow-x: auto;">
+                <div class="row">
+                    <div class="col-sm-6">
+                        <div style="padding-left:5%;padding-right:1%">
+                            <table style="margin-left: 2%;padding:4px;width:700px">
+                                <tr>
+                                    <td>
+                                        Attachment Name
+                                        <i class="fa fa-times" style="color:white" id="Name_1"></i>
+                                    </td>
+                                    <td>
+                                        File
+                                    </td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td style="width:700px">
+                                        <div class="col-md-8" style="width:500px;">
+                                            <select id="Attachment" name="Attachment" class="form-control select2" required="required">
+                                                <option value="">Select Attachment Type</option>
+                                                @foreach (var item in Model.AttachementList)
+                                                {
+                                                    <option value=@item.Value>@item.Text</option>
+                                                }
+                                            </select>
+
+                                        </div>
+                                    </td>
+                                    <td style="width:50px"></td>
+                                    <td style="width:600px">
+                                        <div class="name-input-container">
+                                            <input type="file" class="form-control" style="width:300px;" name="FileName" id="FileName" accept=".pdf" />
+                                        </div>
+                                    </td>
+
+                                    <td style="width:50px"></td>
+                                    <td style="width:600px">
+                                        <div class="name-input-container">
+                                            <a class="btn btn-info" href="#" id="saveAttachments" onclick="addAttachmentsz()">
+                                                <i class="glyphicon glyphicon-plus"></i>Add
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <br />
+                <div id="divAttachments"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--End of Assignment of Member-->
+@section pagespecific {
+    @*<script src="~/Scripts/chosen.jquery.min.js"></script>*@
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        //$(function () {
+        //    $("#PreYearAmount").autoNumeric("init");
+        //    $("#CurYearAmount").autoNumeric("init");
+        //});
+
+        $(function () {
+            $('#AccountEstimateId').select2({
+                dropdownParent: $('#AddEstimateModal')
+            });
+           /// $("#dt_ebasic").DataTable();
+        });
+
+        $(document).ready(function () {
+            $('#hide-menu > span > a').trigger('click');
+        });
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            localStorage.setItem('lastTab', $(this).attr('href'));
+        });
+        var lastTab = localStorage.getItem('lastTab');
+
+        if (lastTab) {
+            $('[href="' + lastTab + '"]').tab('show');
+            if (lastTab = "#tab-r2") {
+                $("#divLoader").show();
+                $("#divLoader").hide();
+            } if (lastTab = "#tab-r3") {
+                $("#divLoader").show();
+                $("#divLoader").hide();
+            } if (lastTab = "#tab-r4") {
+                $("#divLoader").show();
+                $("#divLoader").hide();
+            } if (lastTab = "#tab-r5") {
+                $("#divLoader").show();
+                $("#divLoader").hide();
+            } if (lastTab = "#tab-r6") {
+                $("#divLoader").show();
+                $("#divLoader").hide();
+            }
+        }
+
+         var inValidScores = [];
+        function validateForm(formObj) {
+            debugger;
+            $(".loadingImg").show();
+            formObj.submit.disabled = true;
+            formObj.submit.value = 'Please Wait...';
+            successMessage = true;
+            console.log(formObj);
+
+            $("#saveAnswerForm").prop('disabled', true);
+        }
+
+        var response = '@TempData["Response"]';
+        debugger;
+        switch (response) {
+
+            case "UnderstandingClientSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Understand Client saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId' +'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "UnderstandingClientError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("An error occur during saving Understand Client Questionnaire, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId' +'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "UnderstandingTheClientValidationError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Please answer All Questionnaire", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId' +'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "InternalControlSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Internal Control Questionnaire saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "InternalControlError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("An error occur during saving Internal Control Questionnaire, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+
+            case "GeneralIntControlSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("General Internal Questionnaire saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "GeneralIntControlError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving General Internal Questionnaire, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "PreAnalyticalProcSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Preliminary Analytical Procedures saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "PreAnalyticalProcError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Preliminary Analytical Procedures, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "AuditAdminSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Audit Administration saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "AuditAdminError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Audit Administration, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "QualityCtrSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Quality Control saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "QualityCtrError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Quality Control, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+
+            case "OtherPlnIssueSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Other Planning Issues saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "OtherPlnIssueError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Other Planning Issue, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "FraudRFactorSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Risk Fraud Factor saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "FraudRFactorError":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Risk Fraud Factor, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "PlanningMeetingChkSuccess":
+                 $("#saveAnswerForm").prop('disabled', false);
+                 swal("Planning Meeting CheckList saved successfully", { icon: "success" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            case "PlanningMeetingChkError":
+                $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur during saving Planning Meeting CheckList, Please Contact System Support", { icon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")';
+                    var new_url = url + "?id=" + '@ViewBag.PlanningEngagementId'+'&clientYearEnd=' + '@ViewBag.ClientFinancialYear';
+                    window.location.replace(new_url);
+                });
+                break;
+            @*case "Error":
+                 $("#saveAnswerForm").prop('disabled', false);
+                swal("An error occur, Please Contact System Support", { iscon: "warning" })
+                .then((value) => {
+                    var url = '@Url.Action("CreatePreliminaryAnalysis", "PreliminaryAnalysis")';
+                    var new_url = url + "?id=" + '@ViewBag.PreliminaryAnalysisId';
+                    window.location.replace(new_url);
+                });
+                break;*@
+
+        }
+
+        function AllowSingleSelection(checkboxObject) {
+            var getQuestion = checkboxObject.value;
+            var question = getQuestion.substring(0, getQuestion.indexOf('_'));
+            //Get the parent control of checkbox which is the checkbox list
+            var checkboxObjectList = checkboxObject.parentNode.parentNode.parentNode;
+            //Get the checkbox controls in checkboxlist
+            var checkboxControls = checkboxObjectList.getElementsByTagName("input");
+            //Loop through each check box controls
+            for (var i = 0; i < checkboxControls.length; i++) {
+                //Check the current checkbox is not the one user selected
+                if (checkboxControls[i] != checkboxObject && checkboxObject.checked &&
+                    question == checkboxControls[i].value.substring(0, checkboxControls[i].value.indexOf('_'))) {
+                    //Uncheck all other checkboxes
+                    checkboxControls[i].checked = false;
+                }
+            }
+        }
+        //////Clear script after Questionnaire Implemen
+
+        //$("#PreYearAmount").autoNumeric('init');
+        //$("#CurYearAmount").autoNumeric('init');
+
+        // Order by the grouping
+        $('#example tbody').on('click', 'tr.group', function () {
+            var currentOrder = table.order()[0];
+            if (currentOrder[0] === groupColumn && currentOrder[1] === 'asc') {
+                table.order([groupColumn, 'desc']).draw();
+            } else {
+                table.order([groupColumn, 'asc']).draw();
+            }
+        });
+
+        //Count input char
+        $('#AuditApproach').on("keyup", function () {
+            var count = $('#AuditApproach').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#AuditApproachCount').text(parseInt(numChars));
+        });
+
+        //Count input char
+        $('#Method').on("keyup", function () {
+            var count = $('#Method').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#UncertintyCount').text(parseInt(numChars));
+        });
+
+
+        //$(document).ready(function () {
+        //    $('#example').DataTable();
+        //});
+
+        //$("#saveAnswerForm").click(function (){
+        //    debugger;
+        //    var data = example.DataTable().rows().data();
+        //});
+
+
+
+        //function ReviewInternalControl() {
+        //    $("#ReviewOfInternalControl").modal("show");
+        //}
+
+        function AddAccountEstimate() {
+            $("#AddEstimateModal").modal("show");
+        }
+
+        $("#btnSaveAccountEst").click(function () {
+            debugger;
+            var accountEstimateId = $("#AccountEstimateId").val();
+            var overallRiskAssessment = $("#OverallRiskAssessment").val();
+            var preYearAmount = $("#PreYearAmount").val();
+            var curYearAmount = $("#CurYearAmount").val();
+            var auditApproach = $("#AuditApproach").val();
+            var estimateUncertainty = $("#DegreeOfestimationncertainty").val();
+            var method = $("#Method").val();
+
+
+            if (accountEstimateId == '' || overallRiskAssessment == ''
+                || preYearAmount == '' || curYearAmount == '' || auditApproach == ''
+                || estimateUncertainty == '' || method=='' ) {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AccountEstimateId", $("#AccountEstimateId").val());
+            formdata.append("OverallRiskAssessment", $("#OverallRiskAssessment").val());
+            formdata.append("PreYearAmount", $("#PreYearAmount").val());
+            formdata.append("CurYearAmount", $("#CurYearAmount").val());
+            formdata.append("AuditApproach", $("#AuditApproach").val());
+            formdata.append("EngagementId", $("#EngagementId").val());
+            formdata.append("ClientInformationId", $("#ClientInformationId").val());
+            formdata.append("DegreeOfestimationncertainty", $("#DegreeOfestimationncertainty").val());
+            formdata.append("Method", $("#Method").val());
+
+            $("#btnSaveAccountEst").prop('disabled', true);
+            $("#divLoader").toggle(true);
+            var url = '@Url.Action("SaveAccountEstimates", "Engagement")';
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log('response', response)
+                    $("#btnSaveAccountEst").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Dublicate") {
+                        swal("Dublicate Estimate!", { icon: "warning" })
+                            .then((value) => {
+                                return false;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#btnSaveAccountEst").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        ///Review of Internal Control
+        //function AddReviewInternalControl() {
+        //    $("#AddReviewInternalCtlModal").modal("show");
+        //}
+        var AddReviewInternalControl = function () {
+            debugger
+            var id = $("#EngagementId").val();
+            @*var url = '@Url.Action("GetInternalControlData", "Engagement")';
+            url += '?id=' + id + '&engId=' + engId;*@
+
+            var url = '@Url.Action("GetInternalControlData", "Engagement")';
+            url += '?id=' + id;
+           $("#reviewInternalControl").show();
+            $("#modalReviewInternalControlBody").load(url, function () {
+                $("#ReviewOfInternalControl").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        $("#divLoader").toggle(false);
+        $("#addEngTeamMember").click(function () {
+            debugger;
+            var auditorId = $("#AuditorId").val();
+            var engagementId = $("#EngagementId").val();
+            var engagementRoleId = $("#EngagementRoleId").val();
+
+            if (auditorId == '' || engagementId == '' || engagementRoleId=='') {
+                swal("Please Fill All the required Fields", {icon: "warning"});
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AuditorId", $("#AuditorId").val());
+            formdata.append("AuditorName", $("#select2-chosen-1").text());
+            formdata.append("EngagementId", $("#EngagementId").val());
+            formdata.append("EngagementRoleId", $("#EngagementRoleId").val());
+            formdata.append("MemberLevel", $("#select2-chosen-2").text());
+
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveEngagementTeamMember", "Engagement")';
+            @*var urlReturn = '@Url.Action("engagementassignment", "Engagement")/?id=' + engagementId;*@
+            $("#saveEngagementForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log('response', response)
+                    $("#saveEngagementForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                /*window.location.href = urlReturn;*/
+                                window.location.reload();
+                            });
+                    } else if(response =="Dublicate") {
+                        swal("Dublicate Team Member Registered!", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response =="Existing") {
+                        swal("Team Member already Registered!", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response =="Role Existing") {
+                        swal("Only one Member with Team Leader Role!", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveEngagementForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        })
+
+
+        function RemoveMember(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveSelectedMember(id);
+                }
+            });
+        }
+
+        function RemoveSelectedMember(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedMember", "Engagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Member Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function RemoveAccountEst(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveSelectedAccountEst(id);
+                }
+            });
+        }
+
+        function RemoveSelectedAccountEst(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedAccountEstimate", "Engagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Estimate Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        var EditAccountEst = function (id) {
+            debugger
+            var url = '@Url.Action("GetToEditAccountEst", "Engagement")/' + id;
+           $("#updateByAdd").hide();
+           $("#updateByEdit").show();
+            $("#modalEditAccountEstBody").load(url, function () {
+                $("#modalEditAccountEst").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        var ReviewInternalControl = function (id) {
+            debugger
+            var engId = $("#EngagementId").val();
+            var url = '@Url.Action("GetInternalControlData", "Engagement")';
+            url += '?id=' + id + '&engId=' + engId;
+           $("#reviewInternalControl").show();
+            $("#modalReviewInternalControlBody").load(url, function () {
+                $("#ReviewOfInternalControl").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        var AddNoteToAccount = function (id,fy) {
+            debugger
+            $("#divLoader").toggle(true);
+            var clientId = $("#ClientInformationId").val();
+           var url = '@Url.Action("GetAuditableItemData", "Engagement")';
+            url += '?id=' + id + '&fy='+fy + '&clId=' + clientId;
+            $("#addNewNoteToAccounts").show();
+            $("#divLoader").toggle(false);
+            $("#noteToAccountBody").load(url, function () {
+                $("#noteToAccount").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+
+
+
+        var AddComments = function (id) {
+            debugger
+
+           var url = '@Url.Action("GetTrendAnalysisMovement", "PlanningEngagement")';
+           url += '?id=' + id;
+           $("#addCommentsToTrend").show();
+            $("#trendAnalysisBody").load(url, function () {
+                $("#trendAnalysis").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+
+        var AddEstimateBudget = function (id) {
+            debugger
+
+           var url = '@Url.Action("GetAuditableAreaEst", "PlanningEngagement")';
+           url += '?id=' + id;
+           $("#addEstimateCost").show();
+            $("#estimateHrsBody").load(url, function () {
+                $("#estmateCostData").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+
+
+
+        //function AddNoteToAccount(id) {
+        //    debugger;
+        //    updateNotToAccountTable(id);
+        //    $('#glItemsModal').modal('show');
+        //}
+
+        //var dt_noteToAccount = $('#dt_noteToAccount').dataTable({
+        //    "language": {
+        //        "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+        //        "zeroRecords": "No matching records found"
+        //    },
+        //});
+
+
+        function updateNotToAccountTable(id) {
+            $("#loader").text("Loading Please Wait...")
+            debugger;
+            //var subvote = $("#departmentCode").val();
+            //var distributionfinancialYear = $("#distributionfinancialYear").val();
+
+            var url = '@Url.Action("GetAuditableItem", "Engagement")';
+            var params = { "id": id };
+
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_noteToAccount.fnClearTable();
+                    for (var i = 1; i < data.length; i++) {
+                        //var emb = data[i]["FundingRefNo"];
+                        dt_noteToAccount.fnAddData([i,
+                            data[i]["AuditableItemName"],
+                            '<amount-input type="text" placeholder="Amount" id="Id1-' + i + '" onkeyup="amountChanged(' + i + ')"/>',
+                            '<amount-input type="text" placeholder="Amount" id="Id2-' + i + '" onkeyup="amountChanged(' + i + ')"/>'
+                        ]);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+
+            });
+        }
+
+
+        function AddAssignmentAndLeadSchedula() {
+            $("#AddMemberLeadSchedulModal").modal("show");
+        }
+
+         $("#AuditableAreaId").change(function () {
+             var id = $(this).val();
+             var fy = '@ViewBag.ClientFinancialYear';
+             var clientId = $("#ClientInformationId").val();
+
+             var url = '@Url.Action("GetListAuditableItem", "PlanningEngagement")';
+             url += '?id=' + id + '&fy=' + fy + '&clId=' + clientId;
+            if (id != "") {
+
+                var option = [];
+                $.ajax({
+                    url: url,
+                    @*url: '@Url.Action("GetListAuditableItem", "PlanningEngagement")/?id=' + id,*@
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.empty;
+                        var n = 0;
+                        data.data.forEach(q => {
+                            n++;
+                            option.push('<tr><td>' + n + '</td><td>' + q["AuditableItemName"] + '</td><td>' + q["PreviousYearAmount"].toLocaleString() + '</td><td>' + q["CurrentYearAmount"].toLocaleString() + '</td><td><input type="checkbox"  class="checkBoxAssign"  value="' + q["TrendAnalysisId"] + '"></td></tr>');
+
+                        });
+                        $("#auditableitemList").show();
+                        $("#itemToAssignlist").html(option);
+                    }
+                });
+            }
+        });
+
+
+        $(".auditableAreaMemberAssignCheckAll").click(function () {
+            $(".checkBoxAssign").prop('checked',
+                $(this).prop('checked'));
+        });
+
+
+        $("#btnSaveAssignment").click(function () {
+            debugger;
+            var trendAnalysisId = [];
+
+            $("input:checkbox.checkBoxAssign").each(function () {
+                if ($(this).prop("checked")) {
+                    trendAnalysisId.push($(this).val());
+                    console.log('Ids', $(this).val());
+                }
+            });
+
+            if (trendAnalysisId.length == 0) {
+                swal("Please check atleast One Auditable Item!", { icon: "warning" });
+                return;
+            }
+
+            var userId = $("#UserId").val();
+            var engagementId = $("#EngagementId").val();
+            var auditableAreaId = $("#AuditableAreaId").val();
+            //var auditableAreaName = $("#AuditableAreaId option:selected").text();
+
+            if (userId == '' || auditableAreaId == '') {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AuditableAreaId", auditableAreaId);
+            formdata.append("EngagementId", engagementId);
+            formdata.append("UserId", userId);
+            //formdata.append("AuditableAreaName", auditableAreaName);
+            formdata.append("TrendAnalysisMovementIds", trendAnalysisId);
+
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveAuditableItemAssign", "PlanningEngagement")';
+            @*//var urlList = '@Url.ActionQuestionnairAssignListnt",Questionnairsnt")';*@
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#btnSaveAssignment").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response =="duplicate Area") {
+                        swal("Duplicate Auditable Area", { icon: "warning" });
+                    }
+                    else {
+                        swal(response, {icon: "error"});
+                    }
+                },
+                failure: function (error) {
+                    $("#btnSaveAssignment").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        function AddIdentifyRisk() {
+            debugger;
+            var clientId = $("#ClientInformationId").val();
+            var plId = '@ViewBag.PlanningEngagementId';
+            var fy = '@ViewBag.ClientFinancialYear';
+             var url = '@Url.Action("RiskIdentificationProcess", "PlanningEngagement")';
+            var new_url = url + "?clientId=" + clientId + "&planningEngagementId=" + plId +"&fy="+ fy;
+            //window.location.replace(new_url);
+            $("#addSummaryCommentData").hide();
+            $("#saveRiskForm").hide();
+            $("#saveRiskAssertationForm").show();
+            $(".modal-title").text("Questionnair Response");
+            $("#divLoader").toggle(false);
+            $("#summaryCommentBody").load(new_url, function () {
+                $("#summaryComment").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+
+
+        function AddRiskObserved(id) {
+            var url = '@Url.Action("AddPossibleRisk", "PlanningEngagement")';
+            var new_url = url + "?Id=" + id;
+            $("#addSummaryCommentData").hide();
+            $("#saveRiskAssertationForm").hide();
+            $("#saveRiskForm").hide();
+            $(".modal-title").text("Risk Identification Process");
+            $("#divLoader").toggle(false);
+            $("#summaryCommentBody").load(new_url, function () {
+                $("#summaryComment").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+
+        function ShowRiskAddedDetail(id) {
+            var url = '@Url.Action("RiskAddedDetail", "PlanningEngagement")';
+            var new_url = url + "?Id=" + id;
+            $("#addSummaryCommentData").hide();
+            $("#saveRiskAssertationForm").hide();
+            $("#saveRiskForm").hide();
+            $(".modal-title").text("Risk Identification Process");
+            $("#divLoader").toggle(false);
+            $("#summaryCommentBody").load(new_url, function () {
+                $("#summaryComment").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        function AddRemoveRisk(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveSelectedRisk(id);
+                }
+            });
+        }
+
+        function RemoveSelectedRisk(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedRisk", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "Success") {
+                        swal("Selected Risk Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function RemoveAllQuestionnerRisk(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveSelectedAllQnRisk(id);
+                }
+            });
+        }
+
+        function RemoveSelectedAllQnRisk(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedAllQuestionRisk", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "Success") {
+                        swal("Selected Risk Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+
+        $("#ClientInformationIdx").change(function () {
+            debugger;
+            var clientId = $("#ClientInformationIdx").val();
+            document.getElementById('FinancialYearName').value = "";
+
+            if (!(clientId == null)) {
+                if (!(clientId == "")) {
+                    $("#divLoader").show();
+                    var url = '@Url.Action("GetClientFinancialYear", "PlanningEngagement")';
+                    $.ajax({
+                        type: "POST",
+                        url: url,
+                        data: { id: clientId },
+                        success: function (data, status, jqXHR) {
+                            $("#divLoader").hide();
+                            if (data.success) {
+                                var dateValue = ToJavaScriptDate(data.FinancialYear);
+                                document.getElementById('FinancialYearName').value = dateValue;
+
+                            } else {
+                                swal("Please Add Client Year End", { icon: "warning" });
+                                //document.getElementById('ClientYearEnd').style.color ="red";
+                                document.getElementById('FinancialYearName').value = "";
+                                $("#saveEngagementForm").prop('disabled', true);
+                            }
+                        }
+                    });
+                }
+            }
+
+        });
+
+        $("#generateRiskPlanForm").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            //var clientDataId = $("#ClientInformationIdx").val();
+            //var clientFy = $("#FinancialYearName").val();
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            //formdata.append("FinancialYearName", clientFy);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveGeneratedFinancialRiskPlan", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateRiskPlanForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+        });
+
+        var AssertionRiskPlan = function (id) {
+            debugger
+            $("#divLoader").toggle(true);
+           var url = '@Url.Action("GetFinancialRiskPlanData", "PlanningEngagement")';
+           url += '?id=' + id;
+            $("#addRiskAssertionData").show();
+            $("#divLoader").toggle(false);
+            $("#riskAssertionBody").load(url, function () {
+                $("#riskAssertion").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        $("#generateSummaryForm").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            //var clientDataId = $("#ClientInformationIdx").val();
+            //var clientFy = $("#FinancialYearName").val();
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            //formdata.append("FinancialYearName", clientFy);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveGeneratedRiskResponseSummary", "PlanningEngagement")';
+            $("#generateSummaryForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.responseBody, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateSummaryForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(resultData.responseBody, { icon: "warning" });
+                }
+            });
+        });
+
+
+        $("#revokeSummaryForm").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            //var clientDataId = $("#ClientInformationIdx").val();
+            //var clientFy = $("#FinancialYearName").val();
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            //formdata.append("FinancialYearName", clientFy);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("RevokeRiskResponseSummary", "PlanningEngagement")';
+            $("#revokeSummaryForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.responseBody, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#revokeSummaryForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(resultData.responseBody, { icon: "warning" });
+                }
+            });
+        });
+
+        var RiskResponseSummary = function (id) {
+            debugger
+            $("#divLoader").toggle(true);
+           var url = '@Url.Action("GetRiskSummaryResponseData", "PlanningEngagement")';
+           url += '?id=' + id;
+            $("#addSummaryCommentData").show();
+            $("#saveRiskAssertationForm").hide();
+            $("#saveRiskForm").hide();
+            $("#divLoader").toggle(false);
+            $("#summaryCommentBody").load(url, function () {
+                $("#summaryComment").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        $("#loadDataForMateriality").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            //var clientDataId = $("#ClientInformationIdx").val();
+            //var clientFy = $("#FinancialYearName").val();
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            //formdata.append("FinancialYearName", clientFy);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("GenerateMaterialData", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.responseBody, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#loadDataForMateriality").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, { icon: "warning" });
+                }
+            });
+        });
+
+
+         $("#revokeDataForMateriality").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("RevokeDataForMateriality", "PlanningEngagement")';
+            $("#revokeDataForMateriality").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Overall Materiality has Be revoked Successfull", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Pending") {
+                        swal("Error in revoke Overall Materiality", { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#revokeDataForMateriality").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+         });
+
+
+       $("#generatePerformanceMateriality").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveGeneratedPerformanceMaterialityPlan", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateRiskPlanForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+       });
+
+
+        $("#revokePerformanceMateriality").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("RevokeformanceMaterialityPlan", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Generated") {
+                        swal("Performance Materiality has Be revoked Successfull", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Pending") {
+                        swal(responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateRiskPlanForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+       });
+
+        var PerformanceMateriality = function (id) {
+            debugger
+
+           var url = '@Url.Action("GetPerformanceMaterialityData", "PlanningEngagement")';
+           url += '?id=' + id;
+           $("#addperformanceData").show();
+            $("#performanceBody").load(url, function () {
+                $("#performance").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }
+
+        function CalculateSampleSize() {
+            debugger;
+            //$("#divLoader").show();
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+           var url = '@Url.Action("GetSampleSizeData", "PlanningEngagement")';
+            url += '?id=' + planningEngagementId;
+            //$("#SampleSizeModal").modal("show");
+            $("#sampleBody").load(url,function () {
+                     $("#sampleSizeId").modal({
+                         backdrop: "static",
+                         keyboard: false,
+                     });
+                     //$("#divLoader").hide();
+                }
+            );
+        }
+
+
+        function DeleteSample(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveSampleSize(id);
+                }
+            });
+        }
+
+        function RemoveSampleSize(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedSample", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Sample Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+
+         $("#generateTrendsMovement").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("GeneratedTrendAnalysisMovement", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateTrendsMovement").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+         });
+
+        $("#revokeTrendsMovement").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("RevokeTrendAnalysisMovement", "PlanningEngagement")';
+            $("#btnSaveAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#generateTrendsMovement").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+        });
+
+        $("#revokeRiskPlanForm").click(function () {
+            debugger;
+
+            var planningEngagementId = '@ViewBag.PlanningEngagementId';
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("PlanningEngagementId", planningEngagementId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("RevokeRiskPlanForm", "PlanningEngagement")';
+            $("#revokeRiskPlanForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $().prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Generated") {
+                        swal(resultData.responseBody, { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response == "Pending") {
+                        swal(resultData.responseBody, { icon: "info" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(resultData.response, {icon: "warning"});
+                    }
+                },
+                failure: function (error) {
+                    $("#revokeRiskPlanForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error, {icon:"warning"});
+                }
+            });
+        });
+
+        @*var ReviewInternalControl = function (id) {
+            debugger
+            var engId = $("#EngagementId").val();
+            var url = '@Url.Action("GetInternalControlData", "Engagement")';
+            url += '?id=' + id + '&engId=' + engId;
+           $("#reviewInternalControl").show();
+            $("#modalReviewInternalControlBody").load(url, function () {
+                $("#ReviewOfInternalControl").modal({
+                    backdrop: "static",
+                    keyboard: false
+                })
+            });
+        }*@
+
+
+         function RemoveEstimateBudget(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveBudgetPerformance(id);
+                }
+            });
+        }
+
+        function RemoveBudgetPerformance(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveBudgetSummaryPerformance", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Budget Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function DeleteInternalControl(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveReviewIntCtl(id);
+                }
+            });
+        }
+
+        function RemoveReviewIntCtl(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveReviewInternalControlData", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Review Internal Control Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        ////Planning Memorandamu
+        $("#Remarks").on("keyup", function () {
+            debugger;
+            var count = $("#Remarks").val().split('');
+            var numChars = 2500 - parseInt(count.length);
+            $("#RemarkskCount").text(parseInt(numChars));
+        });
+
+        $("#saveMemorandam").on('click', function () {
+        debugger;
+            var moduleType = $("#ModuleType").val();
+            var remarks = $("#Remarks").val();
+            var clientId = $("#ClientInformationId").val();
+            var financialYear = $("#ClientFinancialYear").val();
+
+
+            if (moduleType == '' || remarks == '') {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("ModuleType", moduleType);
+            formdata.append("Remarks", remarks);
+            formdata.append("ClientInformationId", clientId);
+            formdata.append("ClientFinancialYear", financialYear);
+
+            $("#saveLoader").toggle(true);
+            var url = '@Url.Action("CreatePlanningMemorandom", "PlanningEngagement")';
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log('response', response)
+                    $("#addRiskAssertionData").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Memorandom Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Dublicate") {
+                        swal("Dublicate Estimate!", { icon: "warning" })
+                            .then((value) => {
+                                return false;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#addRiskAssertionData").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+
+        var answerSet = new Set();
+        var getAnswer = null;
+        var answer = null;
+        function getValueFromCheckbox(checkboxData) {
+            answer = checkboxData.value;
+            getAnswer = answer.substring(0, answer.indexOf('_'));
+            answerSet.add(getAnswer);
+        }
+        const checkIfSetsAreEqual = (xs, ys) =>
+            xs.size === ys.size &&
+            [...xs].every((x) => ys.has(x));
+
+
+        function validateForm(formObj) {
+            $(".loadingImg").show();
+            formObj.submit.disabled = true;
+            formObj.submit.value = 'Please Wait...';
+            successMessage = true;
+            $("#saveAnswerForm").prop('disabled', true);
+        }
+
+        function validateFormOnCreate(formObj, category) {
+            $(".loadingImg").show();
+            formObj.submit.disabled = true;
+            formObj.submit.value = 'Please Wait...';
+            successMessage = true;
+            var inputs = null;
+            var isCheckBoxQuestion = false;
+            var errorMessage = null;
+            //switch (category) {
+            //    case "Form1":
+            //        inputs = document.querySelectorAll('#Form1 .answers');
+            //        errorMessage = "Please Answer all Understanding The Client And Its Environment Questionnaire";
+            //        break;
+
+            //    case "Form2":
+            //        inputs = document.querySelectorAll('#Form2 .answers');
+            //        errorMessage = "Please Answer all Internal Control Questionnaire";
+            //        break;
+
+            //    case "Form3":
+            //        inputs = document.querySelectorAll('#Form3 .answers');
+            //        errorMessage = "Please Answer all General Internal Controls Questionnaire";
+            //        break;
+
+            //    case "Form4":
+            //        inputs = document.querySelectorAll('#Form4 .answers');
+            //        errorMessage = "Please Answer all Preliminary Analytical Procedures Questionnaire";
+            //        break;
+
+            //    case "Form5":
+            //        inputs = document.querySelectorAll('#Form5 .answers');
+            //        errorMessage = "Please Answer all Other Planning Issues Questionnaire";
+            //        break;
+            //        t
+            //    case "Form6":
+            //        inputs = document.querySelectorAll('#Form6 .answers');
+            //        errorMessage = "Please Answer all Planning Meeting Checklist";
+            //        break;
+            //}
+            var questionSet = new Set();
+            var getQuestion = null;
+            var question = null;
+            for (var i = 0; i < inputs.length; i++) {
+                if (inputs[i].tagName == "INPUT" && inputs[i].tagName != "TEXTAREA") {
+                    isCheckBoxQuestion = true;
+                    question = inputs[i].value;
+                    getQuestion = question.substring(0, question.indexOf('_'));
+                    questionSet.add(getQuestion);
+                }
+            }
+
+            if (isCheckBoxQuestion) {
+                if (checkIfSetsAreEqual(questionSet, answerSet)) {
+                    $("#saveAnswerForm").prop('disabled', true);
+                    return true;
+                } else {
+                    swal(errorMessage, { icon: "warning" }).then((value) => {
+                        $("#saveAnswerForm").prop('disabled', false);
+                        formObj.submit.disabled = false;
+                        $(".loadingImg").toggle(false);
+                    });
+                    return false;
+                }
+            } else {
+                $("#saveAnswerForm").prop('disabled', true);
+                return true;
+            }
+        }
+
+
+        function DeleteMemorandamu(id) {
+            swal({
+                title: "Are you sure?",
+                text: "Once Remove, You will not be able to recover",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveMemorandamu(id);
+                }
+            });
+        }
+
+        function RemoveMemorandamu(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveSelectedMemorandamu", "Engagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Memorandamu Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        //Notes Planning Meeting  Minutes
+        function AddNotePlanningMeeting() {
+           /* $("#AddEstimateModal").modal("show");*/
+            $("#AddNotePlnMeetingModal").modal("show");
+        }
+
+        $("#btnSaveAccountEst").click(function () {
+            debugger;
+            var accountEstimateId = $("#AccountEstimateId").val();
+            var overallRiskAssessment = $("#OverallRiskAssessment").val();
+            var preYearAmount = $("#PreYearAmount").val();
+            var curYearAmount = $("#CurYearAmount").val();
+            var auditApproach = $("#AuditApproach").val();
+            var estimateUncertainty = $("#DegreeOfestimationncertainty").val();
+            var method = $("#Method").val();
+
+
+            if (accountEstimateId == '' || overallRiskAssessment == ''
+                || preYearAmount == '' || curYearAmount == '' || auditApproach == ''
+                || estimateUncertainty == '' || method=='' ) {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AccountEstimateId", $("#AccountEstimateId").val());
+            formdata.append("OverallRiskAssessment", $("#OverallRiskAssessment").val());
+            formdata.append("PreYearAmount", $("#PreYearAmount").val());
+            formdata.append("CurYearAmount", $("#CurYearAmount").val());
+            formdata.append("AuditApproach", $("#AuditApproach").val());
+            formdata.append("EngagementId", $("#EngagementId").val());
+            formdata.append("ClientInformationId", $("#ClientInformationId").val());
+            formdata.append("DegreeOfestimationncertainty", $("#DegreeOfestimationncertainty").val());
+            formdata.append("Method", $("#Method").val());
+
+            $("#btnSaveAccountEst").prop('disabled', true);
+            $("#divLoader").toggle(true);
+            var url = '@Url.Action("SaveAccountEstimates", "Engagement")';
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log('response', response)
+                    $("#btnSaveAccountEst").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response == "Dublicate") {
+                        swal("Dublicate Estimate!", { icon: "warning" })
+                            .then((value) => {
+                                return false;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#btnSaveAccountEst").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+
+         /// ADDING ATTACHMENTS DIALOG STARTS HERE
+        var dt_attachments = $('#dt_attachments').dataTable();
+        $("#dt_attachments_wrapper .dt-toolbar").remove();
+        $("#dt_attachments_wrapper .dt-toolbar-footer").remove();
+
+        var allattachments = []
+        var attachments = []
+        var countAttachment = 0;
+
+        function addAttachmentsz() {
+            debugger;
+            if ($("#Attachment").val() == "" || $("#FileName").val() == "") {
+                return false;
+            }
+
+            var attachmentId = $('#Attachment').val().trim();
+            var fileName = $('#FileName').get(0).files[0];
+            var attachment = $("#Attachment option:selected").text();
+            var derivedAttachmentName = attachment + ':-' + fileName.name;
+
+            attachments.push({
+                AttachmentId: attachmentId,
+                AttachmentType: derivedAttachmentName,
+                FileName: fileName,
+
+            });
+
+            GenerateAttachmentsTable();
+        }
+
+        function GenerateAttachmentsTable() {
+            if (attachments.length > 0) {
+                var $table = $('<table class="table table-condensed table-stripped table-hover table-bordered"/>');
+                $table.append('<thead>' +
+                    '<tr><th colspan="4">Attachment Type</th>' +
+                    '<tr><th>#</th><th style="display:none;">Id</th><th style="text-align: center">Attachment Name</th><th style="text-align: center">Action</th></tr>' +
+                    '</thead>');
+                var $tbody = $('<tbody/>');
+                var j = 0;
+                $.each(attachments, function (i, val) {
+                    ++j;
+                    var $row = $('<tr/>');
+                    $row.append($('<td/>').html(j));
+                    $row.append($('<td style="display:none;"/>').html(val.AttachmentId));
+                    $row.append($('<td/>').html(val.AttachmentType));
+                    var $remove = $('<a href="#"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>');
+                    $remove.click(function (e) {
+                        e.preventDefault();
+                        attachments.splice(i, 1);
+                        GenerateAttachmentsTable();
+                    });
+                    $row.append($('<td/>').html($remove));
+                    $tbody.append($row);
+                });
+                $table.append($tbody);
+                $('#divAttachments').html($table);
+                $("#FileName").val("");
+                $("#saveAttachments").attr("disabled", false);
+            } else {
+                $('#divAttachments').html('');
+                $("#saveAttachments").attr("disabled", false);
+            }
+
+            $("#added_attachments").text(attachments.length);
+        }
+
+        function AddNotePlan(id) {
+            var params = { "id": id };
+            var url = '@Url.Action("AddNotesPlanning", "Engagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Risk Reviewed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function RemoveNotePlan(id) {
+            var params = { "id": id };
+            var url = '@Url.Action("RemoveNotesPlanning", "Engagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected Risk Removed Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+
+        function RevokeAssignment(id) {
+            swal({
+                title: "Are you sure?",
+                text: "The auditable Item you assigned will be revoked",
+                buttons: ["Yes", "No"],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    RemoveAssignedAuditableItem(id);
+                }
+            });
+        }
+
+        function RemoveAssignedAuditableItem(id, index) {
+            var params = { "id": id };
+            var url = '@Url.Action("RevokedMemberAssign", "PlanningEngagement")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "success") {
+                        swal("Selected item revoked Successfully", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function AddAssignedItem(auditableAreaId, userId) {
+            $("#AddAuditableItemBySelectedAuditableArea").modal("show");
+            $("#SelectedAuditableItemId").val(auditableAreaId);
+            $("#SelectedUserId").val(userId);
+
+            var id = auditableAreaId;
+             var fy = '@ViewBag.ClientFinancialYear';
+             var clientId = $("#ClientInformationId").val();
+
+             var url = '@Url.Action("GetListAuditableItem", "PlanningEngagement")';
+             url += '?id=' + id + '&fy=' + fy + '&clId=' + clientId;
+            if (id != "") {
+
+                var option = [];
+                $.ajax({
+                    url: url,
+                    @*url: '@Url.Action("GetListAuditableItem", "PlanningEngagement")/?id=' + id,*@
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.empty;
+                        var n = 0;
+                        data.data.forEach(q => {
+                            n++;
+                            option.push('<tr><td>' + n + '</td><td>' + q["AuditableItemName"] + '</td><td>' + q["PreviousYearAmount"].toLocaleString() + '</td><td>' + q["CurrentYearAmount"].toLocaleString() + '</td><td><input type="checkbox"  class="checkBoxAssign"  value="' + q["TrendAnalysisId"] + '"></td></tr>');
+
+                        });
+                        $("auditableitemListSecond").show();
+                        $("#itemToAssignlistSecond").html(option);
+                    }
+                });
+            }
+        }
+
+
+        $("#btnSaveItemAssignment").click(function () {
+            debugger;
+            var trendAnalysisId = [];
+
+            $("input:checkbox.checkBoxAssign").each(function () {
+                if ($(this).prop("checked")) {
+                    trendAnalysisId.push($(this).val());
+                    console.log('Ids', $(this).val());
+                }
+            });
+
+            if (trendAnalysisId.length == 0) {
+                swal("Please check atleast One Auditable Item!", { icon: "warning" });
+                return;
+            }
+
+            var userId = $("#SelectedUserId").val();
+            var engagementId = $("#EngagementId").val();
+            var auditableAreaId = $("#SelectedAuditableItemId").val();
+            //var auditableAreaName = $("#AuditableAreaId option:selected").text();
+
+            if (userId == '' || auditableAreaId == '') {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AuditableAreaId", auditableAreaId);
+            formdata.append("EngagementId", engagementId);
+            formdata.append("UserId", userId);
+            //formdata.append("AuditableAreaName", auditableAreaName);
+            formdata.append("TrendAnalysisMovementIds", trendAnalysisId);
+
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("AddSelectedAuditableItemAssign", "PlanningEngagement")';
+            $("#btnSaveItemAssignment").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#btnSaveItemAssignment").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response =="duplicate") {
+                        swal("Duplicate Auditable Item", { icon: "warning" });
+                    }
+                    else {
+                        swal(response, {icon: "error"});
+                    }
+                },
+                failure: function (error) {
+                    $("#btnSaveItemAssignment").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        });
+
+        function AddAssignedItemz(auditableAreaId, userId) {
+            var userId = userId;
+            var engagementId = $("#EngagementId").val();
+            var auditableAreaId = auditableAreaId;
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("AuditableAreaId", auditableAreaId);
+            formdata.append("EngagementId", engagementId);
+            formdata.append("UserId", userId);
+            //formdata.append("AuditableAreaName", auditableAreaName);
+            formdata.append("TrendAnalysisMovementIds", trendAnalysisId);
+
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveAuditableItemAssign", "PlanningEngagement")';
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#btnSaveAssignment").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Auditable Item Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (response =="duplicate Item") {
+                        swal("Duplicate Auditable Item", { icon: "warning" });
+                    }
+                    else {
+                        swal(response, {icon: "error"});
+                    }
+                },
+                failure: function (error) {
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        $("#saveRiskAssertationForm").click(function () {
+            debugger;
+            var questionnaireId = $("#QuestionnaireId").val();
+            var questionnaireName = $("#QuestionnaireId option:selected").text();
+            var questionnairResponse = $("#QuestionnairResponse").val();
+            var planningEngagementId = $("#PlanningEngagementId").val();
+            /*var financialYearName = $("#FinancialYear").val();*/
+            var clientId = $("#ClientId").val();
+            var clientName = $("#ClientName").val();
+
+
+            if (questionnaireId == '' || questionnairResponse == '' ) {
+                swal("Please Fill All the required Fields", {icon: "warning"});
+                return false;
+            }
+            //if (questionnairResponse =="Yes") {
+            //    if (risks.length == 0) {
+            //        swal("Please, Add Atleast One Risk with at least one auditable Area Affected", { icon: "warning" });
+            //        return false;
+            //    }
+            //}
+
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("QuestionnaireId", questionnaireId);
+            formdata.append("QuestionnairName", questionnaireName);
+            formdata.append("QuestionnairResponse", questionnairResponse);
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            formdata.append("ClientId", clientId);
+            formdata.append("ClientName", clientName);
+            //formdata.append("FinancialYear", financialYearName);
+
+            //for (var i = 0; i < risks.length; i++) {
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableAreaIds", risks[i].AffectedAuditableAreaIds);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskName", risks[i].RiskName);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskCategory", risks[i].RiskCategory);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskRanking", risks[i].RiskRanking);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableArea", risks[i].AffectedAuditableArea);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyAuditorMngRisk", risks[i].IdentifyAuditorMngRisk);
+            //    formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskDescription", risks[i].IdentifyRiskDescription);
+            //}
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveIdentifiedRiskDetail", "PlanningEngagement")';
+
+            $("#saveRiskAssertationForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $("#saveRiskAssertationForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Success") {
+                        swal("Saved Risk Successfully!", { icon: "success" })
+                           .then((value) => {
+                                window.location.reload();
+                            });
+                    } else if (resultData.response =="Dublicate") {
+                        swal("Dublicate Risk Registered", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveRiskAssertationForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        })
+
+    </script>
+}

@@ -1,0 +1,461 @@
+﻿@{
+    ViewBag.Title = "Approve Exchequer Withdraw List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+
+                            <div class="row">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_exchequer_withdraw_list" class="table table-bordered table-condensed table-amount">
+
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Reference No</th>
+                                        <th>Vote Code</th>
+                                        <th>Vote Name</th>
+                                        <th>Exchequer Amount</th>
+                                        <th>Available Amount</th>
+                                        <th>Unavailable Amount</th>
+                                        <th>Amount</th>
+                                        <th>Withdrawal Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="RejectModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <center><h3 class="modal-title">Rejection of Exchequer Withdrawal</h3></center>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Remarks (<span style="font-weight:bold;" id="Remarks3Count">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Remarks3" name="Remarks3" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <input type="submit" value="Submit" class="btn btn-info" onclick="cancelExchequerForm()" id="exchequerStatus" />
+                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="RemarkDialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Remarks</h4>
+            </div>
+
+            <div class="modal-body">
+                <span id="Remarks"></span>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        //SHOW LOADER ICON
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+
+        var dt_exchequer_withdraw_list = $("#dt_exchequer_withdraw_list").dataTable();
+        $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_exchequer_withdraw_list").DataTable().search(this.value).draw();
+            $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        function ToCheckDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+                  $.ajax({
+                url: '@Url.Action("GetApprovedWithdrawExchequerList", "ExchequerWithdraw")',
+                type: 'Get',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_exchequer_withdraw_list.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var ExchequerAmount = 0;
+                        var sExchequerAmount = 0;
+                        var AvailableAmount = 0;
+                        var UnavailableAmount = 0;
+                        var WithdrawAmount = 0;
+                        var sWithdrawAmount = 0;
+
+                        if (data[i]["ExchequerAmount"] != null) {
+                            ExchequerAmount = "<p align='right'>" + data[i]["ExchequerAmount"].toLocaleString() + "</p>";
+                        } else {
+                            ExchequerAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["AvailableAmount"] != null) {
+                            AvailableAmount = "<p align='right'>" + data[i]["AvailableAmount"].toLocaleString() + "</p>";
+                        } else {
+                            AvailableAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["WithdrawAmount"] != null) {
+                            WithdrawAmount = "<p align='right'>" + data[i]["WithdrawAmount"].toLocaleString() + "</p>";
+                        } else {
+                            WithdrawAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["ExchequerAmount"] != null && data[i]["WithdrawAmount"] != null) {
+                            sExchequerAmount = data[i]["ExchequerAmount"];
+                            sWithdrawAmount = data[i]["WithdrawAmount"];
+                            AvailableAmount = sExchequerAmount - sWithdrawAmount;
+                            UnavailableAmount = sExchequerAmount - AvailableAmount;
+                        }
+                        if (UnavailableAmount <= 0) {
+                            UnavailableAmount = 0;
+                        }
+
+                        dt_exchequer_withdraw_list.fnAddData([i + 1,
+                             data[i]["FundingRefNo"],
+                            data[i]["VoteCode"],
+                           data[i]["InstitutionName"],
+                           ExchequerAmount,
+                           AvailableAmount.toLocaleString(),
+                           UnavailableAmount.toLocaleString(),
+                            WithdrawAmount,
+                            ToJavaScriptDate(data[i]["CreatedAt"]),
+                           '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("ExchequerWithdrawDetails", "ExchequerWithdraw")/?id=' + data[i]["WithdrawExchequerId"] + '">Details</a></li>\
+                                 <li><a href="#" onclick="approveDialog(' + i + ')">Approve</a></li>\
+                                <li><a href="#" onclick="cancelDialog(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\ '
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+        function approveDialog(i) {
+            swal({
+                title: 'Exchequer Withdrawal Approval',
+                text: "Are you sure you want to Approve?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false);
+                    approveWithdrawExchequer(data[i]["WithdrawExchequerId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function approveWithdrawExchequer(withdrawExchequerId) {
+            var url = '@Url.Action("Approve", "ExchequerWithdraw")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": withdrawExchequerId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Approved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Approving Exchequer Withdrawal", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function remarkDialog(i) {
+            $('#RemarkDialog').modal('show');
+            var reason = data[i]["Remarks"];
+            $("#Remarks").text(reason);
+        }
+
+        var withdrawExchequerId = null;
+        function cancelDialog(i) {
+            $('#RejectModel').modal('show');
+            $("#saveLoader-" + i + "").toggle(true)
+            $("#drop-" + i + "").toggle(false)
+            withdrawExchequerId = data[i]["WithdrawExchequerId"];
+        }
+
+
+        $('#Remarks3').on("keyup", function () {
+            var count = $('#Remarks3').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#Remarks3Count').text(parseInt(numChars));
+        });
+
+        function cancelExchequerForm() {
+            var Remarks = $("#Remarks3").val();
+
+            successMessage = "Exchequer Withdrawal Rejected Successfully";
+            failureMessage = "Error in Rejecting Exchequer Withdrawal";
+
+            if (Remarks == '') {
+                swal("Please Add Remarks");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('WithdrawExchequerId', withdrawExchequerId);
+            formData.append('ComponentDesc', Remarks);
+
+            swal({
+                text: "Reject Exchequer Withdrawal?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postCancelFormData(formData);
+                } else {
+                    swal("Cancelled", "No change was made");
+                    $("#exchequerStatus").prop('disabled', false);
+                }
+            });
+        }
+
+        function postCancelFormData(formData) {
+            $(".loadingImg").show();
+            $("#exchequerStatus").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Reject", "ExchequerWithdraw")';
+            var urlList = '@Url.Action("ApprovedWithdrawExchequerList", "ExchequerWithdraw")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#RejectModel').modal('hide');
+                    $("#exchequerStatus").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal(successMessage, { icon: "success" })
+                            .then((m) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        $("#exchequerStatus").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(failureMessage, { icon: "warning" });
+                }
+            });
+        }
+
+    </script>
+}

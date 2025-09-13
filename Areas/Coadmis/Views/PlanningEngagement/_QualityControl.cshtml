@@ -1,0 +1,1136 @@
+﻿@model IFMIS.Areas.Coadmis.Models.EngagementVM
+<style>
+    #myTab7 {
+        height: 42px;
+    }
+
+    .widget-body1 {
+        margin-left: 140px;
+        width: 1050px;
+    }
+
+    .tabs-below > .nav-tabs, .tabs-left > .nav-tabs, .tabs-right > .nav-tabs {
+        border-bottom: 0;
+        border-right: 0;
+    }
+
+    .form-horizontal {
+        margin-top: 30px;
+        margin-left: 17px;
+    }
+</style>
+<div class="widget-body1">
+    <ul id="myTab7" class="nav nav-tabs bordered">
+        <li class="active">
+            <a href="#mq1" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-fw fa-lg  fa-pied-piper"></i>Audit Administration
+                <span class="badge bg-color-blue txt-color-white"></span>
+            </a>
+        </li>
+        <li class="">
+            <a href="#mq2" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-fw fa-lg  fa-pied-piper"></i> Quality Control
+                <span class="badge bg-color-blue txt-color-white"></span>
+            </a>
+        </li>
+        <li class="">
+            <a href="#mq3" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-fw fa-lg  fa-pied-piper"></i> Memorandum
+                <span class="badge bg-color-blue txt-color-white"></span>
+            </a>
+        </li>
+    </ul>
+    <div id="myTabContent7" class="tab-content padding-10">
+        <div class="tab-pane fade active in" id="mq1">
+            @if (Model.AuditAdministrationQn.Count != 0)
+            {
+                <div class="col-md-12">
+                    <div class="col-md-6" style="padding-top:20px">
+                        <dl class="dl-horizontal">
+                            <dt><strong>Client Name:</strong></dt>
+                            <dd>@ViewBag.ClientName</dd>
+                            <dt><strong>File No.:</strong></dt>
+                            <dd>@ViewBag.FileNo</dd>
+                            <dt> <strong>Working Paper Ref:</strong></dt>
+                            <dd> @ViewBag.WorkPaper</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6" style="padding-top:20px">
+                        <dl class="dl-horizontal">
+                            <dt>Questionnaire Title</dt>
+                            <dd> Audit Administration</dd>
+                            <dt><strong>Prepared By:</strong></dt>
+                            <dd>@ViewBag.PreparedBy</dd>
+                            <dt><strong>Prepared At:</strong></dt>
+                            <dd>@ViewBag.PreparedAt</dd>
+                        </dl>
+                    </div>
+                </div>
+
+            }
+
+            @if (Model.AuditAdministrationQn.Count == 0)
+            {
+                <div class="row">
+                    <div class="col-lg-3 col-sm-3 col-xs-3"></div>
+                    <div class="col-lg-6 col-sm-6 col-xs-6">
+
+                        <div class="alert alert-block alert-info">
+                            <a class="close" data-dismiss="alert" href="#">×</a>
+                            <center><span>Audit Administration is not Assigned for this Year</span></center>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-xs-3"></div>
+                </div>
+            }
+            @if (Model.AuditAdministrationQn.Count != 0 && ViewBag.IsAuditAdministrationQnAns == false)
+            {
+                /*BEGIN ADDING QUESTIONNAIRE ANSWERS*/
+                using (Html.BeginForm("SaveQuestionnaire", "PlanningEngagement", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return validateForm(this);" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ModuleId" id="ModuleId" value="@ViewBag.PlanningEngagementId" />
+                    <input type="hidden" name="ClientFinancialYear" id="ClientFinancialYear" value="@ViewBag.ClientFinancialYear" />
+                    <input type="hidden" name="Category" id="Category" value="Audit Administration" />
+                    <table id="example" class="table table-striped table-bordered table-hover" width="100%">
+                        <thead><tr></tr></thead>
+                        <tbody>
+                            @{ int n = 0; }
+                            @foreach (var group in Model.AuditAdministrationQn.GroupBy(a => a.QuestionnairTitleName))
+                            {
+                                n++;
+                                <tr data-level='1' style="background:#f5f5f5; color:#000000">
+                                    <td colspan="13">
+                                        <strong>
+                                            <span class="sign"></span>
+                                            @n. @group.Key
+                                        </strong>
+                                    </td>
+                                </tr>
+
+                                foreach (var item in group.GroupBy(a => a.QuestionnairSubTitleName))
+                                {
+                                    int y = 0;
+
+                                    int num = 0;
+                                    if (item.Key != null)
+                                    {
+                                        <tr data-level='1' style="background:#f5f5f5; color:#000000;">
+                                            <td colspan="13">
+                                                <strong>
+                                                    <span class="sign"></span>
+                                                    <i>@item.Key</i>
+                                                </strong>
+                                            </td>
+                                        </tr>
+
+                                        foreach (var itemQn in item.GroupBy(a => a.Question))
+                                        {
+                                            num++;
+                                            <tr>
+                                                <td>@itemQn.Key </td>
+                                                @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                {
+
+                                                    foreach (var data in itemx)
+                                                    {
+                                                        y++;
+
+                                                        if (itemx.Key == "Radio Button")
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                            </td>
+                                                        }
+
+                                                        else if (itemx.Key == "Text")
+                                                        {
+                                                            <td colspan="2">
+                                                                <label>@data.Value</label>
+                                                                <input type="hidden" id="QuestionIdForTextAreas-@y" name="QuestionIdForTextAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()" />
+                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]"></textarea>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@y" />
+                                                                <label>@data.Value</label>
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
+
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        foreach (var itemQn in group.GroupBy(a => a.Question))
+                                        {
+                                            num++;
+                                            <tr>
+                                                <td>@itemQn.Key </td>
+                                                @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                {
+
+                                                    foreach (var data in itemx)
+                                                    {
+                                                        y++;
+
+                                                        if (itemx.Key == "Radio Button")
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                            </td>
+                                                        }
+
+                                                        else if (itemx.Key == "Text")
+                                                        {
+                                                            <td colspan="2">
+                                                                <label>@data.Value</label>
+                                                                <input type="hidden" id="QuestionIdForTextAreas-@y" name="QuestionIdForTextAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()" />
+                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]"></textarea>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@y" />
+                                                                <label>@data.Value</label>
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
+
+                                            </tr>
+                                        }
+                                    }
+                                }
+
+                            }
+
+                        </tbody>
+                    </table>
+
+                    <div class="form-group">
+                        <div class="col-md-1"></div>
+
+                        <button type="submit" name="submit" class="btn btn-info" id="saveAnswerForm">
+                            <i class="fa fa-save"></i> Save
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+
+                    </div>
+                }
+                /*END ADDING QUESTIONNAIRE ANSWERS*/
+            }
+
+            @if (ViewBag.IsAuditAdministrationQnAns)
+            {
+                using (Html.BeginForm("UpdateQuestionnaire", "PlanningEngagement", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return validateForm(this);" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ModuleId" id="ModuleId" value="@ViewBag.PlanningEngagementId" />
+                    <input type="hidden" name="Category" id="Category" value="Audit Administration" />
+                    <table id="example" class="table table-striped table-bordered table-hover" width="100%">
+                        <thead><tr></tr></thead>
+                        <tbody>
+                            @{ int n = 0;
+                            }
+                            @if (Model.AuditAdministrationQn != null)
+                            {
+                                foreach (var group in Model.AuditAdministrationQn.GroupBy(a => a.QuestionnairTitleName))
+                                {
+                                    n++;
+                                    List<int> questionList = new List<int>();
+                                    if (ViewBag.GetAuditAdministrationQuestAnswers != null)
+                                    {
+                                        for (var mn = 0; mn < ViewBag.GetAuditAdministrationQuestAnswers.Count; mn++)
+                                        {
+                                            if (ViewBag.GetAuditAdministrationQuestAnswers[mn].QuestionId == group.Select(a => a.QuestionId).FirstOrDefault())
+                                            {
+                                                questionList.Add((int)group.Select(a => a.QuestionId).FirstOrDefault());
+                                            }
+                                        }
+                                    }
+
+                                    if (questionList.Contains((int)group.Select(a => a.QuestionId).FirstOrDefault()))
+                                    {
+                                        <tr data-level='1' style="background:#f5f5f5; color:#000000">
+                                            <td colspan="13">
+                                                <strong>
+                                                    <span class="sign"></span>
+                                                    @n. @group.Key
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    }
+                                    foreach (var item in group.GroupBy(a => a.QuestionnairSubTitleName))
+                                    {
+                                        int y = 0;
+
+                                        int num = 0;
+                                        if (item.Key != null)
+                                        {
+
+                                            if (questionList.Contains((int)item.Select(a => a.QuestionId).FirstOrDefault()))
+                                            {
+                                                <tr data-level='1' style="background:#f5f5f5; color:#000000;">
+                                                    <td colspan="13">
+                                                        <strong>
+                                                            <span class="sign"></span>
+                                                            <i>@item.Key</i>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            foreach (var itemQn in item.GroupBy(a => a.Question))
+                                            {
+                                                num++;
+                                                <tr>
+                                                    @if (questionList.Contains((int)item.Select(a => a.QuestionId).FirstOrDefault()))
+                                                    {
+                                                        <td>
+                                                            @itemQn.Key
+                                                        </td>
+                                                    }
+                                                    @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                    {
+
+                                                        foreach (var data in itemx)
+                                                        {
+                                                            y++;
+
+                                                            if (ViewBag.GetAuditAdministrationQuestAnswers != null)
+                                                            {
+                                                                for (var nm = 0; nm < ViewBag.GetAuditAdministrationQuestAnswers.Count; nm++)
+                                                                {
+                                                                    if (ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionId == @itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                    {
+
+                                                                        if (itemx.Key == "Radio Button")
+                                                                        {
+
+                                                                            if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer == data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" checked value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                            else if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer != data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                        }
+                                                                        else if (itemx.Key == "Text")
+                                                                        {
+                                                                            <td colspan="2">
+                                                                                <label>@data.Value</label>
+                                                                                <input type="hidden" id="QuestionIdForTxtAreas-@y" name="QuestionIdForTxtAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" />
+                                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]">@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer</textarea>
+                                                                            </td>
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer.Contains(","))
+                                                                            {
+                                                                                string[] answerArray = ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer.Split(',');
+
+                                                                                <td>
+                                                                                    @for (var z = 0; z < answerArray.Count(); z++)
+                                                                                    {
+                                                                                        if (answerArray[z] == data.Value)
+                                                                                        {
+                                                                                            <input type="checkbox" class="answers" checked value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@answerArray[z]-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                            <label>@data.Value</label>
+                                                                                        }
+                                                                                    }
+                                                                                    @if (!answerArray.Contains(data.Value))
+                                                                                    {
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    }
+
+                                                                                </td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer == data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                                else if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer != data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                        }
+                                                    }
+
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+
+                                            foreach (var itemQn in group.GroupBy(a => a.Question))
+                                            {
+                                                num++;
+                                                <tr>
+                                                    @{
+                                                        if (ViewBag.GetAuditAdministrationQuestAnswers != null)
+                                                        {
+                                                            for (var mn = 0; mn < ViewBag.GetAuditAdministrationQuestAnswers.Count; mn++)
+                                                            {
+                                                                if (ViewBag.GetAuditAdministrationQuestAnswers[mn].QuestionId == itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                {
+                                                                    questionList.Add((int)itemQn.Select(a => a.QuestionId).FirstOrDefault());
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    @if (questionList.Contains((int)itemQn.Select(a => a.QuestionId).FirstOrDefault()))
+                                                    {
+                                                        <td>
+                                                            @itemQn.Key
+                                                        </td>
+                                                    }
+
+                                                    @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                    {
+
+                                                        foreach (var data in itemx)
+                                                        {
+                                                            y++;
+
+                                                            //BEGIN CHECKING IF ANSWERS IS NOT NULL
+                                                            if (ViewBag.GetAuditAdministrationQuestAnswers != null)
+                                                            {
+                                                                for (var nm = 0; nm < ViewBag.GetAuditAdministrationQuestAnswers.Count; nm++)
+                                                                {
+                                                                    if (ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionId == @itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                    {
+
+                                                                        if (itemx.Key == "Radio Button")
+                                                                        {
+
+                                                                            if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer == data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                            else if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer != data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                        }
+                                                                        else if (itemx.Key == "Text")
+                                                                        {
+                                                                            <td colspan="2">
+                                                                                <label>@data.Value</label>
+                                                                                <input type="hidden" id="QuestionIdForTxtAreas-@y" name="QuestionIdForTxtAreas[]" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" />
+                                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]">@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer</textarea>
+                                                                            </td>
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer.Contains(","))
+                                                                            {
+                                                                                string[] answerArray = ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer.Split(',');
+
+                                                                                <td>
+                                                                                    @for (var z = 0; z < answerArray.Count(); z++)
+                                                                                    {
+                                                                                        if (answerArray[z] == data.Value)
+                                                                                        {
+                                                                                            <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@answerArray[z]-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                            <label>@data.Value</label>
+                                                                                        }
+                                                                                    }
+                                                                                    @if (!answerArray.Contains(data.Value))
+                                                                                    {
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    }
+
+                                                                                </td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer == data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                                else if (ViewBag.GetAuditAdministrationQuestAnswers[nm].Answer != data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetAuditAdministrationQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            //END CHECKING IF ANSWERS IS NOT NULL
+                                                        }
+                                                    }
+
+                                                </tr>
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                    <div class="form-group">
+                        <div class="col-md-1"></div>
+                        @if (Model.OverallStatus == "Approved")
+                        {
+
+                        }
+                        else
+                        {
+                            <button type="submit" name="submit" class="btn btn-info" id="saveAnswerForm">
+                                <i class="fa fa-save"></i> Save
+                                <img src="~/Content/img/loading.gif" class="loadingImg" />
+                            </button>
+                        }
+
+                    </div>
+                }
+            }
+
+
+
+        </div>
+        <div class="tab-pane fade" id="mq2">
+
+            @if (Model.QualityControlQn.Count != 0)
+            {
+                <div class="col-md-12">
+                    <div class="col-md-6" style="padding-top:20px">
+                        <dl class="dl-horizontal">
+                            <dt><strong>Client Name:</strong></dt>
+                            <dd>@ViewBag.ClientName</dd>
+                            <dt><strong>File No.:</strong></dt>
+                            <dd>@ViewBag.FileNo</dd>
+                            <dt> <strong>Working Paper Ref:</strong></dt>
+                            <dd> @ViewBag.WorkPaper</dd>
+                        </dl>
+                    </div>
+                    <div class="col-md-6" style="padding-top:20px">
+                        <dl class="dl-horizontal">
+                            <dt>Questionnaire Title</dt>
+                            <dd>Quality Control</dd>
+                            <dt><strong>Prepared By:</strong></dt>
+                            <dd>@ViewBag.PreparedBy</dd>
+                            <dt><strong>Prepared At:</strong></dt>
+                            <dd>@ViewBag.PreparedAt</dd>
+                        </dl>
+                    </div>
+                </div>
+
+            }
+
+            @if (Model.QualityControlQn.Count == 0)
+            {
+                <div class="row">
+                    <div class="col-lg-3 col-sm-3 col-xs-3"></div>
+                    <div class="col-lg-6 col-sm-6 col-xs-6">
+
+                        <div class="alert alert-block alert-info">
+                            <a class="close" data-dismiss="alert" href="#">×</a>
+                            <center><span>Quality Control is not Assigned for this Year</span></center>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-3 col-xs-3"></div>
+                </div>
+            }
+            @if (Model.QualityControlQn.Count != 0 && ViewBag.IsQualityControlQnAns == false)
+            {
+                /*BEGIN ADDING QUESTIONNAIRE ANSWERS*/
+                using (Html.BeginForm("SaveQuestionnaire", "PlanningEngagement", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return validateForm(this);" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ModuleId" id="ModuleId" value="@ViewBag.PlanningEngagementId" />
+                    <input type="hidden" name="ClientFinancialYear" id="ClientFinancialYear" value="@ViewBag.ClientFinancialYear" />
+                    <input type="hidden" name="Category" id="Category" value="Quality Control" />
+                    <table id="example" class="table table-striped table-bordered table-hover" width="100%">
+                        <thead><tr></tr></thead>
+                        <tbody>
+                            @{ int n = 0; }
+                            <tr>
+                                <td colspan="3" style="">@ViewBag.QuestionnaireDescription</td>
+                            </tr>
+                            @foreach (var group in Model.QualityControlQn.GroupBy(a => a.QuestionnairTitleName))
+                            {
+                                n++;
+                                <tr data-level='1' style="background:#f5f5f5; color:#000000">
+                                    <td colspan="13">
+                                        <strong>
+                                            <span class="sign"></span>
+                                            @n. @group.Key
+                                        </strong>
+                                    </td>
+                                </tr>
+
+                                foreach (var item in group.GroupBy(a => a.QuestionnairSubTitleName))
+                                {
+                                    int y = 0;
+
+                                    int num = 0;
+                                    if (item.Key != null)
+                                    {
+                                        <tr data-level='1' style="background:#f5f5f5; color:#000000;">
+                                            <td colspan="13">
+                                                <strong>
+                                                    <span class="sign"></span>
+                                                    <i>@item.Key</i>
+                                                </strong>
+                                            </td>
+                                        </tr>
+
+                                        foreach (var itemQn in item.GroupBy(a => a.Question))
+                                        {
+                                            num++;
+                                            <tr>
+                                                <td>@itemQn.Key </td>
+                                                @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                {
+
+                                                    foreach (var data in itemx)
+                                                    {
+                                                        y++;
+
+                                                        if (itemx.Key == "Radio Button")
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                            </td>
+                                                        }
+
+                                                        else if (itemx.Key == "Text")
+                                                        {
+                                                            <td colspan="2">
+                                                                <label>@data.Value</label>
+                                                                <input type="hidden" id="QuestionIdForTextAreas-@y" name="QuestionIdForTextAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()" />
+                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]"></textarea>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@y" />
+                                                                <label>@data.Value</label>
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
+
+                                            </tr>
+                                        }
+                                    }
+                                    else
+                                    {
+
+                                        foreach (var itemQn in group.GroupBy(a => a.Question))
+                                        {
+                                            num++;
+                                            <tr>
+                                                <td>@itemQn.Key </td>
+                                                @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                {
+
+                                                    foreach (var data in itemx)
+                                                    {
+                                                        y++;
+
+                                                        if (itemx.Key == "Radio Button")
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                            </td>
+                                                        }
+
+                                                        else if (itemx.Key == "Text")
+                                                        {
+                                                            <td colspan="2">
+                                                                <label>@data.Value</label>
+                                                                <input type="hidden" id="QuestionIdForTextAreas-@y" name="QuestionIdForTextAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()" />
+                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]"></textarea>
+                                                            </td>
+                                                        }
+                                                        else
+                                                        {
+                                                            <td>
+                                                                <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value" name="Answers[]" id="Answers-@y" />
+                                                                <label>@data.Value</label>
+                                                            </td>
+                                                        }
+                                                    }
+                                                }
+
+                                            </tr>
+                                        }
+                                    }
+                                }
+
+                            }
+
+                        </tbody>
+                    </table>
+
+                    <div class="form-group">
+                        <div class="col-md-1"></div>
+
+                        <button type="submit" name="submit" class="btn btn-info" id="saveAnswerForm">
+                            <i class="fa fa-save"></i> Save
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+
+                    </div>
+                }
+                /*END ADDING QUESTIONNAIRE ANSWERS*/
+            }
+
+            @if (ViewBag.IsQualityControlQnAns)
+            {
+                using (Html.BeginForm("UpdateQuestionnaire", "PlanningEngagement", FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return validateForm(this);" }))
+                {
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="ModuleId" id="ModuleId" value="@ViewBag.PlanningEngagementId" />
+                    <input type="hidden" name="ClientFinancialYear" id="ClientFinancialYear" value="@ViewBag.ClientFinancialYear" />
+                    <input type="hidden" name="Category" id="Category" value="Quality Control" />
+                    <table id="example" class="table table-striped table-bordered table-hover" width="100%">
+                        <thead><tr></tr></thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="3" style="">@ViewBag.QuestionnaireDescription</td>
+                            </tr>
+                            @{ int n = 0;
+                            }
+                            @if (Model.QualityControlQn != null)
+                            {
+                                foreach (var group in Model.QualityControlQn.GroupBy(a => a.QuestionnairTitleName))
+                                {
+                                    n++;
+                                    List<int> questionList = new List<int>();
+                                    if (ViewBag.GetQualityCntQuestAnswers != null)
+                                    {
+                                        for (var mn = 0; mn < ViewBag.GetQualityCntQuestAnswers.Count; mn++)
+                                        {
+                                            if (ViewBag.GetQualityCntQuestAnswers[mn].QuestionId == group.Select(a => a.QuestionId).FirstOrDefault())
+                                            {
+                                                questionList.Add((int)group.Select(a => a.QuestionId).FirstOrDefault());
+                                            }
+                                        }
+                                    }
+
+                                    if (questionList.Contains((int)group.Select(a => a.QuestionId).FirstOrDefault()))
+                                    {
+                                        <tr data-level='1' style="background:#f5f5f5; color:#000000">
+                                            <td colspan="13">
+                                                <strong>
+                                                    <span class="sign"></span>
+                                                    @n. @group.Key
+                                                </strong>
+                                            </td>
+                                        </tr>
+                                    }
+                                    foreach (var item in group.GroupBy(a => a.QuestionnairSubTitleName))
+                                    {
+                                        int y = 0;
+
+                                        int num = 0;
+                                        if (item.Key != null)
+                                        {
+
+                                            if (questionList.Contains((int)item.Select(a => a.QuestionId).FirstOrDefault()))
+                                            {
+                                                <tr data-level='1' style="background:#f5f5f5; color:#000000;">
+                                                    <td colspan="13">
+                                                        <strong>
+                                                            <span class="sign"></span>
+                                                            <i>@item.Key</i>
+                                                        </strong>
+                                                    </td>
+                                                </tr>
+                                            }
+                                            foreach (var itemQn in item.GroupBy(a => a.Question))
+                                            {
+                                                num++;
+                                                <tr>
+                                                    @if (questionList.Contains((int)item.Select(a => a.QuestionId).FirstOrDefault()))
+                                                    {
+                                                        <td>
+                                                            @itemQn.Key
+                                                        </td>
+                                                    }
+                                                    @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                    {
+
+                                                        foreach (var data in itemx)
+                                                        {
+                                                            y++;
+
+                                                            if (ViewBag.GetQualityCntQuestAnswers != null)
+                                                            {
+                                                                for (var nm = 0; nm < ViewBag.GetQualityCntQuestAnswers.Count; nm++)
+                                                                {
+                                                                    if (ViewBag.GetQualityCntQuestAnswers[nm].QuestionId == @itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                    {
+
+                                                                        if (itemx.Key == "Radio Button")
+                                                                        {
+
+                                                                            if (ViewBag.GetQualityCntQuestAnswers[nm].Answer == data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" checked value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].Answer-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                            else if (ViewBag.GetQualityCntQuestAnswers[nm].Answer != data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                        }
+                                                                        else if (itemx.Key == "Text")
+                                                                        {
+                                                                            <td colspan="2">
+                                                                                <label>@data.Value</label>
+                                                                                <input type="hidden" id="QuestionIdForTxtAreas-@y" name="QuestionIdForTxtAreas[]" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" />
+                                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]">@ViewBag.GetQualityCntQuestAnswers[nm].Answer</textarea>
+                                                                            </td>
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            if (ViewBag.GetQualityCntQuestAnswers[nm].Answer.Contains(","))
+                                                                            {
+                                                                                string[] answerArray = ViewBag.GetQualityCntQuestAnswers[nm].Answer.Split(',');
+
+                                                                                <td>
+                                                                                    @for (var z = 0; z < answerArray.Count(); z++)
+                                                                                    {
+                                                                                        if (answerArray[z] == data.Value)
+                                                                                        {
+                                                                                            <input type="checkbox" class="answers" checked value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@answerArray[z]-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                            <label>@data.Value</label>
+                                                                                        }
+                                                                                    }
+                                                                                    @if (!answerArray.Contains(data.Value))
+                                                                                    {
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a=>a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    }
+
+                                                                                </td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                if (ViewBag.GetQualityCntQuestAnswers[nm].Answer == data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].Answer-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                                else if (ViewBag.GetQualityCntQuestAnswers[nm].Answer != data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+
+                                                        }
+                                                    }
+
+                                                </tr>
+                                            }
+                                        }
+                                        else
+                                        {
+
+                                            foreach (var itemQn in group.GroupBy(a => a.Question))
+                                            {
+                                                num++;
+                                                <tr>
+                                                    @{
+                                                        if (ViewBag.GetQualityCntQuestAnswers != null)
+                                                        {
+                                                            for (var mn = 0; mn < ViewBag.GetQualityCntQuestAnswers.Count; mn++)
+                                                            {
+                                                                if (ViewBag.GetQualityCntQuestAnswers[mn].QuestionId == itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                {
+                                                                    questionList.Add((int)itemQn.Select(a => a.QuestionId).FirstOrDefault());
+                                                                }
+                                                            }
+                                                        }
+                                                    }
+
+                                                    @if (questionList.Contains((int)itemQn.Select(a => a.QuestionId).FirstOrDefault()))
+                                                    {
+                                                        <td>
+                                                            @itemQn.Key
+                                                        </td>
+                                                    }
+
+                                                    @foreach (var itemx in itemQn.GroupBy(a => a.Lebal))
+                                                    {
+
+                                                        foreach (var data in itemx)
+                                                        {
+                                                            y++;
+
+                                                            //BEGIN CHECKING IF ANSWERS IS NOT NULL
+                                                            if (ViewBag.GetQualityCntQuestAnswers != null)
+                                                            {
+                                                                for (var nm = 0; nm < ViewBag.GetQualityCntQuestAnswers.Count; nm++)
+                                                                {
+                                                                    if (ViewBag.GetQualityCntQuestAnswers[nm].QuestionId == @itemQn.Select(a => a.QuestionId).FirstOrDefault())
+                                                                    {
+
+                                                                        if (itemx.Key == "Radio Button")
+                                                                        {
+
+                                                                            if (ViewBag.GetQualityCntQuestAnswers[nm].Answer == data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].Answer-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                            else if (ViewBag.GetQualityCntQuestAnswers[nm].Answer != data.Value)
+                                                                            {
+                                                                                <td>
+                                                                                    <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@num" onclick="AllowSingleSelection(this);" />@data.Value
+                                                                                </td>
+                                                                            }
+                                                                        }
+                                                                        else if (itemx.Key == "Text")
+                                                                        {
+                                                                            <td colspan="2">
+                                                                                <label>@data.Value</label>
+                                                                                <input type="hidden" id="QuestionIdForTxtAreas-@y" name="QuestionIdForTxtAreas[]" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" />
+                                                                                <textarea class="form-control answers" required id="Answers-@y" rows="4" cols="150" name="Answers[]">@ViewBag.GetQualityCntQuestAnswers[nm].Answer</textarea>
+                                                                            </td>
+                                                                        }
+                                                                        else
+                                                                        {
+
+                                                                            if (ViewBag.GetQualityCntQuestAnswers[nm].Answer.Contains(","))
+                                                                            {
+                                                                                string[] answerArray = ViewBag.GetQualityCntQuestAnswers[nm].Answer.Split(',');
+
+                                                                                <td>
+                                                                                    @for (var z = 0; z < answerArray.Count(); z++)
+                                                                                    {
+                                                                                        if (answerArray[z] == data.Value)
+                                                                                        {
+                                                                                            <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@answerArray[z]-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                            <label>@data.Value</label>
+                                                                                        }
+                                                                                    }
+                                                                                    @if (!answerArray.Contains(data.Value))
+                                                                                    {
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    }
+
+                                                                                </td>
+                                                                            }
+                                                                            else
+                                                                            {
+                                                                                if (ViewBag.GetQualityCntQuestAnswers[nm].Answer == data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" checked value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@ViewBag.GetQualityCntQuestAnswers[nm].Answer-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                                else if (ViewBag.GetQualityCntQuestAnswers[nm].Answer != data.Value)
+                                                                                {
+                                                                                    <td>
+                                                                                        <input type="checkbox" class="answers" value="@itemQn.Select(a => a.QuestionId).FirstOrDefault()_@data.Value-@ViewBag.GetQualityCntQuestAnswers[nm].QuestionnaireAnswerDetailId" name="Answers[]" id="Answers-@y" />
+                                                                                        <label>@data.Value</label>
+                                                                                    </td>
+                                                                                }
+                                                                            }
+                                                                        }
+                                                                    }
+                                                                }
+                                                            }
+                                                            //END CHECKING IF ANSWERS IS NOT NULL
+                                                        }
+                                                    }
+
+                                                </tr>
+                                            }
+                                        }
+                                    }
+
+                                }
+                            }
+
+                        </tbody>
+                    </table>
+                    <div class="form-group">
+                        <div class="col-md-1"></div>
+                        @if (Model.OverallStatus == "Approved")
+                        {
+
+                        }
+                        else
+                        {
+                            <button type="submit" name="submit" class="btn btn-info" id="saveAnswerForm">
+                                <i class="fa fa-save"></i> Save
+                                <img src="~/Content/img/loading.gif" class="loadingImg" />
+                            </button>
+                        }
+
+                    </div>
+                }
+            }
+
+        </div>
+        <div class="tab-pane fade" id="mq3">
+            <div class="form-horizontal">
+                <div class="form-group">
+                    @Html.HiddenFor(model => model.ClientInformationId)
+                    @*@Html.HiddenFor(model => model.ClientFinancialYear)*@
+                    @*<input type="hidden" name="ClientInformationId" id="ClientInformationId" value="@ViewBag.ClientInformationId" />*@
+                    <input type="hidden" name="ClientFinancialYear" id="ClientFinancialYear" value="@ViewBag.ClientFinancialYear" />
+                    <input type="hidden" name="OverallStatus" id="OverallStatus" value="Pending" />
+                    <label class="control-label col-md-2">Module Type<span class="redStar">*</span></label>
+                    <div class="col-md-8">
+                        @Html.DropDownList("ModuleType", new List<SelectListItem>{
+                          new SelectListItem{ Text="--Select ---", Value = "" },
+                          new SelectListItem{ Text="Personal Declaration Form", Value = "Personal Declaration Form" },
+                          new SelectListItem{ Text="Audit Strategy", Value = "Audit Strategy" },
+                          new SelectListItem{ Text="Quality Control", Value = "Quality Control" },
+                           }, new { @class = "form-control select2", @required = "required" })
+                        @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="control-label col-md-2">Remarks<span class="redStar">*</span></label>
+                    <div class="col-md-8">
+                        @Html.TextAreaFor(model => model.Remarks, new { maxlength = 2500, @class = "form-control", @rows = 5, @cols = 30 })
+                        @Html.ValidationMessageFor(model => model.Remarks, "", new { @class = "text-danger" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    <div class="col-md-8"></div>
+                    @if (Model.OverallStatus == "Approved")
+                    {
+
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-info" id="saveMemorandam">
+                            <i class="fa fa-save"></i>Save
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+                    }
+
+                </div>
+
+            </div>
+
+            <div class="col-md-12">
+                <table id="dt_samplebasic" class="table table-striped table-bordered table-hover" width="50%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Module Type</th>
+                            <th>Remarks</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    @{
+                        int j = 0;
+                    }
+                    <tbody>
+                        @if (Model.Memorandamu.Count == 0)
+                        {
+                            <tr>
+                                <td colspan="10" style="text-align:center">
+                                    <span style="font-style:italic">
+                                        No Data of Memorandamu For :
+                                        <strong> @Model.EngagementName</strong>
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+
+
+                            foreach (var group in Model.Memorandamu)
+                            {
+                                j++;
+                                <tr>
+                                    <td>@j</td>
+                                    <td>@group.ModuleType</td>
+                                    <td>@group.Remarks</td>
+                                    @if (Model.OverallStatus == "Approved")
+                                    {
+                                        <td>
+                                            <a href="#" onclick="DeleteMemorandamu(@group.PlanningMemorandamId)">Disabled</a>
+                                        </td>
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <a href="#" onclick="DeleteMemorandamu(@group.PlanningMemorandamId)"><i class="fa fa fa-fw  fa-trash-o"></i></a>|
+                                            <a href="#" onclick="EditMemorandamu(@group.PlanningMemorandamId)"><i class="fa fa fa-fw  fa-edit"></i></a>
+                                        </td>
+                                    }
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </div>
+</div>

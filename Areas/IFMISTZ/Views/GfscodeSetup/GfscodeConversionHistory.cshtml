@@ -1,0 +1,285 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.GfsCodeHistoryViewModel
+@{
+    ViewBag.Title = "GFS Code Conversion History";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .chat-container {
+        max-width: 100%;
+        margin: 0 auto;
+        padding: 20px;
+        background-color: #e5ddd5;
+        border-radius: 5px;
+    }
+
+    .chat-header {
+        background-color: #88a8c2;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 5px 5px 0 0;
+        margin: -20px -20px 20px -20px;
+    }
+
+    .message {
+        margin-bottom: 15px;
+        display: flex;
+    }
+
+    .message-left {
+        justify-content: flex-start;
+    }
+
+    .message-right {
+        justify-content: flex-end;
+    }
+
+    .message-content {
+        max-width: 70%;
+        padding: 10px 15px;
+        border-radius: 7.5px;
+        position: relative;
+        word-wrap: break-word;
+    }
+
+    .message-left .message-content {
+        background-color: white;
+        border-top-left-radius: 0;
+    }
+
+    .message-right .message-content {
+        background-color: #dcf8c6;
+        border-top-right-radius: 0;
+    }
+
+    .message-info {
+        font-size: 0.8em;
+        color: #777;
+        text-align: right;
+        margin-top: 5px;
+    }
+
+    .message-sender {
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #075e54;
+    }
+
+    .message-text {
+        margin-bottom: 5px;
+    }
+
+    .initial-message {
+        text-align: center;
+        background-color: #fff5c4;
+        padding: 8px 12px;
+        border-radius: 7.5px;
+        margin: 20px auto;
+        display: inline-block;
+    }
+
+    .date-separator {
+        text-align: center;
+        margin: 20px 0;
+        position: relative;
+    }
+
+        .date-separator:before {
+            content: '';
+            position: absolute;
+            height: 1px;
+            background-color: #ccc;
+            width: 45%;
+            top: 50%;
+            left: 0;
+        }
+
+        .date-separator:after {
+            content: '';
+            position: absolute;
+            height: 1px;
+            background-color: #ccc;
+            width: 45%;
+            top: 50%;
+            right: 0;
+        }
+
+    .date-text {
+        background-color: #e5ddd5;
+        padding: 0 10px;
+        display: inline-block;
+        position: relative;
+        z-index: 1;
+    }
+
+    .status-badge {
+        display: inline-block;
+        padding: 3px 7px;
+        border-radius: 3px;
+        font-size: 0.8em;
+        font-weight: bold;
+        margin-right: 5px;
+    }
+
+    .badge-requested {
+        background-color: #3498db;
+        color: white;
+    }
+
+    .badge-approved {
+        background-color: #2ecc71;
+        color: white;
+    }
+
+    .badge-rejected {
+        background-color: #e74c3c;
+        color: white;
+    }
+
+    .badge-split {
+        background-color: #f39c12;
+        color: white;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-history"></i> </span>
+                        <h2 style="color:black;">GFS Code Conversation History</h2>
+                    </header>
+                    <div>
+                        <div class="chat-container">
+                            <div class="chat-header">
+                                <div class="row">
+                                    <div class="col-md-1">
+                                        <i class="fa fa-users fa-2x"></i>
+                                    </div>
+                                    <div class="col-md-9">
+                                        <h4>GFS Code Request - @Model.BatchSummary.BatchRefNo</h4>
+                                        <small>
+                                            Current Status:
+                                            <span class="status-badge badge-@Model.BatchSummary.Overallstatus.ToLower()">
+                                                @Model.BatchSummary.Overallstatus
+                                            </span>
+                                            Total Codes: @Model.BatchSummary.TotalNoGfsCodeReq
+                                        </small>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- System message for batch creation -->
+                            <div style="text-align: center; margin: 20px 0;">
+                                <span class="initial-message">
+                                    <i class="fa fa-info-circle"></i>
+                                    Batch @Model.BatchSummary.BatchRefNo created by @Model.BatchSummary.CreatedBy
+                                    on @Model.BatchSummary.CreatedAt.ToString("dd-MM-yyyy HH:mm")
+                                </span>
+                            </div>
+
+                            @{
+                                DateTime currentDate = DateTime.MinValue;
+                                var groupedConversions = Model.Conversions.OrderBy(c => c.CreatedAt).GroupBy(c => c.CreatedAt.Date);
+                            }
+
+                            @foreach (var dateGroup in groupedConversions)
+                            {
+                                if (currentDate != dateGroup.Key)
+                                {
+                                    currentDate = dateGroup.Key;
+                                    <div class="date-separator">
+                                        <span class="date-text">@currentDate.ToString("dddd, MMMM d, yyyy")</span>
+                                    </div>
+                                }
+
+                                foreach (var conversion in dateGroup)
+                                {
+                                    bool isCreator = conversion.CreatedBy == Model.BatchSummary.CreatedBy;
+                                    var batchDetail = Model.BatchDetails.FirstOrDefault(d => d.BatchDetailId == conversion.BatchDetailId);
+                                    string detail = batchDetail != null ? batchDetail.GfsCodeName : "Unknown";
+
+                                    <div class="message @(isCreator ? "message-left" : "message-right")">
+
+                                        <div class="message-content">
+                                            <div class="message-sender">
+                                                @conversion.CreatedBy
+                                                <span class="status-badge badge-@conversion.RequestStatus.ToLower()">
+                                                    @conversion.RequestStatus
+                                                </span>
+                                            </div>
+                                            <div class="message-text">
+                                                <strong>GFS Code Name:</strong> @conversion.GfsCodeName<br />
+                                                <strong>GFS Code Descr:</strong> @conversion.GfsCodeDesc
+                                            </div>
+
+                                            @if (!string.IsNullOrEmpty(conversion.Comment))
+                                             {
+                                                    <div class="message-text" style="background-color: rgba(0,0,0,0.05); padding: 8px; border-radius: 5px; margin-top: 8px;">
+                                                        <i class="fa fa-comment"></i> @conversion.Comment
+                                                    </div>
+                                             }
+
+                                            <div class="message-info">
+                                                @conversion.CreatedAt.ToString("HH:mm")
+                                                <i class="fa fa-check" style="margin-left: 3px;"></i>
+                                            </div>
+                                        </div>
+                                    </div>
+                                }
+                            }
+
+                            <!-- If no conversations yet -->
+                            @if (!Model.Conversions.Any())
+                            {
+                                <div style="text-align: center; margin: 30px 0;">
+                                    <div class="alert alert-info">
+                                        <i class="fa fa-info-circle"></i>
+                                        No conversion history found for this batch. Actions will appear here once the batch is processed.
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                        <br />
+                        <div class="row mt-4">
+                            <div class="col-md-12">
+                                @if (Model.BatchSummary.Overallstatus == "Rejected")
+                                {
+                                    <a href="@Url.Action("GfsCodeProcessedRequest", "GfscodeSetup")" class="btn btn-default">
+                                        <i class="fa fa-arrow-left"></i> Back to Processed Requests
+                                    </a>
+                                }
+
+                                <a href="@Url.Action("GfsCodeBatchDetails", new { id = Model.BatchSummary.BatchSummaryId })" class="btn btn-primary">
+                                    <i class="fa fa-eye"></i> View Batch Details
+                                </a>
+                                @if (Model.BatchSummary.Overallstatus != "Approved" && Model.BatchSummary.Overallstatus != "Rejected")
+                                {
+                                    <a href="@Url.Action("GfsCodePendingRequest", "GfscodeSetup")" class="btn btn-default">
+                                        <i class="fa fa-arrow-left"></i> Back to Pending Requests
+                                    </a>
+                                    <a href="@Url.Action("GfsCodeBatchDetails", new { id = Model.BatchSummary.BatchSummaryId })" class="btn btn-success pull-right">
+                                        <i class="fa fa-check-circle"></i> Process This Batch
+                                    </a>
+                                }
+                            </div>
+                        </div>
+                        <br />
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            // Scroll to bottom of chat on load
+            var chatContainer = $(".chat-container");
+            chatContainer.scrollTop(chatContainer[0].scrollHeight);
+        });
+    </script>
+}

@@ -1,0 +1,241 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM>
+@{
+    ViewBag.Title = "Complete Inventory";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Inventory Detail - @ViewBag.Inventory </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <br />
+
+                            <br />
+                            <table align="center" class="table  table-bordered table-hover table-condensed" id="dt_inventories" style="width:96%">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%"></th>
+                                        <th style="text-align:left">Ledger Folio</th>
+                                        <th style="text-align:left">BatchNo</th>
+                                        <th style="text-align:left">Inventory Desc</th>
+                                        <th style="text-align:center">Quantity</th>
+                                        <th style="text-align:left">UOM</th>
+                                        <th style="text-align:right">Unit Price(Tsh)</th>
+                                        <th style="text-align:right">Inventory Value(Tsh)</th>
+                                        <th style="text-align:center">Original Quantity</th>
+                                        <th style="text-align:left">Source</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{var i = 0;}
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+                                            decimal quantity = 0;
+                                            if(item.Quantity > 0)
+                                            {
+                                                quantity = (decimal)item.Quantity;
+                                            }
+                                            else
+                                            {
+                                                quantity = 1;
+                                            }
+                                            decimal unit_price=Convert.ToDecimal(item.InventoryValue / quantity);
+                                   decimal inventory_value=Convert.ToDecimal(unit_price * item.BalanceQuantity);
+                                    <tr>
+                                        <td style="text-align:right">
+                                            @i
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.InventoryCode)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.BatchNo)
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.ItemName)
+                                        </td>
+                                        <td style="text-align:center">
+                                            @Html.DisplayFor(modelItem => item.BalanceQuantity)
+
+                                        </td>
+                                        <td style="text-align:left">
+                                            @Html.DisplayFor(modelItem => item.UOM)
+
+                                        </td>
+                                        <td style="text-align:right">
+                                            @unit_price.ToString("#,##0.00")
+
+                                        </td>
+
+                                        <td style="text-align:right">
+                                            @inventory_value.ToString("#,##0.00")
+
+                                        </td>
+                                        <td style="text-align:center">
+                                            @Html.DisplayFor(modelItem => item.Quantity)
+                                        </td>
+
+                                        <td style="text-align:left">
+
+                                            @if (item.SourceModule =="External") {
+                                            @Html.DisplayFor(modelItem => item.SourceModule)
+                                            }else{
+                                            <a href="@Url.Action("PreviewSource", "Inventories", new {source=item.SourceModule,number=item.ReceivingNumber })">
+                                                @Html.DisplayFor(modelItem => item.SourceModule)
+                                            </a>
+                                            }
+                                        </td>
+
+                                    </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+
+
+                            <br />
+                            <div class="col-md-offset-1">
+                                @if(ViewBag.register !=null){
+
+                                <a href="@Url.Action("ViewInventories","Inventories")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                
+                                }else{
+
+                                <a href="@Url.Action("StockTaking","Inventories")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                }
+                            </div>
+                            <br />
+                            <br />
+                        </div>
+
+                        </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        function SubmitInventory(formData) {
+            var manufacture_date = $("#ManufactureDate").val();
+            if (!manufacture_date) {
+                swal("Please Select Manufacture Date");
+                return false;
+            }
+            var expire_date = $("#ExpireDate").val();
+            if (!expire_date) {
+                swal("Please Select Expire Date");
+                return false;
+            }
+            var url = '@Url.Action("ModifyExistInventory", "Inventories")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (result) {
+                    if (result == "Success") {
+                        swal("Data saved successfully", { icon: "Success" })
+                                    .then((value) => {
+                                        var url = '@Url.Action("PendingInventories", "Inventories")';
+                                        window.location.replace(url);
+                                    });
+                    }
+                    else {
+                        swal("Failed  due to DbException");
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        // =========== End Save Inventory ====================
+            $(document).ready(function () {
+
+                //MANAGE SELECTED DATE
+                $(function () {
+                    $("#ExpireDate").change(function () {
+                        var expire_date = $(this).val();
+                        var manufacture_date = $("#ManufactureDate").val();
+                        if (manufacture_date) {
+                            if (expire_date) {
+                                if (manufacture_date > expire_date) {
+                                    swal("Please select date which is greater than the manufacture date");
+                                    $("#ExpireDate").val("");
+                                }
+
+                            }
+                        }
+
+
+                    });
+                });
+                $(function () {
+                    $("#ManufactureDate").change(function () {
+                        var manufacture_date = $(this).val();
+                        var expire_date = $("#ExpireDate").val();
+                        if (expire_date) {
+                            if (manufacture_date) {
+                                if (manufacture_date > expire_date) {
+                                    swal("Please select date which is less than the expire date");
+                                    $("#ManufactureDate").val("");
+                                }
+
+                            }
+                        }
+
+
+                    });
+                });
+
+
+                        });
+
+
+
+    </script>
+}
+
+

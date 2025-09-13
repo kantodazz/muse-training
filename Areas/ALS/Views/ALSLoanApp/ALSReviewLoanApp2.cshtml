@@ -1,0 +1,1098 @@
+﻿@{
+    ViewBag.Title = "ALS Loan Review";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div style="display:flex;flex-direction:row;justify-content:space-between">
+                                <div></div>
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vote Code</th>
+                                        <th>Vote Name</th>
+                                        <th>Application Number</th>
+                                        <th>Check Number</th>
+                                        <th>Vendor Name</th>
+                                        <th>Loan Amount</th>
+                                        <th>OverallStatus</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="viewActionModal" style="left:4%;">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <table>
+                            <tr style="border:none">
+                                <td class="form-label" style="border:none">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="Remarks_1"></i>
+                                </td>
+                                <td style="border:none">
+                                    <div class="name-input-container">
+                                        <textarea type="text" id="Remarks" style="width:300px" rows="2" cols="50" /></textarea>
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr style="border:none">
+                                <td class="form-label" style="border:none">
+                                    Attachment
+                                </td>
+                                <td style="border:none">
+                                    <div class="name-input-container">
+                                        <input type="file" class="col-sm-8" id="RemarkAttachment" />
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button class="btn btn-info btn-size" style="width:100px;" onclick="confirmSave()">
+                        <i class="fa fa-save ico"></i>Save
+                    </button>
+
+                    <button class="btn btn-info btn-size" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times ico"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="commentModal2" style="left:4%">
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Return Loan to ALS Portal</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Remarks
+                                    <i class="fa fa-times" style="color:white" id="remarksloan1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <textarea style="width:300px" rows="2" id="remarksloan" maxlength="350"></textarea><br />
+                                    </div>
+                                </td>
+                            </tr>
+
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="attachment1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" id="attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="ReturnForm()" id="returnform">
+                        <i class="fa fa-save ico"></i>Submit
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                    <button class="btn btn-info btn-size" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times ico"></i>Close
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="attachmentModal" style="left:4%">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Upload Attachment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="Title_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachment" id="Attachment" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="UploadForm()" id="uploadform">
+                        <i class="fa fa-times"></i>Upload
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="attachmentModalc" style="left:4%">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Upload Attachment</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Attachment
+                                    <i class="fa fa-times" style="color:white" id="Title_2"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="file" name="Attachmentc" id="Attachmentc" class="input" style="width:300px" />
+                                    </div>
+                                </td>
+
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="UploadFormc()" id="uploadformc">
+                        <i class="fa fa-times"></i>Upload
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="signingDigitallyModal" style="left:4%">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Signing Digitally</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Password
+                                    <i class="fa fa-times" style="color:white" id="password_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" name="password" id="password" class="input" />
+                                        @*<input type="password" id="pwd" name="pwd" minlength="8" />*@
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="signingForm()" id="signingform">
+                        <i class="fa fa-times"></i>Sign
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="signingDigitallyRepModal" style="left:4%">
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Signing Digitally</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:2px">
+                        <input type="hidden" name="LoanApplId" id="LoanApplId" />
+                        @Html.AntiForgeryToken()
+                        <table style="margin-left:5%">
+                            <tr>
+                                <td class="form-label">
+                                    Password
+                                    <i class="fa fa-times" style="color:white" id="passwordrep_1"></i>
+                                </td>
+                                <td>
+                                    <div class="input-group">
+                                        <input type="text" name="passwordrep" id="passwordrep" class="input" />
+                                        @*<input type="password" id="pwd" name="pwd" minlength="8" />*@
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="submit" class="btn btn-info" onclick="signingRepForm()" id="signingrepform">
+                        <i class="fa fa-times"></i>Sign
+                        <img src="/Content/img/loading.gif" class="saveLoader" />
+                    </button>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 40%">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Password</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default" id="btnSaveComment">
+                    <span class="glyphicon glyphicon-floppy-disk" aria-hidden="true"></span>
+                    Sign
+                </button>
+                <button class="btn btn-default role-dismiss" data-dismiss="modal">
+                    <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+    <script>
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+        var data = [];
+        function LoadData() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetALSLoanApp", "ALSLoanApp")',
+                data: { status: ['Approved','Repayment Authorized','Contract Confirmed','Rejected by Pre-Authorizer'].toString() },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_table.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_table.fnAddData([i + 1,
+                            data[i]["AllocInstitutionCode"],
+                            data[i]["AllocInstitutionName"],
+                            data[i]["LoanCtrlNum"],
+                            data[i]["CheckNo"],
+                            data[i]["VendorName"],
+                            toLabel(data[i]["LoanApprovedAmount"]),
+                            data[i]["OverallStatus"].includes("Rejected") ? "Rejected" : data[i]["OverallStatus"],
+                            action(i, data[i]["OverallStatus"], data[i]["ApplicantCategory"], data[i]["ApplicationType"])
+
+                  ]);
+                        $("#saveLoader-" + i + "").toggle(false)
+                    }
+                },
+                failure: function (errmsg) {
+                    swal(errmsg);
+                }
+            });
+        }
+
+
+
+
+         //action
+        function action(i, overallStatus, applicantCategory,applicationType) {
+            debugger;
+
+
+            if ((overallStatus == "Approved" || overallStatus == "Rejected by Pre-Authorizer") && applicantCategory == "Member of Parliament") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                   <span class="caret"></span\
+                       <span class="sr-only"></span>\
+             </button>\
+           <ul class="dropdown-menu">\
+               <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+               <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+               <li><a href="#" onclick="confirm(' + i + ')">Accept</a></li>\
+          </ul>\
+          </div>\
+          <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+
+            if ((overallStatus == "Approved" || overallStatus == "Rejected by Pre-Authorizer") && applicantCategory == "Employee") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+                             <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+                             <li><a href="@Url.Action("PrintAttachment", "ALSLoanAssignment")/?loanAppid=' + data[i]["LoanApplId"] + '&&' + 'attachmentType=' + "Contract" + '" target="_blank">Print Contract</a></li>\
+                             <li><a href="#" onclick="uploadedContract(' + i + ')">Upload</a></li>\
+                             <li><a href="#" onclick= "signingDigitally(' + i + ')">Signing Digitally</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+            if (overallStatus == "Repayment Authorized" ) {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+                             <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+                             <li><a href="#" onclick="confirm(' + i + ')">Accept</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            } if (overallStatus == "Contract Confirmed") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+                             <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+                             <li><a href="@Url.Action("PrintAttachment", "ALSLoanAssignment")/?loanAppid=' + data[i]["LoanApplId"] + '&&' + 'attachmentType=' + "RepaymentSchedule" + '" target="_blank">Print Repayment Schedule</a></li>\
+                             <li><a href="#" onclick="uploaded(' + i + ')">Upload</a></li>\
+                             <li><a href="#" onclick= "signingRepDigitally(' + i + ')">Signing Digitally</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+
+            } if ((overallStatus == "Approved" || overallStatus == "Rejected by Pre-Authorizer") && applicantCategory != "Employee" && applicationType !="Subsidy") {
+                return '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+                             <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+                             <li><a href="@Url.Action("PrintAttachment", "ALSLoanAssignment")/?loanAppid=' + data[i]["LoanApplId"] + '&&' + 'attachmentType=' + "RepaymentSchedule" + '" target="_blank">Print Repayment Schedule</a></li>\
+                              <li><a href="#" onclick="uploaded(' + i + ')">Upload</a></li>\
+                             <li><a href="#" onclick= "signingRepDigitally(' + i + ')">Signing Digitally</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            }
+
+            //if (overallStatus == "Approved" || overallStatus == "Rejected by Pre-Authorizer") {
+            //    return '<div class="btn-group" id="drop-' + i + '">\
+            //              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+            //                     <span class="caret"></span\
+            //                         <span class="sr-only"></span>\
+            //               </button>\
+            //             <ul class="dropdown-menu">\
+            //                 <li><a href="#" onclick= "view(' + data[i].LoanApplId + ')">Details</a></li>\
+            //                 <li><a href="#" onclick= "reject(' + i + ')">Reject</a></li>\
+            //                 <li><a href="#" onclick="confirm(' + i + ')">Accept</a></li>\
+            //            </ul>\
+            //      </div>\
+            //      <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+            //}
+        }
+
+
+        LoadData()
+        function repaymentSchedule(loanAppId) {
+            reportUrl = "@ViewBag.reportUrlName" + "ALS_loanRepayScheduleModRPT.aspx";
+            queryString = "loanAppId=" + loanAppId;
+            $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("ParameterEncryption", "Reports", new {area = "ALS"})',
+                    contentType: "application/json; charset=utf-8",
+                    datatype: "json",
+                    data: { "query": queryString },
+                    success: function (response) {
+                        window.open(reportUrl + response);
+                    }
+            });
+        }
+
+        var selectedItemId = 0
+        var TotalAmount = 0
+        var selectedItemIndex = 0
+        var actionType = ""
+        function confirm(i) {
+            selectedItemId = data[i].LoanApplId
+            selectedItemIndex = i
+            TotalAmount = data[i].NetLoanAmount
+            actionType = "Accept"
+            $('#viewActionModal').modal('show');
+        }
+
+        function reject(i) {
+            actionType = "Reject"
+            selectedItemId = data[i].LoanApplId
+            $('#viewActionModal').modal('show');
+        }
+
+        function confirmSave() {
+            if ($("#Remarks").val() == '') {
+                $("#Remarks").attr("style", "border-color: red;");
+            } else {
+                swal({
+                    title: actionType + ' this Application?',
+                    buttons: ['NO', 'YES'],
+                    dangerMode: true,
+                }).then(function (isConfirmed) {
+                    if (isConfirmed) {
+                        confirmPost()
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+            }
+        }
+
+        function confirmPost(Ids) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ALSLoanActions", "ALSLoanApp")',
+                data: CreateForm({
+                    id: selectedItemId,
+                    status: actionType == "Reject" ? "Rejected by Acceptor" : "Accepted",
+                    level: "Loan Review and Authorization",
+                    remarks: $("#Remarks").val(),
+                    file: $("#RemarkAttachment")[0].files[0]
+                }),
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => window.location.reload());
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function CreateForm(form) {
+            let _form = new FormData();
+            for (let key in form) {
+                _form.append(key, form[key])
+            }
+            return _form
+        }
+
+        const context = {
+            detailsUrl: '@Url.Action("ALSLoanDetails", "ALSLoanApp")',
+            actionStatus: 'Accepted',
+            level: 'Loan Review and Authorization',
+            actionLabel: 'Accept',
+            redirectUrl: '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")',
+            rejectionStatus: 'Rejected by Acceptor'
+        }
+
+        function view(Id) {
+            window.location.href = `${context.detailsUrl}/?Id=${Id}
+                &actionStatus=${context.actionStatus}
+                &level=${context.level}
+                &actionLabel=${context.actionLabel}
+                &redirectUrl=${context.redirectUrl}
+                &rejectionStatus=${context.rejectionStatus}`
+        }
+
+
+       //======= Return Start ========
+        function loanReturn(i) {
+          debugger
+            $("#LoanApplId").text(data[i]["LoanApplId"]);
+            document.getElementById("LoanApplId").value = data[i]["LoanApplId"];
+            $('#commentModal2').modal('show');
+        }
+
+       //function loanReturn(i) {
+       //     actionType = "Reject"
+       //     selectedItemId = data[i].LoanApplId
+       //     $('#commentModal2').modal('show');
+       // }
+
+        $(".saveLoader").toggle(false);
+        function ReturnForm() {
+           debugger
+            var loanApplId = $("#LoanApplId").val();
+            var remarks = $("#remarksloan").val();
+
+            if (loanApplId == '' || remarks == '') {
+                var url = '@Url.Action("", "ALSLoanAssignment")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            postReturnLoan(loanApplId, remarks);
+        }
+
+        function postReturnLoan(loanApplId,remarks) {
+            //console.log(formData);
+            $(".loadingImg").show();
+            $("#returnform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("ReturnLoanToAslPortal", "ALSLoanAssignment")';
+            $.ajax({
+                url: url,
+                data: { alsLoanAppId: loanApplId, remark: remarks },
+                type: 'POST',
+                //contentType: false,
+                //processData: false,
+                success: function (response) {
+                    $("#returnform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Returned Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        $("#returnform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                failure: function (error) {
+                    $("#returnform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+        // =============== End  Confirmation ===============
+         function uploaded(i) {
+             $("#LoanApplId").text(data[i]["LoanApplId"]);
+             document.getElementById("LoanApplId").value = data[i]["LoanApplId"];
+            $('#attachmentModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function UploadForm() {
+
+            var loanApplId = $("#LoanApplId").val();
+            var attachmenttype = "RepaymentSchedule";
+
+            if (loanApplId == '') {
+                var url = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('LoanApplId', loanApplId);
+            formData.append('AttachmentType', attachmenttype);
+            formData.append('FileName', $("#Attachment")[0].files[0]);
+            uploadattachment(formData);
+        }
+
+        function uploadattachment(formData) {
+            $(".loadingImg").show();
+            $("#uploadform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("UploadAlsAttachment", "ALSLoanApp")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log(response);
+                    $("#uploadform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                            $("#divLoader").hide();
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    }
+                    else {
+                        $("#uploadform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            $("#saveLoader").toggle(false);
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    };
+
+                },
+                failure: function (error) {
+                    $("#uploadform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        function uploadedContract(i) {
+             $("#LoanApplId").text(data[i]["LoanApplId"]);
+             document.getElementById("LoanApplId").value = data[i]["LoanApplId"];
+            $('#attachmentModalc').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function UploadFormc() {
+
+
+            var loanApplId = $("#LoanApplId").val();
+            var attachmenttype = "Contract";
+
+            if (loanApplId == '') {
+                var url = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('LoanApplId', loanApplId);
+            formData.append('AttachmentType', attachmenttype);
+            formData.append('FileName', $("#Attachmentc")[0].files[0]);
+            uploadattachment_c(formData);
+        }
+
+        function uploadattachment_c(formData) {
+            $(".loadingImg").show();
+            $("#uploadformc").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("UploadAlsAttachmentContract", "ALSLoanApp")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log(response);
+                    $("#uploadformc").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Uploaded Successfully!", { icon: "success" }).then((e) => {
+                            $("#divLoader").hide();
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    }
+                    else {
+                        $("#uploadformc").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            $("#saveLoader").toggle(false);
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    };
+
+                },
+                failure: function (error) {
+                    $("#uploadformc").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        //-----------------------------
+
+        function signingDigitally1(i) {
+
+            $("#LoanApplId").text(data[i]["LoanApplId"]);
+             document.getElementById("LoanApplId").value = data[i]["LoanApplId"];
+            $('#signingDigitallyModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function signingForm() {
+            debugger;
+
+            var loanApplId = $("#LoanApplId").val();
+            var password = $("#password").val();
+            var attachmenttype = "Contract";
+
+            if (loanApplId == '') {
+                var url = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('LoanApplId', loanApplId);
+            formData.append('Password', password);
+            formData.append('AttachmentType', attachmenttype);
+            //formData.append('FileName', $("#Attachment")[0].files[0]);
+            signingDigitallyment(formData);
+        }
+
+        function signingDigitallyment(formData) {
+            $(".loadingImg").show();
+            $("#signingform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("SignedDigitally", "ALSLoanApp")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log(response);
+                    $("#signingform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Signed Successfully!", { icon: "success" }).then((e) => {
+                            $("#divLoader").hide();
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    }
+                    else {
+                        $("#signingform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            $("#saveLoader").toggle(false);
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    };
+
+                },
+                failure: function (error) {
+                    $("#signingform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+
+        //-----------------------------------
+
+
+          //-----------------------------
+
+        function signingRepDigitally2(i) {
+
+            $("#LoanApplId").text(data[i]["LoanApplId"]);
+             document.getElementById("LoanApplId").value = data[i]["LoanApplId"];
+            $('#signingDigitallyRepModal').modal('show');
+        }
+
+        $(".saveLoader").toggle(false);
+        function signingRepForm() {
+            debugger;
+
+            var loanApplId = $("#LoanApplId").val();
+            var password = $("#passwordrep").val();
+            var attachmenttype = "RepaymentSchedule";
+
+            if (loanApplId == '') {
+                var url = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                swal("Please Fill All the required Fields");
+                return false;
+            }
+
+            if (password == '') {
+                var url = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                swal("Please Fill Password required Fields");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('LoanApplId', loanApplId);
+            formData.append('Password', password);
+            formData.append('AttachmentType', attachmenttype);
+            //formData.append('FileName', $("#Attachment")[0].files[0]);
+            signingRepDigitallyment(formData);
+        }
+
+        function signingRepDigitallyment(formData) {
+            $(".loadingImg").show();
+            $("#signingrepform").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("SignedDigitally", "ALSLoanApp")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    console.log(response);
+                    $("#signingrepform").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Signed Successfully!", { icon: "success" }).then((e) => {
+                            $("#divLoader").hide();
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    }
+                    else {
+                        $("#signingrepform").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(response, { icon: "warning" }).then((e) => {
+                            $("#saveLoader").toggle(false);
+                            window.location.href = '@Url.Action("ALSReviewLoanApp", "ALSLoanApp")';
+                        });
+                    };
+
+                },
+                failure: function (error) {
+                    $("#signingrepform").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(error)
+                }
+            });
+        }
+
+        var signingDigitally = function (i) {
+            var attachmenttype = "Contract";
+            $(".modal-title").text("Sign Comment");
+            $("#btnSaveComment").show();
+            $("#divLoader").show();
+            var url = '@Url.Action("AcceptSignDigitally", "ALSLoanApp")/?loanAppid=' + data[i]["LoanApplId"] + '&&attachmentType=' + attachmenttype;
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+
+                $("#divLoader").hide();
+            });
+        };
+
+
+        var signingRepDigitally = function (i) {
+            var attachmenttype = "RepaymentSchedule";
+            $(".modal-title").text("Sign Comment");
+            $("#btnSaveComment").show();
+            $("#divLoader").show();
+            var url = '@Url.Action("AcceptSignDigitally", "ALSLoanApp")/?loanAppid=' + data[i]["LoanApplId"] + '&&attachmentType=' + attachmenttype;
+            $("#modal-body").load(url, function () {
+                $("#modal").modal({
+                    backdrop: "static",
+                    keyboard: false
+                });
+
+                $("#divLoader").hide();
+            });
+        };
+
+    </script>
+}

@@ -1,0 +1,575 @@
+@model IFMIS.Areas.RecurrentPayment.Models.BeneficiaryVM
+@{
+    ViewBag.Title = "Payment Submission Lists";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_payment_list" class="table table-bordered table-condensed table-amount">
+
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Batch Number</th>
+                                        <th>Payment Description</th>
+                                        <th>Payment Category</th>
+                                        <th>No of Transactions</th>
+                                        <th>Amount</th>
+                                        <th>Attachment</th>
+                                        <th>Status</th>
+                                        <th>Created Date</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="RejectModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Rejection Reason</h4>
+            </div>
+            <div class="modal-body">
+                @Html.AntiForgeryToken()
+                <div class="modal-body">
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-12">
+                                <label>Enter Reason (<span style="font-weight:bold;" id="RejectionReasonsCount">250</span>)</label>
+                                <textarea rows="4" id="RejectionReasons" name="RejectionReasons" class="form-control" style="resize: none;" maxlength="250"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-left:10% !important;">
+                <button type="button" class="btn btn-info pull-left" id="btnSaveRemarks" onclick="RejectPaymentBatch()">
+                    <i class="fa fa-save"></i>Save
+                    <img src="~/Content/img/loading.gif" class="batchLoader" />
+                </button>
+                <button class="btn btn-default delete-cancel pull-left" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="attachFileModal">
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Attach File</h3>
+            </div>
+
+            <div class="modal-body">
+                <input type="file" name="file" id="file" accept=".pdf" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="uploadFile()" style="width:100px;" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="/Content/img/loading.gif" class="saveLoader" />
+                </button>
+                <button class="btn btn-info"
+                        data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade modal-backdrop-transparent" id="documentModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header" style="color: #31708f; background-color: #d9edf7; border-color: #bce8f1; ">
+                <h5 class="modal-title" id="title"></h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="color:white;">
+                    <span aria-hidden="true"><i class="fa fa-times"></i></span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <embed style="height: 70vh !important;" width="100" id="embedDocument" class="embed-responsive-item col-md-12"
+                       src="" allowfullscreen />
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        $(".loadingImg").hide();
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+
+        //var dt_payment_list = $("#dt_payment_list").dataTable();
+        $("#dt_payment_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_payment_list").DataTable().search(this.value).draw();
+            $("#dt_payment_list_wrapper .dt-toolbar").remove();
+        });
+
+        $(document).ready(function () {
+            $(".saveLoader").toggle(false);
+            BindDataTable();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var BindDataTable = function (response) {
+            $("#dt_payment_list").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetPaymentSubmissionList", "EFTPayments")',
+                "iDisplayLength": 10,
+                "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "fnServerData": function (sSource, aoData, fnCallback) {
+
+                    $.ajax({
+                        type: "Get",
+                        data: aoData,
+                        url: sSource,
+                        success: fnCallback
+                    })
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "BatchNo"},
+                    { "mData": "BatchDesc"},
+                    { "mData": "PaymentCategory" },
+                    {
+                        "mData": "NoTrx",
+                        "render": function (NoTrx, type, full, meta) {
+                            var num = null;
+                            if (NoTrx == null || NoTrx == 0) {
+                                num = "<p align='right'>0</p>";
+                            }
+                            else {
+                                num = "<p align='right'>" + NoTrx.toLocaleString() + "</p>";
+                            }
+                            return num;
+                        }
+                    },
+
+                    {
+                        "mData": "TotalAmount",
+                        "render": function (TotalAmount, type, full, meta) {
+                            var amount = null;
+                            if (TotalAmount == null) {
+                                amount = "<p align='right'>0</p>";
+                            }
+                            else {
+                                amount = "<p align='right'>" + TotalAmount.toLocaleString() + "</p>";
+                            }
+                            return amount;
+                        }
+                    },
+                    {
+                        "mData": "BOTSlipFileName",
+                        "render": function (BOTSlipFileName, type, full, meta) {
+                            var getAnswer = null;
+                            if (BOTSlipFileName == null) {
+                                getAnswer = "No Attachment";
+                            } else {
+                                getAnswer = "<span style='cursor:pointer' title = 'Preview Document' onclick = 'return previewDocument(`" + full.BOTSlipFileName + "`,`" + full.BatchNo + "`)'" + "><i class='fa fa-eye'>&nbsp;&nbsp;Preview</i></span>";
+                            }
+                            return getAnswer;
+                        }
+                    },
+
+                    {
+                        "mData": "OverallStatus",
+                        "render": function (OverallStatus, type, full, meta) {
+                            if (OverallStatus == "Approved") {
+                                return "Authorized"
+                            } else {
+                                return OverallStatus;
+                            }
+                        }
+                    },
+                    {
+                        "mData": "CreatedAt",
+                        "render": function (CreatedAt, type, full, meta) {
+                            if (CreatedAt != null && CreatedAt != "") {
+                                return ToJavaScriptDate(CreatedAt);
+                            } else {
+                                return "Not Found";
+                            }
+                        }
+                    },
+                    {
+                        "mData": "PaymentBatchID",
+                        "render": function (PaymentBatchID, type, full, meta) {
+                            var sendtoBOT = 'display:none';
+                            if (full.BOTSlipFileName != null) {
+                                sendtoBOT = "";
+                            }
+                               return '<div class="btn-group" id="drop">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret"></span\
+                                <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu dropdown-menu-right">\
+                                    <li><a class="dropdown-item" href="@Url.Action("PaymentBatchDetails", "EFTPayments")/?paymentBatchId=' + full.PaymentBatchID +'">Details</a></li>\
+                                    <li><a class="dropdown-item" href="@Url.Action("BOTPaymentInstructionSlip", "EFTPayments")/?id=' + full.PaymentBatchID +'">Download BOT Payslip</a></li>\
+                                    <li style="cursor:pointer"><a class="dropdown-item" onclick="attachSlip(' + full.PaymentBatchID + ')">Attach File</a></li>\
+                                    <li style="cursor:pointer;'+ sendtoBOT + '"><a class="dropdown-item" onclick="sendPaymentToBOT(`' + full.BatchNo + '`,`' + full.PaymentBatchID +'`)">Send To BOT</a></li>\
+                                    <li style="cursor:pointer"><a class="dropdown-item" onclick="rejectPaymentBatch(' + full.PaymentBatchID + ')">Reject</a></li>\
+                                </ul>\
+                            </div>\ ';
+                        }
+                    },
+                ]
+            });
+        }
+
+       /*BEGINNING REJECTION OF PAYMENT BATCH*/
+        $(".batchLoader").toggle(false);
+        var paymtBatchId = null;
+        function rejectPaymentBatch(id) {
+            paymtBatchId = id;
+            $('#RejectModal').modal('show');
+        }
+
+        $('#RejectionReasons').on("keyup", function () {
+            var count = $('#RejectionReasons').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#RejectionReasonsCount').text(parseInt(numChars));
+        });
+
+         function RejectPaymentBatch() {
+             $(".batchLoader").toggle(true);
+             $("#btnSaveRemarks").prop('disabled', true);
+             var RejectionReasons = $("#RejectionReasons").val();
+
+             if (RejectionReasons == '') {
+                 swal("Please Enter Reasons", { icon: "warning" });
+                 $(".batchLoader").toggle(false);
+                 $("#btnSaveRemarks").prop('disabled', false);
+                 return false;
+             }
+
+                 var formData = new FormData();
+                 formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                 formData.append('PaymentBatchId', paymtBatchId);
+                 formData.append('Remarks', RejectionReasons);
+                 formData.append('ModuleName', "EFT Payments");
+                 formData.append('ModuleLevel', "EFT Payment Submission");
+                 formData.append('Destination', "EFT Payment Authorization");
+                 formData.append('OverallStatus', "Rejected in Submission");
+
+                 var url = '@Url.Action("RejectPaymentBatch", "EFTPayments")';
+                 $.ajax({
+                     type: "POST",
+                     url: url,
+                     data: formData,
+                     contentType: false,
+                     processData: false,
+                     success: function (response) {
+                         switch (response.data) {
+                             case "Success":
+                                swal("Payment Batch Rejected Successfully", { icon: "success" })
+                                 .then((value) => {
+                                  var url = '@Url.Action("PaymentSubmissionList", "EFTPayments")';
+                                   window.location.replace(url);
+                                 });
+
+                                 $(".batchLoader").toggle(false);
+                                 $("#btnSaveRemarks").prop('disabled', false);
+                                 break;
+                         }
+                     },
+                     failure: function (response) {
+                         swal(response.d, { icon: "warning" });
+                         $(".batchLoader").toggle(false);
+                         $("#btnSaveRemarks").prop('disabled', false);
+                     }
+                 });
+
+         }
+        /*ENDING REJECTION OF PAYMENT BATCH*/
+
+        /*BEGINNING SOURCE CODE TO UPLOAD FILE*/
+        var PaymentBatchId = null;
+           function attachSlip(paymentBatchId) {
+               PaymentBatchId = paymentBatchId;
+               $('#attachFileModal').modal('show');
+           }
+
+           function uploadFile() {
+               swal({
+                   text: "Are you sure you want to Upload File?",
+                   buttons: ["NO", "YES"],
+               }).then((confirmed) => {
+                   if (confirmed) {
+                       var file = $("#file").val();
+                       if (file == '') {
+                           $("#form_submision").prop('disabled', false);
+                           $(".loadingImg").hide();
+                           $(".saveLoader").toggle(false);
+                           swal("Please Upload Attachment (PDF Format)");
+                           return false;
+                       }
+
+                       if (file != '') {
+                           $("#form_submision").prop('disabled', false);
+                           $(".loadingImg").hide();
+                           $(".saveLoader").toggle(false);
+                           var attachment = document.querySelector("#file");
+                           if (/\.(pdf)$/i.test(attachment.files[0].name) === false) {
+                               swal("Please Upload Attachment (PDF Format)");
+                               return false;
+                           }
+                       }
+                       var formData = new FormData();
+                       formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                       formData.append('PaymentBatchId', PaymentBatchId);
+                       formData.append('File', $('input[type=file]')[0].files[0]);
+                       uploadFilesConfirmed(formData);
+                   } else {
+                       swal("Cancelled");
+                   }
+               });
+            }
+
+           function uploadFilesConfirmed(formData) {
+               $("#form_submision").prop('disabled', true);
+               $("#saveLoader").toggle(true);
+               $.ajax({
+                   url: '@Url.Action("AttachSlip", "EFTPayments")',
+                   data: formData,
+                   type: 'POST',
+                   contentType: false,
+                   processData: false,
+                   success: function (response) {
+                       $("#form_submision").prop('disabled', false);
+                       $("#saveLoader").toggle(false);
+                       if (response.data == "Success") {
+                           swal("File Uploaded successfully!", { icon: 'success' })
+                             .then((e) => {
+                                 $('#attachFileModal').modal('hide');
+                                 window.location.reload();
+                             });
+                       } else {
+                           swal(response.data)
+                            .then((e) => {
+                                $('#attachFileModal').modal('hide');
+                                window.location.reload();
+                            });
+                       }
+
+                   },
+                   failure: function (error) {
+                       $("#form_submision").prop('disabled', false);
+                       $("#saveLoader").toggle(false);
+                       swal(error)
+                        .then((e) => {
+                            $('#attachFileModal').modal('hide');
+                            window.location.reload();
+                        });
+                   }
+               });
+           }
+
+            function previewDocument(documentUrl, batchNumber) {
+                $("#title").text(batchNumber);
+               var url = '@Url.Content("~/Media/BOTSlip/")' + documentUrl;
+               document.getElementById("embedDocument").setAttribute("src", url);
+               $("#documentModal").modal("show");
+           }
+        /*ENDING SOURCE CODE TO UPLOAD FILE*/
+        /*BEGINNING SEND PAYMENTS TO BOT*/
+        function sendPaymentToBOT(batchNumber,paymentBatchId) {
+            swal({
+                title: 'Sent Payments To BOT',
+                text: 'Are you sure you want to Send Payment Batch Number: '+batchNumber+' to BOT?',
+                buttons: [
+                'No',
+                'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                var formData = new FormData()
+                    formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                    formData.append('paymentBatchId', paymentBatchId);
+                    postFormData(formData);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+       function postFormData(formData) {
+           var successMessage = "Payments Successfully Sent to BOT";
+           var failureMessage = "An error occurred during Sending of Payments to BOT";
+
+           $(".loadingImg").show();
+           $(".saveLoader").toggle(true);
+           var url = '@Url.Action("SendPaymentToBOT", "EFTPayments")';
+           var urlList = '@Url.Action("PaymentSubmissionList", "EFTPayments")';
+           $.ajax({
+               url: url,
+               data: formData,
+               type: 'POST',
+               contentType: false,
+               processData: false,
+               success: function (response) {
+                   $(".saveLoader").toggle(true);
+                   if (response == "Success") {
+                       swal(successMessage, { icon: "success" })
+                           .then((m) => {
+                               window.location.replace(urlList);
+                           });
+                   }
+                   else if (response == "NotOk") {
+                       swal("An Error occurred on sending file to BOT, Please Contact System Support.", { icon: "warning" })
+                           .then((m) => {
+                               window.location.replace(urlList);
+                           });
+                   } else {
+                       $(".saveLoader").toggle(false);
+                       swal(failureMessage + ": " + response, { icon: "warning" });
+                   }
+               },
+               failure: function (error) {
+                   $(".saveLoader").toggle(false);
+                   swal(failureMessage, { icon: "warning" });
+               }
+           });
+       }
+        /*ENDING SEND PAYMENTS TO BOT*/
+    </script>
+}

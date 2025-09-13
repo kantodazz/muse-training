@@ -1,0 +1,177 @@
+﻿@{
+    ViewBag.Title = "Fund Allocation List";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<!--Main contenteditable start here-->
+<div id="content" style="margin: 5px;">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-table"></i></span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <!--Widget content start-->
+                        <div class="widget-body">
+                            <div class="row">
+                                
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search Allocatin .." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="datatable" class="table table-bordered table-hover table-condensed" >
+                                <thead style="border-bottom: 1px solid white;">
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Funding Ref No.</th>
+                                        <th>Allocation Ref No.</th>
+                                        <th>Funding Source</th>
+                                        <th>Allocated Vote Detail</th>
+                                        <th>Total Allocated Amount(TZs)</th>
+                                        @*<th>Total Receiving Amount</th>*@
+                                        @*<th>SubBudget Class</th>*@
+                                        @*<th>Allocation Type</th>*@
+                                        <th>Status</th>
+                                        <th style="width:30px">Actions</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    <!--Widget End-->
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<!--Main Content End Here-->
+@section Scripts {
+    <script>
+        
+        var datatable = $("#datatable").dataTable();
+        $("#datatable_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#datatable").DataTable().search(this.value).draw();
+            $("#datatable_wrapper .dt-toolbar").remove();
+        });
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetApprovedFundAllocationList", "FundAllocation")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                console.log("Test", data);
+                datatable.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    datatable.fnAddData(
+                        [i + 1,
+                         data[i]["FundingRefNo"],
+                        data[i]["TransactionCtrlNo"],
+                        data[i]["FundDetails"],
+                        data[i]["AllocVoteDetail"],
+                        toLabel(data[i]["TotalAllocationAmount"]),
+                        //toLabel(data[i]["OperationalAmount"]),
+                        //data[i]["SubBudgetClass"],
+                        //data[i]["FundingSource"],
+                        //data[i]["TotalAllocatedAmount"],
+                        //data[i]["AllocationType"],
+                        ///data[i]["LoginInstitutionCode"] +' - '+ data[i]["LoginInstitutionName"],
+                       
+                        data[i]["OverallStatus"],
+                        '<div class="btn-group id="drop-' + i + '">\
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                            </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("FundAllocationDetails", "FundAllocation")/?id=' + data[i]["FundAllocSummaryId"] + '">Details</a></li>\
+                            </ul>\
+                        </div>'
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+         function Delete(i) {
+            if (i == 'x');
+            swal({
+                title: "Are you sure?",
+                text: "Once Deleted, you will not be able to recover this !",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteSelectedItem(data[i]["FundAllocSummaryId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+         function deleteSelectedItem(Id) {
+            var url = '@Url.Action("Delete", "FundAllocation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "FundAllocSummaryId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}
+<!--Page Script to load DataTable START HERE-->
+
+
+

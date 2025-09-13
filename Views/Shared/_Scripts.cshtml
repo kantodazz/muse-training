@@ -1,0 +1,244 @@
+﻿<!-- Link to Google CDN's jQuery + jQueryUI; fall back to local -->
+<!--Commented online script by Mateso for performance check
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.1.1/jquery.min.js"></script>
+<script> if (!window.jQuery) { document.write('<script src="/scripts/libs/jquery-2.1.1.min.js"><\/script>'); } </script>
+<script src="//ajax.googleapis.com/ajax/libs/jqueryui/1.10.3/jquery-ui.min.js"></script>
+<script> if (!window.jQuery.ui) { document.write('<script src="/scripts/libs/jquery-ui-1.10.3.min.js"><\/script>'); } </script>
+<script src="~/scripts/libs/jquery-2.1.1.min.js"></script>
+-->
+
+@Scripts.Render("~/scripts/jquery")
+<!-- IMPORTANT: SmartAdmin Core -->
+@Scripts.Render("~/scripts/smartadmin")
+
+@if (Request.IsAuthenticated)
+{
+    <!-- PACE LOADER - turn this on if you want ajax loading to show (caution: uses lots of memory on iDevices)-->
+    @*<script data-pace-options='{ "restartOnRequestAfter": true }' src="~/scripts/plugin/pace/pace.min.js"></script>*@
+    <!-- Demo purpose only! -->
+    @*<script src="/scripts/demo.min.js"></script>*@
+}
+
+<!-- SmartChat UI : plugin -->
+@Scripts.Render("~/scripts/smart-chat")
+
+<!-- DataTables : plugin -->
+@Scripts.Render("~/scripts/datatables")
+
+<!-- jQGrid : plugin -->
+@Scripts.Render("~/scripts/jq-grid")
+
+<!-- Forms : plugin -->
+@Scripts.Render("~/scripts/forms")
+
+@Scripts.Render("~/scripts/mofJs/bootstrap-multiselect.min.js")
+<!-- Flot Chart Plugin: Flot Engine, Flot Resizer, Flot Tooltip, Morris, Sparkline, EasyPie -->
+@Scripts.Render("~/scripts/charts")
+
+<!-- Vector Maps Plugin: Vectormap engine, Vectormap language -->
+@Scripts.Render("~/scripts/vector-map")
+
+<!-- Full Calendar -->
+@Scripts.Render("~/scripts/full-calendar")
+@*<audio id="notificationSound" controls="controls" style="display:none">
+        <source src="~/Media/Sound/notification.mp3" type="audio/mpeg" />
+    </audio>*@
+@*<script src="~/Scripts/jquery.signalR-2.4.1.js"></script>
+    <script src="~/signalr/hubs"></script>*@
+<!-- DO NOT REMOVE : GLOBAL FUNCTIONS! -->
+
+<script>
+
+    $(document).ready(function () {
+
+        pageSetUp();
+        drawBreadCrumb();
+
+        // INIT DATE PICKERS
+        $(".flatpickr").flatpickr({
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            wrap: true,
+            maxDate: "today"
+        });
+
+        $(".flatpickr2").flatpickr({
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            wrap: true,
+            minDate: "today"
+        });
+
+        $(".flatpickr3").flatpickr({
+            enableTime: false,
+            dateFormat: "Y-m-d",
+            wrap: true,
+        });
+
+        $("input[type=datetime]")
+            .wrap('<div class="input-group">')
+            .datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true,
+                showOn: "both",
+                buttonImage: '@Url.Content("~/Content/img/calendar.gif")'
+                //maxDate: "+0D"
+            })
+            .next("button").button({
+                icons: { primary: "ui-icon-calendar" },
+                label: "Select Date",
+                text: false
+            })
+            .addClass("btn btn-default")
+            .wrap('<span class="input-group-btn">')
+            .find('.ui-button-text')
+            .css({
+                'visibility': 'hidden',
+                'display': 'inline'
+            });
+
+        $.validator.methods.date = function (value, element) {
+            return this.optional(element) || moment(value, "DD.MM.YYYY", true).isValid();
+        }
+
+        $.validator.methods.date = function (value, element) {
+            return this.optional(element) || moment(value, "DD/MMM/YYYY", true).isValid();
+        }
+
+        $.validator.methods.date = function (value, element) {
+            return this.optional(element) || moment(value, "DD-MM-YY", true).isValid();
+        }
+
+        $.validator.methods.date = function (value, element) {
+            return this.optional(element) || moment(value, "DD-MM-YYYY", true).isValid();
+        }
+
+        $.validator.methods.date = function (value, element) {
+            return this.optional(element) || moment(value, "YYYY-MM-DD", true).isValid();
+        }
+
+        // Start Notification block
+            @*$(function () {
+                // Proxy created on the fly
+                var notification = $.connection.notificationHub;
+
+                // Declare a function on the job hub so the server can invoke it
+                notification.client.countNotifications = function () {
+                   // getData();
+                    countNotification();
+                };
+
+                //start the connection
+                $.connection.hub.start();
+
+                $.connection.hub.disconnected(function () {
+                    setTimeout(function () {
+                        $.connection.hub.start();
+                    }, 5000); // Restart connection after 5 seconds.
+                    //console.log("restart connection...");
+                });
+
+                countNotification();
+
+            });
+
+            function countNotification() {
+                var $span = $('.notificationResult');
+                var url = null;
+                if('@Request.Url.ToString().ToUpper().Contains(IFMIS.Libraries.Constants.IFMISTZ)'){
+                    url = '@Url.Action("CountNotification", "Notification", new { area = "" })';
+                }
+                if ('@Request.Url.ToString().ToUpper().Contains(IFMIS.Libraries.Constants.LOANMOD)') {
+                    url = '@Url.Action("CountNotification", "Notification", new { area = "" })';
+                }
+                else {
+                    url = '@Url.Action("CountNotification", "Notification")';
+                }
+
+                $.ajax({
+                    url: url,
+                    type: 'GET',
+                    datatype: 'json',
+                    success: function (data) {
+                        $span.empty();
+                        $span.text(data.countNotifications);
+                        if (data.countNotifications == 0 || data.countNotifications == null) {
+                            document.getElementById("notify").style.fontWeight = 'bold;';
+                            document.getElementById("notify").style.fontSize = '15px';
+                            document.getElementById("notify").style.background = '#8b0000';
+
+                        } else {
+                            document.getElementById("notify").style.color = 'white';
+                            document.getElementById("notify").style.fontSize = '15px';
+                            document.getElementById("notify").style.background = '#0091d9;';
+                            document.getElementById('notificationSound').play();
+
+                        }
+                    }
+                });
+            }
+
+            function viewNotification() {
+                $.ajax({
+                    url: '@Url.Action("ViewNotification", "Notification")',
+                    type: 'POST',
+                    datatype: 'json',
+                    success: function (result) {
+                        if (result == "Success") {
+
+                            var urlList = null;
+                            if ('@Request.Url.ToString().ToUpper().Contains(IFMIS.Libraries.Constants.IFMISTZ)') {
+                                urlList = '@Url.Action("NotificationList", "Notification", new { area = "" })';
+                            }
+                            if ('@Request.Url.ToString().ToUpper().Contains(IFMIS.Libraries.Constants.LOANMOD)') {
+                                urlList = '@Url.Action("NotificationList", "Notification", new { area = "" })';
+                            }
+                            else {
+                                urlList = '@Url.Action("NotificationList", "Notification")';
+                            }
+                            window.location.href = urlList;
+                        }
+                        else {
+                            swal("Failed  due to Open Notification");
+                        }
+                    }
+                });
+            }
+
+            $(function () {
+                $(".myNotification").on("click", function () {
+                    viewNotification();
+                });
+            });*@
+
+             // End Notification block
+
+
+
+
+
+    });
+
+</script>
+
+@if (@Model is HelperResult)
+{
+    @Model
+}
+<!-- Your GOOGLE ANALYTICS CODE Below-->
+@*<script type="text/javascript">
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'xx-xxxxxxxx-x']);
+        _gaq.push(['_trackPageview']);
+
+        (function () {
+            var ga = document.createElement('script');
+            ga.type = 'text/javascript';
+            ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0];
+            s.parentNode.insertBefore(ga, s);
+        })();
+    </script>*@
+

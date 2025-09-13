@@ -1,0 +1,490 @@
+﻿@model IFMIS.Areas.Consolidation.Models.DisclosureSummaryVM
+@{
+    var i = 0;
+    ViewBag.Title = "Aging Disclosures Data Entries";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                @Html.HiddenFor(model => model.ConsoTransactionSummaryId)
+                                @Html.DisplayNameFor(model => model.DisclosureCategory) : <strong>@Html.DisplayFor(model => model.DisclosureCategory)</strong><br />
+                                @Html.DisplayNameFor(model => model.FinancialYear) : <strong>@Html.DisplayFor(model => model.FinancialYear)</strong><br />
+                                @Html.DisplayNameFor(model => model.NoteNo) : <strong>@Html.DisplayFor(model => model.NoteNo)</strong><br />
+                                @Html.DisplayNameFor(model => model.NoteDesc) : <strong>@Html.DisplayFor(model => model.NoteDesc)</strong>
+                            </p>
+
+                            <div class="row">
+                                <div class="col-sm-4 col-md-3 col-lg-3 col-md-offset-6">
+                                    @*@if (Model.Note == "89")
+                                        {*@
+                                    @*<a href="#" onclick="reloadData(@Model.ConsoTransactionSummaryId,@Model.Note)" class="btn btn-info" style="border-radius:1px;">
+                                        <i class="fa fa-edit"></i>Reload New  Data
+                                    </a>*@
+                                    @*  }*@
+                                </div>
+                                <div class="col-md-3">
+                                    @*<div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>*@
+                                </div>
+                            </div>
+                            <div class="table-striped table-condensed table-responsive">
+                                <table class="table table-bordered table-hover table-condensed" id="dt_basic">
+
+                                    <thead>
+                                        <tr>
+                                            <th style="text-align:center;width:4%">#</th>
+                                            <th style="text-align:left;width:15%">GFSCode</th>
+                                            <th style="text-align: right; width: 13%">TB Amount</th>
+                                            <th style="text-align: right;width:13%">Balance</th>
+                                            <th style="text-align: right; width: 11%">0-30 days</th>
+                                            <th style="text-align: right; width: 11% ">31- 60 days</th>
+                                            <th style="text-align: right; width: 11% ">61-90 days</th>
+                                            <th style="text-align: right; width: 11%">91 - 365days</th>
+                                            <th style="text-align: right; width: 11%">1- 2 years</th>
+                                            <th style="text-align: right; width: 11%">Above 2 years</th>
+                                        </tr>
+                                    </thead>
+
+                                    <tbody>
+                                        @foreach (var item in Model.DisclosureNoteAgingList)
+                                        {
+                                            i++;
+                                            <tr id=@item.Id class=@item.Id>
+                                                <td style="text-align:center">@i</td>
+                                                <td style="text-align:left">
+                                                    @if (item.GfsCode != null)
+                                                    {
+                                                        <span>@Html.DisplayFor(modelItem => item.GfsCode)-@Html.DisplayFor(modelItem => item.GfsCodeDesc)</span>
+                                                    }
+                                                    else
+                                                    {
+                                                        <span>@Html.DisplayFor(modelItem => item.GfsCodeDesc)</span>
+                                                    }
+
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.TBAmount, new { htmlAttributes = new { @class = "form-control amount", @readonly = "readonly", @style = "width:120px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.Balance, new { htmlAttributes = new { @class = "form-control amount", @readonly = "readonly", @style = "width:120px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.UpTo1Month, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",1)", @onfocusout = "saveEntry(this," + @item.Id + ",1)", @autocomplete = "off", @style = "width:120px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.C1To3Months, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",2)", @onfocusout = "saveEntry(this," + @item.Id + ",2)", @autocomplete = "off", @style = "width:120px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.C3To12Months, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",3)", @onfocusout = "saveEntry(this," + @item.Id + ",3)", @autocomplete = "off", @style = "width:120px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.C1To3Years, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",4)", @onfocusout = "saveEntry(this," + @item.Id + ",4)", @autocomplete = "off", @style = "width:115px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.C3To5Years, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",5)", @onfocusout = "saveEntry(this," + @item.Id + ",5)", @autocomplete = "off", @style = "width:115px;text-align: right" } })
+                                                </td>
+                                                <td style="text-align:center">
+                                                    @Html.EditorFor(modelItem => item.Over5Years, new { htmlAttributes = new { @class = "form-control amount", @onkeyup = "amountEntry(this," + @item.Id + ",6)", @onfocusout = "saveEntry(this," + @item.Id + ",6)", @autocomplete = "off", @style = "width:115px;text-align: right" } })
+                                                </td>
+                                            </tr>
+                                        }
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a onclick="window.history.back()" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                        <a onclick="Confirm()" style="margin-right:5px" class="btn btn-info pull-left"> <i class="fa fa-save"></i>Finish  </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+      var currentRowId = 0;
+     var dt_items_data = $('#dt_items').dataTable();
+    $("#dt_items_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_items").DataTable().search(this.value).draw();
+    });
+
+        //$(".amount").autoNumeric('init');
+        
+
+        //function amountEntry(e) {
+        //    $("#" + e.id).autoNumeric('init');
+        //}
+        function Confirm() {
+            //debugger
+            $("#divLoader").show();
+            var id = $("#ConsoTransactionSummaryId").val()
+            var url = '@Url.Action("ConfirmDisclosure", "ConsolidationDisclosures")';
+            var urlto = '@Url.Action("PendingDisclosures", "ConsolidationDisclosures")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    //debugger
+                    $("#divLoader").hide();
+                    if (response == "Success") {
+                        //valid
+                        swal("Confirmed  successfully!", { icon: "success" })
+                            .then((value) => {
+                                //location.reload();
+                                location.href = urlto;
+                                //window.history.back();
+                            });
+
+                    }
+                    else if (response == "Partial") {
+                        swal("Partial Confirmed,some did not match TB Amount!", { icon: "success" })
+                            .then((value) => {
+                                //location.reload();
+                                location.href = urlto;
+                                //window.history.back();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" });
+                        return;
+                    }
+
+                }
+            });
+        }
+
+        function amountEntry(e, rowId, num) {
+            debugger
+            //$("#" + e.id).autoNumeric('init');
+            //e.value = e.value.toLocaleString('en');
+            var $row = $("#" + rowId);
+            var totalAmount = parseFloat($row.find('input[name="item.TBAmount"]').val().split(",").join(""));
+            var value = parseFloat(e.value.split(",").join(""));
+            //var balance = parseFloat($row.find('input[name="item.Balance"]').val().split(",").join(""));
+            var UpTo1Month = parseFloat($row.find('input[name="item.UpTo1Month"]').val().split(",").join(""));
+            var C1To3Months = parseFloat($row.find('input[name="item.C1To3Months"]').val().split(",").join(""));
+            var C3To12Months = parseFloat($row.find('input[name="item.C3To12Months"]').val().split(",").join(""));
+            var C1To3Years = parseFloat($row.find('input[name="item.C1To3Years"]').val().split(",").join(""));
+            var C3To5Years = parseFloat($row.find('input[name="item.C3To5Years"]').val().split(",").join(""));
+            var Over5Years = parseFloat($row.find('input[name="item.Over5Years"]').val().split(",").join(""));
+
+            var balance = (UpTo1Month || 0) + (C1To3Months || 0) + (C3To12Months || 0) + (C1To3Years || 0) + (C3To5Years || 0) + (Over5Years || 0);
+            //if (value >= 0) {
+            //    //Valid
+            //}
+            //else {
+            //    value = 0;
+            //}
+            //var bala = balance + value;
+            //if (balance <= totalAmount) {
+                 
+            var newbalance = totalAmount - balance.toFixed(2);
+            newbalance = newbalance.toFixed(2);
+                $row.find('input[name="item.Balance"]').val(newbalance.toLocaleString('en'));
+
+            //}
+            //else {
+
+            //    swal("Amount can not exceed " + totalAmount.toLocaleString('en'), { icon: "warning" }).then((a) => {
+            //        e.value = 0;
+            //        UpTo1Month = parseFloat($row.find('input[name="item.UpTo1Month"]').val().split(",").join(""));
+            //        C1To3Months = parseFloat($row.find('input[name="item.C1To3Months"]').val().split(",").join(""));
+            //        C3To12Months = parseFloat($row.find('input[name="item.C3To12Months"]').val().split(",").join(""));
+            //        C1To3Years = parseFloat($row.find('input[name="item.C1To3Years"]').val().split(",").join(""));
+            //        C3To5Years = parseFloat($row.find('input[name="item.C3To5Years"]').val().split(",").join(""));
+            //        Over5Years = parseFloat($row.find('input[name="item.Over5Years"]').val().split(",").join(""));
+            //        balance = (UpTo1Month || 0) + (C1To3Months || 0) + (C3To12Months || 0) + (C1To3Years || 0) + (C3To5Years || 0) + (Over5Years || 0);
+
+            //        var newbalance = totalAmount - balance;
+            //        $row.find('input[name="item.Balance"]').val(newbalance.toLocaleString('en'));
+            //    });
+
+            //}
+        }
+
+        function saveEntry(e, rowId, num) {
+            debugger
+            var $row = $("#" + rowId);
+            var totalAmount = parseFloat($row.find('input[name="item.TBAmount"]').val().split(",").join(""));
+            var value = parseFloat(e.value.split(",").join(""));
+            var UpTo1Month = parseFloat($row.find('input[name="item.UpTo1Month"]').val().split(",").join(""));
+            var C1To3Months = parseFloat($row.find('input[name="item.C1To3Months"]').val().split(",").join(""));
+            var C3To12Months = parseFloat($row.find('input[name="item.C3To12Months"]').val().split(",").join(""));
+            var C1To3Years = parseFloat($row.find('input[name="item.C1To3Years"]').val().split(",").join(""));
+            var C3To5Years = parseFloat($row.find('input[name="item.C3To5Years"]').val().split(",").join(""));
+            var Over5Years = parseFloat($row.find('input[name="item.Over5Years"]').val().split(",").join(""));
+
+            var balance = (UpTo1Month || 0) + (C1To3Months || 0) + (C3To12Months || 0) + (C1To3Years || 0) + (C3To5Years || 0) + (Over5Years || 0);
+            //if (value >= 0) {
+            //    //Valid
+            //}
+            //else {
+            //    value = 0;
+            //}
+            //if (balance <= totalAmount) {
+                var id = parseInt(rowId);
+                //if (value <= totalAmount) {
+                    saveDisclosure(id, num, value);
+                //}
+
+            //}
+
+        }
+
+        function saveDisclosure(id, num, amount) {
+            debugger
+            var form_data = {
+                "id": id,
+                "disclosureNum": num,
+                "amount": amount
+            };
+             var url = '@Url.Action("SaveAgingDisclosure", "ConsolidationDisclosures")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: form_data,
+                success: function (response) {
+                    if (response == "Success") {
+                    //valid
+                    }
+                    else {
+                        swal(response);
+                        return;
+                    }
+
+                }
+            });
+        }
+
+        $(document).ready(function () {
+            //new AutoNumeric('.amount', {
+            //    //currencySymbol: ' €',
+            //    decimalCharacter: ',',
+            //    digitGroupSeparator: '.',
+            //});
+            //$('.amount').autoNumeric();
+            $('.amount').autoNumeric('init', {
+               // negativeSignCharacter: AutoNumeric.options.negativeSignCharacter.hyphen,
+                vMax: '1000000000000000.00',
+                vMin: '-1000000000000000.00',
+            });
+
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                        {
+                            "sExtends": "pdf",
+                            "sTitle": "SmartAdmin_PDF",
+                            "sPdfMessage": "SmartAdmin PDF Export",
+                            "sPdfSize": "letter"
+                        },
+                        {
+                            "sExtends": "print",
+                            "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                        }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+        });
+    </script>
+}

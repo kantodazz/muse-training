@@ -1,0 +1,242 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.PaymentBatch
+
+@{
+    ViewBag.Title = "Payment Batch Details";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Payment Batch Details</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+
+                            <dl class="dl-horizontal">
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.PayStation.PayStationCode)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.PayStation.PayStationCode)
+                                </dd>
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.PayStation.PayStationName)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.PayStation.PayStationName)
+                                </dd>
+
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.BatchNo)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.BatchNo)
+                                </dd>
+
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.BatchDesc)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.BatchDesc)
+                                </dd>
+
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.PaymentCategory)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.PaymentCategory)
+                                </dd>
+
+                                <dt>
+                                    @Html.DisplayNameFor(model => model.OverallStatus)
+                                </dt>
+
+                                <dd>
+                                    @Html.DisplayFor(model => model.OverallStatus)
+                                </dd>
+
+                            </dl>
+
+                            <table class="table table-bordered table-condensed table-hover table-responsive table-striped">
+                                <tr>
+                                    <th>
+                                        #
+                                    </th>
+                                    <th>
+                                        Beneficiary Name
+                                    </th>
+                                    <th>
+                                        Swift Code
+                                    </th>
+                                    <th>
+                                        Account No
+                                    </th>
+                                    <th>
+                                        Amount
+                                    </th>
+                                    <th></th>
+                                </tr>
+
+                                @{
+                                    int i = 0;
+                                    decimal totalAmount = 0;
+                                    string[] paymentStatuses = new string[8] { "Pending", "PENDING", "CONFIRMED", "VERIFIED", "APPROVED", "Pre-funding Completed", "Sent to BOT", "Received at BOT" };
+                                }
+                                @foreach (var item in Model.Payments.Where(a => paymentStatuses.Contains(a.OverallStatus)))
+                                {
+                                    i++;
+                                    totalAmount += decimal.Parse(item.Amount.ToString());
+                                    <tr>
+                                        <td>
+                                            @i
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.BankBic)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.BeneficiaryAccountNo)
+                                        </td>
+                                        <td style="text-align: right">
+                                            @String.Format("{0:#,0.00}", item.Amount)
+                                        </td>
+                                        <td>
+                                            <a href="#" onclick="showAdjustmentModal(@item.PaymentID)">
+                                                Details
+                                            </a>
+                                            @if (item.OverallStatus != "Pre-funding Completed" && item.OverallStatus != "Sent to BOT" && item.OverallStatus != "Settled" && item.OverallStatus != "Unapplied")
+                                            {
+                                                <span>|</span>
+                                                <a href="#" onclick="cancelPayment(@item.PaymentID)" class="btn-xs edit">
+                                                    Cancel
+                                                </a>
+                                                @*@Html.ActionLink("Delete", "Delete", "Payments", new { id = item.PaymentID }, new { })*@
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                                <tr>
+                                    <th colspan="4" style="text-align: center">
+                                        Total
+                                    </th>
+                                    <th style="text-align: right">
+                                        @String.Format("{0:#,0.00}", totalAmount)
+                                    </th>
+                                    <th></th>
+                                </tr>
+
+                            </table>
+                            <br />
+                            <p class="col-md-2" style="text-align: left">
+
+                                @*<a href="@Request.UrlReferrer" class="btn btn-default">Back</a>*@
+                                <a href="@Url.Action("PaymentBatch","PaymentBatches", new { id = Model.PaymentBatchID })" class="btn btn-info" style="float: left; margin-left: 5px">
+                                    <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                    Back
+                                </a>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- Start of Net Pay Adjustment modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Payment Details</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Net Pay Adjustment modal -->
+
+@section Scripts {
+    <script>
+
+        var showAdjustmentModal = function (id) {
+
+            var url = '@Url.Action("Details", "Payments")';
+
+            $(".modal-body").load(url, { id: id }, function () {
+                $("#responseModal").modal("show");
+            });
+
+        };
+
+        var cancelPayment = function (id) {
+            //$("#responseModal").modal('show');
+            var url = '@Url.Action("CancelPayment", "PaymentBatches")';
+            swal({
+                title: 'Cancelation',
+                text: "Are you sure you want to cancel this payment?",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    //pageLoading("true");
+                    $("#divLoader").show();
+                    $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: { id: id },
+                            success: function (response) {
+                                //pageLoading("false");
+                                $("#divLoader").hide();
+                                if (response == "Success") {
+                                    swal("Payment successfully canceled!", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                        });
+                                }
+                                else {
+                                    swal(response, { icon: "warning" });
+                                }
+                            },
+                            error: function (xhr) {
+                                //pageLoading("false");
+                                $("#divLoader").hide();
+                                console.log('errorResp', xhr.responseText)
+                                swal(xhr.responseText, { icon: "warning" });
+                            },
+
+                        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        };
+
+    </script>
+}

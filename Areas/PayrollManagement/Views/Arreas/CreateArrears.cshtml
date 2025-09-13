@@ -1,0 +1,213 @@
+﻿@model IFMIS.Areas.PayrollManagement.Models.EmployeeArrearsVM
+
+@{
+    ViewBag.Title = "Create";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i></span>
+                        <h2> Earning(s) Amends</h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            @using (Html.BeginForm("", "", FormMethod.Post, new { id = "paymentForm" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                    @Html.HiddenFor(model => model.CheckNumber, new { @class = "form-control" })
+                                    <div class="form-group">
+                                        <label class="col-md-2 control-label">CheckNumber</label>
+                                        <div class="col-md-5">
+                                            @Html.TextBoxFor(model => model.EmployeeId, new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.EmployeeId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.FirstName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.FirstName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.MiddleName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.MiddleName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.MiddleName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.LastName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.LastName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.PaymentCodeId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.DropDownListFor(model => model.PaymentCodeId, ViewBag.Paycodes as SelectList, "Select Payment Code--", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.PaymentCodeId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Amount, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-5">
+                                            @Html.EditorFor(model => model.Amount, new { htmlAttributes = new { @class = "form-control" } })
+                                            @Html.ValidationMessageFor(model => model.Amount, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.Remarks, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-8">
+                                            @Html.TextAreaFor(model => model.Remarks,htmlAttributes: new { style = "width: 61%; max-width: 61%;" })
+                                            @Html.ValidationMessageFor(model => model.Remarks, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div class="col-md-offset-2 col-md-10">
+                                            <button type="button" class="btn btn-info btn-flat" onclick="AddArrear()">
+                                                <span class="glyphicon glyphicon-floppy-save" aria-hidden="true"></span>
+                                                Save
+                                            </button>
+                                            <a href="@Url.Action("ArreasList", "Arreas")" class="btn btn-default btn-flat">
+                                                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                                Back
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <!-- end widget content -->
+        </div>
+        <!-- end widget div -->
+</div>
+<!-- end widget -->
+
+@section pagespecific {
+    <!--PAGE RELATED PLUGIN(S)-->
+    <script type="text/javascript">
+        $("#saveLoader").toggle(false);
+        $('#Amount').autoNumeric('init');
+
+        $(document).ready(function () {
+            var url = '@Url.Action("GetEmployee", "Employees")';
+            $("#EmployeeId").select2({
+                minimumInputLength: 4,
+                width: 'resolve',
+                ajax: {
+                    url: url,
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (searchQuery) {
+                        return {
+                            searchQuery: searchQuery,
+                        };
+                    },
+                    results: function (data, page) {
+                        return {
+                            results: data.employees
+                        };
+                    }
+                }
+            });
+        });
+
+        $("#EmployeeId").change(function () {
+            var url = '@Url.Action("PopulateBeneficiaryFields", "Arreas")';
+            var employeeId = $("#EmployeeId").val();
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { 'employeeId': employeeId },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        document.getElementById('FirstName').value = data.firstName;
+                        document.getElementById('MiddleName').value = data.middleName;
+                        document.getElementById('LastName').value = data.lastName;
+                        document.getElementById('CheckNumber').value = data.checkNumber;
+                    } else {
+                        document.getElementById('FirstName').value = "";
+                        document.getElementById('MiddleName').value = "";
+                        document.getElementById('LastName').value = "";
+                        document.getElementById('CheckNumber').value = "";
+                    }
+                }
+            })
+        });
+
+    var AddArrear = function () {
+           // $.validator.unobtrusive.parse("#paymentForm");
+            if (!$("#paymentForm").valid()) {
+                return false;
+            }
+
+            var data = $("#paymentForm").serialize();
+
+            var url = '@Url.Action("AddArrears", "Arreas")';
+             var url1 = '@Url.Action("ArreasList", "Arreas")';
+
+            if (!$("#paymentForm").valid()) {
+                return false;
+        }
+        $("#saveLoader").toggle(true);
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: data,
+                success: function (response) {
+                    $("#saveLoader").toggle(false);
+                    if (response == "success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = url1;
+                            })
+                    }
+                    else if (response == "exist"){
+                        swal("Asset Exist!", { icon: "info" })
+                            .then((value) => {
+
+                            })
+                    }
+                    else {
+                        swal("Error on saving!", { icon: "error"})
+                            .then((value) => {
+
+                            })
+                    }
+                },
+                error: function (response){
+                    swal("Error on saving asset!")
+                }
+            });
+        }
+
+    </script>
+}

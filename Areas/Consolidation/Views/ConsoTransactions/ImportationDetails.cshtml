@@ -1,0 +1,197 @@
+﻿@model IFMIS.Areas.Consolidation.Models.ConsoDataEntryVM
+@{
+ var i=0;
+ViewBag.Title="Data importation details";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p>
+                                @Html.DisplayNameFor(model => model.FinancialYear) :<strong>@Html.DisplayFor(model => model.FinancialYear)</strong><br />
+                                @Html.DisplayNameFor(model => model.TrxNo) :<strong>@Html.DisplayFor(model => model.TrxNo)</strong><br/>
+                                @Html.DisplayNameFor(model => model.TotalAmount) :<strong>@Html.DisplayFor(model => model.TotalAmount)</strong>
+                            </p>
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-hover table-condensed" id="dt_items">
+
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:center;width:4%">#</th>
+                                        <th style="text-align:center">GFSCode</th>
+                                        <th style="text-align:right">DrAmount</th>
+                                        <th style="text-align:right">CrAmount</th>
+                                        <th style="text-align:right">MissingAmount</th>
+                                        <th style="text-align:center">Note No</th>
+                                        <th style="text-align:center">Note Desc</th>
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{ decimal totalDebit = 0; decimal totalCredit = 0; decimal totalMissing = 0; }
+                                    @foreach (var item in Model.ConsoTransactionImports)
+                                    {
+                                        i++;
+                                        totalDebit += (decimal)item.DrAmount;
+                                        totalCredit += (decimal)item.CrAmount;
+                                        totalMissing += (decimal)item.MissingAmount;
+                                        <tr>
+                                            <td style="text-align:center">@i</td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.GFSCode)
+                                            </td>
+
+                                            @if (item.DrAmount < 0)
+                                            {
+                                                <td style="text-align:right">
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @{item.CrAmount = item.DrAmount * -1;}
+                                                    @Html.DisplayFor(modelItem => item.CrAmount)
+                                                </td>
+                                            }
+                                            else if (item.CrAmount < 0)
+                                            {
+                                            <td style="text-align:right">
+                                                @{item.DrAmount = item.CrAmount * -1;}
+                                                @Html.DisplayFor(modelItem => item.DrAmount)
+                                            </td>
+                                                <td style="text-align:right">
+                                                </td>
+                                            }
+                                            else
+                                            {
+
+                                                <td style="text-align:right">
+                                                    @Html.DisplayFor(modelItem => item.DrAmount)
+                                                </td>
+                                                <td style="text-align:right">
+                                                    @Html.DisplayFor(modelItem => item.CrAmount)
+                                                </td>
+                                            }
+
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.MissingAmount)
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.Note)
+                                            </td>
+                                            <td style="text-align:center">
+                                                @Html.DisplayFor(modelItem => item.NoteDesc)
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                      
+                                <tfoot>
+                                    <tr>
+                                        <td colspan="2"><strong>Total</strong></td>
+                                        <td style="text-align:right"><strong>@Convert.ToDecimal(totalDebit).ToString("#,##0/=")</strong></td>
+                                        <td style="text-align:right"><strong>@Convert.ToDecimal(totalCredit).ToString("#,##0/=")</strong></td>
+                                        <td style="text-align:right"><strong>@Convert.ToDecimal(totalMissing).ToString("#,##0/=")</strong></td>
+                                        <td colspan="1"></td>
+                                        <td colspan="1"></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a onclick="window.history.back()" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+     var dt_items_data = $('#dt_items').dataTable();
+    $("#dt_items_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_items").DataTable().search(this.value).draw();
+    });
+
+    
+    </script>
+}

@@ -1,0 +1,70 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.EFTPaymentsVM
+
+@{
+    ViewBag.Title = "EFTPayments";
+}
+
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">EFT Payments</div>
+        <div class="panel-body">
+
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="form-group" style="margin-bottom: 0px; margin-left: 5px">
+                        @Html.TextBoxFor(m => m.SearchBox, new { @class = "form-control", @placeholder = "Search Beneficiary" })
+                    </div>
+                </div>
+            </div>
+
+            <div id="searchResults" style="margin-top: 20px; display: none"></div>
+
+            @section Scripts{
+                <script>
+                $(document).ready(function () {
+
+                    var url = '@Url.Action("GetBeneficiariesPerPayments", "Payments")';
+
+                    $("#SearchBox").select2({
+                        minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                        width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                        ajax: {
+                            url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                            type: "POST",
+                            dataType: 'json',
+                            data: function (term) {
+                                return {
+                                    term: term
+                                };
+                            },
+                            results: function (data, page) {
+                                return { results: data.beneficiaries }; // data.CountryList returning json data from Controlle
+                            }
+                        }
+                    });
+                });
+
+
+                    $("#SearchBox").change(function () {
+
+                    var id = $("#SearchBox").val();
+                    var txtValue = $("#SearchBox").select2("data").text;
+
+                    var url = '@Url.Action("GetBeneficiaryPayments", "Payments")';
+
+                    $.ajax({
+                        type: "post",
+                        url: url,
+                        data: { id: id, txtValue: txtValue },
+                        success: function (response) {
+                            $("#searchResults").show();
+                            $("#searchResults").html(response);
+                        }
+                    });
+                })
+                </script>
+            }
+        </div>
+    </div>
+</div>

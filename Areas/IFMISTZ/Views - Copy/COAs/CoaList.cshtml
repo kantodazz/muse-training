@@ -1,0 +1,509 @@
+﻿@{
+    ViewBag.Title = "COA List";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row" style="width:100%">
+                                <div class="row" style="margin-left:auto">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <td>Institution Name:</td>
+                                                <td>
+                                                 @Html.DropDownList("InstitutionCode", ViewBag.institutionList as List<SelectListItem>, "--Select Institution Name--", new { @class = "select2 form-control padding-left-10 width:50px", style = "width:900px; ", required = "required" })
+                                                </td>
+                                            </tr>
+                                        </table>
+
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search searchIcon"></i>
+                                            <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                            <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+
+
+                              @*<div class="col-md-3">
+                                <div class="search-container">
+                                    <i class="fa fa-search searchIcon"></i>
+                                    <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                </div>
+                            </div>*@
+
+                                <div style="margin-left: 90%" id="dt_coasegment_wrapper" class="dataTables_wrapper">
+                                    <select name="pageLenth" id="pageLenth" aria-controls="dt_coasegment" class="form-control">
+                                        <option value="10">10</option>
+                                        <option value="25">25</option>
+                                        <option value="50">50</option>
+                                        <option value="100">100</option>
+                                    </select>
+                                </div>
+
+                            </div>
+                         
+
+                            <table id="dt_coa" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Vote</th>
+                                        <th>Sub Vote</th>
+                                        <th>TR</th>
+                                        <th>Cost<br /> Center</th>
+                                        <th>Sub<br/>Budget<br />Class</th>
+                                        <th style="width:300px">Gl Account</th>
+                                        <th>GFS Code</th>
+                                        <th>GFS Desc</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+@section pagespecific{
+
+    <script>
+        // =============INITIOLIZATION OF THE DATATABLE =================//
+        var dt_coa = $('#dt_coa').dataTable({
+
+            "language": {
+                "emptyTable": '<strong id="loader">No matching records found...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+
+        });
+        $("#dt_coa_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //if (!this.value) {
+            //    dt_coa.fnClearTable();
+            //} else {
+            //    if (this.value.includes("-")) {
+            //        searchTableUpdate(this.value.split('-').join('|'));
+            //    } else {
+            //        searchTableUpdate(this.value);
+            //    }
+            //}
+        });
+
+
+
+        // ============ INIT DATA TABLES START =====================
+        var data = [];
+        function loadTableData(){
+
+            actionTemplate = function(i, id, Status) {
+                return Status != "ACTIVE" ?
+                      '<div class="btn-group">\
+                       <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                          <span class="caret"></span>\
+                                     <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                      <li><a href="@Url.Action("Edit", "COAs")/' + id + '">Edit</a></li>\
+                     <li><a href="#" onclick="Activate(' + i + ')">Activate</a></li>\
+                     <li><a href="#" onclick="Cancel(' + i + ')">Cancel</a></li>\
+                     </ul>\
+                    </div>'
+                    :'<div class="btn-group">\
+                      <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                      <span class="caret"></span>\
+                       <span class="sr-only"></span>\
+                         </button>\
+                        <ul class="dropdown-menu">\
+                      <li><a href="@Url.Action("Edit", "COAs")/' + id + '">Edit</a></li>\
+                     <li><a href="#" onclick="Deactivate(' + i + ')">Deactivate</a></li>\
+                     <li><a href="#" onclick="Cancel(' + i + ')">Cancel</a></li>\
+                     </ul>\
+          </div>'
+            }
+        }
+            function searchTableUpdate(search) {
+                var url = '@Url.Action("SearchCoa", "COAs")';
+                $.ajax({
+                    type: "get",
+                    url: url + "/?search=" + search + "",
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        data = response.data;
+                        dt_coa.fnClearTable();
+                        for (var i = 0; i < data.length; i++) {
+                            dt_coa.fnAddData([i + 1,
+                               data[i]["Vote"],
+                               data[i]["SubVote"],
+                               data[i]["TR"],
+                               data[i]["CostCentre"],
+                               data[i]["SubBudgetClass"],
+                               data[i]["GlAccount"].split("|").join("-"),
+                               data[i]["GfsCode"],
+                               data[i]["GFSDesc"],
+                               data[i]["Status"],
+                               actionTemplate(i, data[i]["CoaId"], data[i]["Status"])
+                            ]);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }
+            // ====================== LOAD TABLE DATA START =====================
+            //var data = [];
+            //function loadTableData() {
+                var url = '@Url.Action("GetCoa", "COAs")';
+                $.ajax({
+                    type: "get",
+                    url: url,
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        data = response.data;
+                        dt_coa.fnClearTable();
+                        for (var i = 0; i < data.length; i++) {
+                            dt_coa.fnAddData([i + 1,
+                             data[i]["Vote"],
+                             data[i]["SubVote"],
+                             data[i]["TR"],
+                             data[i]["CostCentre"],
+                             data[i]["SubBudgetClass"],
+                             data[i]["GlAccount"].split("|").join("-"),
+                             data[i]["GfsCode"],
+                             data[i]["GFSDesc"],
+                             data[i]["Status"],
+                             actionTemplate(i, data[i]["CoaId"], data[i]["Status"])
+                            ]);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+
+        function searchPayment() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetCoaList", "COAs")' + "/?InstitutionCode=" + $("#InstitutionCode").val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_coa.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_coa.fnAddData([i + 1,
+                        data[i]["Vote"],
+                        data[i]["SubVote"],
+                        data[i]["TR"],
+                        data[i]["CostCentre"],
+                        data[i]["SubBudgetClass"],
+                        data[i]["GlAccount"].split("|").join("-"),
+                        data[i]["GfsCode"],
+                        data[i]["GFSDesc"],
+                        data[i]["Status"],
+                        actionTemplate(i, data[i]["CoaId"], data[i]["Status"])
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        loadTableData();
+        var globalCoaId = 0;
+        function edit(i) {
+            globalCoaId = i;
+            $("#Vote").val(data[i]["Vote"]);
+            $("#SubVote").val(data[i]["SubVote"]);
+            validateInputsParameters(["#Vote", "#SubVote"])
+            $("#editModal").modal('show');
+        }
+
+
+
+        function Delete(i) {
+            swal({
+                title: "Are you sure?",
+                text: "Once deleted, you will not be able to recover this COA!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteItemConfirmed(data[i]["CoaId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        /**
+        * Send delete signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("DeleteCoa", "COAs")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "CoaId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+
+      function save() {
+            if (voucherSummaryFormValidation()) {
+                commitForm()
+            } else {
+                swal("Please fix form Errors")
+            }
+        }
+
+        function commitForm() {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("Edit", "COAs")',
+                data: {
+                    segmentId: data[globalCoaId]["CoaId"],
+                    createCoaSegmentVm:{
+                        cOAVersionId: $("#COAVersion").val(),
+                        cOASegmentId: $("#COASegmentName").val(),
+                        cOASegmentCode: $("#COASegmentCode").val(),
+                        segmentDescription: $("#SegmentDescription").val(),
+                    }
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#form_submision").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        }
+
+        function voucherSummaryFormValidation() {
+            var isNotValid = validateInputsParameters([
+                "#COASegmentCode",
+                "#SegmentDescription",
+            ]);
+
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+        function Cancel(i) {
+            status = "CANCELLED";
+            swal({
+                title: "Are you sure?",
+                text: "Coa Item  will be Cancelled!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    ChangeCoaItemStatus(data[i]["CoaId"], status)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function Activate(i) {
+            status = "ACTIVE";
+            swal({
+                title: "Are you sure?",
+                text: "Coa Item Status will be changed!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    ChangeCoaItemStatus(data[i]["CoaId"], status)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+        function Deactivate(i) {
+            status = "INACTIVE";
+            swal({
+                title: "Are you sure?",
+                text: "Coa Item Status will be changed!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    ChangeCoaItemStatus(data[i]["CoaId"],status);
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function ChangeCoaItemStatus(Id, status) {
+            var url = '@Url.Action("ChangeCoaStatus", "COAs")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: {
+                    Status: status,
+                    CoaId: Id
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Changed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

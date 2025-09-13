@@ -1,0 +1,414 @@
+﻿@model IFMIS.Areas.Coadmis.Models.RiskAssessementVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "summaryCommentForm" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.DetailedRiskAssId)
+    <div class="form-horizontal">
+        <div class="form-group">
+            <label class="control-label col-md-2">Risk Name<span class="redStar">*</span></label>
+            <div class="col-md-8">
+                @Html.TextBoxFor(model => model.RiskName, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">Risk Category<span class="redStar">*</span></label>
+            <div class="col-md-3">
+                @Html.DropDownList("RiskCategory", new List<SelectListItem>{
+                  new SelectListItem{ Text="--Select ---", Value = "" },
+                  new SelectListItem{ Text="Financial", Value ="Financial" },
+                  new SelectListItem{ Text="Non Financial", Value = "Non Financial" },
+                   }, new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.RiskCategory, "", new { @class = "text-danger" })
+            </div>
+
+            <label class="control-label col-md-2">Risk Ranking<span class="redStar">*</span></label>
+            <div class="col-md-3">
+                @Html.DropDownList("RiskRanking", new List<SelectListItem>{
+                  new SelectListItem{ Text="--Select ---", Value = "" },
+                  new SelectListItem{ Text="High", Value ="H" },
+                  new SelectListItem{ Text="Medium", Value = "M" },
+                  new SelectListItem{ Text="Low", Value = "L" },
+                   }, new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.RiskRanking, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="control-label col-md-2">Auditable Area Affected<span class="redStar">*</span></label>
+            <div class="col-md-8">
+                <select id="SelectedAuditableAreaId" name="SelectedAuditableAreaId" class="form-control select2" required="required" multiple>
+                    <option>Select Client Category</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="control-label col-md-2">Risk Description<span class="redStar">*</span></label>
+            (<span style="font-weight:bold;" id="RiskDescriptionCount">250</span>)
+            <div class="col-md-8">
+                @Html.TextAreaFor(model => model.RiskDescription, new { maxlength = 250, @class = "form-control", @rows = 3, @cols = 15 })
+                @Html.ValidationMessageFor(model => model.RiskDescription, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <label class="control-label col-md-2">How to Manage Risk?<span class="redStar">*</span></label>
+            (<span style="font-weight:bold;" id="AuditorManageRiskCount">250</span>)
+            <div class="col-md-8">
+                @Html.TextAreaFor(model => model.AuditorManageRisk, new { maxlength = 250, @class = "form-control", @rows = 3, @cols = 15 })
+                @Html.ValidationMessageFor(model => model.AuditorManageRisk, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+        <div class="form-group">
+            <div class="col-md-3">
+                <a class="btn btn-info" href="#" id="saveRisks" onclick="addRiskz()">
+                    <i class="glyphicon glyphicon-plus"></i>Add
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <br />
+    <div id="divRiskTable"></div>
+
+}
+@*<script src="~/Areas/Coadmis/Scripts/chosen.jquery.min.js"></script>*@
+<script>
+
+        $(document).ready(function() {
+            $('#QuestionnaireId, #QuestionnairResponse, #RiskCategory, #RiskRanking, #SelectedAuditableAreaId').select2({
+                dropdownParent: $('#summaryCommentForm')
+            });
+
+        });
+
+
+
+         $("#RiskCategory").change(function () {
+            debugger;
+            var category = $(this).val();
+             if (category != "") {
+
+               var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetAuditableByCategoryType", "PlanningEngagement")/?category=' + category,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+
+                        console.log('select', data);
+                        option.empty;
+                        option.push('<option value="">Select Auditable Area</option>');
+                        data.data.forEach(d => {
+                            option.push('<option value=' + d["AuditableAreaId"] + '>' + d["AuditableAreaName"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#SelectedAuditableAreaId").html(option);
+                    }
+                });
+            }
+         })
+
+        $('#RiskDescription').on("keyup", function () {
+            var count = $('#RiskDescription').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#RiskDescriptionCount').text(parseInt(numChars));
+        });
+
+        $('#AuditorManageRisk').on("keyup", function () {
+            var count = $('#AuditorManageRisk').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#AuditorManageRiskCount').text(parseInt(numChars));
+        });
+
+
+    var allRisks = []
+    var risks = []
+    var countRisks = 0;
+
+    function addRiskz() {
+        debugger;
+        var auditableArea = $("select#SelectedAuditableAreaId").val();
+        var auditableAreaId = $("#SelectedAuditableAreaId").val();
+        var auditableAreaName = $("#SelectedAuditableAreaId option:selected").text();
+        var riskName = $("#RiskName").val();
+        var riskDesc = $("#RiskDescription").val();
+        var auditableManRisk = $("#AuditorManageRisk").val();
+        var riskCategory = $("#RiskCategory").val();
+        var riskRanging = $("#RiskRanking").val();
+
+
+        if (riskName == "" || riskDesc == "" || auditableManRisk == "" || riskCategory == "" || riskRanging == "" || auditableArea == "") {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        //var splitAuditableArea = auditableAreaId.split(",");
+        risks.push({
+            RiskName: riskName,
+            RiskCategory: riskCategory,
+            RiskRanking: riskRanging,
+            AffectedAuditableAreaIds: auditableAreaId,
+            AffectedAuditableArea: auditableAreaName,
+            IdentifyAuditorMngRisk: auditableManRisk,
+            IdentifyRiskDescription: riskDesc
+        });
+
+        var formdata = new FormData();
+        var detailedRiskAssId = $("#DetailedRiskAssId").val();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("DetailedRiskAssId", detailedRiskAssId);
+        for (var i = 0; i < risks.length; i++) {
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableAreaIds", risks[i].AffectedAuditableAreaIds);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskName", risks[i].RiskName);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskCategory", risks[i].RiskCategory);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskRanking", risks[i].RiskRanking);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableArea", risks[i].AffectedAuditableArea);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyAuditorMngRisk", risks[i].IdentifyAuditorMngRisk);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskDescription", risks[i].IdentifyRiskDescription);
+        }
+
+        for (const value of formdata.values()) {
+            console.log(value);
+        }
+
+        var url = '@Url.Action("SavedRiskIdentifiedDetail", "PlanningEngagement")';
+
+        $("#saveRiskAssertationForm").prop('disabled', true);
+        $("#divLoader").toggle(true);
+
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (resultData) {
+                $("#saveRiskAssertationForm").prop('disabled', false);
+                $("#divLoader").toggle(false);
+                if (resultData.response == "Success") {
+                    swal("Saved Risk Successfully!", { icon: "success" });
+                } else if (resultData.response =="Dublicate") {
+                    swal("Dublicate Risk Registered", { icon: "warning" });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#saveRiskAssertationForm").prop('disabled', false);
+                $("#divLoader").toggle(false);
+                swal(error);
+            }
+        });
+
+
+        GenerateRiskTable();
+    }
+
+    function GenerateRiskTable() {
+        debugger;
+        if (risks.length > 0) {
+            var $table = $('<table class="table table-condensed table-stripped table-hover table-bordered"/>');
+            $table.append('<thead>' +
+                '<tr><th colspan="5">Identified Risk</th>' +
+                '<tr><th>#</th><th style="display:none;">Id</th><th style="text-align: center">Risk Name</th><th>Risk Category</th><th>Risk Ranking</th><th>Auditable Area</th></tr>' +
+                '</thead>');
+            var $tbody = $('<tbody/>');
+            var j = 0;
+            $.each(risks, function (i, val) {
+                ++j;
+                var $row = $('<tr/>');
+                $row.append($('<td/>').html(j));
+                $row.append($('<td style="display:none"/>').html(val.AffectedAuditableAreaIds));
+                $row.append($('<td style="display:none"/>').html(val.IdentifyAuditorMngRisk));
+                $row.append($('<td style="display:none"/>').html(val.IdentifyRiskDescription));
+                $row.append($('<td/>').html(val.RiskName));
+                $row.append($('<td/>').html(val.RiskCategory));
+                $row.append($('<td/>').html(val.RiskRanking));
+                $row.append($('<td/>').html(val.AffectedAuditableArea));
+                //var $remove = $('<a href="#"><span class="glyphicon glyphicon-trash" aria-hidden="true"></span></a>');
+                //$remove.click(function (e) {
+                //    e.preventDefault();
+                //    risks.splice(i, 1);
+                //    GenerateRiskTable();
+                //});
+               /* $row.append($('<td/>').html($remove));*/
+                $tbody.append($row);
+            });
+            $table.append($tbody);
+            $('#divRiskTable').html($table);
+            $("#RiskName").val("");
+            $("#RiskDescription").val("");
+            $("#AuditorManageRisk").val("");
+            $("#SelectedAuditableAreaId").val(null).trigger('change');
+            $("#RiskCategory").val(null).trigger('change');
+            $('#RiskRanking').val(null).trigger('change');
+            $("#saveRisks").attr("disabled", false);
+        } else {
+            $('#divRiskTable').html('');
+            $("#saveRisks").attr("disabled", false);
+        }
+    }
+
+
+         ///Clear Code Above
+         $("#QuestionnairResponse").change(function () {
+            debugger;
+            var selectedValue = $("#QuestionnairResponse").val();
+
+            if (selectedValue == "Yes") {
+                $("#riskAssign").show();
+            }
+            else {
+                $("#riskAssign").hide();
+            }
+        });
+
+
+         $("#saveRiskAssertationForm").click(function () {
+            debugger;
+            var questionnaireId = $("#QuestionnaireId").val();
+            var questionnaireName = $("#QuestionnaireId option:selected").text();
+            var questionnairResponse = $("#QuestionnairResponse").val();
+            var planningEngagementId = $("#PlanningEngagementId").val();
+            /*var financialYearName = $("#FinancialYear").val();*/
+            var clientId = $("#ClientId").val();
+            var clientName = $("#ClientName").val();
+
+
+            if (questionnaireId == '' || questionnairResponse == '' ) {
+                swal("Please Fill All the required Fields", {icon: "warning"});
+                return false;
+            }
+            if (questionnairResponse =="Yes") {
+                if (risks.length == 0) {
+                    swal("Please, Add Atleast One Risk with at least one auditable Area Affected", { icon: "warning" });
+                    return false;
+                }
+            }
+
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("QuestionnaireId", questionnaireId);
+            formdata.append("QuestionnairName", questionnaireName);
+            formdata.append("QuestionnairResponse", questionnairResponse);
+            formdata.append("PlanningEngagementId", planningEngagementId);
+            formdata.append("ClientId", clientId);
+            formdata.append("ClientName", clientName);
+            //formdata.append("FinancialYear", financialYearName);
+
+            for (var i = 0; i < risks.length; i++) {
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableAreaIds", risks[i].AffectedAuditableAreaIds);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskName", risks[i].RiskName);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskCategory", risks[i].RiskCategory);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskRanking", risks[i].RiskRanking);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].AffectedAuditableArea", risks[i].AffectedAuditableArea);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyAuditorMngRisk", risks[i].IdentifyAuditorMngRisk);
+                formdata.append("RiskAssignedAuditableAreas[" + i + "].IdentifyRiskDescription", risks[i].IdentifyRiskDescription);
+            }
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+            var url = '@Url.Action("SaveIdentifiedRiskDetail", "PlanningEngagement")';
+
+            $("#saveRiskAssertationForm").prop('disabled', true);
+            $("#divLoader").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $("#saveRiskAssertationForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    if (resultData.response == "Success") {
+                        swal("Saved Risk Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = '@Url.Action("CreatePlanningEngagement", "PlanningEngagement")/' + "?id=" + resultData.id + "&clientYearEnd=" + resultData.clientEndYear;
+                                @*window.location.href = '@Url.Action("planningengagementlist", "PlanningEngagement")/' + "?id=" + resultData.id + "&clientYearEnd=" + resultData.clientEndYear;*@
+                            });
+                    } else if (resultData.response =="Dublicate") {
+                        swal("Dublicate Risk Registered", { icon: "warning" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveRiskAssertationForm").prop('disabled', false);
+                    $("#divLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        })
+
+    //Clear Code above
+    //Count input char
+    $('#JustificationOfRisk').on("keyup", function () {
+        var count = $('#JustificationOfRisk').val().split('');
+        var numChars = 250 - parseInt(count.length);
+        $('#JustificationOfRiskCount').text(parseInt(numChars));
+    });
+
+    $("#addSummaryCommentData").on('click', function () {
+        debugger;
+        var riskResponseSummaryId = $("#RiskResponseSummaryId").val();
+        var justificationOfRisk = $("#JustificationOfRisk").val();
+
+
+        if (riskResponseSummaryId == '' || justificationOfRisk == '') {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("RiskResponseSummaryId", riskResponseSummaryId);
+        formdata.append("JustificationOfRisk", justificationOfRisk);
+
+        $("#saveLoader").toggle(true);
+        var url = '@Url.Action("UpdateRiskSummaryResponse", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                if (response == "Success") {
+                    swal("Comment Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Dublicate") {
+                    swal("Dublicate Estimate!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#addRiskAssertionData").prop('disabled', false);
+                $("#saveLoader").toggle(false);
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

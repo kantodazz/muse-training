@@ -1,0 +1,850 @@
+﻿@{
+    ViewBag.Title = "Outstanding Imprest";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    input[type=text] {
+        padding: 4px;
+        border-radius: 4px;
+        border: 1px solid #ccc;
+        height: 35px;
+        width: 175px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=date] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_imprest_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Imprest No</th>
+                                        <th>Payee Code</th>
+                                        <th>Payee Name</th>
+                                        <th>Impres Type</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Imprest Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Payee Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>1. Payee Name: </th>
+                                                <td id="_Payeename"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Payee Code:</th>
+                                                <td id="_PayeeCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>3. Payee Bank Name:</th>
+                                                <td id="_PayeeBankName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>4. Payee Address:</th>
+                                                <td id="_PayeeAddress"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry">
+                            <div class="entry-label">Imprest Entries</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>1. Description: </th>
+                                                <td id="Description1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Apply Date:</th>
+                                                <td id="ApplyDate1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3. Retirement Date:</th>
+                                                <td id="RetirementDate1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>4. Imprest Type:</th>
+                                                <td id="ImprestType1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>5. Sub Budget Class:</th>
+                                                <td id="SubBudgetClass1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <div class="total-amount">TOTAL <strong id="totalAmount">0.00</strong></div>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- VIEW PARTIAL DIALOG ----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Partial Retirement</h3>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding:5px">Total Issue Amount</td>
+                        <td style="padding:5px">
+                            <input type="text" disabled id="TotalIssueAmount">
+                        </td>
+
+                        <td style="padding:5px">Total Amount to Retire</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="TotalAmountToRetire">
+                        </td>
+
+                        <td style="padding:5px">Cash Amount</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="CashAmount" style="width:250px">
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <hr />
+                    <div class="row">
+                        <div class="col-md-9">
+                            <table>
+                                <tr>
+                                   <td>
+                                        Receipt Ref:
+                                        <i class="fa fa-times" style="color:white" id="ReceiptRef_1"></i>
+                                    </td>
+                                    <td style="padding-left:33px">
+                                        <input type="text" name="search" placeholder="Enter Receipt Ref" id="ReceiptRef" class="form-control select2-close-mask">
+                                    </td>
+                                        <td class="form-label">
+                                            Retirement Date
+                                            <i class="fa fa-times" style="color:white" id="ApplyDate_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="flatpickr date-group">
+                                                <input type="text" placeholder="Select Date.."
+                                                       data-input style="border:none"
+                                                       autocomplete="off" id="RetirementDate">
+                                                <a class="input-button" title="open" data-toggle href="#">
+                                                    <span class="input-group-addon" style="height:35px"><i class="fa fa-calendar"></i></span>
+                                                </a>
+                                            </div>
+                                        </td>
+
+
+</tr>
+                            </table>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="search-container submit-btn" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="searchbox_gl">
+                            </div>
+                        </div>
+                    </div>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Gl Expenditure Account</th>
+                                <th>Item Description</th>
+                                <th>Funding Reference</th>
+                                <th>Issued Amount</th>
+                                <th>Expensed Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="submitPartialRetirement()">
+                        <strong id="btnLabel">Retire</strong>
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Add Retirement Date</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                @*<button class="btn btn-success approve-confirm" onclick="allocateAmount()">Ok</button>*@
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="attachFileModal">
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Attach </h3>
+            </div>
+
+            <div class="modal-body">
+                <input type="file" name="file" id="file" accept=".pdf" />
+
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-info" onclick="uploadForm()" style="width:100px;" id="form_submision">
+                    <i class="fa fa-save"></i>Save
+                    <img src="/Content/img/loading.gif" id="saveLoader" />
+                </button>
+                <button class="btn btn-info"
+                        data-dismiss="modal" style="width:100px;">
+                    <i class="fa fa-times"></i>Close
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        // ============ INIT DATA TABLES START =====================
+        var dt_imprest_listing = $('#dt_imprest_listing').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+
+        });
+
+        $("#dt_imprest_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_imprest_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable();
+
+        $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+
+        $("#searchbox_gl").on("keyup search input paste cut", function () {
+            dt_search_gl_item.DataTable().search(this.value).draw();
+        });
+
+
+
+        var dt_payee_details = $('#dt_payee_details').dataTable({
+            'sDom': 't',
+            "autoWidth": false,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "columns": [
+                { title: "Payee Name" },
+                { title: "Payee code" },
+                { title: "Bank Name" },
+                { title: "Bank Account No" },
+                { title: "Address" }]
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+
+        // ********************** INIT DATA TABLES END **********************
+
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalImprestId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPendingImprest", "ImprestRetirement")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                console.log(data);
+                dt_imprest_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_imprest_listing.fnAddData([i + 1,
+                       data[i]["ImprestNo"],
+                       data[i]["PayeeCode"],
+                       data[i]["PayeeName"],
+                       data[i]["ImprestTypeDesc"],
+                       data[i]["OperationalAmount"].toLocaleString(),
+                       data[i]["RetirementStatus"],
+                         '<div class="btn-group" id="drop-' + i + '">\
+                          <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                           </button>\
+                         <ul class="dropdown-menu">\
+                             <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                             <li><a href="#" onclick="attach(' + i + ')">Attach</a></li>\
+                               <li><a href="#" onclick="viewAttachment(' + i + ')">View Attachment</a></li>\
+                             <li><a href="#" onclick="fullRetirement(' + i + ')">Confirm Full Retir...</a></li>\
+                             <li><a href="#" onclick="openPartialReirementDialog(' + i + ')">Confirm Partial Retir...</a></li>\
+                        </ul>\
+                  </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+                    ]);
+                    $("#saveLoader-" + i + "").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+
+        // =============== OPEN VIEW DIALOG START ==================
+        /**
+        * Show View Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function openViewDialog(i) {
+            globalPayeeId = i;
+            $("#_Payeename").text(data[i]["PayeeName"]);
+            $("#_PayeeCode").text(data[i]["PayeeCode"]);
+            $("#_PayeeBankName").text(data[i]["PayeeBankName"]);
+            $("#_PayeeAddress").text(data[i]["PayeeAddress"]);
+
+            dt_voucher_detail.fnClearTable();
+            var TotalAmount = 0;
+            var imprestDetailsIds = [];
+            dt_voucher_detail.fnClearTable();
+            data[i]["ImprestDetails"].forEach(row => {
+                dt_voucher_detail.fnAddData([
+                    row["ExpenditureGlAccount"].split("|").join("-"),
+                    row["ExpenditureGlAccountDesc"],
+                    row["FundingRef"],
+                    row["IssuedAmount"].toLocaleString(),
+                ]);
+                TotalAmount = TotalAmount + parseFloat(row["IssuedAmount"]);
+                imprestDetailsIds.push(row["ImprestDetailId"]);
+            });
+
+            $("#Description1").text(data[i]["Description"]);
+            $("#totalAmount").text(TotalAmount.toLocaleString() + ".00");
+            $("#reasonId").text(data[i]["Remark"] ? data[i]["Remark"] : "-");
+            $("#statusId").text("Overal:- " + data[i]["OverallStatus"] + " | Retirement:- " + data[i]["RetirementStatus"]);
+            $("#InvoiceNo1").text(data[i]["InvoiceNo"]);
+            $("#total_voucher_amount1").val(data[i]["OperationalAmount"]);
+            $("#RetirementDate1").text(data[i]["RetirementDateFormatted"]);
+            $("#ApplyDate1").text(data[i]["ApplyDateFormatted"]);
+            $("#ImprestType1").text(data[i]["ImprestTypeDesc"]);
+            $("#SubBudgetClass1").text(data[i]["SubBudgetClass"]);
+            $('#confirmModal').modal('show');
+
+        }
+        // *************** END SHOW VIEW DIALOG ********************
+
+
+        //======================== REJECT START ==============================
+        /**
+        * Show Rejection Dialog
+        * param  {Int} i - Id of the selected Item
+        */
+        function fullRetirement(i) {
+            if (i == 'x') i = globalImprestId;
+            swal({
+                text: 'Retirement Date',
+                content: {
+                    element: "input",
+                    attributes: {
+                        type: "date",
+                    },
+                },
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(date => {
+                if (!date) {
+                    swal("No Date was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmFull(i, date);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        /**
+         * Send Rejection signal to the backend
+         * param  {Int} i - Id of the selected Item
+         */
+        function confirmFull(Id, date) {
+
+            var url = '@Url.Action("CreateImprestRetirement", "ImprestRetirement")';
+            var imprest = data[Id];
+            for (var i = 0; i < imprest["ImprestDetails"].length; i++) {
+                imprest["ImprestDetails"][i]["ExpensedAmount"] = 0;
+            }
+
+            var form_data = {
+                imprest: imprest,
+                depositRef: "Not Required",
+                retirementDate: date,
+                imprestRetirementType: "Full Retirement",
+                journalTypeCode: "IRF"
+            }
+
+            console.log(form_data);
+
+            var url = '@Url.Action("CreateImprestRetirement", "ImprestRetirement")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: 'success' }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        //********************* REJECT END *************************
+
+
+        function openPartialReirementDialog(i) {
+            //debugger
+            $("#ReceiptRef").select2({
+
+            })
+            globalImprestId = i;
+            dt_search_gl_item.fnClearTable();
+            var index = 0;
+            console.log(data[i]["ImprestDetails"]);
+            data[i]["ImprestDetails"].forEach(row => {
+                dt_search_gl_item.fnAddData([
+                    index + 1,
+                    row["ExpenditureGlAccount"].split("|").join("-"),
+                    row["ExpenditureGlAccountDesc"],
+                    row["FundingRef"],
+                    row["IssuedAmount"],
+                    '<amount-input placeholder="Amount" id="Id-' + index + '" onkeyup="amountChanged(' + index + ')" />'
+                ]);
+                index++;
+            });
+
+            $("#TotalIssueAmount").val(data[i]["BaseAmount"].toLocaleString());
+            $("#TotalAmountToRetire").val(data[i]["BaseAmount"].toLocaleString());
+            $("#CashAmount").val(0);
+            $('#glItemsModal').modal('show');
+        }
+
+        var form_data_status = [];
+        var all_amounts = {};
+
+        function amountChanged(i) {
+            debugger
+            if ($("#_Id-" + i).val()) {
+                safeProceed(i);
+            }
+        }
+
+        function safeProceed(i) {
+            //debugger
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var row = data.rows(i).data()[0]
+            var original_amount = parseFloat(row[4]);
+            var entered_amount = parseFloat($("#_Id-" + i).val().split(",").join(""));
+            all_amounts["Id-" + i] = $("#_Id-" + i).val().split(",").join("");
+
+            var CashAmount = original_amount - entered_amount;
+
+            if (CashAmount < 0) {
+                form_data_status.push(i);
+                $("#Id-" + i).css({ 'color': 'red' });
+            } else {
+                $("#Id-" + i).css({ 'color': 'black' });
+                remove(form_data_status, i);
+                computeTotalAmount();
+            }
+        }
+
+        function computeTotalAmount() {
+            var total_amount = 0;
+            var difference = 0;
+            var amount = "";
+            var data = dt_search_gl_item.DataTable().rows().data();
+            var obj = [];
+
+            for (var i = 0; i < data.length; i++) {
+                var amount = all_amounts["Id-" + i];
+
+                if (amount == undefined) {
+                    amount = "";
+                }
+                if (amount.trim()) {
+                    total_amount = parseFloat(total_amount) + parseFloat(amount);
+                }
+            }
+            try {
+                difference = parseFloat($('#TotalIssueAmount').val().split(",").join("")) - parseFloat(total_amount);
+                $('#CashAmount').val(difference.toLocaleString());
+                if (difference < 0) {
+                    $("#CashAmount").css({ 'color': 'red' });
+                } else {
+                    $("#CashAmount").css({ 'color': 'black' });
+                }
+            } catch (e) { }
+            console.log(total_amount)
+            $("#TotalAmountToRetire").val(total_amount.toLocaleString());
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        function submitPartialRetirement() {
+            if (form_data_status.length == 0 &&
+                voucherSummaryFormValidation()) {
+
+                var _data = dt_search_gl_item.DataTable().rows().data();
+
+                var imprest = data[globalImprestId];
+                let TotalAmount = 0;
+                for (var i = 0; i < _data.length; i++) {
+                    imprest["ImprestDetails"][i]["ExpensedAmount"] = $("#_Id-" + i).val() ? parseFloat($("#_Id-" + i).val().split(",").join("")) : 0;
+                    TotalAmount += imprest["ImprestDetails"][i]["ExpensedAmount"]
+                }
+
+                var form_data = {
+                    imprest: imprest,
+                    depositRef: $("#ReceiptRef").val(),
+                    retirementDate: $("#RetirementDate").val(),
+                    imprestRetirementType: TotalAmount > 0 ? "Partial Retirement" : "Full Retirement",
+                    journalTypeCode: computeJournalTypeCode()
+                }
+
+                var url = '@Url.Action("CreateImprestRetirement", "ImprestRetirement")';
+                $.ajax({
+                    type: "post",
+                    url: url,
+                    data: form_data,
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: 'success' }).then((e) => {
+                                window.location.reload();
+                            });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            } else {
+                swal("Please fill all the details.!");
+            }
+        }
+
+        function voucherSummaryFormValidation() {
+            var isNotValid = validateInputsParameters([
+                "#ReceiptRef",
+                "#RetirementDate",
+            ]);
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val().trim()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+
+        function computeJournalTypeCode() {
+            // Full Retirement
+            if (parseFloat($("#TotalAmountToRetire").val().split(",").join("")) == parseFloat($("#TotalIssueAmount").val().split(",").join(""))) {
+                return "IRF"
+            }
+
+            // Partial Retirement
+            if (parseFloat($("#TotalAmountToRetire").val().split(",").join("")) > 0) {
+                return "IRP"
+            }
+
+            // Partial Retirement - Return All
+            if (parseFloat($("#CashAmount").val().split(",").join(""))
+                == parseFloat($("#TotalIssueAmount").val().split(",").join(""))
+                && (parseFloat($("#TotalAmountToRetire").val().split(",").join("")) == 0)
+                ) {
+                return "IRR"
+            }
+        }
+
+        //========== INPUT THOUSAND SEPARATOR ==================
+
+        $("#total_voucher_amount").on("keyup input paste", function () {
+            $("#total_voucher_amount").val(inputThousandSeparator(this.value))
+        })
+
+        var OldVal = 0
+        function inputThousandSeparator(NewVal) {
+            if (NewVal) {
+                try {
+                    NewVal = parseFloat(NewVal.split(",").join(""))
+                    if (typeof NewVal == 'number' && !Number.isNaN(NewVal)) {
+                        OldVal = NewVal;
+                        return NewVal.toLocaleString()
+                    } else {
+                        return OldVal
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            }
+        }
+        $(function () {
+
+            //$('#RetirementDate').val(new Date().toDateInputValue());
+        });
+        //var fullRetirement = function (id) {
+
+        //    var url = "UpdateRetirementDate/" + id;
+
+        //    $(".modal-body").load(url, function () {
+        //        $("#myModal1").modal("show");
+        //    });
+        //};
+
+
+        function attach(i) {
+            window.location.href =
+                '@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=' + data[i]["ImprestId"] + '&&sourceModule=' + "Imprest";
+        }
+
+        function viewAttachment(i) {
+            window.location.href =
+                '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["ImprestId"] + '&&sourceModule=' + "Imprest";
+        }
+
+        $(function () {
+            var url = '@Url.Action("SearchReference", "ImprestRetirement")';
+
+            $("#BankStatementDetailId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.refNos }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+    </script>
+}

@@ -1,0 +1,254 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.DfundExpenditureSummary>
+
+<div class="row">
+    <div class="col-md-10">
+        <input type="text" class="form-control" id="GlAccount" name="GlAccount" />
+    </div>
+    <div class="col-md-2">
+        <button type="button" id="btnSave" class="btn btn-info">Assign</button>
+    </div>
+</div>
+<hr />
+
+<table id="tblExpenditureSummaries" class="table tab-content table-bordered table-condensed table-hover table-responsive table-striped">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>
+                @Html.DisplayNameFor(model => model.GfsCodeGfsDesc)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.GlAccount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BaseAmount)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.BaseCurrency)
+            </th>
+            <th>
+                @Html.DisplayNameFor(model => model.OverallStatus)
+            </th>
+            <th></th>
+            <th>Action</th>
+        </tr>
+    </thead>
+
+    @{
+        int i = 0;
+    }
+    @foreach (var item in Model)
+    {
+        i++;
+        <tr>
+            <td>@i</td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GfsCodeGfsDesc)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.GlAccount)
+            </td>
+            <td style="text-align: right">
+                @Html.DisplayFor(modelItem => item.BaseAmount, "_DecimalThousands")
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.BaseCurrency)
+            </td>
+            <td>
+                @Html.DisplayFor(modelItem => item.OverallStatus)
+            </td>
+            <td>
+                <input type="checkbox" value="@item.DfundExpenditureSummaryId" />
+            </td>
+            <td style="text-align: center">
+                <!-- Split button -->
+                <div class="btn-group">
+                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        @if (item.OverallStatus == "GL Assigned")
+                        {
+                            <li><a href="#" onclick="confimExpenditure(@item.DfundExpenditureSummaryId)">Confirm</a></li>
+                        }
+                    </ul>
+                </div>
+            </td>
+        </tr>
+    }
+</table>
+
+<script>
+    $(document).ready(function () {
+
+        var donorCode = $("#DonorCode").val();
+        $("#GlAccount").select2({
+            minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+            width: 'resolve',   // to adjust proper width of select2 wrapped elements
+            placeholder: "Search GL Account to Assign Selected GFS Code(s)",
+            allowClear: false,
+            initSelection: function (element, callback) {
+                var id = $(element).val();
+                if (id != 0) {
+                    $.ajax('@Url.Action("GetCoa", "Coas")', {
+                        data: { id: id },
+                        dataType: "json"
+                    }).done(function (data) {
+                        callback(data);
+                    });
+                }
+            },
+            ajax: {
+                url: '@Url.Action("GetBudgetCoasPerDonor", "Coas")', // Controller - Select2Demo and Action -AccessRemoteData
+                type: "GET",
+                dataType: 'json',
+                data: function (term) {
+                    return {
+                        donorCode: donorCode,
+                        term: term
+                    };
+                },
+                results: function (data, page) {
+                    return { results: data.coas }; // data.CountryList returning json data from Controlle
+                }
+            },
+        });
+
+        $('#tblExpenditureSummaries').dataTable();
+    });
+
+    $("#btnSave").click(function () {
+        $("#divLoader").show();
+
+        var glAccount = $("#GlAccount").val();
+        if (glAccount === null || glAccount === "") {
+            swal({
+                text: "Select GL account for GFS code mapping",
+                icon: "warning",
+                button: "OK",
+            });
+
+            $("#divLoader").hide();
+            return false;
+        }
+
+        var glAccountText = $("#GlAccount").select2("data").text;
+        var glAccountTextArray = glAccountText.split("-");
+        var glAccountDesc = glAccountTextArray[glAccountTextArray.length - 1].trim();
+        var ids = [];
+
+        $("input:checkbox").each(function () {
+            if ($(this).prop("checked")) {
+                ids.push($(this).val());
+            }
+        });
+
+        if (!(ids.length > 0)) {
+            swal({
+                text: "Select atleast one GFS code for GL mapping",
+                icon: "warning",
+                button: "OK",
+            });
+
+            $("#divLoader").hide();
+            return false;
+        }
+
+        $("#btnSave").prop("disabled", true);
+        var url = '@Url.Action("AssignGlAccount", "DfundExpenditureSummaries")';
+
+        $.ajax({
+        type: "POST",
+        url: url,
+        data: {
+            glAccount: glAccount,
+            glAccountDesc: glAccountDesc,
+            ids: ids
+        },
+        success: function(response) {
+            if (response == "Success")
+            {
+            swal({
+            text: "GL assignments process successfully completed!",
+            icon: "success",
+            button: "OK",
+            }).then(function() {
+                LoadDataTable();
+            });
+            }
+            else
+            {
+            swal({
+            text: response,
+            icon: "warning",
+            button: "OK",
+        })
+        }
+        },
+        error: function() {
+                swal({
+                text: "An error occured while processing your request, please contact system support",
+                icon: "error",
+                button: "OK",
+            })
+        },
+        complete: function() {
+            $("#divLoader").hide();
+            $("#btnSave").prop("disabled", false);
+            }
+        });
+    });
+
+    var confimExpenditure = function (id) {
+        swal({
+            title: "Confirmation",
+            text: "Are you sure you want to perform this operation",
+            buttons: [
+                'Yes',
+                'No'
+            ],
+            closeOnClickOutside: false,
+        }).then(function (isConfirm) {
+            if (!isConfirm) {
+        $("#divLoader").show();
+        var url = '@Url.Action("ConfirmExpenditure", "DfundExpenditureSummaries")/' + id;
+
+        $.ajax({
+        type: "POST",
+        url: url,
+        success: function(response) {
+            if (response == "Success")
+            {
+            swal({
+            text: "Expenditure confirmed successfully!",
+            icon: "success",
+            button: "OK",
+            }).then(function() {
+                LoadDataTable()
+            });
+            }
+            else
+            {
+            swal({
+            text: response,
+            icon: "warning",
+            button: "OK",
+        })
+        }
+        },
+        error: function() {
+                swal({
+                text: "An error occured while processing your request, please contact system support",
+                icon: "error",
+                button: "OK",
+            })
+        },
+        complete: function() {
+            $("#divLoader").hide();
+            }
+        });
+            }
+        });
+    };
+</script>

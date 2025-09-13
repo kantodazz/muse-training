@@ -1,0 +1,304 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Undo Reconciliation";
+}
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.css" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/select2/3.5.4/select2.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<div id="content" style="margin: 5px; margin-top: 30px">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i> Undo Reconciliation</span>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+
+                            <ul class="nav nav-tabs" id="unmatchTabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active" data-toggle="tab" href="#byAccount">By Account</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" data-toggle="tab" href="#byMatchNo">By MatchNo</a>
+                                </li>
+                            </ul>
+                            <br />
+                            <div class="tab-content border p-3 mt-3">
+                                <!-- By Account -->
+                                <div class="tab-pane fade show active" id="byAccount">
+                                    <div class="row mb-3">
+                                        <div class="col-md-4">
+                                            <select id="accountFilter" class="form-control select2">
+                                                <option value="">-- Select Bank Account --</option>
+                                                @foreach (var item in ViewBag.InstitutionAccount)
+                                                {
+                                                    <option value="@item.Value">@item.Text</option>
+                                                }
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3">
+                                            <input type="date" id="checkDateFilter" class="form-control" />
+                                        </div>
+                                        <div class="col-md-5 d-flex align-items-end">
+                                            <button class="btn btn-secondary me-2" onclick="previewByAccount()">🔍 Preview</button>
+                                            <button id="unmatchByAccountBtn" class="btn btn-info" onclick="unmatchByAccount()">🔄 Unmatch All</button>
+                                            <span id="spinnerAccount" class="spinner-border spinner-border-sm text-info ms-2" style="display:none;"></span>
+                                            <span id="statusAccount" class="text-success fw-bold ms-2"></span>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- By MatchNo -->
+                                <div class="tab-pane fade" id="byMatchNo">
+                                    <div class="row mb-3">
+                                        <div class="col-md-6">
+                                            <input type="text" id="matchNoDropdown" class="form-control" placeholder="Search MatchNo..." />
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-end">
+                                            <button class="btn btn-secondary me-2" onclick="previewByMatchNo()">🔍 Preview</button>
+                                            <button id="unmatchByMatchBtn" class="btn btn-info" onclick="unmatchByMatchNo()">🔄 Unmatch</button>
+                                            <span id="spinnerMatch" class="spinner-border spinner-border-sm text-info ms-2" style="display:none;"></span>
+                                            <span id="statusMatch" class="text-success fw-bold ms-2"></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <!-- Data Tables -->
+                            <div class="row mt-4">
+                                <div class="col-md-6">
+                                    <h5>Cashbook (<span id="cashbookCount">0</span>)</h5>
+                                    <table class="table table-bordered table-sm">
+                                        <thead><tr><th>#</th><th>Amount</th><th>FundingRef</th><th>LegalNo</th><th>MatchNo</th></tr></thead>
+                                        <tbody id="cashbookPreview"></tbody>
+                                        <tfoot><tr><td colspan="5" class="text-end fw-bold"><b>Total: <span id="cashbookTotalAmount">0.00<b/></span></td></tr></tfoot>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <h5> Statement (<span id="statementCount">0</span>)</h5>
+                                    <table class="table table-bordered table-sm">
+                                        <thead><tr><th>#</th><th>Amount</th><th>RelatedRef</th><th>Description</th><th>MatchNo</th></tr></thead>
+                                        <tbody id="statementPreview"></tbody>
+                                        <tfoot><tr><td colspan="5" class="text-end fw-bold"><b>Total: <span id="statementTotalAmount">0.00<b /></span></td></tr></tfoot>
+                                    </table>
+                                </div>
+                            </div>
+
+                            <!-- Unified Pagination -->
+                            <div id="paginationControls" style="margin-top: 10px; text-align: center;">
+                                <button id="prevPage" class="btn btn-sm btn-secondary">⬅️ Prev</button>
+                                <span id="pageInfo"></span>
+                                <button id="nextPage" class="btn btn-sm btn-secondary">Next ➡️</button>
+                            </div>
+
+                            <!-- Below Both Tables -->
+                            @*<div class="d-flex justify-content-center mt-3">
+                                    <button class="btn btn-outline-secondary btn-sm me-2" onclick="paginate(-1)">⬅️ Prev</button>
+                                    <span id="pageInfo" class="align-self-center fw-bold"></span>
+                                    <button class="btn btn-outline-secondary btn-sm ms-2" onclick="paginate(1)">Next ➡️</button>
+                                </div>*@
+
+                            <!-- Loader -->
+                            <div id="loaderMsg" style="text-align:center; margin-top: 15px; display:none;">
+                                <strong>Loading, please wait...</strong>
+                            </div>
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<script>
+    const apiBase = "http://10.1.87.43:5001";
+    let currentPage = 0, pageSize = 10, totalPages = 1;
+    let currentTab = "account"; // or "matchno"
+    let totalCashbookRecords = 0, totalStatementRecords = 0;
+
+    $(document).ready(function () {
+        $(".select2").select2();
+        $("#matchNoDropdown").select2({
+            minimumInputLength: 1,
+            ajax: {
+                url: `${apiBase}/matchno-list`,
+                dataType: "json",
+                data: term => ({ q: term }),
+                results: data => ({ results: data.map(x => ({ id: x.MatchNo, text: x.MatchNo })) })
+            }
+        });
+    });
+
+    function changePage(delta) {
+        const newPage = currentPage + delta;
+        if (newPage >= 0 && newPage < totalPages) {
+            currentPage = newPage;
+            currentTab === "account" ? previewByAccount() : previewByMatchNo();
+        }
+    }
+
+    function renderTableRows(data, targetId, isCashbook, startIndex) {
+        const rows = data.map((tx, i) => `
+            <tr>
+                <td>${startIndex + i + 1}</td>
+                <td>${(isCashbook ? tx.OperationalAmount : tx.TransactionAmount).toLocaleString()}</td>
+                <td>${isCashbook ? tx.FundingRef : tx.RelatedRef}</td>
+                <td>${isCashbook ? tx.LegalNumber : tx.Description}</td>
+                <td>${tx.MatchNo}</td>
+            </tr>
+        `).join('');
+        $(`#${targetId}`).html(rows || "<tr><td colspan='5'>No data found.</td></tr>");
+    }
+
+    async function previewByAccount() {
+        currentTab = "account";
+        const acc = $("#accountFilter").val();
+        const date = $("#checkDateFilter").val();
+        if (!acc || !date) return alert("Select both account and check date.");
+        $("#loaderMsg").show();
+
+        const res = await fetch(`${apiBase}/matched-transactions?bank_account=${acc}&check_date=${date}&start=${currentPage * pageSize}&length=${pageSize}`);
+        const data = await res.json();
+
+        renderTableRows(data.cashbook_data, "cashbookPreview", true, currentPage * pageSize);
+        renderTableRows(data.statement_data, "statementPreview", false, currentPage * pageSize);
+        $("#cashbookTotalAmount").text(sumAmounts(data.cashbook_data, "OperationalAmount"));
+        $("#statementTotalAmount").text(sumAmounts(data.statement_data, "TransactionAmount"));
+        $("#cashbookCount").text(data.totalCashbookRecords);
+        $("#statementCount").text(data.totalStatementRecords);
+
+        totalPages = Math.ceil(Math.max(data.totalCashbookRecords, data.totalStatementRecords) / pageSize);
+        $("#pageInfo").text(`Page ${currentPage + 1} of ${totalPages}`);
+        $("#loaderMsg").hide();
+    }
+
+    async function previewByMatchNo() {
+        currentTab = "matchno";
+        const matchNo = $("#matchNoDropdown").val();
+        if (!matchNo) return alert("Select a MatchNo.");
+        $("#loaderMsg").show();
+
+        const res = await fetch(`${apiBase}/matched-transactions?match_no=${matchNo}&start=${currentPage * pageSize}&length=${pageSize}`);
+        const data = await res.json();
+
+        renderTableRows(data.cashbook_data, "cashbookPreview", true, currentPage * pageSize);
+        renderTableRows(data.statement_data, "statementPreview", false, currentPage * pageSize);
+        $("#cashbookTotalAmount").text(sumAmounts(data.cashbook_data, "OperationalAmount"));
+        $("#statementTotalAmount").text(sumAmounts(data.statement_data, "TransactionAmount"));
+        $("#cashbookCount").text(data.totalCashbookRecords);
+        $("#statementCount").text(data.totalStatementRecords);
+
+        totalPages = Math.ceil(Math.max(data.totalCashbookRecords, data.totalStatementRecords) / pageSize);
+        $("#pageInfo").text(`Page ${currentPage + 1} of ${totalPages}`);
+        $("#loaderMsg").hide();
+    }
+
+    function sumAmounts(data, field) {
+        return data.reduce((sum, x) => sum + (parseFloat(x[field]) || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 2 });
+    }
+
+    async function unmatchByAccount1() {
+        const acc = $("#accountFilter").val();
+        const date = $("#checkDateFilter").val();
+        if (!acc || !date) return alert("Select both account and date.");
+        $("#unmatchByAccountBtn").prop("disabled", true);
+        $("#spinnerAccount").show();
+        $("#statusAccount").text("Unmatching in progress...");
+        await fetch(`${apiBase}/reconciliation-reset?bank_account=${acc}&checkdate=${date}`, { method: "POST" });
+
+        await previewByAccount();
+        $("#unmatchByAccountBtn").prop("disabled", false);
+        $("#spinnerAccount").hide();
+        $("#statusAccount").text("Unmatched successfully.");
+    }
+
+    async function unmatchByAccount() {
+    const acc = $("#accountFilter").val();
+    const date = $("#checkDateFilter").val();
+    if (!acc || !date) return alert("Select both account and date.");
+    $("#unmatchByAccountBtn").prop("disabled", true);
+    $("#spinnerAccount").show();
+    $("#statusAccount").text("Unmatching in progress...");
+
+    const username = '@User.Identity.Name'; // Get logged in user
+
+    await fetch(`${apiBase}/reconciliation-reset?bank_account=${acc}&checkdate=${date}`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Username": username
+        }
+    });
+
+    await previewByAccount();
+    $("#unmatchByAccountBtn").prop("disabled", false);
+    $("#spinnerAccount").hide();
+    $("#statusAccount").text("Unmatched successfully.");
+}
+
+async function unmatchByMatchNo() {
+    const matchNo = $("#matchNoDropdown").val();
+    if (!matchNo) return alert("MatchNo is required.");
+    $("#unmatchByMatchBtn").prop("disabled", true);
+    $("#spinnerMatch").show();
+    $("#statusMatch").text("Unmatching in progress...");
+
+    const username = '@User.Identity.Name'; 
+
+    await fetch(`${apiBase}/unmatch-by-matchno`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-Username": username
+        },
+        body: JSON.stringify({ match_no: matchNo })
+    });
+
+    await previewByMatchNo();
+    $("#unmatchByMatchBtn").prop("disabled", false);
+    $("#spinnerMatch").hide();
+    $("#statusMatch").text("Unmatched successfully.");
+}
+
+    async function unmatchByMatchNo1() {
+        const matchNo = $("#matchNoDropdown").val();
+        if (!matchNo) return alert("MatchNo is required.");
+        $("#unmatchByMatchBtn").prop("disabled", true);
+        $("#spinnerMatch").show();
+        $("#statusMatch").text("Unmatching in progress...");
+
+
+        await fetch(`${apiBase}/unmatch-by-matchno`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ match_no: matchNo })
+        });
+
+        await previewByMatchNo();
+        $("#unmatchByMatchBtn").prop("disabled", false);
+        $("#spinnerMatch").hide();
+        $("#statusMatch").text("Unmatched successfully.");
+    }
+
+
+    $("#prevPage").click(function () {
+        if (currentPage > 0) {
+            currentPage--;
+            currentTab === "account" ? previewByAccount() : previewByMatchNo();
+        }
+    });
+
+    $("#nextPage").click(function () {
+        if (currentPage < totalPages - 1) {
+            currentPage++;
+            currentTab === "account" ? previewByAccount() : previewByMatchNo();
+        }
+    });
+
+</script>

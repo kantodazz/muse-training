@@ -1,0 +1,133 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryIssuingVM
+@if (Model.Inventories.Count() == 0)
+{
+    <div style="padding-bottom:10px" id="infoPanel">
+        <div class="info-box"><strong>No pending inventories available to be issued</strong></div>
+    </div>
+}
+else
+{
+    using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuing(this)" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.HiddenFor(model => model.SourceId)
+        @Html.HiddenFor(model => model.SourceModule)
+        @Html.HiddenFor(model => model.LegalNumber)
+        <div class="form-group">
+
+            @Html.LabelFor(model => model.SubVote, htmlAttributes: new { @class = "control-label   col-md-2" })
+            <div class="col-md-3">
+                @Html.DropDownListFor(model => model.SubVote, Model.SubVotesList, "Select ", new { @class = "form-control select2", @required = "required" })
+                @Html.ValidationMessageFor(model => model.SubVote, "", new { @class = "text-danger" })
+            </div>
+        </div>
+        <table class="table  table-bordered table-hover table-condensed">
+            <thead>
+                <tr>
+                    <th style="text-align:right;width:4%"></th>
+                    <th style="text-align:left">Inventory Code</th>
+                    <th style="text-align:left">Item Name</th>
+                    <th style="text-align:center">Quantity</th>
+                    <th style="text-align:left">UOM</th>
+                    <th style="text-align:right">Unit Price</th>
+                    <th style="text-align:right">Inventory Value</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @{var i = 0;}
+                @foreach (var item in Model.Inventories)
+                {
+                    i++;
+
+                    <tr>
+                        <td style="text-align:right">
+                            @i
+                        </td>
+                        <td style="text-align:left">
+                            @Html.DisplayFor(modelItem => item.InventoryCode)
+                        </td>
+                        <td style="text-align:left">
+                            @Html.DisplayFor(modelItem => item.ItemName)
+                        </td>
+                        <td style="text-align:center">
+                            @Html.DisplayFor(modelItem => item.Balance)
+                        </td>
+
+                        <td style="text-align:left">
+                            @Html.DisplayFor(modelItem => item.UOM)
+
+                        </td>
+
+                        <td style="text-align:right">
+
+
+                            @Html.DisplayFor(modelItem => item.UnitPrice)
+
+                        </td>
+                        <td style="text-align:right">
+                            @Html.DisplayFor(modelItem => item.InventoryValue)
+
+                        </td>
+
+                    </tr>
+                }
+                <tfooter>
+                    <tr>
+                        <th style="text-align:right" colspan="3">Total</th>
+                        <th style="text-align:right">@Model.Inventories.Select(a => a.Balance).DefaultIfEmpty(0).Sum()</th>
+                        <th colspan="2"></th>
+                        <th style="text-align:right">@Convert.ToDecimal(Model.Inventories.Select(a => a.InventoryValue).DefaultIfEmpty(0).Sum()).ToString("#,##0.00/=")</th>
+                    </tr>
+                </tfooter>
+                <tfooter>
+                    <tr>
+                        <th style="text-align:right" colspan="6"></th>
+                        <th style="text-align:center">
+                            <button type="submit" id="save_button" class="btn btn-info" style="float: left; margin-left: 5px">
+                                <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                            </button>
+                        </th>
+                    </tr>
+                </tfooter>
+            </tbody>
+        </table>
+
+    }
+}
+
+
+<script type="text/javascript">
+
+function SubmitIssuing(formData) {
+           $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveIssuingBulk", "InventoriesIssuing")';
+            var ajaxConfig = {
+            type: "post",
+            url: url,
+            data: new FormData(formData),
+            success: function (response) {
+            $("#save_button").prop('disabled', false);
+            if (response == "Success") {
+            swal("Data saved successfully", { icon: "success" })
+            .then((value) => {
+            var url = '@Url.Action("PendingRequisition", "InventoriesIssuing")';
+            window.location.replace(url);
+            });
+            }
+            else {
+            swal(response);
+            }
+            }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+            ajaxConfig["contentType"] = false;
+            ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+            }
+
+</script>
+

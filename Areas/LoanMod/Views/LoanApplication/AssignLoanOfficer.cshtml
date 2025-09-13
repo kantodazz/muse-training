@@ -1,0 +1,395 @@
+﻿@model IFMIS.Areas.LoanMod.Models.LoanApplicationVM
+@{
+    ViewBag.Title = "Assign Loan Officer";
+
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .backgroundColor {
+        background: #ff0000;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <div class="row" style="padding:1% 5% 0 5%;">
+                                <div class="col-lg-3 col-sm-12 "></div>
+                                <div class="col-md-6 col-lg-6 col-sm-12 ">
+                                    <table>
+                                        <tr>
+                                            <td><b>Application No</b></td>
+                                            <td>@ViewBag.ApplicationNo</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Customer Name</b></td>
+                                            <td>@ViewBag.CustomerName</td>
+                                        </tr>
+                                        <tr>
+                                            <td><b>Tin No</b></td>
+                                            <td>@ViewBag.TinNo</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="form-label">
+                                                <b>Loan Appraiser</b>
+                                                <i class="fa fa-times" style="color:white"></i>
+                                            </td>
+                                            <td>
+                                                <input type="text" readonly id="PayeeName" placeholder="No Appraiser Selected" style="width:260px" />
+                                                <input type="hidden" id="LoanAccessorId" name="LoanAccessorId" />
+                                                <input type="hidden" id="ApplicationNo" value="@ViewBag.ApplicationNo" />
+                                                <a class="search-btn" onclick="SearchPayee()"
+                                                   href="#" style="float:right">
+                                                    <i class="fa fa-search search-icon"></i>
+                                                </a>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                                <div class="col-lg-3 col-sm-12 "></div>
+
+                                <table id="dt_selected_payee" class="table table-striped table-bordered table-hover table-condensed" width="100%"></table>
+                            </div>
+
+                            <div class="row" style="padding:1% 5% 0 5%;">
+                                <div class="col-md-6"></div>
+                                <div class="col-md-5">
+                                    <a href="@Url.Action("LoanApprovalList", "LoanApplication" )" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    <button type="submit" class="btn btn-info" onclick="saveAssignmentForm()" id="saveAssignmentForm">
+                                        <i class="glyphicon glyphicon-arrow-right"></i>Save
+                                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                                    </button>
+                                </div>
+                                <div class="col-md-1"></div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="payeeModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Accessor</h3>
+
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container submit-btn" style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                        </div>
+                    </div>
+                </div>
+                <table class="table" id="dt_search_payee">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Loan Appraiser Id</th>
+                            <th>Fullname</th>
+                            <th>Phone Number</th>
+                            <th>Email</th>
+                            <th>Check Number</th>
+                            <th>Title</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific{
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+        $("#saveLoader").toggle(false);
+
+        var LoanAccessorId = null;
+         $(document).ready(function () {
+                $("#dt_search_payee_wrapper .dt-toolbar").remove();
+            });
+            var dt_selected_payee = $('#dt_selected_payee').dataTable({
+                "data": [],
+                //"columnDefs": [{ "bVisible": false, "aTargets": [0] }],
+                "columns": [
+                    { title: "#" },
+                    { title: "LoanAccessorId" },
+                    { title: "Fullname" },
+                    { title: "Phone Number" },
+                    { title: "Email" },
+                    { title: "Check Number" },
+                    { title: "Title" },
+                    { title: "" }
+                ]
+            });
+
+            $("#dt_selected_payee_wrapper .dt-toolbar").remove();
+
+            var dt_search_payee = $('#dt_search_payee').dataTable({
+                //"aoColumnDefs": [{ "bVisible": false, "aTargets": [0] }],
+            });
+
+            $("#searchbox").on("keyup search input paste cut", function () {
+                if (!this.value) {
+                    dt_search_payee.fnClearTable();
+                } else {
+                    searchPayeeTableUpdate(this.value);
+                }
+            });
+
+            function searchPayeeTableUpdate(search) {
+                var url = '@Url.Action("GetAccessor", "LoanApplication")';
+                $.ajax({
+                    type: "get",
+                    url: url + "/?search=" + search + "",
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        data = response.data;
+                        console.log(data);
+                        dt_search_payee.fnClearTable();
+                        for (var i = 0; i < data.length; i++) {
+                            dt_search_payee.fnAddData([i + 1,
+                               data[i]["LoanAccessorId"],
+                               data[i]["Fullname"],
+                               data[i]["PhoneNumber"],
+                               data[i]["Email"],
+                               data[i]["CheckNumber"],
+                               data[i]["Title"],
+                               '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                            ]);
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+            }
+
+            var selectedPayees = []
+            var selectedPayeeIds = []
+
+            function payeeClicked(rowId) {
+                var data = dt_search_payee.DataTable().rows().data();
+                var row = data[rowId];
+                $("#PayeeName").val(row[2]);
+                if(!selectedPayeeIds.includes(row[1])){
+                    selectedPayeeIds.push(row[1])
+                    selectedPayees.push(row)
+                    updatePayeeTable()
+                }
+                $("#payeeModal").modal("hide");
+            }
+
+            function updatePayeeTable(){
+                dt_selected_payee.fnClearTable();
+                selectedPayees.forEach((row,index)=>{
+                    dt_selected_payee.fnAddData([index+1,
+                        row[1], row[2], row[3], row[4],
+                        row[5], row[6],
+                        '<a href="#" onclick="removePayee('+index+')"><i class="fa fa-trash-o"></i></a>'
+                    ]);
+                })
+            }
+
+            function removePayee(index){
+                selectedPayeeIds.splice(index,1)
+                selectedPayees.splice(index,1)
+                updatePayeeTable()
+            }
+
+            function SearchPayee() {
+                $('#payeeModal').modal('show');
+            }
+            $(".saveLoader").toggle(false);
+
+            function saveAssignmentForm() {
+                var ApplicationNo = '@ViewBag.ApplicationNo';
+                var formDataApp = new FormData()
+                formDataApp.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                formDataApp.append('ApplicationNo', ApplicationNo);
+                postFormData(formDataApp);
+            }
+
+
+        function postFormData(formData) {
+            var urlList = '@Url.Action("LoanAccessorAssignedList", "LoanApplication")';
+            var Stage = 'Application';
+            formData.append('PayeeIds', selectedPayeeIds.toString());
+            formData.append('Stage', Stage);
+            $(".loadingImg").show();
+            $("#saveAssignmentForm").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("LoanAssignment", "LoanApplication")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (resultData) {
+                    $("#saveAssignmentForm").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (resultData.response == "Success") {
+                        swal("Loan Application Assigned Successfully!", { icon: "success" })
+                            .then((m) => {
+                                window.location.href = urlList;
+                            });
+                    } else {
+                        $("#saveAssignmentForm").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(resultData.response)
+                    }
+                },
+                failure: function (error) {
+                    $("#saveAssignmentForm").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(resultData.response)
+                }
+            });
+        }
+
+
+
+    </script>
+}

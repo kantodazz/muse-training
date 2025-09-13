@@ -1,0 +1,294 @@
+﻿@{
+    ViewBag.Title = "Verify Deductions";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Employee Name</th>
+                                        <th>Check Number</th>
+                                        <th>Deduction Code</th>
+                                        <th>Initial Balance</th>
+                                        <th>Deduction Amount</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th>Created At</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw();
+        });
+
+           function actionTypes(i) {
+               return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick="verify(' + i + ')">Verify</a></li>\
+                                <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>';
+        }
+
+        var data = []
+          $.ajax({
+            type: "get",
+            url: '@Url.Action("GetDeductions", "Deduction")',
+            data: { status: 'Confirmed' },
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_table.fnAddData([i + 1,
+                       data[i]["Employee"]["FirstName"] + " " + data[i]["Employee"]["MiddleName"] + " " + data[i]["Employee"]["LastName"],
+                       data[i]["Employee"]["CheckNumber"],
+                       data[i]["DeductionCode"] ?
+                       data[i]["DeductionCode"]["DeductionCodeDescription"] : '-',
+                       data[i]["InitialBalance"].toLocaleString(),
+                       data[i]["DeductionAmount"].toLocaleString(),
+                       data[i]["Reason"],
+                       data[i]["OverallStatus"],
+                       data[i]["CreatedDateFormatted"],
+                      actionTypes(i)
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+          });
+
+
+       function verify(i) {
+            swal({
+                title: 'Verify this Item?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    verifyPost(data[i]["DeductionId"], false);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+       function verifyPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("VerifyDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!",{ icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                     }else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        function reject(i) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(data[i]["DeductionId"], remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, remark) {
+            var url = '@Url.Action("RejectDeduction", "Deduction")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "Remark": remark, status: "Rejected By Verifier" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

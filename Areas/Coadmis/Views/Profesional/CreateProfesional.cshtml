@@ -1,0 +1,245 @@
+﻿@model IFMIS.Areas.Coadmis.Models.Profesional
+@{
+    ViewBag.Title = "Create Profesional";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+
+    .redStar {
+        color: red;
+        font-size: 15px;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div class="row setup-content">
+                                @Html.AntiForgeryToken()
+                                <form>
+                                    <div class="form-horizontal">
+                                        <div class="col-xs-12">
+
+                                            <div class="col-md-12">
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-2">Profesional Name<span class="redStar">*</span></label>
+                                                    <div class="col-md-8">
+                                                        @Html.TextBoxFor(model => model.Name, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                                                    </div>
+                                                </div>
+
+                                                <div class="form-group">
+                                                    <label class="control-label col-md-2">Status<span class="redStar">*</span></label>
+                                                    <div class="col-md-8">
+                                                        @Html.DropDownList("Status", new List<SelectListItem>{
+                                                        new SelectListItem{ Text="--Select ---", Value = "" },
+                                                        new SelectListItem{ Text="Active", Value = "Active" },
+                                                        new SelectListItem{ Text="Inactive", Value = "Inactive" },
+                                                        }, new { @class = "form-control", @required = "required" })
+                                                        @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="col-md-2"></div>
+                                <div class="col-md-3">
+                                    <a href="@Url.Action("ProfesionalList", "Profesional")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                    <button type="submit" class="btn btn-info" id="saveProfesional">
+                                        <i class="fa fa-save"></i>Save
+                                        <img src="~/Content/img/loading.gif" class="loadingImg" />
+                                    </button>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+<!--End Optional Value Model-->
+@section pagespecific {
+    <script type="text/javascript">
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        $("#saveLoader").toggle(false);
+        $("#saveProfesional").click(function ()
+        {
+            var name = $("#Name").val();
+            var status = $("#Status").val();
+
+            if (name == '' || status == '') {
+                swal("Please Fill All the required Fields", { icon: "warning" });
+                return false;
+            }
+
+
+            var formdata = new FormData();
+            formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+            formdata.append("Name", name);
+            formdata.append("Status", status);
+
+            for (const value of formdata.values()) {
+                console.log(value);
+            }
+
+             var url = '@Url.Action("SaveProfesional", "Profesional")';
+            var urlList = '@Url.Action("ProfesionalList", "Profesional")';
+            $("#saveQuestionnairType").prop('disabled', true);
+            $("#saveProfesional").toggle(true);
+
+            $.ajax({
+                url: url,
+                data: formdata,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#saveProfesional").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    } else if (response =="Duplicate") {
+                        swal("Duplicate Profesional!", { icon: "warning" });
+                        return false;
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    $("#saveProfesional").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                    swal(error);
+                }
+            });
+        })
+    </script>
+}

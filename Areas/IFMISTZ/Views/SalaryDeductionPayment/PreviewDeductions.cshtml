@@ -1,0 +1,1014 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.DeductionByInstitutionVM
+
+@{
+    // Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+  ViewBag.Title = "Deduction Details";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+    .data-details {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+    table {
+        border-collapse: collapse;
+        width: 100%;
+    }
+
+    td {
+        padding: 5px;
+        text-align: left;
+        border-bottom: 1px dashed #ccc;
+    }
+
+    .row-align {
+        display: flex;
+        flex-wrap: nowrap;
+        justify-content: space-evenly;
+    }
+
+    .row-align-1 {
+        display: flex;
+        flex-wrap: wrap;
+        align-content: center;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <p align="right">
+                                <a href="@Url.Action("PrintSalaryDeduction","SalaryDeductionPayment", new {id=Model.DeductionByInstitutionId})" class="btn btn-info">
+                                    <span class="glyphicon glyphicon-print"></span>&nbsp;Print
+                                </a>
+                            </p>
+                            <div class="data-details">
+                                <table>
+                                    <tr>
+                                        <th>Deduction Type:</th>
+                                        <td>@Html.DisplayFor(model => model.DeductionType)</td>
+                                        <th>Funding Source:</th>
+                                        <td>@Html.DisplayFor(model => model.FundingSource)</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Check Date:</th>
+                                        <td>@Convert.ToDateTime(Model.CheckDate).ToString("dd-MM-yyyy")</td>
+                                        <th>Payment Mode:</th>
+                                        <td>@Html.DisplayFor(model => model.PaymentMode)</td>
+                                    </tr>
+                                    <tr>
+                                        <th>Number of Votes:</th>
+                                        <td>@Model.DeductionByVotes.Count()</td>
+                                        <th>Status:</th>
+                                        <td>@Html.DisplayFor(model => model.OverallStatus)</td>
+                                    </tr>
+                                    <tr>
+                                        @if (Model.ControlNumber != null)
+                                        {
+                                        <th>Control Number:</th>
+                                        <td>@Html.DisplayFor(model => model.ControlNumber)</td>
+                                        }
+                                        @if (Model.ExchequerNo != null)
+                                        {
+                                        <th>ExchequerNo:</th>
+                                        <td>@Html.DisplayFor(model => model.ExchequerNo)</td>
+                                        }
+                                    </tr>
+                                    <tr>
+                                        @if (Model.RejectionReason != null)
+                                        {
+                                        <th>Rejection Reason:</th>
+                                        <td>@Html.DisplayFor(model => model.RejectionReason)</td>
+                                       }
+                                        @if (Model.SolutionTaken != null)
+                                       {
+                                        <th>Solution Taken:</th>
+                                        <td>@Html.DisplayFor(model => model.SolutionTaken)</td>
+                                       }
+                                    </tr>
+                                    <tr>
+                                        @if (Model.Remarks != null)
+                                        {
+                                        <th>Remarks:</th>
+                                        <td>@Html.DisplayFor(model => model.Remarks)</td>
+                                        }
+                                        @if (Model.PaymentType != null)
+                                        {
+                                        <th>Payment Type:</th>
+                                        <td>@Html.DisplayFor(model => model.PaymentType)</td>
+                                        }
+                                    </tr>
+                                </table>                           
+                            </div>
+                            <br/>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <div class="search-container" style="float:right">
+                                            <i class="fa fa-search"></i>
+                                            <input type="search" name="search" placeholder="Search..." id="search-box" autocomplete="off">
+                                        </div>
+                                    </div>
+                                </div>
+                                <table id="dt_deductions" class="table table-bordered table-condensed table-amount">
+                                    <thead>
+                                        <tr>
+                                            <td>#</td>
+                                            <td>Vote Code</td>
+                                            <th>Vote Name</th>
+                                            <th style="width:12%">Tin Number</th>
+                                            <th style="text-align:center">Employees</th>
+                                            <th style="text-align:right">Amount</th>
+
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @{
+                                 int m = 0;
+                                        }
+
+
+                                        @foreach (var item in Model.DeductionByVotes)
+                                   {
+                                     m++;
+                                        <tr>
+                                            <td>@m</td>
+                                            <td>@item.VoteCode</td>
+                                            <td>@item.VoteName</td>
+                                            <td>@item.TinNumber</td>
+                                            <td style="text-align:center">@item.NumEmployees</td>
+                                            <td style="text-align:right">@string.Format("{0:#,0.00}", item.DeductionAmount)</td>
+                                        </tr>
+                                     }
+
+
+                                    </tbody>
+                                    <tfoot>
+                                        <tr>
+                                            <th colspan="4" style="text-align:right">TOTAL</th>
+                                            <th style="text-align:right">
+                                                @Model.TotalNumEmployees
+                                            </th>
+                                            <th style="text-align:right">
+                                                @string.Format("{0:#,0.00}", Model.TotalDeductionAmount)
+                                            </th>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-1">
+                                            @if (Model.OverallStatus == "Pending" || Model.OverallStatus == "Rejected")
+                                          {
+                                            <a href="@Url.Action("PendingDeduction","SalaryDeductionPayment")" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                          }
+                                          else if (Model.OverallStatus.ToUpper() == "CONFIRMED")
+                                          {
+                                            <a href="@Url.Action("ApproveDeduction","SalaryDeductionPayment")" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                          }
+                                          else
+                                          {
+                                            <a href="@Request.UrlReferrer" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                          }
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+
+                        </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<div class="modal fade" id="dedution_model" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Confirm Deduction</h3>
+                <h4 align="center"> <span id="deduction_type"></span></h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "ConfirmEntry" }))
+            {
+            <div class="modal-body form-horizontal">
+
+                <br />
+
+                <input type="hidden" name="Id" id="Id" value="">
+                <div class="form-group">
+
+                    <div class="col-md-12">
+                        <textarea name="Reason" id="Reason" placeholder="Rejection reason" required rows="4" class="form-control"></textarea>
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+            </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="add_control_number" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Add Control Number</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "SubmitCntrNum" }))
+            {
+            <div class="modal-body form-horizontal">
+
+                <br />
+
+                <input type="hidden" name="Id" id="Id" value="">
+                <div class="form-group">
+
+                    <div class="col-md-12">
+                        <input type="text" name="ControlNumber" id="ControlNumber" placeholder="Enter Control Number" class="form-control" maxlength="250" autocomplete="off">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+            </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="payment_type" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Payment Type</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "SetPaymentType" }))
+            {
+            <div class="modal-body form-horizontal">
+
+                <br />
+
+                <input type="hidden" name="Id" id="Id" value="">
+                <div class="form-group">
+
+                    <div class="col-md-12">
+                        @Html.DropDownList("PaymentType", new List<SelectListItem>{
+                           new SelectListItem{ Text="--Select Type--", Value = "" },
+                           new SelectListItem{ Text="Physical Payment", Value = "Physical Payment" },
+                           new SelectListItem{ Text="Non Physical Payment(Dummy)", Value = "Non Physical Payment" },
+                   }, new { @class = "form-control" })
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+            </div>
+
+            }
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Preview
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="load_deductions" style="left:4%">
+
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Loading New Data</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "LoadData" }))
+            {
+            <div class="modal-body form-horizontal">
+
+                <br />
+                <div class="form-group">
+                    @Html.Label("Type", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-6">
+                        @Html.DropDownList("PaymentType", new List<SelectListItem>{
+                    new SelectListItem{ Text="--Select--", Value = "" },
+                    new SelectListItem{ Text="Salary Deductions", Value = "Salary Deductions" },
+                    new SelectListItem{ Text="Unpaid Salaries Transfer", Value = "Unpaid Salaries" },
+                      }, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.Label("Month", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-6">
+                        @Html.DropDownList("Month", new List<SelectListItem>{
+                    new SelectListItem{ Text="--Select--", Value = "" },
+                    new SelectListItem{ Text="January", Value = "1" },
+                    new SelectListItem{ Text="February", Value = "2" },
+                    new SelectListItem{ Text="March", Value = "3" },
+                    new SelectListItem{ Text="April", Value = "4" },
+                    new SelectListItem{ Text="May", Value = "5" },
+                    new SelectListItem{ Text="June", Value = "6" },
+                    new SelectListItem{ Text="July", Value = "7" },
+                    new SelectListItem{ Text="August", Value = "8" },
+                    new SelectListItem{ Text="September", Value = "9" },
+                    new SelectListItem{ Text="October", Value = "10" },
+                    new SelectListItem{ Text="November", Value = "11" },
+                    new SelectListItem{ Text="December", Value = "12" },
+                      }, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.Label("Year", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-4">
+                        <input type="number" name="Year" id="Year" value="@ViewBag.Year" placeholder="0000" class="form-control" autocomplete="off">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" value="Load Data" />
+
+            </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="clear_deductions" style="left:4%">
+
+    <div class="modal-dialog" style="width:40%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Clearing Data</h3>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "ClearData" }))
+            {
+            <div class="modal-body form-horizontal">
+
+                <br />
+                <div class="form-group">
+                    @Html.Label("Type", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-6">
+                        @Html.DropDownList("PaymentType", new List<SelectListItem>{
+                    new SelectListItem{ Text="--Select--", Value = "" },
+                    new SelectListItem{ Text="Salary Deductions", Value = "Salary Deductions" },
+                    new SelectListItem{ Text="Unpaid Salaries Transfer", Value = "Unpaid Salaries" },
+                      }, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.Label("Month", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-6">
+                        @Html.DropDownList("Month", new List<SelectListItem>{
+                    new SelectListItem{ Text="--Select--", Value = "" },
+                    new SelectListItem{ Text="January", Value = "1" },
+                    new SelectListItem{ Text="February", Value = "2" },
+                    new SelectListItem{ Text="March", Value = "3" },
+                    new SelectListItem{ Text="April", Value = "4" },
+                    new SelectListItem{ Text="May", Value = "5" },
+                    new SelectListItem{ Text="June", Value = "6" },
+                    new SelectListItem{ Text="July", Value = "7" },
+                    new SelectListItem{ Text="August", Value = "8" },
+                    new SelectListItem{ Text="September", Value = "9" },
+                    new SelectListItem{ Text="October", Value = "10" },
+                    new SelectListItem{ Text="November", Value = "11" },
+                    new SelectListItem{ Text="December", Value = "12" },
+                      }, new { @class = "form-control" })
+                    </div>
+                </div>
+                <div class="form-group">
+                    @Html.Label("Year", htmlAttributes: new { @class = "control-label col-md-4" })
+                    <div class="col-md-4">
+                        <input type="number" name="Year" id="Year" value="@ViewBag.Year" placeholder="0000" class="form-control" autocomplete="off">
+                    </div>
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                <input class="btn btn-info" type="submit" id="btnSubmit" value="Clear Data" />
+
+            </div>
+
+            }
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_deductions = $('#dt_deductions').dataTable();
+        $("#dt_deductions_wrapper .dt-toolbar").remove();
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_deductions").DataTable().search(this.value).draw();
+        });
+                $("#ConfirmEntry").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you confirm this Deduction Type ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmRejected", "SalaryDeductionPayment")';
+                            var id = $("#dedution_model #Id").val();
+                            var reason = $("#dedution_model #Reason").val();
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "Id": id,
+                                "Reason": reason
+                            }
+                            $('#dedution_model').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+
+                                    swal("Data Confirmed  successfully!", { icon: "success" })
+                                              .then((value) => {
+                                           location.reload();
+                                              });
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+               $("#SubmitCntrNum").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you submit this control number ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("SubmitCntrolNumber", "SalaryDeductionPayment")';
+                            var id = $("#add_control_number #Id").val();
+                            var cntrNum = $("#add_control_number #ControlNumber").val();
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "Id": id,
+                                "ControlNumber": cntrNum
+                            }
+                            $('#add_control_number').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+
+                                    if (cntrNum) {
+                                        swal("Control number saved successfully!", { icon: "success" })
+                                            .then((value) => {
+                                                location.reload();
+                                            });
+                                    } else {
+                                        swal("Control number if previous assigned then removed successfully!", { icon: "success" })
+                                            .then((value) => {
+                                                location.reload();
+                                            });
+                                    }
+
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+        $("#SetPaymentType").on('submit', function (e) {
+                    e.preventDefault();
+            var type = $("#payment_type #PaymentType").val();
+            if (!type) {
+                swal("Please select Payment Type");
+                return false;
+               }
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you submit this type ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("SubmitPaymentType", "SalaryDeductionPayment")';
+                            var id = $("#payment_type #Id").val();
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "Id": id,
+                                "PaymentType": type
+                            }
+                            $('#payment_type').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+
+                                    swal("Payment type saved successfully!", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                        });
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+        $("#LoadData").on('submit', function (e) {
+                    e.preventDefault();
+            var type = $("#LoadData #PaymentType").val();
+            if (!type) {
+                swal("Please select payment type");
+                return false;
+            }
+            var month = $("#LoadData #Month").val();
+            if (!month) {
+                swal("Please select month");
+                return false;
+            }
+            var year = $("#LoadData #Year").val();
+            if (!year) {
+                swal("Please enter year");
+                return false;
+            }
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to load data of this month ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("LoadNewData", "SalaryDeductionPayment")';
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "PaymentType": type,
+                                "Month": month,
+                                "Year": year
+                            }
+
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+                                    $('#load_deductions').modal('hide');
+                                    swal("Process done successfully!", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                        });
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+        $("#ClearData").on('submit', function (e) {
+                    e.preventDefault();
+            var type = $("#ClearData #PaymentType").val();
+            if (!type) {
+                swal("Please select payment type");
+                return false;
+            }
+            var month = $("#ClearData #Month").val();
+            if (!month) {
+                swal("Please select month");
+                return false;
+            }
+            var year = $("#ClearData #Year").val();
+            if (!year) {
+                swal("Please enter year");
+                return false;
+            }
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you whant to clear data ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ClearData", "SalaryDeductionPayment")';
+                            var token = $("[name='__RequestVerificationToken']").val();
+                            var formData = {
+                                "__RequestVerificationToken": token,
+                                "PaymentType": type,
+                                "Month": month,
+                                "Year": year
+                            }
+
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (result) {
+                                if (result == "Success") {
+                                    $('#clear_deductions').modal('hide');
+                                    swal("Data cleared successfully!", { icon: "success" })
+                                        .then((value) => {
+                                            location.reload();
+                                        });
+
+
+                                }
+                                else {
+
+                                    swal(result);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+
+
+      var showMoreDetails = function (id) {
+            var url = '@Url.Action("PreviewDeductions", "SalaryDeductionPayment")';
+            $("#divModalBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on accessing this details, contact system support.");
+                }
+
+                $("#divModal").modal("show");
+            });
+        };
+
+
+        var confirmEntry = function (id) {
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you verify this salary deductions payment ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                          var url = '@Url.Action("ConfirmEntry", "SalaryDeductionPayment")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: {id:id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Verified successfully", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+
+        var requestCtrNo = function (id) {
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you request Control Number ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                          var url = '@Url.Action("RequestCtrNo", "SalaryDeductionPayment")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: {id:id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Control number successfully requested", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal(response, { icon: "warning" });
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+       var confirmRejected = function (id, deductionType) {
+           $("#dedution_model #deduction_type").text(deductionType);
+           $("#dedution_model #Id").val(id);
+           $('#dedution_model').modal('show');
+        }
+        var addControlNumber = function (id) {
+            $("#add_control_number #Id").val(id);
+            $('#add_control_number').modal('show');
+        }
+        var paymentType = function (id) {
+            $("#payment_type #Id").val(id);
+            $('#payment_type').modal('show');
+        }
+        $("#CheckDate").change(function () {
+            var checkDate = $(this).val();
+            if (checkDate) {
+                GetDeductions(checkDate);
+            }
+
+         });
+           function GetDeductions(checkDate) {
+            $.ajax({
+                type: "GET",
+                url: "@Url.Action("GetDeductions", "SalaryDeductionPayment")",
+                data: { checkDate },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                if (response.data) {
+                  data = response.data;
+                                dt_deductions.fnClearTable();
+                                for (var i = 0; i < data.length; i++) {
+
+                                    dt_deductions.fnAddData([i + 1,
+                                    data[i]["DeductionType"],
+                                    data[i]["PayeeAccountName"],
+                                    data[i]["PayeeBankAccountNo"],
+                                    data[i]["PayeeBankName"],
+                                    ToJavaScriptDate(data[i]["CheckDate"]),
+                                   '<div align="right">' + toLabel(data[i]["TotalDeductionAmount"]) + '</div>',
+                                    data[i]["OverallStatus"],
+                                    '<div align="center"><div class="btn-group">\
+                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                         <span class="caret"></span\
+                                             <span class="sr-only"></span>\
+                                    </button>\
+                                  <ul class="dropdown-menu">\
+                                        <li><a href="#" onclick= "showMoreDetails(' + data[i]["DeductionByInstitutionId"] + ')"><i class="fa fa-search-minus"></i>View</a></li>\
+                                        <li><a href="#" onclick= "addControlNumber(' + data[i]["DeductionByInstitutionId"] + ')"><i class="fa fa-edit"></i>Add CntrNum</a></li>\
+                                        <li><a href="#" onclick= "paymentType(' + data[i]["DeductionByInstitutionId"] + ')"><i class="fa fa-edit"></i>Set Payment Type</a></li>\
+                                        <li><a href="#" onclick= "confirmEntry(' + data[i]["DeductionByInstitutionId"] + ')"><i class="fa fa-edit"></i>Confirm</a></li>\
+                                  </ul>\
+                                </div> </div>'
+                                    ]);
+                                }
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }
+          function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var showLoadDeductionPop = function () {
+            $('#load_deductions').modal('show');
+        }
+        var showClearDeductionPop = function () {
+            $('#clear_deductions').modal('show');
+        }
+        //SHOW LOADER ICON
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+
+    </script>
+}

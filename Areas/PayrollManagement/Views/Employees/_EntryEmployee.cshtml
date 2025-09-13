@@ -1,0 +1,170 @@
+﻿@model IFMIS.Areas.PayrollManagement.Models.EmployeeDetailVM
+@{
+    ViewBag.Title = "Create";
+}
+<div class="form-group row">
+    <label class="col-md-2 control-label">Check number</label>
+    @Html.HiddenFor(model => model.EmployeeId)
+    <div class="col-md-2">
+        @Html.EditorFor(model => model.CheckNumber, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.CheckNumber, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label">TYR Number</label>
+    <div class="col-lg-2">
+        @Html.EditorFor(model => model.ForceNumber, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.ForceNumber, "", new { @class = "text-danger", @readonly = true })
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-md-2 control-label">FirstName</label>
+    <div class="col-md-2">
+        @Html.EditorFor(model => model.FirstName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.FirstName, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label">MiddleName</label>
+    <div class="col-lg-2">
+        @Html.EditorFor(model => model.MiddleName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.MiddleName, "", new { @class = "text-danger", @readonly = true })
+    </div>
+    <label class="col-md-1 control-label">LastName</label>
+    <div class="col-lg-2">
+        @Html.EditorFor(model => model.LastName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.LastName, "", new { @class = "text-danger" })
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-md-2 control-label">Institution</label>
+    <div class="col-md-2">
+        @Html.DropDownListFor(model => model.CompanyId, ViewBag.EmployeeInstitution as SelectList, "Select", new { @class = "form-control select2" })
+        @Html.ValidationMessageFor(model => model.CompanyId, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label">Department</label>
+    <div class="col-lg-2">
+        @Html.DropDownListFor(model => model.DepartmentId, ViewBag.EmployeeDepartment as SelectList, "Select Department", new { @class = "form-control select2" })
+        @Html.ValidationMessageFor(model => model.DepartmentId, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label">Workstation</label>
+    <div class="col-lg-2">
+        @Html.DropDownListFor(model => model.WorstationId, ViewBag.EmployeeWorkStation as SelectList, "Select Workstation", new { @class = "form-control select2" })
+        @Html.ValidationMessageFor(model => model.WorstationId, "", new { @class = "text-danger" })
+    </div>
+</div>
+<div class="form-group row">
+    <label class="col-md-2 control-label">Employee Status</label>
+    <div class="col-md-2">
+        @Html.DropDownListFor(model => model.EmployeeStatusId, ViewBag.EmployeeStatus as SelectList, "Select Status", new { @class = "form-control select2", @readonly = true })
+        @Html.ValidationMessageFor(model => model.EmployeeStatusId, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label">Salary Amount</label>
+    <div class="col-md-2">
+        @Html.EditorFor(model => model.SalaryAmount, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+        @Html.ValidationMessageFor(model => model.SalaryAmount, "", new { @class = "text-danger" })
+    </div>
+    <label class="col-md-1 control-label"> Job Code </label>
+    <div class="col-lg-2">
+        @Html.DropDownListFor(model => model.JobCodeId, ViewBag.Jobcodes as SelectList, "Select Job Code", new { @class = "form-control select2", @readonly = true })
+        @Html.ValidationMessageFor(model => model.JobCodeId, "", new { @class = "text-danger" })
+    </div>
+</div>
+<script type="text/javascript">
+    $(document).ready(function () {
+        $('#sal').hide();
+    });
+
+    $("#JobCodeId").change(function () {
+        debugger
+        var id = $("#JobCodeId").val();
+        var url = '@Url.Action("JobCodeAmount", "Employees")';
+        url += '?id=' + id;
+        $.ajax({
+            url: url,
+            datatype: "json",
+            type: "Post",
+            contenttype: 'application/json; charset=utf-8',
+            async: true,
+            success: function (data) {
+                console.log(data);
+                $("#list").html(data);
+                $('#sal').show();
+            },
+            error: function (xhr) {
+                swal('Error please contact system admin');
+            }
+        })
+    });
+
+    $("#BankId").change(function () {
+        var id = $("#BankId").val();
+        var url = '@Url.Action("GetBankBranches", "Employees")';
+        url += '?id=' + id;
+        $.ajax({
+            type: "POST",
+            url: url,
+            contentType: "html",
+            success: function (response) {
+                $("#BankBranchId").empty();
+                $("#BankBranchId").append(response);
+            }
+        })
+    });
+
+        $('input[type=datetime]').datepicker({
+            dateFormat: "dd/M/yy",
+            changeMonth: true,
+            changeYear: true,
+            yearRange: "-5:+0",
+            showOn: "button",
+            buttonImage: "../Media/Images/calendar.gif",
+            buttonImageOnly: true,
+            buttonText: "Select date",
+            //maxDate: "0"
+        });
+
+        $(function () {
+            $(".jqueryui-marker-datepicker").datepicker({
+                dateFormat: "yy-mm-dd",
+                changeYear: true,
+                showOn: "button"
+            }).css("display", "inline-block")
+                .next("button").button({
+                    icons: { primary: "ui-icon-calender" },
+                    label: "Select a date",
+                    text: false
+                });
+        });
+
+        $("#plannedStartDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+
+        $("#SignedDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+        $("#SignedDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+        $("#plannedEndDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+
+        $("#EffectiveDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+        $("#ActualEndDate").datepicker({
+            changeMonth: true,
+            changeYear: true,
+        });
+
+</script>
+
+

@@ -1,0 +1,895 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ContractVM>
+@{
+    ViewBag.Title = "Pending Retention Payment";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br/>
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Pending Retention Payment </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+
+
+                            <div class="row">
+
+                                <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                    <div class="input-group">
+                                        <a href="@Url.Action("PaymentEntry", "Retention")" class="btn btn-info" style="width:120px;border-radius:1px;">
+                                            <i class="fa fa-plus"></i>Add New
+                                        </a>
+
+                                    </div>
+                                </div>
+
+
+                            </div>
+                            <br />
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_retention">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:3%"></th>
+                                        <th style="text-align:left;">Legal Number</th>
+                                        <th style="text-align:left">Payee Name</th>
+                                        <th style="text-align:left"> Bank Account </th>
+                                        <th style="text-align:right">Transaction Amount</th>
+                                        <th style="text-align:right">Operation Amount</th>
+                                        <th style="text-align:left">Status</th>
+                                        <th style="text-align:center;width:6%">Action</th>
+
+                                    </tr>
+                                </thead>
+
+                                <tbody>
+                                    @{var i = 0;}
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                        <tr>
+                                            <td style="text-align:right">
+                                                @i
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.LegalNumber)
+
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.Payeename)
+                                            </td>
+                                            <td style="text-align:left">
+                                                @Html.DisplayFor(modelItem => item.PayeeBankAccount)
+                                            </td>
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.TransactionAmount) @Html.DisplayFor(modelItem => item.TransactionCurrency)
+                                            </td>
+
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.PaymentAmount) @Html.DisplayFor(modelItem => item.OperationalCurrency)
+                                            </td>
+
+                                            <td style="text-align:left">
+                                                @if (item.GLAmount > 0)
+                                                {
+                                                    @Html.DisplayFor(modelItem => item.OverallStatus)<br />
+                                                    if (item.Accrual == "Yes")
+                                                    {
+                                                        <em>Accrual</em>
+                                                    }
+                                                }
+                                                else
+                                                {
+                                                    <em>Assign GL</em>
+                                                }
+
+                                            </td>
+
+                                            <td style="text-align:left">
+
+                                                <div class="btn-group">
+                                                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                        <span class="caret"></span>
+                                                        <span class="sr-only">Toggle Dropdown</span>
+                                                    </button>
+                                                    <ul class="dropdown-menu">
+                                                        <li>
+                                                            <a href="@Url.Action("PreviewRetention", "Retention",new {id=item.UuId})" class="btn-xs edit">
+                                                                <i class="fa fa-search-minus"></i>  Preview
+                                                            </a>
+                                                        </li>
+                                                        <li>
+                                                            <a href="@Url.Action("AttachmentEntry", "PaymentVoucherAttachments",new {groupId=item.RetentionPaymentId,sourceModule="Retention" })" class="btn-xs edit">
+                                                                <i class="fa fa-edit"></i>  Attachments
+                                                            </a>
+                                                        </li>
+                                                        @if (item.Accrual == "Yes")
+                                                        {
+                                                            <li><a href="#" onclick="assignGLAccount(@item.RetentionPaymentId,@item.PaymentAmount,'@item.SubBudgetClass','@item.LegalNumber','@item.ParentInstitutionCode','@item.SubWarrantCode')" class="btn-xs edit"><i class="fa fa-edit"></i> Assign GL</a></li>
+
+                                                        }
+                                                        @if (item.OverallStatus.ToUpper() == "REJECTED")
+                                                        {
+
+                                                            <li><a href="#" onclick="confirmRejected(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Confirm</a></li>
+
+                                                        }
+                                                        else
+                                                        {
+
+                                                            <li><a href="#" onclick="confirmPayment(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Confirm</a></li>
+
+                                                        }
+                                                        @if (item.Accrual == "Yes")
+                                                        {
+                                                            <li><a href="#" onclick="changeRetention(@item.RetentionPaymentId)" class="btn-xs edit"><i class="fa fa-edit"></i> Change Retention</a></li>
+                                                        }
+                                                        <li><a href="#" onclick="confirmPayment(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Change Payee</a></li>
+                                                        <li><a href="#" onclick="cancelPayment(@item.RetentionPaymentId,'@item.LegalNumber')" class="btn-xs edit"><i class="fa fa-edit"></i> Cancel</a></li>
+
+                                                    </ul>
+                                                </div>
+                                            </td>
+
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<div class="modal fade" id="ComfirmEntry" style="left:4%">
+
+    <div class="modal-dialog" style="width:35%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title" style="text-align:center"> Confirm Retention Payment</h3>
+                <h4 align="center">Legal Number <span id="legal_number"></span></h4>
+            </div>
+            @using (Html.BeginForm(null, null, FormMethod.Post, new { id = "ConfirmRejected" }))
+            {
+                <div class="modal-body form-horizontal">
+
+                    <br />
+
+                    <input type="hidden" name="Id" id="Id" value="">
+                    <div class="form-group">
+
+                        <div class="col-md-12">
+                            <textarea name="Reason" id="Reason" placeholder="Enter short explanation how you fixed problem of rejection" required rows="4" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-default" data-dismiss="modal">Cancel</a>
+                    <input class="btn btn-info" type="submit" id="btnSubmit" value="Save" />
+                    @*<input type="submit" value="Submit" class="btn btn-success" id="btnSubmit" />*@
+
+                </div>
+
+            }
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Preview
+                </h4>
+            </div>
+            <div class="modal-body" id="divModalBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="retentionModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Change Retention to Cash(i.e Send to Deposit)
+                </h4>
+            </div>
+            <div class="modal-body" id="changeRetBody">
+
+            </div>
+
+            <div id="divPaymentStatusLoader" style="text-align:center; display:none">
+                <img src="~/assets/img/avatars/ajax_loader.gif" />
+            </div>
+        </div>
+    </div>
+
+</div>
+
+<!----------- Search  GL----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Gl Item(s) -Legal Number <span id="legal_number"></span></h3>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding:5px">Total Items Amount</td>
+                        <td style="padding:5px">
+                            <input type="text" disabled id="total_items_amount">
+                        </td>
+
+                        <td style="padding:5px">Total Line Amount</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="total_line_amount">
+                        </td>
+
+                        <td style="padding:5px">Difference</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="difference" style="width:250px">
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_gl">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" />
+                    </div>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Expenditure Line Item</th>
+                                <th>Item Description</th>                            
+                                 <th>Budget Balance</th>                             
+                                <th>Funding Reference</th>
+                                <th>Expense Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btn_save_items_charge">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable();
+        $("#dt_search_payee_wrapper .dt-toolbar").remove();
+            $(document).ready(function () {
+                /* // DOM Position key index //
+ l - Length changing (dropdown)
+ f - Filtering input (search)
+ t - The Table! (datatable)
+ i - Information (records)
+ p - Pagination (paging)
+ r - pRocessing
+ < and > - div elements
+ <"#id" and > - div with an id
+ <"class" and > - div with a class
+ <"#id.class" and > - div with an id and class
+ Also see: http://legacy.datatables.net/usage/features
+ */
+                /* BASIC ;*/
+                var responsiveHelper_dt_retention = undefined;
+                var responsiveHelper_datatable_fixed_column = undefined;
+                var responsiveHelper_datatable_col_reorder = undefined;
+                var responsiveHelper_datatable_tabletools = undefined;
+
+                var breakpointDefinition = {
+                    tablet: 1024,
+                    phone: 480
+                };
+
+                $('#dt_retention').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_dt_retention) {
+                            responsiveHelper_dt_retention = new ResponsiveDatatablesHelper($('#dt_retention'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_dt_retention.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_dt_retention.respond();
+                    }
+                });
+
+                /* END BASIC */
+
+                /* COLUMN FILTER  */
+                var otable = $('#datatable_fixed_column').DataTable({
+                    //"bFilter": false,
+                    //"bInfo": false,
+                    //"bLengthChange": false
+                    //"bAutoWidth": false,
+                    //"bPaginate": false,
+                    //"bStateSave": true // saves sort state using localStorage
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_fixed_column) {
+                            responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_fixed_column.respond();
+                    }
+                });
+
+                // custom toolbar
+                $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+                // Apply the filter
+                $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+                    otable
+                        .column($(this).parent().index() + ':visible')
+                        .search(this.value)
+                        .draw();
+                });
+                /* END COLUMN FILTER */
+
+                /* COLUMN SHOW - HIDE */
+                $('#datatable_col_reorder').dataTable({
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_col_reorder) {
+                            responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_col_reorder.respond();
+                    }
+                });
+
+                /* END COLUMN SHOW - HIDE */
+
+                /* TABLETOOLS */
+                $('#datatable_tabletools').dataTable({
+
+                    // Tabletools options:
+                    //   https://datatables.net/extensions/tabletools/button_options
+                    "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                            "t" +
+                            "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                    "oTableTools": {
+                        "aButtons": [
+                        "copy",
+                        "csv",
+                        "xls",
+                           {
+                               "sExtends": "pdf",
+                               "sTitle": "SmartAdmin_PDF",
+                               "sPdfMessage": "SmartAdmin PDF Export",
+                               "sPdfSize": "letter"
+                           },
+                           {
+                               "sExtends": "print",
+                               "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                           }
+                        ],
+                        "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                    },
+                    "autoWidth": true,
+                    "preDrawCallback": function () {
+                        // Initialize the responsive datatables helper once.
+                        if (!responsiveHelper_datatable_tabletools) {
+                            responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                        }
+                    },
+                    "rowCallback": function (nRow) {
+                        responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                    },
+                    "drawCallback": function (oSettings) {
+                        responsiveHelper_datatable_tabletools.respond();
+                    }
+                });
+                /* END TABLETOOLS */
+
+                $("#ConfirmRejected").on('submit', function (e) {
+                    e.preventDefault();
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you confirm this entry ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("ConfirmRejected", "Retention")';
+                            var id = $("#Id").val();
+                            var reason = $("#Reason").val();
+                            var formData = {
+                                "Id": id,
+                                "Reason": reason
+                            }
+                            $('#ComfirmEntry').modal('hide');
+                            $.ajax(
+                        {
+                            type: "POST",
+                            url: url,
+                            data: formData,
+                            success: function (response) {
+                                if (response == "Success") {
+
+                                    swal("Entry Confirmed  successfully!", { icon: "success" })
+                                              .then((value) => {
+                                                  location.reload();
+                                              });
+
+
+                                }
+                               else if (response == "AssignGL") {
+                               swal("Please Assign GL Accounts");
+                                }
+                               else if (response == "NoAttachment") {
+                               swal("Please attach approval document");
+                                 }
+                                else {
+
+                                    swal(response);
+                                }
+                            },
+                            error: function (xhr) {
+                                swal(error);
+
+                            },
+
+                        });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+                });
+                        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+         var showDetails = function (id) {
+            debugger;
+            var url = '@Url.Action("Preview", "Retention")';
+            $("#divModalBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#divModalBody").html("Error on accessing this details, contact system support.");
+                }
+                $("#divModal").modal("show");
+            });
+        };
+
+        var changeRetention = function (id) {
+                  var url = '@Url.Action("ChangeRetention", "Retention")';
+            $("#changeRetBody").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#changeRetBody").html("Error on changing retention, contact system support.");
+                }
+                $("#retentionModal").modal("show");
+            });
+
+        }
+
+                var confirmPayment = function (id, legalNumber) {
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you what to confirm Entry   " + legalNumber + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                         var url = '@Url.Action("ConfirmEntry", "Retention")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Confirmed successfully", { icon: "success" })
+                                .then((value) => {
+                                    location.reload();
+                                });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                        $("#divLoader").hide();
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+
+                var cancelPayment = function (id, legalNumber) {
+                  swal({
+                        title: 'Confirmation',
+                        text: "Do you what to cancel Entry   " + legalNumber + " ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            var url = '@Url.Action("CancelPayment", "Retention")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Cancelled  successfully!", { icon: "success" })
+                                         .then((value) => {
+                                             location.reload();
+                                         });
+                        }
+                        else {
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        //console.log(xhr.responseText);
+                        swal("An error has occured, contact system support");
+
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+              };
+        var retentionPaymentId = 0;
+        var glItemsCharges = [];
+        var sum_total = 0;
+                //=============SEARCH GL ACCOUNTS ==================
+        var assignGLAccount = function (id, amount, subBudgetClass, legalNumber, institutionParentCode, subWarrantCode) {
+           var parent_code = "UNKNOWN";
+           var sub_warant_code = "UNKNOWN";
+            retentionPaymentId = id;
+            glItemsCharges = [];
+            sum_total = 0;
+            if (institutionParentCode="") {
+                parent_code = institutionParentCode;
+            }
+            if (subWarrantCode="") {
+                sub_warant_code = subWarrantCode;
+            }
+
+                        $("#glItemsModal #legal_number").text(legalNumber);
+                        $("#search_exp_line").val("");
+                        $("#total_line_amount").val("");
+                        $("#total_items_amount").val(amount.toLocaleString('en'));
+                        $("#difference").val(amount.toLocaleString('en'));
+            $('#glItemsModal').modal('show');
+                    var url = '@Url.Action("GetFundbalance", "PaymentVoucher")';
+               var fundBalanceParams = {
+                subBudgetClass,
+                instCode: parent_code,
+                subWarrantCode: sub_warant_code,
+                IsAccrualVoucher: true
+            };
+            $.ajax({
+                type: "get",
+                url: url,
+                data: fundBalanceParams,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    //=== UPDATE SEARCH GI TABLE ====
+                    data = response.data;
+                    dt_search_gl_item.fnClearTable();
+                        for (var i = 0; i < data.length; i++) {
+                                   var amount = 0;
+                            if (data[i]["BudgetBalance"] > 0) {
+                                amount = data[i]["BudgetBalance"];
+                            }
+                           dt_search_gl_item.fnAddData([i + 1,
+                           data[i]["GlAccount"].split("|").join("-"),
+                           data[i]["GlAccountDesc"],
+                            toLabel(data[i]["BudgetBalance"] || 0),
+                           'NA',
+                           '<amount-input placeholder="Amount" max="' + amount + '"  onkeyup="amountChanged(this)" />'
+                        ]);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        };
+
+        $("#search_gl").on("keyup search input paste cut", function () {
+            $("#search_exp_line").val("");
+            dt_search_gl_item.DataTable().search(this.value).draw();
+        });
+        //==============END SEARCH GL ACCOUNT====================
+               function amountChanged(e) {
+
+            var max_value = parseFloat(e.max);
+            var entered_value = parseFloat(e.value.split(",").join(""));
+            if (!entered_value) {
+                entered_value = 0;
+            }
+
+            if (entered_value >= 0) {
+                if (max_value >= entered_value) {
+
+                    sum_total = 0;
+
+                    var i = 0;
+
+                    $("#dt_search_gl_item tr").each(function () {
+
+
+                        if (i > 0) {
+                            var value = $(this).children().eq(5).find("input").val().trim().split(",").join("");
+
+                            if (value !="") {
+
+                                var amount = parseFloat(value);
+
+                                //INSERT INTO ARRAY
+                                var line = "";
+                                line = $(this).children().eq(1).text().split("-").join("|");
+                                var item_description = $(this).children().eq(2).text();
+                                var funding_ref = $(this).children().eq(4).text();
+
+                                if (glItemsCharges.length > 0) {
+
+                                    //CHECK IF EXIST IN THE ARRAY
+                                    var found = false;
+                                    for (var j = 0; j < glItemsCharges.length; j++) {
+                                        if (glItemsCharges[j].GLAccount == line && glItemsCharges[j].FundingReference == funding_ref) {
+                                            glItemsCharges[j].ExpenseAmount = amount;
+                                            found = true;
+                                        }
+
+                                    }
+
+                                    if (!found) {
+
+                                        glItemsCharges.push({
+                                            "GLAccount": line,
+                                            "GLAccountDesc": item_description,
+                                            "FundingReference": funding_ref,
+                                            "ExpenseAmount": amount
+                                        });
+
+
+                                    }
+
+
+                                } else {
+
+                                    glItemsCharges.push({
+                                        "GLAccount": line,
+                                        "GLAccountDesc": item_description,
+                                        "FundingReference": funding_ref,
+                                        "ExpenseAmount": amount
+                                    });
+
+
+                                }
+
+
+
+
+                            }
+                        }
+
+
+                        i++;
+                    });
+
+                    for (var j = 0; j < glItemsCharges.length; j++) {
+
+                        sum_total = sum_total + glItemsCharges[j].ExpenseAmount;
+
+                    }
+
+                    var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+                    var balance = total_items_value - sum_total;
+                    if (balance >= 0) {
+                        $("#total_line_amount").val(sum_total.toLocaleString('en'));
+                        $("#difference").val(balance.toLocaleString('en'));
+                    }
+                    else {
+                        swal("Total Line Amount can not exceed " + total_items_value.toLocaleString('en'));
+                        e.value = "";
+
+
+                    }
+                } else {
+                    swal("Expense Amount can not exceed " + max_value.toLocaleString('en'));
+                    e.value = "";
+
+
+                }
+            }
+        }
+           var confirmRejected = function (id, legalNumber) {
+                    $("#legal_number").text(legalNumber);
+                    $(".modal-body #Id").val(id);
+                    $('#ComfirmEntry').modal('show');
+             };
+
+                //SAVE GL ACCOUNT(S)
+                $("#btn_save_items_charge").click(function () {
+
+                    var total_items_value = parseFloat($("#total_items_amount").val().split(",").join(""));
+
+                       sum_total = sum_total.toFixed(2);
+                    if (glItemsCharges.length == 0) {
+                        swal("Please Enter Amount !");
+                    }
+                    else if (total_items_value != sum_total) {
+                        swal("Please Total Line Amount must be equal to " + total_items_value.toLocaleString('en') + " !");
+                    }
+                    else {
+                        $('#glItemsModal').modal('hide');
+                        var form_data = {
+                            "RetentionPaymentId": retentionPaymentId,
+                            "ReceivingCoas": glItemsCharges
+                        }
+
+                        $("#btn_save_items_charge").prop('disabled', true);
+                        var url = '@Url.Action("SaveGLAccount", "Retention")';
+                        $.ajax(
+            {
+                type: "POST",
+                url: url,
+                data: form_data,
+                success: function (response) {
+                    $("#btn_save_items_charge").prop('disabled', false);
+                      if (response == "Success") {
+                 swal("GL Account(s) assigned successfully", { icon: "success" })
+                            .then((value) => {
+                            location.reload();
+                            });
+                           }
+                           else {
+                               swal(response);
+                            }
+                },
+                error: function (xhr) {
+                    $("#btn_save_items_charge").prop('disabled', false);
+                    swal("An error has occured, contact system support");
+                },
+
+            });
+
+                    }
+
+                });
+                //END SAVE GL ACCOUNT(S)
+    </script>
+}
+
+
+
+

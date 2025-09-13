@@ -1,0 +1,189 @@
+﻿@model IFMIS.Areas.Coadmis.Models.CoadmisSystemDocument
+@{
+    ViewBag.Title = "System Document Entry";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+
+<!-- MAIN CONTENT -->
+<!-- MAIN CONTENT -->
+<div id="content" style="margin: 5px;">
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- row -->
+        <div class="row">
+            <!-- NEW WIDGET START -->
+            <article class="col-xs-12 col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget jarviswidget-color-white" id="wid-id-0" data-widget-editbutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <!-- widget content -->
+                    <div class="widget-body">
+
+                        @Html.AntiForgeryToken()
+                       
+                        <div class="row setup-content" id="step-1">
+                            <br />
+                            <fieldset>
+
+                                <div class="form-group">
+                                    <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"> Document Name<i class="fa fa-times" style="color:white" id="DocumentName_1"></i></label>
+                                    <div class="col-md-3">
+                                        @Html.EditorFor(model => model.DocumentName, new { htmlAttributes = new { @Class = "form-control", maxlength = "150" } })
+                                    </div>
+
+                                    <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"> File</label>
+                                    <div class="col-md-3">
+                                        <input type="file" name="DocumentUrl" id="DocumentUrl" class="form-control" />
+                                    </div>
+                                    <div class="form-group"><div class="col-md-2"></div></div>
+                                </div>
+
+                                <div class="form-group">
+                                    <br /><br /><br />
+                                    <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"> Status</label>
+                                    <div class="col-md-3">
+                                        @Html.DropDownList("IsActive", new List<SelectListItem>{
+                                               new SelectListItem{ Text="Select Status", Value = "Select Status" },
+                                               new SelectListItem{ Text="Active", Value = "true" },
+                                               new SelectListItem{ Text="Inactive", Value = "false" } },
+                                       new { @class = "form-control", @required = "required" })
+                                    </div>
+                                </div>
+
+                            </fieldset>
+
+                        </div>
+                        <br />
+                        <div class="form-group btnSubmit">
+                            <label class="col-md-2 control-label" style="font-weight:normal;text-align:right"></label>
+                            <div class="col-md-6">
+                                <a class="btn btn-info" href='@Url.Action("SysDocumentList", "CoadmisSystemDocument")' style="margin-right:5px">
+                                    <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                </a>
+                                <button type="submit" name="submit" id="saveFormBtn" class="btn btn-info" onclick="saveForm()">
+                                    <i class="fa fa-save"></i>Update
+                                    <img src="~/Content/img/loading.gif" class="saveLoader" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <!-- end widget div -->
+                <!-- end widget -->
+            </article>
+        </div>
+    </section>
+</div>
+
+<!-- PAGE RELATED PLUGIN(S) -->
+
+@section Scripts {
+    <script>
+        $(".saveLoader").toggle(false);
+        var datatable = $("#datatable").dataTable();
+        $("#datatable_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#datatable").DataTable().search(this.value).draw();
+            $("#datatable_wrapper .dt-toolbar").remove();
+        });
+
+
+        function saveForm() {
+            var DocumentName = $("#DocumentName").val();
+            var DocumentUrl = $("#DocumentUrl").val();
+            var IsActive = $("#IsActive").val();
+
+            if(DocumentName == ''){
+                swal("Please Enter Document Name")
+                return false;
+            }
+
+            if (/^[a-zA-Z0-9\-_\s]*$/.test(DocumentName) == false) {
+                swal("Special Characters for Full Name are not allowed");
+                return false;
+            }
+
+            if(DocumentUrl == '' && '@ViewBag.FileName' == null && '@ViewBag.FileName' != ''){
+                swal("Please Upload File (PDF Format)")
+                return false;
+            }
+
+            if(DocumentUrl != ''){
+                 var file = document.querySelector("#DocumentUrl");
+            if ( /\.(pdf)$/i.test(file.files[0].name) === false ) {
+                swal("Please Upload File (PDF Format)");
+                return false;
+            }
+            }
+
+            if (IsActive == 'Select Status') {
+                swal("Please Select Status");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('SystemDocumentId', '@ViewBag.SystemDocumentId');
+            formData.append('DocumentName', DocumentName);
+            formData.append('DocumentUrl', $("#DocumentUrl")[0].files[0]);
+            formData.append('IsActive', IsActive);
+
+                $("#saveFormBtn").prop('disabled', true);
+                $(".saveLoader").toggle(true);
+                var url = '@Url.Action("EditSystemDocument", "CoadmisSystemDocument")';
+                $.ajax({
+                    url: url,
+                    data: formData,
+                    type: 'POST',
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $("#saveFormBtn").prop('disabled', true);
+                        $(".saveLoader").toggle(true);
+                        if (response == "Success") {
+                            swal("Updated Successfully!", { icon: "success" })
+                                .then((m) => {
+                                 var url = '@Url.Action("SysDocumentList", "CoadmisSystemDocument")';
+                                window.location.replace(url);
+                                });
+                        } else {
+                            $("#saveFormBtn").prop('disabled', false);
+                            $(".saveLoader").toggle(false);
+                            swal(response)
+                        }
+                    },
+                    failure: function (error) {
+                        $("#saveFormBtn").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(error)
+                    }
+                });
+            }
+    </script>
+}

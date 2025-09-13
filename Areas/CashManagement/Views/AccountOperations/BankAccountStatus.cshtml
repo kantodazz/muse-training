@@ -1,0 +1,330 @@
+﻿@{
+    ViewBag.Title = "Closing Acccount Tracker";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <select style="width:150px" id="overallstatus">
+                                        <option value="Sent to BoT">Sent to BoT</option>
+                                        <option value="ACCEPTED">Accepted</option>
+                                        <option value="FORWARDED">Forwarded</option>
+                                        <option value="PROCESSED">Processed</option>
+                                        <option value="All">All</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>From</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="FromDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>To</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="ToDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_batch_details" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Institution Name</th>
+                                        <th>Batch Number</th>
+                                        <th>Bank Name</th>
+                                        <th>Message ID</th>
+                                        <th>Description</th>
+                                        <th>Number Of Accounts</th>
+                                        <th>OverallStatus</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_batch_details = $('#dt_batch_details').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+        $("#dt_batch_details_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_batch_details.DataTable().search(this.value).draw();
+        });
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetBankAccountStatusList", "AccountOperations")' + "/?OverrallStatus=Sent to BoT&&FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=0",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_batch_details.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_batch_details.fnAddData([i + 1,
+                        data[i]["InstitutionName"],
+                        data[i]["BatchNumber"],
+                        data[i]["BankName"],
+                        data[i]["MsgID"],
+                        data[i]["Description"],
+                        data[i]["NoOfTransaction"],
+                        data[i]["OverallStatus"],
+                        action(i, data[i]["CoverLetter"], data[i]["OverallStatus"])
+                    ]);
+                }
+
+                if(data.length == 0){
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchPayment() {
+            debugger
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetBankAccountStatusList", "AccountOperations")' + "/?OverrallStatus=" + $("#overallstatus").val() + "&&FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response)
+                    data = response.data;
+                    dt_batch_details.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_batch_details.fnAddData([i + 1,
+                            data[i]["InstitutionName"],
+                            data[i]["BatchNumber"],
+                            data[i]["BankName"],
+                            data[i]["MsgID"],
+                            data[i]["Description"],
+                            data[i]["NoOfTransaction"],
+                            data[i]["OverallStatus"],
+                            action(i, data[i]["CoverLetter"], data[i]["OverallStatus"])
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // *************** LOAD TABLE DATA END *********************
+
+        //action
+        function action(i, coverletter, overallStatus) {
+
+            if (coverletter != null && overallStatus !="ACCEPTED") {
+                return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ClosingSummaryDetails", "AccountOperations")/?id='+ data[i]["AccountMaintenanceSummaryId"] + '">View Details</a></li>\
+                                <li><a href="@Url.Action("PreviewCoverLetter", "AccountOperations")/?id=' + data[i]["AccountMaintenanceSummaryId"] + '" target="_blank">Priview Cover Letter</a></li>\
+                            </ul>\
+                        </div>'
+            }
+            if (coverletter == null && overallStatus != "ACCEPTED") {
+                return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ClosingSummaryDetails", "AccountOperations")/?id='+ data[i]["AccountMaintenanceSummaryId"] + '">View Details</a></li>\
+                            </ul>\
+                        </div>'
+            }
+
+            if (coverletter == null && (overallStatus == "ACCEPTED" || overallStatus == "FORWARDED")) {
+                return '<div class="btn-group">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="@Url.Action("ClosingSummaryDetails", "AccountOperations")/?id='+ data[i]["AccountMaintenanceSummaryId"] + '">View Details</a></li>\
+                                <li><a href="#" onclick= "cancelRequest(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>'
+            }
+        }
+
+        var cancelRequest = function (i) {
+            swal({
+                text: "Are you sure you want to cancel this Request?",
+                buttons: [
+                  "Yes",
+                  "No"
+                ],
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (!isConfirm) {
+                    var id = data[i]["AccountMaintenanceSummaryId"];
+                    var url = '@Url.Action("CancelRequestFile", "AccountOperations")';
+                    $.ajax({
+                        type: "post",
+                        url: url,
+                        data: { id: id },
+                        success: function (response) {
+                            if (response == "Success") {
+                                swal("Cancellation Request has be Submitted To BoT Successfully!", { icon: "success" })
+                                    .then((value) => {
+                                        window.location.reload();
+                                    });
+                            }
+                            else {
+                                swal(response);
+                            }
+
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                }
+            });
+        }
+
+    </script>
+}
+
+
+

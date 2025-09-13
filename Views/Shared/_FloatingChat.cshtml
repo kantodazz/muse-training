@@ -1,0 +1,195 @@
+﻿<style>
+    /* Floating Chat Widget */
+    #chatWidget {
+        position: fixed;
+        bottom: 80px;
+        right: 20px;
+        width: 350px;
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.2);
+        overflow: hidden;
+        transition: transform 0.3s ease-in-out;
+        display: none;
+        z-index: 10000;
+    }
+
+    #chatHeader {
+        background: linear-gradient(135deg, #007bff, #4a90e2);
+        color: white;
+        padding: 10px;
+        text-align: center;
+        font-weight: bold;
+        cursor: pointer;
+    }
+
+    #chatContainer {
+        width: 100%;
+        height: 300px;
+        background: linear-gradient(135deg, #E3F2FD, #D6EAF8);
+        border-radius: 15px;
+        padding: 15px;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        border: 1px solid #d1d9e6;
+    }
+
+    /* Chat Bubbles */
+    .message {
+        padding: 10px 15px;
+        border-radius: 15px;
+        max-width: 80%;
+        font-size: 14px;
+        word-wrap: break-word;
+        box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .userMessage {
+        background: #007bff;
+        color: white;
+        align-self: flex-end;
+        border-bottom-right-radius: 5px;
+    }
+
+    .botMessage {
+        background: #FFFBCC;
+        color: black;
+        align-self: flex-start;
+        border-bottom-left-radius: 5px;
+    }
+
+    /* Input Box */
+    #inputArea {
+        display: flex;
+        padding: 10px;
+        background: white;
+        border-top: 1px solid #ccc;
+    }
+
+    #questionBox {
+        flex: 1;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 20px;
+        outline: none;
+        font-size: 14px;
+    }
+
+    #askButton {
+        margin-left: 8px;
+        padding: 8px 12px;
+        background-color: #007bff;
+        color: white;
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+    }
+
+        #askButton:hover {
+            background-color: #0056b3;
+        }
+
+    /* Floating Chat Icon */
+    #chatToggleBtn {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        background: #007bff;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+        z-index: 10001;
+    }
+</style>
+
+
+<!-- Floating Chat Button -->
+<div id="chatToggleBtn" onclick="toggleChat()">💬</div>
+
+<!-- Floating Chat Widget -->
+<div id="chatWidget">
+    <div id="chatHeader" onclick="toggleChat()">MUSE Assistant </div>
+    <div id="chatContainer">
+        <div class="message botMessage">Hi, I am your AI assistant. How can I help you? 😊</div>
+    </div>
+    <div id="inputArea">
+        <input type="text" id="questionBox" placeholder="Type your question here..." onkeypress="handleKeyPress(event)">
+        <button id="askButton" onclick="askQuestion()">Ask</button>
+    </div>
+</div>
+
+<script>
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            askQuestion();
+        }
+    }
+
+    function toggleChat() {
+        let chatWidget = document.getElementById("chatWidget");
+        let chatToggleBtn = document.getElementById("chatToggleBtn");
+
+        if (chatWidget.style.display === "none" || chatWidget.style.display === "") {
+            chatWidget.style.display = "block";
+            chatToggleBtn.innerHTML = "✖";
+            localStorage.setItem("chatVisible", "true");
+        } else {
+            chatWidget.style.display = "none";
+            chatToggleBtn.innerHTML = "💬";
+            localStorage.setItem("chatVisible", "false");
+        }
+    }
+
+    document.addEventListener("DOMContentLoaded", function () {
+        let chatWidget = document.getElementById("chatWidget");
+        let chatToggleBtn = document.getElementById("chatToggleBtn");
+
+        if (localStorage.getItem("chatVisible") === "true") {
+            chatWidget.style.display = "block";
+            chatToggleBtn.innerHTML = "✖";
+        }
+    });
+
+    function askQuestion() {
+        let question = $("#questionBox").val();
+        let chatContainer = $("#chatContainer");
+
+        if (!question) {
+            alert("Please enter your question!");
+            return;
+        }
+
+        chatContainer.append(`<div class="message userMessage">${question}</div>`);
+        $("#questionBox").val("");
+
+        let loadingIndicator = `<div class="message botMessage thinking" id="loading">Thinking...</div>`;
+        chatContainer.append(loadingIndicator);
+
+        $.ajax({
+            url: "http://10.1.87.43:5000/ask",
+            type: "POST",
+            contentType: "application/json",
+            data: JSON.stringify({ question: question }),
+            success: function (response) {
+                $("#loading").remove();
+                chatContainer.append(`<div class="message botMessage">${response.answer}</div>`);
+                chatContainer.scrollTop(chatContainer[0].scrollHeight);
+            },
+            error: function () {
+                $("#loading").remove();
+                chatContainer.append(`<div class="message botMessage">Error processing request.</div>`);
+            }
+        });
+    }
+</script>
+
+

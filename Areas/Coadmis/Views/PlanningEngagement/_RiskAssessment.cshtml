@@ -1,0 +1,613 @@
+﻿@model IFMIS.Areas.Coadmis.Models.EngagementVM
+<style>
+    #myTab4 {
+        height: 42px;
+    }
+
+    .widget-body1 {
+        margin-left: 140px;
+        width: 1050px;
+    }
+
+    .tabs-below > .nav-tabs, .tabs-left > .nav-tabs, .tabs-right > .nav-tabs {
+        border-bottom: 0;
+        border-right: 0;
+    }
+
+    .form-horizontal {
+        margin-top: 30px;
+        margin-left: 17px;
+    }
+</style>
+
+<div class="widget-body1">
+    <ul id="myTab4" class="nav nav-tabs bordered">
+        <li class="active">
+            <a href="#sR1" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-fw fa-lg  fa-slack"></i> Detailed Risk assessment
+                <span class="badge bg-color-blue txt-color-white"></span>
+            </a>
+        </li>
+        <li class="">
+            <a href="#sR2" data-toggle="tab" aria-expanded="false">
+                <i class="fa fa-fw fa-lg  fa-pied-piper"></i> Financial Risk & Assertion Plan
+                <span class="badge bg-color-blue txt-color-white"></span>
+            </a>
+        </li>
+        @if (Model.FinancialRiskStatus == "Completed")
+        {
+            <li class="">
+                <a href="#sR3" data-toggle="tab" aria-expanded="false">
+                    <i class="fa fa-fw fa-lg  fa-empire"></i> Risk Response Summary
+                    <span class="badge bg-color-blue txt-color-white"></span>
+                </a>
+            </li>
+
+
+        }
+        @if (Model.CompleteRespSummary == "Completed")
+        {
+            <li class="">
+                <a href="#sR4" data-toggle="tab" aria-expanded="false">
+                    <i class="fa fa-fw fa-lg  fa-sliders"></i>Overall Materiality
+                    <span class="badge bg-color-blue txt-color-white"></span>
+                </a>
+            </li>
+
+            <li class="">
+                <a href="#sR5" data-toggle="tab" aria-expanded="false">
+                    <i class="fa fa-fw fa-lg  fa-sliders"></i>Performance Materiality
+                    <span class="badge bg-color-blue txt-color-white"></span>
+                </a>
+            </li>
+        }
+    </ul>
+    <div id="myTabContent4" class="tab-content padding-10">
+        <div class="tab-pane fade active in" id="sR1">
+            <form>
+                <div class="form-horizontal">
+                    <div class="col-xs-12">
+                        <div align="center">
+                            <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" />
+                        </div>
+                        @if (Model.OverallStatus == "Approved")
+                        {
+
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-info" onclick="AddIdentifyRisk()">
+                                <i class="fa fa-plus"></i> Add New
+                                <img src="~/Content/img/loading.gif" class="loadingImg" />
+                            </button>
+                        }
+
+                        <br />
+                        <br />
+                        <div class="col-md-12">
+
+                            <table id="dt_trendAnalysisBasic" class="table table-striped table-bordered table-hover" width="50%">
+                                <thead>
+                                    <tr>
+                                        <th style="width:1px">#</th>
+                                        <th style="width:15px">Questionnair Name</th>
+                                        <th style="width:5px">Questionnair Response</th>
+                                        <th style="width:25px">Action</th>
+                                    </tr>
+                                </thead>
+                                @{
+                                    int za = 0;
+                                }
+                                <tbody>
+                                    @if (Model.RiskAssessedInfo.Count == 0)
+                                    {
+                                        <tr>
+                                            <td colspan="7" style="text-align:center">
+                                                <span style="font-style:italic">
+                                                    No Risk Identify in this Engagement:
+                                                    <strong> @Model.EngagementName</strong>
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                    else
+                                    {
+                                        foreach (var item in Model.RiskAssessedInfo)
+                                        {
+                                            za++;
+                                            <tr>
+                                                <td>@za</td>
+                                                <td>@item.QuestionnairName</td>
+                                                <td>@item.QuestionnairResponse</td>
+                                                <td>
+                                                    @if (item.QuestionnairResponse == "Yes")
+                                                    {
+                                                      <a href="#" onclick="ShowRiskAddedDetail(@item.DetailedRiskAssId)"><i class="fa fa fa-fw  fa-dot-circle-o"></i></a> <span>|</span>
+                                                    }
+                                                    @if (Model.RiskFyViewStatus != "NotNullValuex")
+                                                    {
+                                                        if (Model.OverallStatus == "Approved")
+                                                        {
+
+                                                        }
+                                                        else
+                                                        {
+                                                            if (item.QuestionnairResponse == "Yes")
+                                                            {
+                                                                <a href="#" onclick="AddRiskObserved(@item.DetailedRiskAssId)"><i class="fa fa fa-fw  fa-plus-square-o"></i></a> <span>|</span>
+                                                            }
+                                                            <a href="#" onclick="RemoveAllQuestionnerRisk(@item.DetailedRiskAssId)"><i class="fa fa fa-fw  fa-trash-o"></i></a>
+
+                                                        }
+
+                                                    }
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+        <div class="tab-pane fade" id="sR2">
+            <div class="form-horizontal">
+                <div class="alert alert-block alert-info">
+                    <a class="close" data-dismiss="alert" href="#">×</a>
+                    <center><span>Please, Make sure you <strong> Assertion All Observed Risk</strong>, Inorder to go to next level</span></center>
+                </div>
+                <div class="col-md-2">
+                    @if (Model.OverallStatus == "Approved")
+                    {
+
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-info" id="generateRiskPlanForm">
+                            <i class="fa  fa-gears"></i> Generate Plan
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+                    }
+
+                </div>
+                <div class="col-md-8"></div>
+                @if (Model.RiskFyViewStatus == "NotNullValue")
+                {
+                    <div class="col-md-2">
+                        <div class="col-md-2">
+                            @if (Model.OverallStatus == "Approved")
+                            {
+
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary" id="revokeRiskPlanForm">
+                                    <i class="fa  fa-reply-all"></i>  Revoke
+                                    <img src="~/Content/img/loading.gif" class="loadingImg" />
+                                </button>
+                            }
+
+                        </div>
+                    </div>
+                }
+
+                <br />
+                <br />
+
+                <table id="dt_financialRiskPlan" class="table table-striped table-bordered table-hover" width="50%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Risk Name</th>
+                            <th>Risk Ranking</th>
+                            <th>Assertion Area Affected</th>
+                            <th>Assertion Risk Ranking</th>
+                            <th>Ref No.</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    @{
+                        int xy = 0;
+                    }
+                    <tbody>
+                        @if (Enumerable.Count(ViewBag.FinancialStAssRiskPlan) == 0)
+                        {
+                            <tr>
+                                <td colspan="9" style="text-align:center">
+                                    <span style="font-style:italic">
+                                        No Financial Statement & Assertion Risk Action Plan :
+                                        <strong> @Model.EngagementName</strong>
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in ViewBag.FinancialStAssRiskPlan)
+                            {
+
+                                xy++;
+                                <tr>
+                                    <td>@xy</td>
+                                    <td>@item.RiskName</td>
+                                    <td>@item.RiskRanking</td>
+                                    <td>@item.AssertionAreaAffected</td>
+                                    <td>@item.AssertionRiskRanking</td>
+                                    <td>@item.RefNo</td>
+                                    <td>@item.RiskSummaryStatus</td>
+                                    @if (Model.OverallStatus == "Approved")
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <a href="#" onclick="AssertionRiskPlan(@item.FinancialStAssRiskPlanId)">
+                                                <i class="fa fa fa-fw  fa-ticket"></i>Add Assertion Detail
+                                            </a>
+                                        </td>
+                                    }
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="tab-pane fade" id="sR3">
+            <div class="form-horizontal">
+                @if (Model.RiskSummaryStatus == "NotNullValue")
+                {
+                    <div class="alert alert-block alert-info">
+                        <a class="close" data-dismiss="alert" href="#">×</a>
+                        <center><span>Please, Make sure you <strong> Add Justification on each Summary</strong>, Inorder to procedure to next level</span></center>
+                    </div>
+                }
+
+                <div class="col-md-2">
+                    @if (Model.OverallStatus == "Approved")
+                    {
+
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-info" id="generateSummaryForm">
+                            <i class="fa  fa-bullseye"></i> Generate Summary
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+                    }
+
+                </div>
+                <div class="col-md-8"></div>
+                @if (Model.RiskSummaryStatus == "NotNullValue")
+                {
+                    <div class="col-md-2">
+                        <div class="col-md-2">
+                            @if (Model.OverallStatus == "Approved")
+                            {
+
+                            }
+                            else
+                            {
+                                <button type="button" class="btn btn-primary" id="revokeSummaryForm">
+                                    <i class="fa  fa-reply-all"></i>  Revoke
+                                    <img src="~/Content/img/loading.gif" class="loadingImg" />
+                                </button>
+                            }
+
+                        </div>
+                    </div>
+                }
+
+                <br />
+                <br />
+                <table id="dt_responseSummary" class="table table-striped table-bordered table-hover" width="50%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Auditable Area</th>
+                            <th>Risk Name</th>
+                            <th>Financial Risk Ranking</th>
+                            <th>Assertion Risk Risk</th>
+                            <th>Risk Factor</th>
+                            <th>Ref No</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    @{
+                        int xo = 0;
+                    }
+                    <tbody>
+                        @if (Enumerable.Count(ViewBag.RiskResponseSummary) == 0)
+                        {
+                            <tr>
+                                <td colspan="7" style="text-align:center">
+                                    <span style="font-style:italic">
+                                        No Risk Response Summary Created for this Engagement :
+                                        <strong> @Model.EngagementName</strong>
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in ViewBag.RiskResponseSummary)
+                            {
+
+                                xo++;
+                                <tr>
+                                    <td>@xo</td>
+                                    <td>@item.AuditableAreaName</td>
+                                    <td>@item.FinancialRiskName</td>
+                                    <td>@item.FinancialRiskRanking</td>
+                                    <td>@item.AssertionRiskRanking</td>
+                                    <td>@item.RiskFactor</td>
+
+                                    @if (item.JustificationOfRisk != null)
+                                    {
+                                        <td><strong style="background-color:yellow">@item.FinancialRefNo</strong> </td>
+                                    }
+                                    else
+                                    {
+                                        <td>@item.FinancialRefNo</td>
+                                    }
+                                    @if (Model.OverallStatus == "Approved")
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <a href="#" onclick="RiskResponseSummary(@item.RiskResponseSummaryId)">
+                                                <i class="fa fa fa-fw  fa-ticket"></i>Add Justification
+                                            </a>
+                                        </td>
+                                    }
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+
+            </div>
+
+        </div>
+        <div class="tab-pane fade" id="sR4">
+            <div class="row">
+                <div class="col-md-8">
+                    @if (Model.CheckMatConfig == "NoSettup")
+                    {
+                        <div class="alert alert-block alert-info">
+                            <a class="close" data-dismiss="alert" href="#">×</a>
+                            <center><span>Please, Make sure you <strong>Configure for Materiality per Client</strong>, Inorder to Generate Materiality</span></center>
+                        </div>
+                        <div class="col-md-8" style="align-content:center">
+                            <dl class="form-horizontal" style="font-weight: bold;">
+                                No data for Materiality
+                            </dl>
+                        </div>
+
+                    }
+                    else
+                    {
+                        if (Model.MaterialityStatus == null)
+                        {
+                            <div class="col-md-8">
+                                @if (Model.OverallStatus == "Approved")
+                                {
+
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-info" id="loadDataForMateriality">
+                                        <i class="fa  fa-gears"></i> Generate Materiality
+                                        <img src="~/Content/img/loading.gif" class="loadingImg" />
+                                    </button>
+                                }
+
+                            </div>
+                        }
+
+                        if (Model.MaterialityStatus != null)
+                        {
+                            <div class="col-md-8">
+                                @if (Model.OverallStatus == "Approved")
+                                {
+
+                                }
+                                else
+                                {
+                                    <button type="submit" class="btn btn-info" id="revokeDataForMateriality">
+                                        <i class="fa  fa-reply-all"></i> Revoke
+                                        <img src="~/Content/img/loading.gif" class="loadingImg" />
+                                    </button>
+                                }
+
+                            </div>
+
+                        }
+
+                    }
+
+
+
+                    @if (Model.MaterialityStatus == null)
+                    {
+                        @*<dl class="form-horizontal" style="font-weight: bold;">
+                                No data for Materiality
+                            </dl>*@
+
+                    }
+                    else
+                    {
+                        <div class="col-md-8">
+                            <dl class="dl-horizontal">
+                                <dt>Client Name:</dt>
+                                <dd>@Html.DisplayFor(model => model.ClientName)</dd>
+                                <dt>Client Financial Year:</dt>
+                                <dd>@Html.DisplayFor(model => model.ClientFinancialYear)</dd>
+                                @if (Model.MaterialityMthod == "Tabular Method")
+                                {
+                                    <dt>Total Amount Asset (Tsh):</dt>
+                                    <dd> @string.Format("{0:#,0.00}", Model.TotalAmountAsset)</dd>
+                                    <dt>Total Amount Revenue(Tsh):</dt>
+                                    <dd> @string.Format("{0:#,0.00}", Model.TotalAmountRevenue)</dd>
+                                    <dt>Lager Amount(Tsh):</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.BiggerDifference)</dd>
+                                    <dt>Materiality Approach:</dt>
+                                    <dd>Table Approach</dd>
+                                }
+                                else if (Model.MaterialityMthod == "Profit Before Tax")
+                                {
+                                    <dt>Total Amount Revenue(Tsh):</dt>
+                                    <dd> @string.Format("{0:#,0.00}", Model.TotalAmountRevenue)</dd>
+                                    <dt>Total Amount Expenses(Tsh):</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.TotalAmountExpenses)</dd>
+                                    <dt>Amount difference(Tsh):</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.BiggerDifference)</dd>
+                                    <dt>Materiality Approach:</dt>
+                                    <dd>Benchmark Approach</dd>
+                                }
+                                else if (Model.MaterialityMthod == "Total Revenue")
+                                {
+                                    <dt>Total Amount Revenue:</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.TotalAmountRevenue)</dd>
+                                    <dt>Materiality Approach:</dt>
+                                    <dd>Benchmark Approach</dd>
+                                }
+                                else if (Model.MaterialityMthod == "Total Expenses")
+                                {
+                                    <dt>Total Amount Expenses(Tsh):</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.TotalAmountExpenses)</dd>
+                                    <dt>Materiality Approach:</dt>
+                                    <dd>Benchmark Approach</dd>
+                                }
+                                else if (Model.MaterialityMthod == "Total Capital")
+                                {
+                                    <dt>Total Amount Capital(Tsh):</dt>
+                                    <dd>@string.Format("{0:#,0.00}", Model.TotalAmountCapital)</dd>
+                                    <dt>Materiality Approach:</dt>
+                                    <dd>Benchmark Approach</dd>
+                                }
+                                <dt>Materiality Mthod:</dt>
+                                <dd>@Html.DisplayFor(model => model.MaterialityMthod)</dd>
+                                <dt>Overall Materiality:</dt>
+                                <dd>@string.Format("{0:#,0.00}", Model.AnsMateriality)</dd>
+                            </dl>
+                        </div>
+                    }
+                </div>
+
+            </div>
+        </div>
+        <div class="tab-pane fade" id="sR5">
+
+            <div class="form-horizontal">
+
+                <div class="col-md-3">
+                    @if (Model.OverallStatus == "Approved")
+                    {
+
+                    }
+                    else
+                    {
+                        <button type="submit" class="btn btn-info" id="generatePerformanceMateriality">
+                            <i class="fa  fa-gears"></i> Generate
+                            <img src="~/Content/img/loading.gif" class="loadingImg" />
+                        </button>
+                    }
+
+                    @*</div>
+                        <div class="col-md-3">*@
+                    @if (Enumerable.Count(ViewBag.PerformanceMateriality) == 0)
+                    {
+                        if (Model.OverallStatus == "Approved")
+                        {
+
+                        }
+                        else
+                        {
+                            <button type="submit" class="btn btn-info" id="revokePerformanceMateriality">
+                                <i class="fa  fa-mail-reply-all"></i> Revoke
+                                <img src="~/Content/img/loading.gif" class="loadingImg" />
+                            </button>
+                        }
+
+                    }
+
+                </div>
+                <br />
+                <br />
+                <table id="dt_performance" class="table table-striped table-bordered table-hover" width="50%">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Auditable Area</th>
+                            <th>Risk Ranking</th>
+                            <th>Overall Materiality</th>
+                            <th>Performance Materiality</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    @{
+                        int jy = 0;
+                    }
+                    <tbody>
+                        @if (Enumerable.Count(ViewBag.PerformanceMateriality) == 0)
+                        {
+                            <tr>
+                                <td colspan="9" style="text-align:center">
+                                    <span style="font-style:italic">
+                                        No Performance Materiality Generated for this :
+                                        <strong> @Model.EngagementName</strong>
+                                    </span>
+                                </td>
+                            </tr>
+                        }
+                        else
+                        {
+                            foreach (var item in ViewBag.PerformanceMateriality)
+                            {
+
+                                jy++;
+                                <tr>
+                                    <td>@jy</td>
+                                    <td>@item.AuditableAreaCode: @item.AuditableAreaName</td>
+                                    <td>@item.RiskRanking</td>
+                                    @*<td> @item.OverallMateriality</td>
+                                        <td> @item.AnsPerfMateriality</td>*@
+                                    <td style="text-align:right">@string.Format("{0:#,0.00}", @item.OverallMateriality)</td>
+                                    <td style="text-align:right"> @string.Format("{0:#,0.00}", @item.AnsPerfMateriality)</td>
+                                    @if (Model.OverallStatus == "Approved")
+                                    {
+
+                                    }
+                                    else
+                                    {
+                                        <td>
+                                            <a href="#" onclick="PerformanceMateriality(@item.PerformanceMaterialityId)">
+                                                <i class="fa fa fa-fw  fa fa-comments-o"></i>Add Justification
+                                            </a>
+                                        </td>
+                                    }
+
+                                </tr>
+                            }
+                        }
+
+                    </tbody>
+                </table>
+            </div>
+
+        </div>
+    </div>
+</div>

@@ -1,0 +1,190 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PaymentVoucherVM>
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+
+@if(Model.Count()>0){
+<div class="row">
+    <div class="col-md-12">
+        <div class="search-container" style="float:right">
+            <i class="fa fa-search"></i>
+            <input type="search" name="search" placeholder="Search..." id="search-box">
+        </div>
+    </div>
+</div>
+<table id="dt_ld" class="table  table-bordered table-hover table-condensed">
+    <thead>
+        <tr>
+            <th style="text-align:right;width:4%"></th>
+            <th style="text-align:center"> @Html.DisplayNameFor(model => model.PVNo)</th>
+            <th style="text-align:left;width:23%"> @Html.DisplayNameFor(model => model.PayeeName)</th>
+            <th style="text-align:right"> @Html.DisplayNameFor(model => model.OperationalAmount)</th>
+            <th style="text-align:center">@Html.DisplayNameFor(model => model.OverallStatus)</th>
+            <th style="text-align:center"> @Html.DisplayNameFor(model => model.SourceModuleReferenceNo)</th>
+           <th style="text-align:right">@Html.DisplayNameFor(model => model.LiquidatedDamageAmount)</th>
+            <th style="text-align:center">CreatedAt</th>
+            <th style="text-align:center;">Action</th>
+        </tr>
+    </thead>
+
+    <tbody>
+        @{var i = 0;}
+        @foreach (var item in Model)
+                {
+                    i++;
+
+        <tr>
+            <td style="text-align:right">
+                @i
+            </td>
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.PVNo)
+            </td>
+            <td style="text-align:left">
+                @Html.DisplayFor(modelItem => item.PayeeName)
+            </td>
+            <td style="text-align:right">
+                @Html.DisplayFor(modelItem => item.OperationalAmount)
+            </td>
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.OverallStatus)
+            </td>
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.SourceModuleReferenceNo)
+            </td>
+            <td style="text-align:right">
+                @Html.DisplayFor(modelItem => item.LiquidatedDamageAmount)
+            </td>
+            <td style="text-align:center">
+                @Html.DisplayFor(modelItem => item.CreatedAt)
+
+            </td>
+            <td style="text-align:center">
+
+                <div class="btn-group" style="text-align:left">
+                    <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                        <span class="caret"></span>
+                        <span class="sr-only">Toggle Dropdown</span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li>
+                            <a href="#" onclick="ldDetails(@item.PaymentVoucherId)">
+                                <i class="fa fa-edit"></i>Details
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </td>
+
+        </tr>
+                }
+    </tbody>
+</table>
+}
+else{
+<p style="font-family: Arial, Helvetica, sans-serif; width: 100%; border: 5px solid gray; padding: 7px; margin: 7px; ">No any Liquidated damage deduction in this Financial Year</p>
+}
+
+<div class="modal fade" id="ldModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog modal-lg" style="width:80%;">
+        <div width="90%" class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">
+                    Liquidated Damage Deduction Detail
+                </h4>
+            </div>
+            <div class="modal-body" id="ldDetails">
+
+            </div>
+
+            
+        </div>
+    </div>
+
+</div>
+
+<script type="text/javascript">
+    var dt_search_ld = $('#dt_ld').dataTable();
+    $("#dt_ld_wrapper .dt-toolbar").remove();
+    $("#search-box").on("keyup search input paste cut", function () {
+        $("#dt_ld").DataTable().search(this.value).draw();
+    });
+
+
+    function ldDetails(id) {
+        
+            var url = '@Url.Action("LDDetails", "LDPosting")';
+            $("#ldDetails").load(url, { id: id }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#ldDetails").html("Error on accessing this details, contact system support.");
+                }
+                $("#ldModal").modal("show");
+            });
+        };
+
+    function postLD(id) {
+
+                    swal({
+                        title: 'Confirmation',
+                        text: "Do you repost LD ?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                          var url = '@Url.Action("RepostLD", "LDPosting")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { id: id },
+                    success: function (response) {
+                        if (response == "Success") {
+                            $("#ldModal").modal("hide");
+                            swal("Reposted successfully", { icon: "success" })
+                                      .then((value) => {
+                                          ldDetails(id);
+                                      });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+        };
+
+
+
+
+</script>
+

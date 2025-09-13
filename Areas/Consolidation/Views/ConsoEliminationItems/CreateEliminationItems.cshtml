@@ -1,0 +1,209 @@
+﻿@model IFMIS.Areas.Consolidation.Models.ConsoEliminationItemsVM
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Create";
+}
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Elimination Mapping Setup </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+                            <div>
+                                <div class="col-md-6">
+                                    <p><strong><u>Entity</u></strong> </p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong><u>Elimination Entity</u></strong></p>
+                                </div>
+                            </div>
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitMapping(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+
+                                <div class="form-horizontal">
+                                    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+
+
+                                    <div class="form-group">
+                                        <div class="col-md-6">
+                                            @Html.DropDownListFor(model => model.GacsNoteSubactivityID, ViewBag.NoteSubActivitiesList as SelectList, "Sub Activity....", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.GacsNoteSubactivityID, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="col-md-6">
+                                            @Html.DropDownListFor(model => model.InstitutionalCode, ViewBag.GacsEntitiesList as SelectList, "Entity Name....", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.InstitutionalCode, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-md-6">
+                                            <select id="NoteId" name="NoteId" class="form-control select2">
+                                                <option value="" selected>Note ...</option>
+                                            </select>
+
+                                        </div>
+                                        <div class="col-md-6">
+                                            @Html.DropDownListFor(model => model.EliminNoteId, ViewBag.GacNotesList as SelectList, "Note....", new { @class = "form-control select2" })
+                                            @Html.ValidationMessageFor(model => model.EliminNoteId, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        <div class="col-md-6">
+                                            <select id="ItemIDValue" name="ItemIDValue" class="form-control select2">
+                                                <option value="" selected>Note Item...</option>
+                                            </select>
+                                            @Html.ValidationMessageFor(model => model.ItemIDValue, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="col-md-6">
+                                            <select id="EliminItemIDValue" name="EliminItemIDValue" class="form-control select2">
+                                                <option value="" selected>Note Item...</option>
+                                            </select>
+                                            @Html.ValidationMessageFor(model => model.EliminItemIDValue, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+
+                                    <div class="form-actions">
+                                        <div class="row">
+                                            <div class="col-md-8 col-md-offset-2">
+                                                <a href="@Url.Action("EliminationItemsList","EliminationItems")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                                <button type="submit" class="btn btn-info" id="save_button" style="float: left; margin-left: 5px">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+
+@section pagespecific{
+    <script>
+        $("#GacsNoteSubactivityID").change(function () {
+            var id = $(this).val();
+            var url = '@Url.Action("GetGacsNotes", "ConsoEliminationItems")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { id: id },
+                success: function (response) {
+                    $("#NoteId").empty();
+                    $("#NoteId").append(response);
+                }
+            })
+        });
+        $("#NoteId").change(function () {
+            var noteId = $(this).val();
+            var url = '@Url.Action("GetGacsNoteItems", "ConsoEliminationItems")';
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { noteId: noteId },
+                success: function (response) {
+                    $("#ItemIDValue").empty();
+                    $("#ItemIDValue").append(response);
+                }
+            })
+        });
+
+        $("#EliminNoteId").change(function () {
+            var noteId = $(this).val();
+            var url = '@Url.Action("GetGacsNoteItems", "ConsoEliminationItems")';
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { noteId: noteId },
+                success: function (response) {
+                    $("#EliminItemIDValue").empty();
+                    $("#EliminItemIDValue").append(response);
+                }
+            })
+        });
+
+        function SubmitMapping(formData) {
+            debugger;
+             $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveMapping", "ConsoEliminationItems")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                    $("#save_button").prop('disabled', false);
+                    if (response == "Success") {
+                        swal("Mapping saved successfully", { icon: "success" })
+                            .then((value) => {
+                       var url = '@Url.Action("EliminationItemsList", "ConsoEliminationItems")';
+                               window.location.replace(url);
+                               });
+                    }
+                    else {
+                        swal(response);
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+    </script>
+}
+

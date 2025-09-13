@@ -1,0 +1,146 @@
+﻿@model IEnumerable<IFMIS.Areas.RecurrentPayment.Models.PaymentSummaryReportUnapplied>
+
+@{
+    ViewBag.Title = "Payment Summary For Unapplied Status";
+}
+<style>
+    tr:nth-of-type(odd) {
+        background-color: #f5f5f5;
+    }
+
+    table {
+        border-collapse: separate;
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.4 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 100%;
+    }
+
+    th,
+    td {
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+        td:first-child {
+            border-left: 1px solid #cecfd5;
+        }
+
+    thead {
+        background: #395870;
+        color: #fff;
+    }
+
+    tfoot {
+        background-color: #b4fabc;
+        color: #000000;
+    }
+</style>
+<div id="content">
+
+    <div class="panel panel-default" style="font-family:'Trebuchet MS', 'Lucida Sans Unicode', 'Lucida Grande', 'Lucida Sans', Arial, sans-serif; font-style:normal; font-size:15px">
+        <!-- Default panell contents -->
+        <div class="panel-heading">
+            <h3 class="panel-title">UNAPPLIED - Payment Report</h3>
+        </div>
+
+        @using (Html.BeginForm(null, null, FormMethod.Post))
+        {
+
+            <table>
+                <tr>
+                    <td></td>
+                </tr>
+                <tr>
+                    <td>
+                        <p>
+                            <label for="StartDate">Start Date:</label>
+                            @Html.TextBox("StartDate")
+
+                            <label for="StartDate">To Date:</label>
+                            @Html.TextBox("EndDate")
+
+                            &nbsp; &nbsp;
+                            <button class="btn btn-default" type="submit" onclick="search()">
+                                <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                            </button>
+                            &nbsp; &nbsp;
+                            <button type="button" class="btn btn-default btn-flat btn-sm"formaction="PaymentSummaryUnapplied" formmethod="post">
+                                <span class="glyphicon glyphicon-print"></span>
+                            </button>
+                            &nbsp; &nbsp;
+                            <button type="button" class="btn btn-default btn-flat btn-sm" formaction="PaymentSummaryUnappliedExport" formmethod="post">
+                                <span class="glyphicon glyphicon-export"></span>
+                            </button>
+                            &nbsp;&nbsp;
+                            <a href="@Request.UrlReferrer" class="btn btn-default btn-flat">
+                                <span class="glyphicon glyphicon-backward" aria-hidden="true"></span>
+                                Go Back
+                            </a>
+                        </p>
+                    </td>
+                </tr>
+            </table>
+        }
+        <div id="divLoader" style="text-align: center; display: none">
+            <img src="~/Media/Images/ajax_loader.gif" />
+        </div>
+
+        <div id="searchResults" style="margin-top: 20px; display: none"></div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        $(document).ready(function () {
+            $('#StartDate').datepicker();
+            $('#EndDate').datepicker();
+        });
+        debugger
+        var search = function () {
+            var startDate = $("#StartDate").val();
+            var endDate = $("#EndDate").val();
+
+
+            if (startDate == "" && endDate == "") {
+
+                alert("Please! Select Date Range")
+                return true;
+            }
+
+            var url = '@Url.Action("GetDateRangeUnapplied", "Report")';
+            $("#divLoader").show();
+
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { startDate: startDate, endDate: endDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+
+                    if (response == "No Data Available") {
+                        alert("Sorry! No Record are Available for that Given Range.");
+                        location.reload();
+                    }
+                    else {
+                        $("#divLoader").hide();
+                    };
+                }
+            });
+        };
+
+        function goBack() {
+
+            window.history.back();
+        }
+    </script>
+
+}

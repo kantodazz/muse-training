@@ -1,0 +1,72 @@
+﻿@model IFMIS.Areas.Coadmis.Models.QuestionnairVM
+
+<div class="row setup-content">
+    @Html.AntiForgeryToken()
+    <form>
+        <div class="form-horizontal">
+            <div class="col-xs-12">
+                <div class="col-md-12">
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Questionnaire Type<span class="redStar">*</span></label>
+                        <div class="col-md-8">
+                            @if (ViewBag.QuestionnairTypleList != null)
+                            {
+                                @Html.DropDownListFor(model => model.QuestionnairTypeId, ViewBag.QuestionnairTypleList as SelectList, "Select Questionnair Type", new { @class = "form-control select2" })
+                                @Html.ValidationMessageFor(model => model.QuestionnairTypeId, "", new { @class = "text-danger" })
+
+                            }
+                            else
+                            {
+                                @Html.DropDownList("QuestionnairTypeId", null, "Select Questionnair Type", new { @class = "form-control select2" })
+
+                            }
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Questionnaire Group<span class="redStar">*</span></label>
+                        <div class="col-md-8">
+                            @Html.TextBoxFor(model => model.Title, new { @Class = "input", @required = "required", style = "width:100%; display:block;border:1px solid #ccc;padding:8px;" })
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-3">Parent Questionnaire Group</label>
+                        <div class="col-md-8">
+                            <select id="ParentId" name="ParentId" class="form-control select2" required="required">
+                                <option>Select Parent Type</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+<script type="text/javascript">
+    $(document).ready(function () {
+        $("select").select2();
+    });
+
+    $('#QuestionnairTypeId').change(function () {
+        debugger;
+        var option = [];
+        var selectedValue = $('#QuestionnairTypeId').val();
+        var url = '@Url.Action("GetGroups", "Questionnairs")/?id='+ selectedValue;
+        $.ajax({
+            url: url,
+            type: 'GET',
+            success: function (response) {
+                option.empty;
+                option.push('<option value="">Select Parent Type</option>');
+                response.data.forEach(d => {
+                    option.push('<option value=' + d["ParentId"] + '>' + d["Title"] + '</option>');
+                });
+                option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                $("#ParentId").html(option);
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+    });
+</script>

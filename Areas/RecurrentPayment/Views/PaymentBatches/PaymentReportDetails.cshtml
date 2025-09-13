@@ -1,0 +1,180 @@
+﻿@model IFMIS.Areas.RecurrentPayment.Models.PaymentBatch
+
+@{
+    ViewBag.Title = "View";
+}
+
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">Payment Batch Details</div>
+        <div class="panel-body">
+            <dl class="dl-horizontal">
+                <dt>
+                    @Html.DisplayNameFor(model => model.PayStation.PayStationCode)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.PayStation.PayStationCode)
+                </dd>
+                <dt>
+                    @Html.DisplayNameFor(model => model.PayStation.PayStationName)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.PayStation.PayStationName)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.BatchNo)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.BatchNo)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.BatchDesc)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.BatchDesc)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.PaymentCategory)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.PaymentCategory)
+                </dd>
+
+                <dt>
+                    @Html.DisplayNameFor(model => model.OverallStatus)
+                </dt>
+
+                <dd>
+                    @Html.DisplayFor(model => model.OverallStatus)
+                </dd>
+            </dl>
+            <hr />
+            <div class="row">
+                <div class="col-md-2">
+                    <button type="button" class="btn btn-default btn-flat"
+                            onclick="location.href='@Url.Action("PaymentsPerBatch", "Report", new { id = Model.PaymentBatchID })'">
+                        <span class="glyphicon glyphicon-print"></span>
+                        Preview
+                    </button>
+                </div>
+            </div>
+            <hr />
+
+            <table class="table table-bordered table-condensed table-hover table-responsive table-striped">
+                <tr>
+                    <th>
+                        #
+                    </th>
+                    <th>
+                        Beneficiary Name
+                    </th>
+                    <th>
+                        Swift Code
+                    </th>
+                    <th>
+                        Account No
+                    </th>
+                    <th>
+                        Amount
+                    </th>
+                    <th></th>
+                </tr>
+
+                @{
+                    int i = 0;
+                    decimal totalAmount = 0;
+                    string[] paymentStatuses = new string[10] { "PENDING", "CONFIRMED", "VERIFIED", "APPROVED", "Pre-funding Completed", "Sent to BOT", "Received at BOT", "SETTLED", "UNAPPLIED", "UNAPPLIED PROCESSED" };
+                }
+                @foreach (var item in Model.Payments.Where(a => paymentStatuses.Contains(a.OverallStatus)).OrderBy(a => a.BeneficiaryName))
+            {
+                i++;
+                totalAmount += decimal.Parse(item.Amount.ToString());
+                    <tr>
+                        <td>
+                            @i
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BankBic)
+                        </td>
+                        <td>
+                            @Html.DisplayFor(modelItem => item.BeneficiaryAccountNo)
+                        </td>
+                        <td style="text-align: right">
+                            @string.Format("{0:#,0.00}", item.Amount)
+                        </td>
+                        <td>
+                            <a href="#" onclick="showAdjustmentModal(@item.PaymentID)">
+                                Details
+                            </a>
+                            @if (item.OverallStatus != "Pre-funding Completed" && item.OverallStatus != "Sent to BOT" && item.OverallStatus != "Settled" && item.OverallStatus != "Unapplied")
+                            {
+                                <span>|</span>
+                                @Html.ActionLink("Delete", "Delete", "Payments", new { id = item.PaymentID }, new { })
+                            }
+                        </td>
+                    </tr>
+                }
+                <tr>
+                    <th colspan="4" style="text-align: center">
+                        Total
+                    </th>
+                    <th style="text-align: right">
+                        @string.Format("{0:#,0.00}", totalAmount)
+                    </th>
+                    <th></th>
+                </tr>
+
+            </table>
+        </div>
+
+        <p>
+            <a href="@Request.UrlReferrer">Back</a>
+        </p>
+    </div>
+</div>
+
+<!-- Start of Net Pay Adjustment modal -->
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Payment Details</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of Net Pay Adjustment modal -->
+
+@section Scripts {
+    <script>
+
+        var showAdjustmentModal = function (id) {
+
+            var url = '@Url.Action("Details", "Payments")';
+
+            $(".modal-body").load(url, { id: id }, function () {
+                $("#responseModal").modal("show");
+            });
+        };
+
+    </script>
+}

@@ -1,0 +1,95 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.GLOutoStandingVw>
+
+@if (Model.Count() > 0)
+{
+    <div class="table-responsive">
+        @{
+            int i = 0;
+            decimal? BasetotalAmount = 0;
+            decimal? OpertotalAmount = 0;
+        }
+
+
+        <div class="well" style="padding-top:20px">
+            <table style="width:100%">
+                <tr>
+                    <td>
+                        <strong>ACCOUNT NUMBER:</strong>
+                        @Model.Select(a => a.BankAccount).FirstOrDefault()
+                    </td>
+                </tr>
+                <tr>
+                    <td>
+                        <strong>ACCOUNT NAME  :</strong>
+                        @Model.Select(a => a.AccountName).FirstOrDefault()
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+        @foreach (var group in Model.GroupBy(a => a.TransactionType))
+        {
+
+
+            <div class="group-header">
+                @if (group.Key.Trim() == "CR")
+                    {
+                    <span class="h3">Payment</span>
+
+                }
+                else if (group.Key.Trim() == "DR")
+                {
+                    <span class="h3">Receipt</span>
+
+                }
+
+            </div>
+                <table class="table table-bordered table-condensed">
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th style="width:4px">Legal Number</th>
+                            <th>Description</th>
+                            <th style="text-align:right">Operational Amount</th>
+                            <th style="width:2px">Age(Days)</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @foreach (var item in group)
+                        {
+                            i++;
+                            BasetotalAmount += item.BaseAmountGL;
+                            OpertotalAmount += item.OperationalAmountGL;
+                            <tr>
+
+                                <td>@string.Format("{0: dd/MM/yyyy}", item.TransactionDate)</td>
+                                <td>@item.LegalNumber</td>
+                                <td>@item.DescriptionGL</td>
+                                <td style="text-align:right">@string.Format("{0:#,#.00;(#,#.00)}", item.OperationalAmountGL)</td>
+                                <td>@item.Age</td>
+                            </tr>
+                        }
+                        <tr class="group-footer" style="background:#f5f5f5; color:#000000">
+                            <td colspan="3" style="text-align:right">Total</td>
+                            <td style="text-align:right">
+                                @string.Format("{0:#,#.00;(#,#.00)}", group.Sum(x => x.OperationalAmountGL))
+                            </td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+        }
+    </div>
+
+            }
+            else
+            {
+                <p class="alert alert-info">
+
+                    No General Ledger Oustanding
+
+                </p>
+
+            }

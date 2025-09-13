@@ -1,0 +1,273 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.ManagerialNotificationVM>
+
+@{
+    ViewBag.Title = "Management Notification List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-user"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    @if (User.IsInRole("Helpdesk Managerial Entry"))
+                                    {
+                                        <a class="btn btn-info" href='@Url.Action("CreateManagerial", "ManagerialNotification")'>
+                                            <i class="glyphicon glyphicon-plus"></i> Add New
+                                        </a>
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_managerial_list" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Firstname</th>
+                                        <th>Surname</th>
+                                        <th>Email</th>
+                                        <th>Phonenumber</th>
+                                        <th>Category</th>
+                                        <th>Status</th>
+                                        @if (ViewBag.InstitutionCode == IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE || User.IsInRole("Super Admin"))
+                                        {
+                                            <th>Institution Name</th>
+                                        }
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        var dt_managerial_list = $("#dt_managerial_list").dataTable();
+        $("#dt_managerial_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_managerial_list").DataTable().search(this.value).draw();
+            $("#dt_managerial_list_wrapper .dt-toolbar").remove();
+        });
+
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetManagerialNotificationList", "ManagerialNotification")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_managerial_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var Display = 'display:none;';
+                    var InstitutionName = '';
+
+                    if ('@ViewBag.InstitutionCode' == '@IFMIS.Libraries.Constants.MOFP_INSTITUTION_CODE' || '@User.IsInRole("Super Admin")' ) {
+                        Display = '';
+                        InstitutionName = '<p style="' + Display + '">'+ data[i]["InstitutionName"] + "</p>";
+                    } else {
+                        InstitutionName = '<p style="' + Display + '">' + data[i]["InstitutionName"] + "</p>";
+                    }
+
+                    dt_managerial_list.fnAddData([i + 1,
+                       data[i]["Firstname"],
+                       data[i]["Lastname"],
+                       data[i]["Email"],
+                       data[i]["PhoneNumber"],
+                       data[i]["Category"],
+                       data[i]["Status"],
+                       InstitutionName,
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("EditManagerialNotification", "ManagerialNotification")/?id=' + data[i]["ManagerialNotificationId"] + '">Edit</a></li>\
+                                <li><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function cancelDialog(i) {
+            swal({
+                title: 'Cancel User ?',
+                text: "Do you what to Remove User : " + data[i]["Email"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelManagerialNotification(data[i]["ManagerialNotificationId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelManagerialNotification(managerialNotificationId) {
+            var url = '@Url.Action("CancelManagerialNotification", "ManagerialNotification")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": managerialNotificationId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("User Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal("Error Cancelling User", { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Cancelling User", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+    </script>
+}

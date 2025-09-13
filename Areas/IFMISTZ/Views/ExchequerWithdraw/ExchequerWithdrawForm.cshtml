@@ -1,0 +1,487 @@
+﻿@{
+    ViewBag.Title = "Exchequer Withdraw List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+
+                            <div class="row" align="center">
+                                <div class="col-lg-3 col-sm-3 col-md-3 col-xs-3"></div>
+                                <div class="col-lg-6 col-sm-6 col-md-6 col-xs-6">
+                                    @*<div class="input-group">*@
+                                    <table class="table" style="width:300px;border:0px;">
+                                        <tr>
+                                            <td><input class="form-control" id="FundingRefNo" name="FundingRefNo" style="max-width:300px;width:300px" autocomplete="off" placeholder="Enter Reference Number" type="text" /></td>
+                                            <td><button class="btn btn-info" id="search" onclick="searchForm()" type="submit">Search</button></td>
+                                        </tr>
+                                    </table>
+
+
+                                    @*</div>*@
+                                    @*<input type="text" name="FundingRefNo" id="FundingRefNo" class="form-control" placeholder="Enter Employee's Username or checknumber" style="width:300px" />*@
+                                </div>
+                                <div class="col-lg-3 col-sm-3 col-md-3 col-xs-3"></div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <br />
+                            <div class="row" align="center" id="ExchequerWithdrawTable">
+                                <div class="col-lg-12 col-sm-12 col-md-12 col-xs-12">
+                                    <div class="col-md-6"></div>
+                                        <div class="col-md-6">
+                                            <div class="search-container" style="float:right">
+                                                <i class="fa fa-search"></i>
+                                                <input type="search" name="search" placeholder="Search..." id="search-box">
+                                            </div>
+                                        </div>
+                                        <br />
+                                        <br />
+                                    <table id="dt_exchequer_withdraw_list" class="table table-bordered table-condensed table-amount">
+
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Vote Code</th>
+                                                <th>Vote Name</th>
+                                                <th>Exchequer Amount</th>
+                                                <th>Available Amount</th>
+                                                @*<th>Unavailable Amount</th>*@
+                                                <th>Withdraw Amount</th>
+                                                <th>Action</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody></tbody>
+                                        @*<tfoot>
+                                                <tr>
+                                                    <td colspan="3"><p align="right"><strong>Total</strong></p></td>
+                                                    <td><p align="right"><b><input type="text" id="OriginalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                    <td><p align="right"><b><input type="text" id="OperationalAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                    <td><p align="right"><b><input type="text" id="UnavailableAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                    <td><p align="right"><b><input type="text" id="WithdrawAmount" style="border: 0px none;text-align:right" /></b></p></td>
+                                                    <td></td>
+                                                </tr>
+                                            </tfoot>*@
+                                    </table>
+                                </div>
+                            </div>
+
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+<div class="modal fade" id="WithdrawModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Exchequer withdraw</h3>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Amount </div>
+                        <div class="col-md-8">
+                            <input type="hidden" name="WithdrawExchequerId" id="WithdrawExchequerId" />
+                            <input type="hidden" name="AvailableAmount" id="AvailableAmount" />
+                            <amount-input name="WithdrawAmount" id="WithdrawAmount" maxlength="16" onkeyup="validateWithdrawAmount()" style="width:100%;">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Description (<span style="font-weight:bold;" id="DescriptionCount">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Description" name="Description" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <button type="submit" class="btn btn-info" onclick="saveWithdrawExchequer()" id="exchequerStatus">Submit</button>
+                        <img src="~/Content/img/loading.gif" class="saveLoader2" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        $(".saveLoader2").toggle(false);
+        //SHOW LOADER ICON
+        //HIDE LOADER ICON
+        $(".loadingImg").hide();
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+        });
+
+        function WithdrawModelForm() {
+            $('#WithdrawModel').modal('show');
+        }
+
+
+        document.getElementById("ExchequerWithdrawTable").style.display = "none";
+
+        var dt_exchequer_withdraw_list = $("#dt_exchequer_withdraw_list").dataTable();
+        $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_exchequer_withdraw_list").DataTable().search(this.value).draw();
+            $("#dt_exchequer_withdraw_list_wrapper .dt-toolbar").remove();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        function ToCheckDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+
+        $('#Description').on("keyup", function () {
+            var count = $('#Description').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#DescriptionCount').text(parseInt(numChars));
+        });
+
+        var searchForm = function () {
+            var FundingRefNo = $("#FundingRefNo").val();
+
+            if (FundingRefNo == '') {
+                swal("Please Enter Reference Number");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('FundingRefNo', FundingRefNo);
+
+            $(".loadingImg").show();
+            $("#saveForm").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            $.ajax({
+                url: '@Url.Action("GetExchequerWithdrawLists", "ExchequerWithdraw")',
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    data = response.data;
+                    document.getElementById("ExchequerWithdrawTable").style.display = "block";
+                    var sumExchequerAmount = 0;
+                    var sumAvailableAmount = 0;
+                    var sumUnavailableAmount = 0;
+                    var sumWithdrawAmount = 0;
+                    var difference = 0;
+
+                    var Display = 'display:none;';
+
+                    dt_exchequer_withdraw_list.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var ExchequerAmount = 0;
+                        var AvailableAmount = 0;
+                        var UnavailableAmount = 0;
+                        var WithdrawAmount = 0;
+
+                        if (data[i]["ExchequerAmount"] != null) {
+                            sumExchequerAmount += data[i]["ExchequerAmount"];
+                            ExchequerAmount = "<p align='right'>" + data[i]["ExchequerAmount"].toLocaleString() +"</p>";
+                        } else {
+                            ExchequerAmount = "<p align='right'> 0 </p>";
+                        }
+
+                        if (data[i]["AvailableAmount"] != null) {
+                            sumAvailableAmount += data[i]["AvailableAmount"];
+                            AvailableAmount = "<p align='right'>" + data[i]["AvailableAmount"].toLocaleString() + "</p>";
+                        } else {
+                            AvailableAmount =  "<p align='right'> 0 </p>";
+                        }
+
+
+                        if (data[i]["WithdrawAmount"] != null) {
+                            sumWithdrawAmount += data[i]["WithdrawAmount"];
+                            WithdrawAmount = "<p align='right'>" + data[i]["WithdrawAmount"].toLocaleString() + "</p>";
+                        } else {
+                            WithdrawAmount =  "<p align='right'> 0 </p>";
+                        }
+
+                        if ((data[i]["AvailableAmount"] >= data[i]["WithdrawAmount"]) || data[i]["AvailableAmount"] != 0) {
+                            Display = '';
+                        }
+                        difference = sumExchequerAmount - sumAvailableAmount;
+                        sumUnavailableAmount = parseFloat(difference);
+                        dt_exchequer_withdraw_list.fnAddData([i + 1,
+                           data[i]["VoteCode"],
+                           data[i]["InstitutionName"],
+                           ExchequerAmount,
+                           AvailableAmount,
+                           //sumUnavailableAmount.toLocaleString(),
+                           WithdrawAmount,
+                           '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("ExchequerWithdrawDetails", "ExchequerWithdraw")/?id=' + data[i]["ExchequerWithdrawId"] + '">Details</a></li>\
+                            </ul>\
+                        </div>\ '
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    document.getElementById("ExchequerWithdrawTable").style.display = "hidden";
+                    swal(error);
+                }
+            });
+
+        }
+
+        function withdrawDialog(i) {
+            swal({
+                title: 'Exchequer Withdraw',
+                text: "Are you sure you want to Withdraw?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false);
+                    document.getElementById("WithdrawExchequerId").value = data[i]["WithdrawExchequerId"];
+                    document.getElementById("AvailableAmount").value = data[i]["AvailableAmount"];
+                    WithdrawModelForm();
+
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function validateWithdrawAmount() {
+            var WithdrawAmount = $("#WithdrawAmount").val();
+            var AvailableAmount = $("#AvailableAmount").val();
+
+            var withdrawAmountValue = $("#_WithdrawAmount").val();
+            withdrawAmountValue = withdrawAmountValue.split(',').join('');
+
+            if (parseFloat(withdrawAmountValue) <= 0) {
+                swal("Amount should not be Zero or Negative", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            else if (parseFloat(withdrawAmountValue) > parseFloat(AvailableAmount)) {
+                swal("Amount Entered Exceed Available Amount", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+            else {
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+            }
+        }
+        function saveWithdrawExchequer() {
+            var WithdrawExchequerId = $("#WithdrawExchequerId").val();
+            var AvailableAmount = $("#AvailableAmount").val();
+            var WithdrawAmount = $("#WithdrawAmount").val();
+            var Description = $("#Description").val();
+
+            if (WithdrawAmount == "") {
+                swal("Please Enter Amount to Withhdraw", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            var withdrawAmountValue = $("#_WithdrawAmount").val();
+            withdrawAmountValue = withdrawAmountValue.split(',').join('');
+
+            if (parseFloat(withdrawAmountValue) <= 0) {
+                swal("Amount should not be Zero or Negative", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            if (parseFloat(withdrawAmountValue) > parseFloat(AvailableAmount)) {
+                swal("Amount Entered Exceed Available Amount", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            if (Description == "") {
+                swal("Please Enter Description", { icon: "warning" });
+                $("#exchequerStatus").prop('disabled', false);
+                $(".saveLoader2").toggle(false);
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('WithdrawExchequerId', WithdrawExchequerId);
+            formData.append('OperationalAmount', parseFloat(AvailableAmount));
+            formData.append('WithdrawAmount', parseFloat(withdrawAmountValue));
+            formData.append('ComponentDesc', Description);
+            postFormData(formData);
+        }
+
+        function postFormData(formData) {
+            $(".loadingImg").show();
+            $("#exchequerStatus").prop('disabled', true);
+            $(".saveLoader2").toggle(true);
+            var url = '@Url.Action("saveWithdrawExchequer", "ExchequerWithdraw")';
+            var urlList = '@Url.Action("WithdrawExchequerList", "ExchequerWithdraw")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader2").toggle(true);
+                    if (response == "Success") {
+                        swal("Exchequer Withdraw Successfully", { icon: "success" })
+                            .then((m) => {
+                                window.location.replace(urlList);
+                            });
+                    } else {
+                        $("#exchequerStatus").prop('disabled', false);
+                        $(".saveLoader2").toggle(false);
+                        swal("An Error Occur on Saving Exchequer Withdrawal" + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#exchequerStatus").prop('disabled', false);
+                    $(".saveLoader2").toggle(false);
+                    swal("An Error has Occured, Please Contact Administrator", { icon: "warning" });
+                }
+            });
+        }
+
+    </script>
+}

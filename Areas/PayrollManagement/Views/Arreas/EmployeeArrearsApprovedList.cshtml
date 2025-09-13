@@ -1,0 +1,179 @@
+﻿
+@{
+    ViewBag.Title = "Approved";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br/>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3"></div>
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <!-- START ROW -->
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"><i class="fa fa-edit"></i></span>
+                        <h2> Employee(s) Arrears </h2>
+                    </header>
+                    <!-- widget div-->
+                    <div>
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="pull-right" style="margin-right:50px">
+                                    <a class="btn btn-default" onclick="rejectArrears()">
+                                        <i class="glyphicon glyphicon-remove-circle"></i> Reject
+                                    </a>
+                                </div>
+                            </div>
+                            <br />
+                            <table class="table table-striped table-bordered table-hover table-condensed" id="tblUsers">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Employee</th>
+                                        <th>CheckNumber</th>
+                                        <th>Payment Code</th>
+                                        <th>Payment Code Description</th>
+                                        <th>Amount</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                            <!-- end widget content -->
+                        </div>
+                        <!-- end widget div -->
+                    </div>
+                    <!-- end widget -->
+                </div>
+            </article>
+        </div>
+    </section>
+    <!-- end widget grid -->
+</div>
+@section pagespecific {
+    <script type="text/javascript">
+    $(function () {
+        BindDataTable();
+    });
+
+    var BindDataTable = function (response) {
+            var url = '@Url.Action("GetEmployeeArrearsApprovedList", "Arreas")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "FullName" },
+                    { "mData": "CheckNumber" },
+                    { "mData": "PaymentCodeIdentifier" },
+                    { "mData": "PaymentCodeDescription" },
+                    {
+                        "mData": "Amount",
+                        render: $.fn.dataTable.render.number(',', '.', 2),
+                        className: "text-right"
+                    },
+                    { "mData": "OverallStatus" },
+                    {
+                        "mData": "EmployeeArrearsId",
+                        "bSortable": false,
+                        "render": function (EmployeeArrearsId, type, full, meta) {
+                                 return '<input type="checkbox" value="' + EmployeeArrearsId + '" class="checkBoxConfirm">'
+                        }
+                    },
+                ]
+            });
+        };
+
+
+        function rejectArrears() {
+             var csvIds = [];
+             $("input:checkbox.checkBoxConfirm").each(function () {
+                 if ($(this).prop("checked")) {
+                     csvIds.push($(this).val());
+                 }
+             });
+
+             if (csvIds.length == 0) {
+                 swal("No record selected!");
+
+                 return;
+             }
+
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "Save",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    rejectPost(remark, csvIds);
+                };
+            });
+
+            $('#confirmModal').modal('hide');
+        }
+
+    function rejectPost(remark, csvIds) {
+
+        $('#resultLoading').show();
+
+            $.ajax({
+                type: "post",
+                url:  '@Url.Action("RejectArreas", "Arreas")',
+                data: { "ids": csvIds, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else if (response == "DbException"){
+                        swal("Error on rejecting Employee!", { icon: "error" }).then((e) => {
+                        });
+                    }
+                },
+                failure: function (error){
+                    swal(error);
+                }
+            });
+        }
+
+    </script>
+}
+
+
+
+
+
+

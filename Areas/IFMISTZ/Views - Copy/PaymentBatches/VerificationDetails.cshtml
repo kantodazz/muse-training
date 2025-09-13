@@ -1,0 +1,573 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.BulkPayment>
+@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 180px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Payment Details List </h2>
+                    </header>
+                    <div>
+                        <div style="padding-left:20px;">
+                        <a href="@Url.Action("Verification","PaymentBatches")" class="btn btn-info">
+                            <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                            Back
+                        </a>
+                      
+                        </div>
+                        <hr class="simple" />
+                        <div class="table-responsive">
+                            @{
+                                int i = 0;
+                                int j = 0;
+                                decimal? totalAmount = 0;
+                                decimal? operationalAmountGL = 0;
+                            }
+
+
+
+                            <div class="col-md-12">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+
+                                            <div class="widget-body" style="padding-top:10px">
+                                                <div class="row">
+                                                    <div class="col-md-7">
+                                                        <div class="payee-entry">
+                                                            <div class="entry-label">Payment Batch Summary</div>
+                                                            <div style="padding-left:20px">
+                                                                <div class="row">
+                                                                    <div class="col-md-7">
+                                                                        <table>
+                                                                            <tr>
+                                                                                <th>Batch Number: </th>
+                                                                                <td>@ViewBag.Batch.BatchNo</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th>Batch Description:</th>
+                                                                                <td>@ViewBag.Batch.BatchDesc</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th>No of Transactions:</th>
+                                                                                <td>@ViewBag.Batch.NoTrx</td>
+                                                                            </tr>
+                                                                            <tr>
+                                                                                <th>Total Amount:</th>
+                                                                                <td>@string.Format("{0:#,0.00}", ViewBag.Batch.TotalAmount)</td>
+                                                                            </tr>
+
+                                                                            <tr>
+                                                                                <th>Overallstatus:</th>
+                                                                                <td>@ViewBag.Batch.OverallStatus</td>
+                                                                            </tr>
+                                                                            @if (ViewBag.Batch.OverallStatusDescription == "" || ViewBag.Batch.OverallStatusDescription == null)
+                                                                            {
+                                                                                <tr class="hidden"></tr> }
+                                                                            else
+                                                                            {
+                                                                                <tr>
+                                                                                    <th>OverallStatus Description:</th>
+                                                                                    <td>@ViewBag.Batch.OverallStatusDescription</td>
+                                                                                </tr>
+                                                                            }
+
+                                                                            @if (ViewBag.Batch.RejectedReason == "" || ViewBag.Batch.RejectedReason == null)
+                                                                            {
+                                                                                <tr class="hidden"></tr> }
+                                                                            else
+                                                                            {
+                                                                                <tr>
+                                                                                    <th>Reason:</th>
+                                                                                    <td>@ViewBag.Batch.RejectedReason</td>
+                                                                                </tr>
+                                                                            }
+                                                                        </table>
+                                                                    </div>
+
+                                                                </div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+                                                    <div class="col-md-12">
+                                                        <div class="searchContainer" style="float:right">
+                                                            <i class="fa fa-search searchIcon"></i>
+                                                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <table id="dt_basicGL" class="table table-bordered table-hover table-condensed table-responsive" style="width:100%">
+                                                    <thead>
+                                                        <tr>
+
+                                                            <th>#</th>
+
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.BeneficiaryCode)
+                                                            </th>
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.BeneficiaryName)
+                                                            </th>
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.BeneficiaryAccountNo)
+                                                            </th>
+
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.BankBic)
+                                                            </th>
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.BankName)
+                                                            </th>
+                                                            <th style="text-align:right">
+                                                                @Html.DisplayNameFor(model => model.Amount)
+                                                            </th>
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.PaymentDescription)
+                                                            </th>
+
+                                                            <th>
+                                                                @Html.DisplayNameFor(model => model.OverallStatus)
+                                                            </th>
+
+                                                            @*<th></th>*@
+
+                                                        </tr>
+
+                                                    </thead>
+
+                                                    @foreach (var item in Model)
+                                                    {
+                                                        i++;
+                                                        <tr>
+
+                                                            <td>@i</td>
+
+
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.BeneficiaryCode)
+                                                            </td>
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.BeneficiaryName)
+                                                            </td>
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.BeneficiaryAccountNo)
+                                                            </td>
+
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.BankBic)
+                                                            </td>
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.BankName)
+                                                            </td>
+
+
+                                                            <td style="text-align: right">
+                                                                @string.Format("{0:#,0.00}", item.Amount)
+                                                            </td>
+
+
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.PaymentDescription)
+                                                            </td>
+
+                                                            <td>
+                                                                @Html.DisplayFor(modelItem => item.OverallStatus)
+                                                            </td>
+
+                                                        </tr>
+
+                                                    }
+
+                                                </table>
+                                            </div>
+
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+
+
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!--Start of delete confirmation modal section-->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-danger" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm Delete</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p class="success-message">Are you sure you want to delete this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info confirm-confirm">Yes</button>
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+
+@section pagespecific{
+    <script>
+
+        $("#matchbtn").attr('disabled', true);
+
+        var dt_basicBank = $('#dt_basicBank').dataTable();
+        $("#dt_basicBank_wrapper .dt-toolbar").remove();
+        $("#searchboxBank").on("keyup search input paste cut", function () {
+            dt_basicBank.DataTable().search(this.value).draw();
+        });
+
+        var dt_basicGL = $('#dt_basicGL').dataTable();
+        $("#dt_basicGL_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_basicGL.DataTable().search(this.value).draw();
+        });
+
+        $(document).ready(function () {
+
+            $('#CheckDate').datepicker({
+                dateFormat: 'dd/mm/yy',
+                prevText: '<i class="fa fa-chevron-left"></i>',
+                nextText: '<i class="fa fa-chevron-right"></i>',
+                onSelect: function (selectedDate) {
+                    $('#CheckDate').datepicker('option', selectedDate);
+                }
+            });
+        });
+        var checkedRows = [];
+        var checkedRows2 = [];
+        var search = function () {
+            checkedRows = [];
+            checkedRows2 = [];
+            var AccountNumber = $("#BankAccount").val();
+            var chkDate = $("#CheckDate").val();
+            var url = '@Url.Action("BanktoBankOutStanding", "Reconcilliation")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { AccountNumber: AccountNumber, chkDate: chkDate },
+                success: function (response) {
+                    $("#searchResults").show();
+                    $("#searchResults").html(response);
+                }
+            });
+        };
+
+
+        $(document).on("click", ".cbCheckAll1", function () {
+            $(".checkBox1").prop('checked',
+              $(this).prop('checked'));
+        });
+
+        $(document).on("click", ".cbCheckAll", function () {
+            $(".checkBoxBank").prop('checked',
+              $(this).prop('checked'));
+        });
+
+
+        var matching = function () {
+            var bankIds = [];
+
+            $("input:checkbox.checkBox1").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+
+                }
+            });
+
+
+            $("input:checkbox.checkBoxBank").each(function () {
+                if ($(this).prop("checked")) {
+                    bankIds.push($(this).val());
+                }
+            });
+
+            if (bankIds.length <= 0) {
+                alert("Select transaction to Match!");
+
+                return;
+            }
+
+            $("#responseModal").modal('show');
+            $(".delete-confirm").click(function () {
+                var url = '@Url.Action("BanktoBankMatching", "Reconcilliation")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: { bankIds: bankIds },
+                    success: function (response) {
+                        if (response == "Success") {
+                            //alert("successfully.");
+                            //location.reload();
+                            if ($('.modal-header').hasClass('alert-info')) {
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                            }
+                            $('.success-message').html('Matched successfully');
+                        }
+                    },
+                    error: function (err) {
+                        alert(err.statusText);
+                    },
+                });
+            })
+        };
+
+        $(document).ready(function () {
+            var responsiveHelper_dt_basicBank = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+        })
+
+
+        //===BANK CR====
+        function rowChecked(rowId) {
+            if ($("#row-" + rowId).is(":checked")) {
+                checkedRows.push(rowId);
+            } else {
+                remove(checkedRows, rowId);
+            }
+            totalAmountSelectedCr();
+            match();
+        }
+
+        $("#matchbtn").attr('disabled', true);
+        function match() {
+            var x = $("#totalAmountSelectedBankDr").text();
+            var y = $("#totalAmountSelectedBank").text();
+
+            x = parseFloat(x.split(",").join(""));
+            y = parseFloat(y.split(",").join(""));
+
+            if (x == y && y != 0) {
+                $("#match").text("Matched Amount");
+                $("#matchbtn").attr('disabled', false);
+            } else {
+
+                $("#matchbtn").attr('disabled', true);
+                $("#match").text("Unmatched Amount");
+            }
+        }
+
+        function totalAmountSelectedCr() {
+            var TotalAmount = 0;
+            if (checkedRows.length > 0) {
+                var data = dt_basicBank.DataTable().rows().data();
+                checkedRows.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                    TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+                });
+
+                $("#totalAmountSelectedBank").text(TotalAmount.toLocaleString());
+            } else {
+
+                $("#totalAmountSelectedBank").text(0);
+            }
+        }
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        //=====END BANK CR====//
+
+        //===BANK DR====
+        function rowChecked2(rowId) {
+            if ($("#row2-" + rowId).is(":checked")) {
+                checkedRows2.push(rowId);
+            } else {
+                remove2(checkedRows2, rowId);
+            }
+            totalAmountSelectedDr();
+            match();
+        }
+
+        function totalAmountSelectedDr() {
+            var TotalAmount = 0;
+            if (checkedRows2.length > 0) {
+                var data = dt_basicGL.DataTable().rows().data();
+                checkedRows2.forEach(rowId=> {
+                    var row = data.rows(rowId).data()[0];
+                    TotalAmount = TotalAmount + parseFloat(row[5].split(",").join("").split(")").join("").split("(").join(""));
+                });
+                $("#totalAmountSelectedBankDr").text(TotalAmount.toLocaleString());
+            } else {
+
+                $("#totalAmountSelectedBankDr").text(0);
+            }
+        }
+
+        function remove2(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        //function checkAll(rowId) {
+        //    console.log(rowId);
+        //    $("#totalAmountSelectedBankDr").text(0);
+        //    var data = dt_basicGL.DataTable().rows().data();
+        //    if ($("#row2-" + rowId).is(":checked")) {
+        //        for (var i = 0; i < data.length; i++) {
+        //            if (i !== rowId)
+        //                $("#row2-" + i).prop('disabled', true);
+        //        }
+        //        var row = data.rows(rowId).data()[0];
+        //        $("#totalAmountSelectedBankDr").text(row[5].toLocaleString());
+        //        match();
+        //    } else {
+        //        for (var i = 0; i < data.length; i++) {
+        //            $("#row2-" + i).prop('disabled', false);
+        //        }
+        //        $("#totalAmountSelectedBankDr").text(" ");
+        //        match();
+        //    }
+        //}
+
+        var cancelpayment = function (id) {
+            debugger
+            if ($('.modal-header').hasClass('alert-info')) {
+                $('.modal-header').removeClass('alert-info').addClass('alert-danger');
+            }
+            $('.success-message').html('').html('Are you sure you want to delete this record ?');
+            $('.confirm-confirm').css('display', 'none');
+            $('.delete-confirm').css('display', 'inline');
+            $("#modal").modal({
+                backdrop: "static",
+                keyboard: false
+            });
+
+            $(".delete-confirm").click(function () {
+                debugger
+                if (id != "") {
+                    var url = '@Url.Action("DeleteConfirmed","BulkPayments")';
+                    $.ajax({
+                        url: url,
+                        data: { id: id },
+                        type: "POST",
+                        success: function (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show info message.
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-danger')) {
+                                    $('.modal-header').removeClass('alert-danger').addClass('alert-info');
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.confirm-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                } else {
+                                    //hide ok button as it is not necessary
+                                    $('.delete-confirm').css('display', 'none');
+                                    $('.confirm-confirm').css('display', 'none');
+                                    $('.delete-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Record deleted successfully');
+                            }
+                            else {
+                                //hide ok button as it is not necessary
+                                $('.delete-confirm').css('display', 'none');
+                                $('.delete-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                                $('.success-message').html(response);
+                            }
+                        }, error: function (err) {
+                            if (!$('.modal-header').hasClass('alert-danger')) {
+                                $('.modal-header').removeClass('alert-info').addClass('alert-danger');
+                                $('.delete-confirm').css('display', 'none');
+                            }
+                            $('.success-message').html(err.statusText);
+                        }
+                    });
+                }
+            });
+        };
+
+        //function to reset bootstrap modal popups
+        $('#modal').on('hidden.bs.modal', '.modal', function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to delete this record ?');
+        });
+
+    </script>
+
+}

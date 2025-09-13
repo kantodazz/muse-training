@@ -1,0 +1,224 @@
+﻿@{
+    ViewBag.Title = "Psssf Employer Contribution Details";
+}
+<link href="~/Content/css/custom.css" rel="stylesheet" />
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table  table-hover table-condensed" id="leftData"></table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table  table-hover table-condensed" id="rightData"></table>
+                        </div>
+                    </div>
+                    <div>
+                        <h2>Paid Vouchers</h2>
+                        <table id="dt_table_vouchers" class="table table-bordered table-condensed table-amount">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>PvNo</th>
+                                    <th>AccountName</th>
+                                    <th>AccountNumber</th>
+                                    <th>OverallStatus</th>
+                                    <th>Amount</th>
+                                    <th>Created At</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                    <div>
+                        <div>
+                            <h2>Search Employee(s)</h2> <i> [CheckDate is required; Provide Vote, CheckNumber, or both]</i>
+                        </div>
+                        <div style="padding: 4px">
+                            <div style="display: flex; justify-content: space-between;">
+                                <div>CheckDate(*): <input type="date" style="margin-right: 10px;" id="checkDate" /></div>
+                                <div>VoteCode: <input type="text" style="margin-right: 10px;" id="voteCode" /></div>
+                                <div>CheckNumber: <input type="text" style="margin-right: 10px;" id="checkNumber" /></div>
+                                <div><button class="btn btn-info" onclick="loadData()" id="loadData">SEARCH</button></div>
+                            </div>
+                        </div>
+                        <table id="dt_table" class="table table-bordered table-condensed">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Claim Ref</th>
+                                    <th>VoteCode</th>
+                                    <th>CheckNumber</th>
+                                    <th>FullName</th>
+                                    <th>ContributionCode</th>
+                                    <th>EmployerContribution</th>
+                                    <th>MonthlySalary</th>
+                                    <th>OverallStatus</th>
+                                    <th>ReconStatus</th>
+                                </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+
+    <script>
+
+        var dt_table = $('#dt_table').dataTable();
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        var dt_table_vouchers = $('#dt_table_vouchers').dataTable();
+        $("#dt_table_vouchers_wrapper .dt-toolbar").remove();
+
+        var data = [];
+        function loadData() {
+            var checkDate = $("#checkDate").val()
+            if (!checkDate) {
+                swal("Invalid check date");
+                return;
+            }
+
+            $("#loadData").text("LOADING...");
+            $("#loadData").prop('disabled', true);
+
+            var voteCode = $("#voteCode").val();
+            var checkNumber = $("#checkNumber").val();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("SearchPsssfEmployeeContribution", "SalaryDeductionPayment")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+                data: {
+                    checkDate, voteCode: voteCode.trim(),
+                    checkNumber: checkNumber.trim()
+                },
+                success: function (response) {
+                    $("#loadData").text("SEARCH");
+                    $("#loadData").prop('disabled', false);
+                    var data = response.data;
+
+                dt_table.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+
+                    dt_table.fnAddData([i+1,
+                        data[i].ClaimRef,
+                        data[i].VoteCode,
+                        data[i].CheckNumber,
+                        `${data[i].FirstName} ${data[i].MiddleName} ${data[i].LastName}`,
+                        data[i].ContributionCode,
+                        toLabel(data[i].EmployerContribution),
+                        toLabel(data[i].MonthlySalary),
+                        data[i].OverallStatus,
+                        data[i].OverallStatusDescription,
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+        }
+
+        function openViewDialog(d) {
+            let leftData = '';
+            let rightData = '';
+
+            const render = (key, value) => {
+                if (['CheckDate','Id'].includes(key)) return;
+                if (key == "CheckDateFormatted") {
+                    $("#checkDate").val(formatDateForInput(value))
+                    return `<tr><th>CheckDate</th><td>${value}</td></tr>`
+                }
+                return `<tr><th>${key}</th><td>${String(value || "NA").split("|").join("-")}</td></tr>`
+            }
+
+            let switcher = true
+            Object.keys(d).forEach((key) => {
+                let value = d[key]
+                if ((value && !["NA", "N/A"].includes(value)) || value == 0) {
+                    var output = render(key, value);
+                    if (output) {
+                        if (switcher) {
+                            leftData += output
+                        } else {
+                            rightData += output;
+                        }
+                        switcher = !switcher
+                    }
+                }
+            })
+
+            document.getElementById('leftData').innerHTML = leftData;
+            document.getElementById('rightData').innerHTML = rightData;
+        }
+
+     function loadSummary() {
+          $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetPendingPsssfContribution", "SalaryDeductionPayment")',
+              data: { id: '@ViewBag.id' },
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+              success: function (response) {
+                  openViewDialog(response.data || {})
+          },
+          failure: function (error) {
+              swal(error);
+          }
+      });
+        }
+
+        loadSummary()
+
+         function GetPaidVouchers(){
+             $.ajax({
+                 type: "GET",
+                 url: '@Url.Action("GetPaidVouchers", "SalaryDeductionPayment")',
+                 data: { id: '@ViewBag.id' },
+                 contenttype: "application/json; charset=utf-8",
+                 datatype: "json",
+                 success: function (response) {
+                     var data = response.data;
+                     dt_table_vouchers.fnClearTable();
+                     for (var i = 0; i < data.length; i++) {
+                         dt_table_vouchers.fnAddData([i+1,
+                             data[i].PVNo,
+                             data[i].PayeeBankName,
+                             data[i].PayeeBankAccount,
+                             data[i].OverallStatus,
+                             toLabel(data[i].OperationalAmount),
+                             data[i].CreatedAtFormatted,
+                         ]);
+                         }
+                 },
+    failure: function (error) {
+        swal(error);
+    }
+});
+}
+        GetPaidVouchers()
+        function formatDateForInput(dateStr) {
+            var parts = dateStr.split('/');
+            if (parts.length !== 3) return null; // invalid format
+
+            var day = parts[0].padStart(2, '0');
+            var month = parts[1].padStart(2, '0');
+            var year = parts[2];
+
+            return `${year}-${month}-${day}`;
+        }
+    </script>
+}

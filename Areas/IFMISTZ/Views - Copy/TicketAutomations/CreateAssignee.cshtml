@@ -1,0 +1,425 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.TicketAutomation
+@{
+    ViewBag.Title = "Automatic Ticket Assignment";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Automatic Ticket Assignment</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+
+                            <div class="row" style="padding:1% 5% 0 5%;">
+                                @if (ViewBag.CountLevels > 0 && ViewBag.SupportTeam > 0)
+                                {
+                                    <div class="col-md-6 col-lg-6 col-sm-12 ">
+                                        <table>
+
+                                            @Html.AntiForgeryToken()
+                                            <tr>
+                                                <td class="form-label">
+                                                    Check Number
+                                                    <i class="fa fa-times" style="color:white" id="UserId_1"></i>
+                                                </td>
+                                                <td>
+                                                    <input type="text" name="UserId" id="UserId" class="form-control" placeholder="Enter Employee's username or checknumber" style="width:300px" />
+                                                </td>
+                                            </tr>
+                                            @*<tr>
+                                                    <td>Module Name</td>
+                                                    <td>
+                                                        <select id="ModuleId" name="ModuleId" style="width:300px">
+                                                            @if (ViewBag.Modules != null)
+                                                            {
+                                                                <option>Select Module</option>
+                                                                foreach (var module in ViewBag.Modules)
+                                                                {
+                                                                    <option value='@module.ModulesId'>@module.ModuleName</option>
+                                                                }
+                                                            }
+                                                            }
+
+                                                        </select>
+                                                    </td>
+                                                </tr>*@
+                                            <tr>
+                                                <td>Ticket Levels</td>
+                                                <td>
+                                                    <select id="LevelsId" name="LevelsId" style="width:300px">
+                                                        @if (ViewBag.Levels != null)
+                                                        {
+                                                            <option>Select Level</option>
+                                                            foreach (var level in ViewBag.Levels)
+                                                            {
+                                                                <option value='@level.LevelsId'>@level.LevelName</option>
+                                                            }
+                                                        }
+                                                        }
+
+                                                    </select>
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>Priority</td>
+                                                <td>
+                                                    @Html.DropDownList("Priority", new List<SelectListItem>
+                                                    {
+                                                    new SelectListItem{ Text="--Select ---", Value = "" },
+                                                     new SelectListItem{ Text="All", Value = "5" },
+                                                    new SelectListItem{ Text="Normal", Value = "1" },
+                                                    new SelectListItem{ Text="Medium", Value = "2" },
+                                                   new SelectListItem{ Text="High", Value = "3" },
+                                                   new SelectListItem{ Text="Urgent", Value = "4" }
+                                                    }, new { @class = "form-control", style = "width:300px;" })
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    Status
+
+                                                </td>
+                                                <td>
+                                                    @Html.DropDownList("Status", new List<SelectListItem>{
+                                                new SelectListItem{ Text="--Select ---", Value = "" },
+                                                new SelectListItem{ Text="ACTIVE", Value = "Active" },
+                                                new SelectListItem{ Text="INACTIVE", Value = "Inactive" },
+                                                 }, new { @class = "form-control", @required = "required", style = "width:300px;" })
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td>
+                                                    Notification
+                                                    <i class="fa fa-times" style="color:white" id="Status_1"></i>
+                                                </td>
+                                                <td>
+                                                    @Html.DropDownList("Notification", new List<SelectListItem>{
+                                                new SelectListItem{ Text="--Select ---", Value = "" },
+                                                new SelectListItem{ Text="EMAIL", Value = "Email" },
+                                                new SelectListItem{ Text="SMS", Value = "SMS" },
+                                                 new SelectListItem{ Text="EMAIL & SMS", Value = "Email and SMS" },
+                                                 }, new { @class = "form-control", @required = "required", style = "width:300px;" })
+                                                </td>
+                                            </tr>
+
+                                            <tr>
+                                                <td></td>
+                                                <td>
+                                                    <a class="btn btn-info" href='@Url.Action("TicketAutomationsList", "TicketAutomations")' style="margin-right:5px">
+                                                        <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                                    </a>
+                                                    <button type="submit" class="btn btn-info" id="form_submision">
+                                                        <i class="fa fa-save"></i>Save
+                                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+
+                                        </table>
+                                    </div>
+
+                                    <div class="col-lg-6 col-sm-12 ">
+                                        <table>
+                                            <tr>
+                                                <td>Checknumber</td>
+                                                <td><input type="text" name="CheckNumber" id="CheckNumber" readonly style="width:300px" /></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Firstname</td>
+                                                <td><input type="text" name="FirstName" id="FirstName" readonly style="width:300px" /></td>
+                                            </tr>
+                                            @*<tr>
+                                                <td>Middlename</td>
+                                                <td><input type="text" name="MiddleName" id="MiddleName" readonly style="width:300px" /></td>
+                                            </tr>*@
+                                            <tr>
+                                                <td>Lastname</td>
+                                                <td><input type="text" name="LastName" id="LastName" readonly style="width:300px" /></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Email</td>
+                                                <td><input type="text" name="Email" id="Email" readonly style="width:300px" /></td>
+                                            </tr>
+                                            <tr>
+                                                <td>Phone number</td>
+                                                <td><input type="text" name="PhoneNumber" id="PhoneNumber" readonly style="width:300px" /></td>
+                                            </tr>
+                                        </table>
+
+                                    </div>
+
+
+                                    <div class="row">
+                                        <div class="col-md-2"></div>
+                                        <div class="col-md-6">
+
+
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        if ('@ViewBag.CountLevels' == 0) {
+            swal("Levels not Found,Consult Administrator to add Levels", { icon: "warning" })
+                              .then((value) => {
+                                  var url = '@Url.Action("TicketAutomationsList", "TicketAutomations")';
+                                  window.location.replace(url);
+                              });
+        }
+
+        if ('@ViewBag.SupportTeam' == 0) {
+            swal("Support Team not Found,Consult Administrator to add Support Teams", { icon: "warning" })
+                              .then((value) => {
+                                  var url = '@Url.Action("TicketAutomationsList", "TicketAutomations")';
+                                  window.location.replace(url);
+                              });
+        }
+
+        $(function () {
+
+            var url = '@Url.Action("GetEmployees", "TicketAutomations")';
+
+            $("#UserId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                placeholder: 'Select Employee',
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.employees }; // data.CountryList returning json data from Controlle
+                    }
+                }
+            });
+        });
+
+        $('#UserId').on("change", function () {
+            var employeeId = $("#UserId").val();
+            $.ajax({
+                type: "POST",
+                url: "GetEmployee",
+                data: { id: employeeId },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#CheckNumber").val(data.CheckNumber);
+                        $("#UserName").val(data.UserName);
+                        $("#FirstName").val(data.FirstName);
+                        $("#MiddleName").val(data.MiddleName);
+                        $("#LastName").val(data.LastName);
+                        $("#PhoneNumber").val(data.PhoneNumber);
+                        $("#Email").val(data.Email);
+                    } else {
+                        alert('Error on accessing employee details');
+                    }
+                },
+                error: function () {
+                    alert("Error on accessing employee details");
+                }
+            })
+        });
+
+
+
+        // =========== FORM SUBMISSION ==================
+        $("#saveLoader").toggle(false);
+        $("#form_submision").click(function () {
+            var UserId = $("#UserId").val();
+            var LevelsId = $("#LevelsId").val();
+            var Status = $("#Status").val();
+            var Notification = $("#Notification").val();
+            var Priority = $("#Priority").val();
+
+            var notificationValue = null;
+            if (Notification == '') {
+                notificationValue = "Email";
+            }
+            else {
+                notificationValue = Notification;
+            }
+
+            if (LevelsId != '' && UserId != '' && Status != '' && Priority != '') {
+                try {
+
+                    var form_data = {
+                        "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+                        "UserId": $("#UserId").val(),
+                        "LevelsId": $("#LevelsId").val(),
+                        "Priority": $("#Priority").val(),
+                        "Status": $("#Status").val(),
+                        "Notification": notificationValue,
+                    }
+
+                    console.log(form_data);
+                    var url = '@Url.Action("CreateAssignee", "TicketAutomations")';
+                    var urlList = '@Url.Action("TicketAutomationsList", "TicketAutomations")';
+                    $("#form_submision").prop('disabled', true);
+                    $("#saveLoader").toggle(true);
+                    $.ajax({
+                        type: "post",
+                        url: url,
+                        data: form_data,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                            $("#form_submision").prop('disabled', false);
+                            $("#saveLoader").toggle(false);
+                            if (response == "Success") {
+                                swal("Ticket Automation Assigned Successfully!", { icon: "success" })
+                                    .then((value) => {
+                                        window.location.href = urlList;
+                                    });
+                            }
+                            else {
+                                swal(response);
+                            }
+                        },
+                        failure: function (error) {
+                            $("#form_submision").prop('disabled', false);
+                            $("#saveLoader").toggle(false);
+                            swal(error);
+                        }
+                    });
+
+                } catch (e) {
+                    swal("Error Saving. Please consult system administrator!");
+                }
+            } else {
+                swal("Please  Fill all the Required Form Fields");
+            }
+
+
+        });
+
+    </script>
+}
+
+

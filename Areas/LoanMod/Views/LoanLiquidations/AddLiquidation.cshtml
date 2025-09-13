@@ -1,0 +1,216 @@
+﻿@{
+    ViewBag.Title = "Liquidation";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Search Loan</h2>
+                    </header>
+                    <div>
+                        <hr class="simple" />
+                        <div class="table-responsive">
+                            <div class="col-md-12">
+                                <section id="widget-grid">
+                                    <div class="row">
+                                        <article class="col-sm-12 col-md-12 col-lg-12">
+                                            <div class="widget-body" style="padding-top:10px; min-height: 50px">
+                                                <div class="row">
+                                                        <div class="form-group">
+                                                            <label class="control-label col-md-2">Loan Number:</label>
+                                                            <div class="col-md-4">
+                                                                <input type="text" id="LoanApplication" class="form-control" />
+                                                            </div>
+                                                        </div>
+                                                </div>
+                                            </div>
+                                        </article>
+                                    </div>
+                                </section>
+                            </div>
+                        </div>
+                        <hr class="simple" />
+                        <hr />
+                        <div id="Loanapp">
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        $(document).ready(function () {
+            var url = '@Url.Action("GetLoanApplication", "LoanLiquidations")';
+            debugger;
+            $("#LoanApplication").select2({
+                minimumInputLength: 3,
+                width: 'resolve',
+                ajax: {
+                    url: url,
+                    type: "POST",
+                    dataType: 'json',
+                    data: function (searchQuery) {
+                        return {
+                            searchQuery: searchQuery,
+                        };
+                    },
+                    results: function (data, page) {
+                        return {
+                            results: data.application
+                        };
+                    }
+                }
+            });
+        });
+
+        $("#LoanApplication").change(function () {
+            debugger
+            var LoanApplication = $("#LoanApplication").val();
+            var url = '@Url.Action("GetApplication", "LoanLiquidations")';
+            url += '?LoanApplication=' + LoanApplication;
+            $.ajax({
+                url: url,
+                datatype: "json",
+                type: "Post",
+                contenttype: 'application/json; charset=utf-8',
+                async: true,
+                success: function (data) {
+                    $("#Loanapp").html(data);
+                },
+                error: function (xhr) {
+                    swal('Error please contact system admin');
+                }
+            })
+        });
+
+        function attach() {
+            debugger
+            var form_data = {
+                "Attachment": $("#Attachment").val(),
+                "Remark": $("#Remark").val(),
+                "LiquidationCategoryName": $("#LiquidationCategory").val(),
+                "LoanApplicationId": $("#LoanApplicationId").val(),
+            }
+            console.log(form_data);
+            var url = '@Url.Action("liquidated", "LoanLiquidations")';
+            var urlList = '@Url.Action("LiquidationList", "LoanLiquidations")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.href = urlList;
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+
+
+        }
+
+    </script>
+}
+

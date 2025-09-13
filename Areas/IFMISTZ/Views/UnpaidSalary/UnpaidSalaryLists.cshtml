@@ -1,0 +1,458 @@
+﻿@{
+    ViewBag.Title = "Unpaid Salary List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .widget-body {
+        position: relative;
+    }
+
+    .loadingImg {
+        margin-left: auto;
+        margin-right: auto;
+        position: absolute;
+        top: 50%;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("UploadAtSourcePayment", "AtSourcePayment")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" id="ImageLoader" />
+                            </div>
+                            <table id="dt_unpaid_salary_list" class="table table-bordered table-condensed table-amount">
+
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>At Source Type</th>
+                                        <th>Account From</th>
+                                        <th>Account From Name</th>
+                                        <th>Account To</th>
+                                        <th>Account To Name</th>
+                                        <th>Check Date</th>
+                                        <th>Status</th>
+                                        <th>No of Transactions</th>
+                                        <th>Total Amount</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<div class="modal fade" id="RejectModel">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <center><h3 class="modal-title">Cancellation of Unpaid Salary</h3></center>
+            </div>
+            @Html.AntiForgeryToken()
+            <div class="modal-body">
+
+                <div class="form-horizontal">
+
+                    <div class="form-group">
+                        <div class="col-md-3"> Remarks (<span style="font-weight:bold;" id="Remarks3Count">250</span>) </div>
+                        <div class="col-md-8">
+                            <textarea class="form-control" id="Remarks3" name="Remarks3" maxlength="250" rows="3"></textarea>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+            <div class="modal-footer">
+                <div class="form-group">
+                    <div class="col-md-2"></div>
+                    <div class="col-md-3">
+                        <input type="submit" value="Submit" class="btn btn-info" onclick="cancelUnpaidSalaryForm()" id="allocationStatus" />
+                        <img src="~/Content/img/loading.gif" class="saveLoader" />
+                    </div>
+                    <div class="col-md-7"></div>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+</div>
+
+
+<div class="modal fade" id="RemarkDialog">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 align="center">Remarks</h4>
+            </div>
+
+            <div class="modal-body">
+                <span id="Remarks"></span>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-info" data-dismiss="modal">Ok</a>
+
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+
+    <script>
+        $(".saveLoader").toggle(false);
+        //SHOW LOADER ICON
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+            document.getElementById("ImageLoader").style.marginLeft = "auto";
+            document.getElementById("ImageLoader").style.marginRight = "auto";
+            document.getElementById("ImageLoader").style.position = "absolute";
+            document.getElementById("ImageLoader").style.top = "50%";
+        });
+
+        var dt_unpaid_salary_list = $("#dt_unpaid_salary_list").dataTable();
+        $("#dt_unpaid_salary_list_wrapper .dt-toolbar").remove();
+
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_unpaid_salary_list").DataTable().search(this.value).draw();
+            $("#dt_unpaid_salary_list_wrapper .dt-toolbar").remove();
+        });
+
+        function ToJavaScriptDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        function ToCheckDate(value) {
+            if (value != null && value != '') {
+                var pattern = /Date\(([^)]+)\)/;
+                var results = pattern.exec(value);
+                var dt = new Date(parseFloat(results[1]));
+                return (dt.getMonth() + 1) + "/" + dt.getFullYear();
+            }
+        }
+
+        var data = [];
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetUnpaidSalaryLists", "UnpaidSalary")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_unpaid_salary_list.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var Display = 'display:none;';
+                    Display = '';
+                    var overallStatus = '';
+
+                    var totalAllocationAmount = data[i]["TotalDeductionAmount"];
+                    if (totalAllocationAmount != null) {
+                        totalAllocationAmount = "<p align='right'>" + toLabel(data[i]["TotalDeductionAmount"]); +"</p>"
+                    } else {
+                        totalAllocationAmount = "<p align='right'>" + data[i]["TotalDeductionAmount"]; +"</p>"
+                    }
+
+                    var totalNoTransactions = "<p align='right'>" + (data[i]["TotalNumEmployees"]); +"</p>";
+
+                    if (data[i]["Remarks"] != null) {
+                        var remarks = '<a href="#" onclick="remarkDialog(' + i + ')"><i class="fa fa-eye"></i>' + data[i]["PayerBankAccount"] + '</a>';
+                    } else {
+                        remarks = data[i]["PayerBankAccount"]
+                    }
+
+                        overallStatus = data[i]["OverallStatus"];
+
+                    dt_unpaid_salary_list.fnAddData([i + 1,
+                       data[i]["DeductionType"],
+                       remarks,
+                       data[i]["PayerBankName"],
+                       data[i]["PayeeBankAccountNo"],
+                       data[i]["PayeeAccountName"],
+                       ToJavaScriptDate(data[i]["CheckDate"]),
+                       overallStatus,
+                       totalNoTransactions,
+                       totalAllocationAmount,
+                       '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li ><a href="@Url.Action("UnpaidSalaryDetails", "UnpaidSalary")/?id=' + data[i]["DeductionByInstitutionId"] + '">Details</a></li>\
+                                <li style="' + Display + '"><a href="#" onclick="confirmDialog(' + i + ')">Confirm</a></li>\
+                                <li style="' + Display + '"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+      /***BEGINNING OF DEDUCTION TRANSFER CONFIRMATION***/
+        function confirmDialog(i) {
+            swal({
+                title: 'Unpaid Salary Confirmation',
+                text: "Are you sure you want to confirm?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false);
+                    confirmAllocationTransfer(data[i]["DeductionByInstitutionId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmAllocationTransfer(deductionByInstitutionId) {
+            var url = '@Url.Action("Confirm", "UnpaidSalary")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": deductionByInstitutionId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    swal("Error Confirming Unpaid Salary", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+      /***END OF DEDUCTION TRANSFER CONFIRMATION***/
+        function remarkDialog(i) {
+            $('#RemarkDialog').modal('show');
+            var reason = data[i]["Remarks"];
+            $("#Remarks").text(reason);
+        }
+
+
+        /***BEGINNING OF DEDUCTION TRANSFER REJECTION***/
+
+        var deductionByInstitutionId = null;
+        function cancelDialog(i) {
+            $('#RejectModel').modal('show');
+            $("#saveLoader-" + i + "").toggle(true)
+            $("#drop-" + i + "").toggle(false)
+            deductionByInstitutionId = data[i]["DeductionByInstitutionId"];
+        }
+
+
+        $('#Remarks3').on("keyup", function () {
+            var count = $('#Remarks3').val().split('');
+            var numChars = 250 - parseInt(count.length);
+            $('#Remarks3Count').text(parseInt(numChars));
+        });
+
+        function cancelUnpaidSalaryForm() {
+            var Remarks = $("#Remarks3").val();
+
+            successMessage = "Unpaid Salary Cancelled Successfully";
+            failureMessage = "Error in Cancelling Unpaid Salary";
+
+            if (Remarks == '') {
+                swal("Please Add Remarks");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('DeductionByInstitutionId', deductionByInstitutionId);
+            formData.append('Remarks', Remarks);
+
+            swal({
+                text: "Cancel Unpaid Salary?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    postCancelFormData(formData);
+                } else {
+                    swal("Cancelled", "No change was made");
+                    $("#allocationStatus").prop('disabled', false);
+                }
+            });
+        }
+
+        function postCancelFormData(formData) {
+            $(".loadingImg").show();
+            $("#allocationStatus").prop('disabled', true);
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Cancel", "UnpaidSalary")';
+            var urlList = '@Url.Action("UnpaidSalaryLists", "UnpaidSalary")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#RejectModel').modal('hide');
+                    $("#allocationStatus").prop('disabled', true);
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal(successMessage, { icon: "success" })
+                            .then((m) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        $("#allocationStatus").prop('disabled', false);
+                        $(".saveLoader").toggle(false);
+                        swal(failureMessage + ": " + response, { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    $("#allocationStatus").prop('disabled', false);
+                    $(".saveLoader").toggle(false);
+                    swal(failureMessage, { icon: "warning" });
+                }
+            });
+        }
+
+        /***END OF DEDUCTION TRANSFER REJECTION***/
+    </script>
+}

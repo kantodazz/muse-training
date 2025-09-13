@@ -1,0 +1,210 @@
+﻿<div class="modal fade" id="addNewModal" style="left:4%">
+    <div class="modal-dialog" style="width:50%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Add New Counterpart</h3>
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div>
+                            Counterpart Institution:
+                            <input type="text" name="InstitutionCode" id="InstitutionCode" class="form-control" placeholder="Select Institution" />
+                        </div>
+                        <div id="message" style="color:green;font-style: italic"></div>
+                        <div>
+                            Counterpart Note:
+                            <select class="form-control" id="notes"></select>
+                        </div>
+                        <div>
+                            Counterpart GfsCode:
+                            <select class="form-control" id="gfscode"></select>
+                        </div>
+                        <div style="display: flex; justify-content: space-between">
+                            <div>
+                                Counterpart Amount:
+                                <amount-input id="newItemAmount" onkeyup="itemAmountChanged()" />
+                            </div>
+                            <div>
+                                Available balance:
+                                <input type="text" disabled style="font-weight: bold; border: none"
+                                       id="itemBalance" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="saveNewItem" onclick="saveItemAmounts()">
+                        <i class="fa fa-save"></i> SAVE
+                        <img src="~/Content/img/loading.gif" id="saveNewItemLoader" />
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    var counterpartItems = [];
+    function loadDataCounterPartData() {
+        $("#message").text("[Loading Please Wait...]")
+        createNotesFilter({})
+               $.ajax({
+                   type: "GET",
+                   url: '@Url.Action("GetCounterpartItem", "ConsoElimination")',
+                   contenttype: "application/json; charset=utf-8",
+                   data: {
+                       id: '@ViewBag.Item.ConsoInstitutionEliminationSummaryId',
+                       baseCategory:'@ViewBag.reportSubCategId',
+                       baseGfsCode: '@ViewBag.Item.GFSCode',
+                       financialYear: '@ViewBag.fy',
+                      // baseGfsCode: '22001101',
+                      // financialYear: '2024',
+                       counterpartEntityCode: $("#InstitutionCode").val()
+                   },
+                   datatype: "json",
+                   success: function (response) {
+                       if (response.error) {
+                           $("#message").text(`[${response.error}]`);
+                           return;
+                       }
+                       counterpartItems = response.Message.MessageDetails;
+                       if (!counterpartItems || !counterpartItems.length) {
+                           var statusDesc = response.Message?.MessageSummary?.statusDesc || "No records found..";
+                           $("#message").text(`[${statusDesc}]`);
+                           return;
+                       }
+                       let notes = {}
+                       counterpartItems.forEach(item => {
+                           notes[item.CounterPartNote] = item.CounterPartNoteDesc
+                       })
+                       createNotesFilter(notes)
+                       $("#message").text('');
+                   },
+               }).fail(function (jqXHR, textStatus) {
+                   if (jqXHR.status === 404) {
+                       $("#message").text(`[Error 404: Resource not found.]`);
+                   } else if (jqXHR.status === 500) {
+                       $("#message").text('[Error 500: Internal Server Error.]');
+                   } else {
+                       $("#message").text(`[Unexpected error: ${textStatus}]`);
+                   }
+               });;
+     }
+
+    function createNotesFilter(notes) {
+        var select = document.getElementById("notes")
+        select.innerHTML = ''
+        Object.keys(notes).forEach(note => {
+            let option = document.createElement('option')
+            option.value = note
+            option.text = `${note} - ${notes[note]}`
+            select.appendChild(option);
+        });
+
+
+        $("#notes").on("change", function () {
+            createGfsCodeFilter()
+        });
+
+        $("#notes").trigger('change');
+    }
+
+    function createGfsCodeFilter() {
+        var select = document.getElementById("gfscode")
+        select.innerHTML = ''
+        counterpartItems.filter(item => item.CounterPartNote == $("#notes").val())
+        .forEach(gfs => {
+            let option = document.createElement('option')
+            option.value = gfs.GfsCode
+            option.text = `${gfs.GfsCode} - ${gfs.GfsCodeDescription}`
+            select.appendChild(option);
+        });
+    }
+
+    function itemAmountChanged() {
+        var eliminationAmount = toNumber($("#_newItemAmount").val());
+        var totalAmount = toNumber($("#totalAmount").val());
+        $("#itemBalance").val(toLabel(totalAmount - eliminationAmount));
+        isItemAmountValid()
+    }
+
+    function isItemAmountValid() {
+        var itemBalance = toNumber($("#itemBalance").val());
+        if (itemBalance < 0) {
+            document.getElementById("itemBalance").style.color = "red";
+        } else {
+            document.getElementById("itemBalance").style.color = "black";
+        }
+        return itemBalance >= 0;
+    }
+
+
+    function saveItemAmounts() {
+        if (!isItemAmountValid()) {
+             swal("Counterpart amount exceeds available balance!")
+             return
+        }
+
+        if (!$("#_newItemAmount").val()) {
+            swal("Counterpart amount is required!")
+            return;
+        }
+
+        var gfsCode = $("#gfscode option:selected").text()
+        var [GFSCode, GFSCodeDesc] = gfsCode.split('-').map(item => item.trim())
+
+        var note = $("#notes option:selected").text()
+        var [NoteNo, _] = note.split('-').map(item => item.trim())
+
+        var inst = $("#InstitutionCode").select2("data")
+
+        if (!inst) {
+            swal("Please fill all the fields!")
+            return;
+        }
+
+        var [InstitutionCode, InstitutionName] = inst?.text.split('-').map(item => item.trim());
+
+        if (!InstitutionCode || !NoteNo || !GFSCode) {
+            swal("Please fill all the fields!")
+            return;
+        }
+
+        var form = [{
+            EliminationAmount: $("#_newItemAmount").val(),
+            FinancialYear: '@ViewBag.fy',
+            GFSCodeDesc,
+            GFSCode,
+            NoteNo,
+            InstitutionCode,
+            InstitutionName,
+            Id: '@ViewBag.Item.ConsoInstitutionEliminationSummaryId',
+        }];
+
+        $("#saveNewItemLoader").toggle(true)
+        $("#saveNewItem").prop('disabled', true)
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("CreateUpdateEntityAmount", "ConsoElimination")',
+            data: { data: form },
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                if (response == "Success") {
+                    swal("Saved Successfully!", { icon: "success" }).then(_ => window.location.reload());
+                } else {
+                    swal(response);
+                }
+                $("#saveNewItemLoader").toggle(false)
+                $("#saveNewItem").prop('disabled', false)
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+    }
+
+</script>

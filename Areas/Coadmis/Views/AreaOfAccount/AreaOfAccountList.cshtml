@@ -1,0 +1,350 @@
+﻿
+@{
+    ViewBag.Title = "Area Of Account List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 50px">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a class="btn btn-info" onclick="showAreaModal()">
+                                    <i class="glyphicon glyphicon-plus"></i> Add New
+                                </a>
+                            </div>
+                            <div class="col-md-6"></div>
+                        </div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            @Html.AntiForgeryToken()
+                            <table class="table  table-bordered table-hover table-condensed" id="dataTableList">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%">#</th>
+                                        <th style="text-align:left;">Name</th>
+                                        <th style="text-align:center"></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+<!-- Start of create modal -->
+<div class="modal fade" id="divModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 500px">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Add area of account</h4>
+            </div>
+            <div class="modal-body" id="divModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-info role-save" onclick="saveArea()">
+                    <i class="fa fa-save"></i>
+                    <img src="~/Content/img/loading.gif" id="saveLoader" />
+                    Save
+                </button>
+                <button class="btn btn-default role-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of create modal -->
+<!-- Start of edit modal -->
+<div class="modal fade" id="divEditModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog" style="width: 750px">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title" id="lblmodal">Update Area of Account</h4>
+            </div>
+            <div class="modal-body" id="divEditModalBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-info role-save" onclick="updateArea()">
+                    <i class="fa fa-save"></i>
+                    <img src="~/Content/img/loading.gif" id="saveEditLoader" />
+                    Save
+                </button>
+                <button class="btn btn-default role-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End of edit modal -->
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        var datatable = $("#dataTableList").dataTable();
+        $(".saveLoader").hide();
+        var showAreaModal = function () {
+
+            var url = '@Url.Action("Create", "AreaOfAccount")';
+
+            $("#divModalBody").load(url, function (response, status, xhr) {
+                if (status == "error") {
+                    if (!$(".modal-header").hasClass("alert-danger")) {
+                        $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                        $(".role-save").css("display", "none");
+                    }
+                    $("#divModalBody").html("Error on creating area of account, contact system support");
+                }
+                $("#divModal").modal("show");
+                $("#saveLoader").hide();
+            });
+        };
+
+        //function to reset bootstrap modal popups
+        $("#divModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass("alert-danger").addClass("alert-info");
+            $(".role-save").css("display", "inline-block");
+            $("#divModalBody").html("");
+        });
+
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetAreaOfAccountsList", "AreaOfAccount")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                datatable.fnClearTable();
+                for (var i = 0; i < data.length; i++)
+                    {
+                        datatable.fnAddData([i + 1,
+                            data[i]["AreaOfAccountName"],
+                            '<div class="btn-group" id="drop-' + i + '">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                             <li><a href="#" onclick="showEditAreaModel('+ data[i]["AreaOfAccountId"] + ',\'' + data[i]["AreaOfAccountName"] + '\')">Edit</a></li>\
+                                    <li><a href="#" onclick="deleteArea('+ data[i]["AreaOfAccountId"] + ')">Cancel</a></li>\
+                                </ul>\
+                            </div>\ '
+                        ]);
+                }
+            },
+            failure: function (error)
+            {
+                swal(error);
+            }
+        });
+
+        var showEditAreaModel = function (id, name) {
+
+            var url = '@Url.Action("Edit", "AreaOfAccount")';
+
+            $("#divEditModalBody").load(url, function (response, status, xhr) {
+                if (status == "error") {
+                    if (!$(".modal-header").hasClass("alert-danger")) {
+                        $(".modal-header").removeClass("alert-info").addClass("alert-danger");
+                        $(".role-save").css("display", "none");
+                    }
+                    $("#divEditModalBody").html("Error on updating area of account, contact system support");
+                }
+                $('#AreaOfAccountName').val(name);
+                $('#AreaOfAccountId').val(id);
+                $("#divEditModal").modal("show");
+                $("#saveEditLoader").hide();
+            });
+        };
+
+        function saveArea() {
+            var AreaOfAccountName = $("#AreaOfAccountName").val();
+
+            if (AreaOfAccountName == '') {
+                swal("Please add name");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('AreaOfAccountName', AreaOfAccountName);
+
+            postFormData(formData);
+        }
+
+        function postFormData(formData) {
+            $(".saveEditLoader").show();
+            $(".saveEditLoader").toggle(true);
+            var url = '@Url.Action("create", "AreaOfAccount")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#divModal').modal('hide');
+                    $(".saveEditLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Area of account created successfully", { icon: "success" })
+                            .then((m) => {
+                                window.location.replace('@Url.Action("AreaOfAccountList", "AreaOfAccount")');
+                            });
+                    } else if (response == "Duplicate") {
+                        swal("Area of accounts already exist", { icon: "warning" })
+                            .then((m) => {
+                                return;
+                            });
+                    } else if (response == "Invalid") {
+                        swal("Operation Failed. Please contact System Administrator!", { icon: "warning" })
+                            .then((m) => {
+                                return;
+                            });
+                    } else {
+                        $(".saveEditLoader").toggle(false);
+                        swal("Failed to create area of account", { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function updateArea() {
+            debugger;
+            var AreaOfAccountName = $("#AreaOfAccountName").val();
+            var id = $("#AreaOfAccountId").val();
+
+            if (AreaOfAccountName == '') {
+                swal("Please add area of account");
+                return false;
+            }
+
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('AreaOfAccountName', AreaOfAccountName);
+            formData.append('AreaOfAccountId', id);
+
+            putFormData(formData);
+        }
+
+        function putFormData(formData) {
+            $(".saveLoader").show();
+            $(".saveLoader").toggle(true);
+            var url = '@Url.Action("Edit", "AreaOfAccount")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $('#divEditModalBody').modal('hide');
+                    $(".saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Area of accounts updated successfully", { icon: "success" })
+                            .then((m) => {
+                                window.location.replace('@Url.Action("AreaOfAccountList", "AreaOfAccount")');
+                            });
+                    } else if (response == "Duplicate") {
+                        swal("Area of account already exist", { icon: "warning" })
+                            .then((m) => {
+                                return;
+                            });
+                    } else if (response == "Invalid") {
+                        swal("Operation Failed. Please contact System Administrator!", { icon: "warning" })
+                            .then((m) => {
+                                return;
+                            });
+                    } else if (response == "Not Found") {
+                        swal("Area of account not found", { icon: "warning" })
+                            .then((m) => {
+                                return;
+                            });
+                    } else {
+                        $(".saveLoader").toggle(false);
+                        swal("Failed to update area of account", { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        //Delete action start here
+        function deleteArea(id) {
+            swal({
+                text: "Are you Sure you want to delete this area",
+                buttons: [
+                    'No',
+                    'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    deleteLegalFramework(id);
+                } else {
+                    swal("Cancelled", "No changes was made");
+                }
+            });
+
+        }
+
+        function deleteLegalFramework(id) {
+             var url = '@Url.Action("Delete", "AreaOfAccount")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Area of account deleted Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}
+
+
+
+

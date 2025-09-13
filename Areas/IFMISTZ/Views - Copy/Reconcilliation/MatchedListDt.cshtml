@@ -1,0 +1,196 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.MatchedVw>
+@{
+    ViewBag.Title = "Reconciliation Status";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+    .searchContainer {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        /*padding-top:10px;*/
+        /*text-align: center;*/
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget " id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Matching List</h2>
+                    </header>
+                    <div>
+
+                        <div class="widget-body" style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-5">
+                                    <a href="@Url.Action("ReconcilliationStatus","Reconcilliation")" class="btn btn-info">
+                                        <span class="glyphicon glyphicon-arrow-left" aria-hidden="true"></span>
+                                        Back
+                                    </a>
+                                </div>
+                                <div class="col-md-12">
+                                    <div class="searchContainer" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                                <div class="col-md-12">
+                                <table style="width:50%">
+                                    <tr>
+                                        <td>
+                                            <strong>ACCOUNT NUMBER:</strong>
+                                            @Model.Select(a => a.BankAccount).FirstOrDefault()
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td>
+                                            <strong>ACCOUNT NAME  :</strong>
+                                            @Model.Select(a => a.AccountNameGL).FirstOrDefault()
+                                        </td>
+                                    </tr>
+                                </table>
+                               </div>
+                            </div>
+                            <table id="dt_matched" class="table table-bordered table-hover table-condensed">
+                                <thead style="white-space:nowrap">
+                                    <tr style="background:#f5f5f5; color:#000000">
+                                        <th colspan="4" style="text-align:center"><b>GL</b></th>
+                                        <th colspan="4" style="text-align:center"><b>Bank Statement</b></th>
+                                    </tr>
+                                    <tr>
+                                        <th>Date</th>
+                                        <th>Legal Number</th>
+                                        <th>Description</th>
+                                        <th style="text-align:right">Operational Amount</th>
+                                        <th>Date</th>
+                                        <th>Related Ref</th>
+                                        <th style="text-align:right">Amount</th>
+                                        <th>Match Number</th>
+                                        
+                                    </tr>
+                                </thead>
+                                @foreach (var item in Model)
+                                {
+
+
+                                    <tr>
+
+                                        <td>@string.Format("{0: dd/MM/yyyy}", item.TransactionDate)</td>
+                                        <td>@item.LegalNumber</td>
+                                        <td>@item.DescriptionGL</td>
+                                        <td style="text-align:right">@string.Format("{0:#,0.00}", item.OperationalAmountGL)</td>
+                                        <td>@string.Format("{0: dd/MM/yyyy}", item.BankDate)</td>
+                                        <td>@item.RelatedRefBank</td>
+                                        <td style="text-align:right">@string.Format("{0:#,0.00}", item.AmountBank)</td>
+                                        <td>@item.MatchNo</td>
+                                    </tr>
+                                }
+
+
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+
+        $(document).ready(function () {
+            var responsiveHelper_dt_matched = undefined;
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+        })
+
+        var data = [];
+        var dt_matched = $('#dt_matched').dataTable();
+        $("#dt_matched_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+
+            if (!this.value) {
+                        dt_matched.fnClearTable();
+                    } else {
+                        searchPayeeTableUpdate(this.value);
+                    }
+            //dt_matched.DataTable().search(this.value).draw();
+        });
+
+        //$("#searchbox").on("keyup search input paste cut", function () {
+        //    if (!this.value) {
+        //        dt_matched.fnClearTable();
+        //    } else {
+        //        searchPayeeTableUpdate(this.value);
+        //    }
+        //});
+
+        function searchPayeeTableUpdate(search) {
+            var BankAcct = '@ViewBag.BankAcct';
+            var checkDate = '@ViewBag.checkDate';
+            var url = '@Url.Action("GetMatchedListDt", "Reconcilliation")/?BankAcct=' + BankAcct + '&&checkDate=' + checkDate + '&&search='+search+'';
+            $.ajax({
+                type: "get",
+                url: url,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_matched.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_matched.fnAddData([
+                            ToJavaScriptDate(data[i]["TransactionDate"]),
+                            data[i]["LegalNumber"],
+                            data[i]["DescriptionGL"],
+                            data[i]["OperationalAmountGL"].toLocaleString(),
+                            ToJavaScriptDate(data[i]["BankDate"]), 
+                            data[i]["RelatedRefBank"],
+                            data[i]["AmountBank"].toLocaleString(),
+                            data[i]["MatchNo"],
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+
+        function ToJavaScriptDate(value) {
+            var pattern = /Date\(([^)]+)\)/;
+            var results = pattern.exec(value);
+            var dt = new Date(parseFloat(results[1]));
+            return dt.getDate() + "/" + (dt.getMonth() + 1) + "/" + dt.getFullYear();
+        }
+
+    </script>
+
+}

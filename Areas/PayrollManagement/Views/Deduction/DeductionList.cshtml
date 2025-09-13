@@ -1,0 +1,379 @@
+﻿@{
+    ViewBag.Title = "Deduction(s)";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<br />
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div id="divLoader"></div>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateDeduction", "Deduction")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                    <a class="btn btn-info " onclick="confirm()">
+                                        <i class="glyphicon glyphicon-thumbs-up"></i> Confirm
+                                    </a>
+                                </div>
+                                <br /><br /><br />
+                            </div>
+                            <table id="tblUsers" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th></th>
+                                        <th>Employee Name</th>
+                                        <th>Check Number</th>
+                                        <th>Deduction Code</th>
+                                        <th>Loan Amount</th>
+                                        <th>Deduction Amount</th>
+                                        <th>Reason</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+@section pagespecific{
+    <script>
+    $(function () {
+        BindDataTable();
+        $("#divLoader").show();
+    });
+
+  var BindDataTable = function () {
+      var url = '@Url.Action("GetDeductionList", "Deduction")';
+    $("#tblUsers").DataTable({
+        "bServerSide": true,
+        "sAjaxSource": url,
+        "fnServerParams": function (aoData) {
+            aoData.push({ "name": "overallStatus", "value": "Pending,Rejected By Approver,Rejected By Verifier"});
+        },
+        "fnServerData": function (sSource, aoData, fnCallback) {
+            $.ajax({
+                type: "GET",
+                url: sSource,
+                data: aoData,
+                success: function (data) {
+                    fnCallback(data);
+                    $("#divLoader").hide();
+                },
+                error: function () {
+                    $("#divLoader").hide();
+                    swal("An error occurred while fetching data.");
+                },
+                complete: function () {
+                    $("#divLoader").hide();
+                }
+            });
+        },
+        "aoColumns": [
+            {
+                render: function (data, type, row, meta) {
+                    return meta.row + meta.settings._iDisplayStart + 1;
+                }
+            },
+            {
+                "bSortable": false,
+                "render": function (data, type, row, meta) {
+                    return '<input type="checkbox" value="' + row.EmployeeDeductionId + '" class="checkBoxConfirm">';
+                }
+            },
+            { "mData": "FullName" },
+            { "mData": "CheckNumber" },
+            { "mData": "DedDescription" },
+            {
+                "mData": "LoanAmount",
+                render: $.fn.dataTable.render.number(',', '.', 2),
+                className: "text-right"
+            },
+            {
+                "mData": "MonthlyDeductionAmount",
+                render: $.fn.dataTable.render.number(',', '.', 2),
+                className: "text-right"
+            },
+            { "mData": "Remarks" },
+            { "mData": "OverallStatus" },
+            {
+                "mData": "EmployeeDeductionId",
+                "bSortable": false,
+                "render": function (EmployeeDeductionId, type, row, meta) {
+                    return '<div class="btn-group">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                    <span class="caret"></span>\
+                                    <span class="sr-only">Toggle Dropdown</span>\
+                                </button>\
+                                <ul class="dropdown-menu">\
+                                    <li><a href="@Url.Action("EditDeduction", "Deduction")/' + EmployeeDeductionId + '"> Edit </a></li>\
+                                    <li><a href="#" onclick="confirm(' + EmployeeDeductionId + ')"> Confirm </a></li>\
+                                    <li><a href="#" onclick="cancel(' + EmployeeDeductionId + ')"> Delete </a></li>\
+                                </ul>\
+                            </div>';
+                }
+            },
+        ],
+        "drawCallback": function (settings) {
+            var api = this.api();
+            var rows = api.rows({ page: 'current' }).nodes();
+            var last = null;
+
+            api.column(3, { page: 'current' }).data().each(function (group, i) {
+                if (last !== group) {
+                    $(rows).eq(i).before('<tr class="group"><td style="font-weight: bold;" colspan="8">' + group + '</td></tr>');
+                    last = group;
+                }
+            });
+        }
+    });
+  };
+
+    var confirm = function (){
+            debugger
+            var csvIds = [];
+
+            $("input:checkbox.checkBoxConfirm").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                swal("No record selected!");
+                return;
+            }
+
+            swal({
+                title: "Confirmation!",
+                text: "Are you sure you want to Confirm?",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+                    confirmDeduction(csvIds)
+                }
+            });
+        }
+
+        function confirmDeduction(csvIds) {
+            var url = '@Url.Action("ConfirmMultDeduction", "Deduction")';
+
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: { ids: csvIds },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deduction Confirmed Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    } else if (response == "DbException") {
+                        swal("Error on confirmation!", { icon: "error" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    swal("An error has occured, contact system support");
+                },
+            });
+        };
+
+      function confirmold(i){
+            swal({
+                title: 'Confirm this Item?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    conformPost(data[i]["EmployeeDeductionId"], false);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+
+      function conformPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("ConfirmDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    $("#resultLoading").hide();
+                    if (response == "Success") {
+                        swal("Saved Successfully!", {icon:"success"}).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+       function cancel(i){
+            swal({
+                title: 'Delete this Item.?',
+                buttons: [
+                  'NO',
+                  'YES'
+                ],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPost(data[i]["EmployeeDeductionId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+         function cancelPost(Id) {
+            $.ajax({
+                type: "post",
+                url: '@Url.Action("CancelDeduction", "Deduction")',
+                data: { "Id": Id},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Deleted Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+         }
+
+        function edit(i) {
+            window.location.href = '@Url.Action("EditDeduction", "Deduction")/?Id=' + data[i]["EmployeeDeductionId"];
+        }
+    </script>
+}

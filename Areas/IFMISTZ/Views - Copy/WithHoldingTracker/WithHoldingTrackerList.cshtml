@@ -1,0 +1,248 @@
+﻿@{
+    ViewBag.Title = "WithHolding Tracker";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>From</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="FromDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-3">
+                                    <table>
+                                        <tr>
+                                            <td>To</td>
+                                            <td>
+                                                <div class="flatpickr date-group">
+                                                    <input type="text" placeholder="Select Date.."
+                                                           data-input
+                                                           style="width:120px;border:none;height:20px"
+                                                           autocomplete="off" id="ToDate">
+                                                    <a class="input-button" title="open" data-toggle href="#">
+                                                        <span class="input-group-addon" style="height:30px"><i class="fa fa-calendar"></i></span>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-2"></div>
+                                <div class="col-md-4">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Keywords..." id="searchbox">
+                                        <button style="background-color:#2196F3;color:white" onclick="searchPayment()">Search</button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>PV No</th>
+                                        <th>Payee Name</th>
+                                        <th>Service Amount</th>
+                                        <th>VAT On Service</th>
+                                        <th>Goods Amount</th>
+                                        <th>WithHoldingAmount</th>
+                                        <th>VoucherAmount</th>
+                                        <th>PaidVoucherNo</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section pagespecific{
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "No matching records found"
+            }
+        });
+
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            //dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        // ====================== LOAD TABLE DATA START =====================
+        var data = [];
+        var globalPayeeId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetWithHoldingVoucher", "WithHoldingTracker")' + "/?FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=0",
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_voucher_listing.fnAddData([i + 1,
+                       data[i]["PVNo"],
+                       data[i]["Payeename"],
+                       toLabel(data[i]["ServiceAmount"]),
+                       toLabel(data[i]["VATOnService"]),
+                       toLabel(data[i]["GoodsAmount"]),
+                       toLabel(data[i]["OperationalWithHoldingAmount"]),
+                       toLabel(data[i]["VoucherOperationalAmount"]),
+                       data[i]["PaidVoucherNo"] ? data[i]["PaidVoucherNo"] : "-",
+                       data[i]["CreatedAtFormatted"]
+                    ]);
+                }
+
+                if(data.length == 0){
+                    $("#loader").text("No matching records found")
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function searchPayment() {
+            $("#loader").text("Loading...")
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetWithHoldingVoucher", "WithHoldingTracker")' + "/?FromDate=" + $('#FromDate').val() + "&&ToDate=" + $('#ToDate').val() + "&&keywords=" + $('#searchbox').val() + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_voucher_listing.fnAddData([i + 1,
+                            data[i]["PVNo"],
+                       data[i]["Payeename"],
+                       data[i]["ServiceAmount"],
+                       data[i]["VATOnService"],
+                       toLabel(data[i]["GoodsAmount"]),
+                       data[i]["OperationalWithHoldingAmount"],
+                       data[i]["VoucherOperationalAmount"],
+                       data[i]["PaidVoucherNo"] ? data[i]["PaidVoucherNo"] : "-",
+                       data[i]["CreatedAtFormatted"]
+                        ]);
+                    }
+                    if (data.length == 0) {
+                        $("#loader").text("No matching records found")
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        // *************** LOAD TABLE DATA END *********************
+
+
+    </script>
+}

@@ -1,0 +1,348 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 2px;
+        padding: 8px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    input {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    .row-align {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-evenly;
+    }
+
+    .ico {
+        margin-right: 5px;
+    }
+
+    .btn-size {
+        width: 90px;
+    }
+
+    .backgroundChange {
+        background-color: #80cbc4;
+        font-weight: bold;
+        color: white
+    }
+
+    .blink-anim {
+        transition: background-color 0.05s ease-in-out;
+    }
+</style>
+
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid" class="">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false"
+                     data-widget-custombutton="false" data-widget-colorbutton="false"
+                     data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Debt Collection</h2>
+
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div style="display:flex;justify-content:center;align-content:center">
+                                <div>
+                                    <table style="margin-left: 2%">
+                                        <tr>
+                                            <td class="form-label">
+                                                Loan Application
+                                                <i class="fa fa-times" style="color:white" id="LoanId_1"></i>
+                                            </td>
+                                            <td>
+                                                <div class="name-input-container">
+                                                    <input type="text" readonly id="LoanId" placeholder="No Loan Selected" style="width:260px" />
+                                                    <a class="search-btn" onclick="SearchLoan()"
+                                                       href="#" style="float:right">
+                                                        <i class="fa fa-search search-icon"></i>
+                                                    </a>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td class="form-label">
+                                                Amount
+                                                <i class="fa fa-times" style="color:white" id="Amount_1"></i>
+                                            </td>
+                                            <td>
+                                                <div class="input-group">
+                                                    <span class="input-group-addon">
+                                                        <strong class="currency">TZS</strong>
+                                                    </span>
+                                                    <amount-input type="text" style="width:255px" id="Amount" autocomplete="off" />
+                                                </div>
+                                            </td>
+                                        </tr>
+
+                                        <tr>
+                                            <td class="form-label">
+                                                Last CollectionDate  <i class="fa fa-times" style="color:white" id="LastCollectionDate_1"></i>
+                                            </td>
+                                            <td>
+                                                <div class="name-input-container">
+                                                    <input type="date" id="LastCollectionDate" style="width:300px"  />
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    </div>
+                    <div class="row" style="padding:20px">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-6">
+                            <a class="btn btn-info" href='@Url.Action("DebtCollectionEntry", "DebtCollection")' style="margin-right:5px">
+                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                            </a>
+                            <button type="submit" class="btn btn-info" onclick="saveData()" id="form_submision">
+                                <i class="fa fa-save"></i>Save
+                                <img src="~/Content/img/loading.gif" id="saveLoader" />
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- Search Payee ----------------->
+<div class="modal fade" id="loanModal" style="left:4%">
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Loan</h3>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container" style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                        </div>
+                    </div>
+                </div>
+                <table class="table" id="dt_search_loan">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Application No</th>
+                            <th>LoanNo</th>
+                            <th>TIN</th>
+                            <th>Customer Name</th>
+                            <th>Approved Amount</th>
+                            <th>Paid Amount</th>
+                            <th>Balance Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <script>
+
+        $("#saveLoader").toggle(false)
+       
+        function SearchLoan() {
+            $('#loanModal').modal('show');
+        }
+
+        var dt_search_loan = $('#dt_search_loan').dataTable();
+        $("#dt_search_loan_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_search_loan.fnClearTable();
+            } else {
+                searchLoanTableUpdate(this.value);
+            }
+        });
+
+       var loans = []
+        function searchLoanTableUpdate(search) {
+            var url = '@Url.Action("GetLoan", "DebtCollection")';
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { search },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    loans = response.data;
+                    dt_search_loan.fnClearTable();
+                    for (var i = 0; i < loans.length; i++) {
+                        dt_search_loan.fnAddData([i + 1,
+                            loans[i]["ApplicationNo"],
+                            loans[i]["LoanNo"],
+                            loans[i]["TinNo"],
+                            loans[i]["CustomerName"],
+                            toLabel(loans[i]["LoanApprovedAmount"]),
+                            toLabel(loans[i]["TotalAmountPaid"]),
+                            toLabel(loans[i]["LoanBalance"]),
+                           '<a href="#" onclick="loanClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var selectedLoanId = 0
+        function loanClicked(i) {
+            selectedLoanId = loans[i].LoanApplicationId
+            $("#LoanId").val(loans[i].LoanNo)
+            $('#loanModal').modal('hide');
+        }
+
+        function saveData() {
+            if (isTheFormValid()) {
+                $("#form_submision").prop('disabled', true);
+                $("#saveLoader").toggle(true);
+                $.ajax({
+                    type: "POST",
+                    url:'@Url.Action("Create", "DebtCollection")',
+                    data: {
+                        Amount: $("#Amount").val(),
+                        LoanId: selectedLoanId,
+                        LoanNo: $("#LoanId").val(),
+                        LastCollectionDate: $("#LastCollectionDate").val(),
+                    },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        $("#form_submision").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: "success" })
+                                .then((value) => {
+                                    window.location.href = '@Url.Action("DebtCollectionEntry", "DebtCollection")';
+                                });
+                        } else {
+                            swal(response);
+                        }
+                    },
+                    failure: function (error) {
+                        $("#form_submision").prop('disabled', false);
+                        $("#saveLoader").toggle(false);
+                        swal(error);
+                    }
+                });
+            }
+        }
+
+
+        function isTheFormValid() {
+            var isNotValid = validateInputsParameters([
+                "#Amount",
+                "#LastCollectionDate",
+            ]);
+
+            if (isNotValid) {
+                $(isNotValid + "_1").attr("style", "color: red;");
+                return false
+            }
+
+            if (selectedLoanId == 0) {
+                $("#LoanId_1").attr("style", "color: red;");
+                return false
+            }
+
+
+            return true
+        }
+
+        function validateInputsParameters(parameterList) {
+            var resetStyle = function (parameterList) {
+                for (var i = 0; i < parameterList.length; i++) {
+                    $(parameterList[i] + "_1").attr("style", "color: white;");
+                }
+            }
+
+            resetStyle(parameterList);
+            for (var i = 0; i < parameterList.length; i++) {
+                if (!$(parameterList[i]).val()) {
+                    return parameterList[i];
+                }
+            }
+            return null;
+        }
+    </script>
+}

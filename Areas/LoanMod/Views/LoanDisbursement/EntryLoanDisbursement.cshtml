@@ -1,0 +1,485 @@
+﻿@{
+    ViewBag.Title = "Add/Amend Beneficiary.";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+<style>
+ .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div>
+                                <table>
+                                    <tbody>
+                                        <tr>
+                                            <td>
+                                                <button type="submit" class="btn btn-info" onclick="searchPayee()" style="width:100px">
+                                                    <i class="fa fa-plus"></i>Add New
+                                                </button>
+                                            </td>
+                                            <td>
+                                                Application No:<input type="text" disabled style="width:200px" value="@ViewBag.Loan.ApplicationNo"/>
+                                            </td>
+                                            <td>
+                                                Approved:<input type="text" disabled style="width:200px" value="@string.Format("{0:#,0.00}",ViewBag.Loan.LoanApprovedAmount)"/>
+                                            </td>
+                                            <td>
+                                                Disbursed:<input type="text" disabled style="width:200px" value="@string.Format("{0:#,0.00}",ViewBag.Loan.DisbursedAmount)" />
+                                            </td>
+                                            @{ 
+                                                decimal balance = ViewBag.Loan.LoanApprovedAmount - ViewBag.Loan.DisbursedAmount;
+                                            }
+                                            <td>
+                                                Balance:<input type="text" disabled style="width:200px" value="@string.Format("{0:#,0.00}",balance)" />
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <hr/>
+                    <table class="table table-bordered table-condensed" id="dt_table">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Name</th>
+                            <th>Address</th>
+                            <th>Acc. No</th>
+                            <th>Bank Name</th>
+                            <th>Status</th>
+                            <th>Amount</th>
+                            <th style="width:50px">Revoke</th>
+                        </tr>
+                    </thead>
+                </table>
+                            <hr />
+                            <div class="row">
+                                <div class="col-md-2"></div>
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("ListLoanDisbursement", "LoanDisbursement")' style="margin-right:5px">
+                                        <i class="glyphicon glyphicon-arrow-left"></i>Back
+                                    </a>
+                                    <button type="submit" class="btn btn-info" id="saveAmounts" onclick="saveAmountCheck()">
+                                        <i class="fa fa-save"></i>Save
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                     </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- Search Payee ----------------->
+<div class="modal fade" id="payeeModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Payee</h3>
+
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-6">
+                    </div>
+                    <div class="col-md-6">
+                        <div class="search-container " style="float:right">
+                            <i class="fa fa-search search-icon"></i>
+                            <input type="search" name="search" placeholder="Search..." id="searchbox">
+                        </div>
+                    </div>
+                </div>
+                <table class="table" id="dt_search_payee">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>PaymentId</th>
+                            <th>BIC</th>
+                            <th>CtrlNum</th>
+                            <th>Payee Name</th>
+                            <th>Account Name</th>
+                            <th>Payee Code</th>
+                            <th>Bank Name</th>
+                            <th>Bank Account No</th>
+                            <th>Payee Type</th>
+                            <th>Address</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody></tbody>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info" data-dismiss="modal">
+                    <i class="fa  fa-times"></i>Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific{
+<script src="~/Scripts/mofJS/loan-attach.js?ts = @DateTime.Now.Ticks.ToString()"></script>
+<attach-dialog />
+    <script>
+        $("#saveLoader1").toggle(false)
+        $("#saveLoader").toggle(false)
+        var data = []
+        function loanData() {
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetLoanBeneficiary", "LoanDisbursement")',
+                data: { Id: "@ViewBag.Id" },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    populateData(data)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+        loanData();
+
+        var dt_table = $('#dt_table').dataTable();
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        var LoanPayeeId = 0
+        var BenAmounts = [];
+        function remove(Id) {
+            swal({
+                title: 'Remove this Beneficiary?',
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (yes) {
+                if (yes) {
+                    LoanPayeeId = Id;
+                    attach();
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+        function populateData(data) {
+            console.log(data)
+            dt_table.fnClearTable();
+
+            for (var i = 0; i < data.length; i++) {
+                var amount = data[i].LoanAmount ? data[i].LoanAmount : 0;
+                BenAmounts.push(amount)
+                if (data[i].IsDusbursed) {
+                    dt_table.fnAddData([i + 1,
+                       data[i].PayeeAccountName,
+                       data[i].PayeeAddress,
+                       data[i].PayeeBankAccount,
+                       data[i].PayeeBankName,
+                       data[i].OverallStatus ? data[i].OverallStatus : "Approved",
+                       '<amount-input  id="id' + i + '" value="' + toLabel(amount) + '" disabled/>',
+                       'Disbursed'
+                    ]);
+                } else {
+                    console.log(data[i].OverallStatus)
+                    dt_table.fnAddData([i + 1,
+                          data[i].PayeeAccountName,
+                          data[i].PayeeAddress,
+                          data[i].PayeeBankAccount,
+                          data[i].PayeeBankName,
+                          data[i].OverallStatus ? data[i].OverallStatus : "Approved",
+                          data[i].OverallStatus == "Revoked" ? '<amount-input  id="id' + i + '" value="' + toLabel(amount) + '" disabled/>'
+                          : '<amount-input  id="id' + i + '" value="' + toLabel(amount) + '" onkeyup="amountChanged(' + i + ')"/>',
+                          data[i].OverallStatus == "Revoked" ? '<a href="#" onclick="undoRemoval(' + data[i].LoanPayeeId + ')">UNDO</a>' : '<a href="#" onclick="remove(' + data[i].LoanPayeeId + ')"><i class="fa fa-trash-o"></i></a>'
+                    ]);
+                }
+
+            }
+        }
+
+        function attach() {
+            $("#attachModal").modal("show");
+        }
+
+        var dt_attach = $('#dt_attach').dataTable()
+        $("#dt_attach_wrapper .dt-toolbar").remove();
+        initParams({
+            LoanPayeeId: LoanPayeeId,
+            AttachUrl: '@Url.Action("AmmendBeneneficiary", "LoanDisbursement")'
+        })
+
+        var IsAmountValid = true;
+
+        function amountChanged(i) {
+            var temp = BenAmounts
+            temp[i] = toNumber($("#_id" + i).val())
+
+            var sum = BenAmounts.reduce((a, b) =>a + b)
+
+            if (sum > toNumber('@ViewBag.Loan.LoanApprovedAmount')) {
+                $("#_id" + i).attr("style", "color: red;");
+                IsAmountValid = false
+            } else {
+                BenAmounts[i] = toNumber($("#_id" + i).val())
+                $("#_id" + i).attr("style", "color: black;");
+                IsAmountValid = true
+            }
+        }
+
+        function saveAmountCheck() {
+            if (IsAmountValid) {
+                saveAmounts()
+            } else {
+                swal("You have exceeded the approved amount.");
+            }
+        }
+
+        function saveAmounts() {
+
+            $("#saveAmounts").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+
+            newAmounts = [];
+            BenAmounts.forEach((v, i) => {
+                newAmounts.push({
+                    amount: v,
+                    Id: data[i].LoanPayeeId
+                })
+            });
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("SaveBenAmounts", "LoanDisbursement")',
+                data: { Id: "@ViewBag.Id", newAmounts },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully..!", { icon: "success" })
+                        .then((m) => {
+                            window.location.href = '@Url.Action("ListLoanDisbursement", "LoanDisbursement")';
+                        });
+                    } else {
+                        swal(response)
+                    }
+                    $("#saveAmounts").prop('disabled', false);
+                    $("#saveLoader").toggle(false);
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function undoRemoval(Id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("UndoBenRevocation", "LoanDisbursement")',
+                data: { Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully..!", { icon: "success" })
+                        .then((m) =>window.location.reload());
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function searchPayee() {
+            $("#payeeModal").modal('show');
+        }
+
+        var dt_search_payee = $('#dt_search_payee').dataTable({
+            "aoColumnDefs": [{ "bVisible": false, "aTargets": [1, 2, 3] }],
+        });
+
+        $("#dt_search_payee_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_search_payee.fnClearTable();
+            } else {
+                searchPayeeTableUpdate(this.value);
+            }
+        });
+
+        function searchPayeeTableUpdate(search) {
+            var url = '@Url.Action("GetPayee", "LoanDisbursement")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    console.log(response);
+                    var _data = response.data;
+                    dt_search_payee.fnClearTable();
+                    for (var i = 0; i < _data.length; i++) {
+                        dt_search_payee.fnAddData([i + 1,
+                           _data[i]["PayeeDetailId"],
+                           _data[i]["BIC"],
+                           _data[i]["RequireControlNum"],
+                           _data[i]["PayeeName"],
+                           _data[i]["AccountName"],
+                           _data[i]["PayeeCode"],
+                           _data[i]["BankName"],
+                           _data[i]["Accountnumber"],
+                           _data[i]["PayeeType"],
+                           _data[i]["Address1"],
+                           '<a href="#" onclick="payeeClicked(' + _data[i]["PayeeDetailId"] + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function payeeClicked(Id) {
+            swal({
+                title: 'Add this Beneficiary?',
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (yes) {
+                if (yes) {
+                    AddBeneficiary(Id)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+
+        function AddBeneficiary(Id) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("AddNewBeneficiary", "LoanDisbursement")',
+                data: { LoanAppId: "@ViewBag.Id", Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Added Successfully..!", { icon: "success" })
+                        .then((m) =>window.location.reload());
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

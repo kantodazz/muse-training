@@ -1,0 +1,835 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PaymentBatch>
+
+@{
+    ViewBag.Title = "Index";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    //var stpay = Model.Select(x => x.OverallStatus).FirstOrDefault();
+}
+
+<!-- MAIN CONTENT -->
+<br />
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+            <!-- Button trigger modal -->
+            <!--<a data-toggle="modal" href="#myModal" class="btn btn-info btn-lg pull-right header-btn hidden-mobile"><i class="fa fa-circle-arrow-up fa-lg"></i> Launch form modal</a>-->
+        </div>
+    </div>
+
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <!-- widget options:
+                        usage: <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false">
+
+                        data-widget-colorbutton="false"
+                        data-widget-editbutton="false"
+                        data-widget-togglebutton="false"
+                        data-widget-deletebutton="false"
+                        data-widget-fullscreenbutton="false"
+                        data-widget-custombutton="false"
+                        data-widget-collapsed="true"
+                        data-widget-sortable="false"
+
+                    -->
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Pending Payment Batch </h2>
+
+                    </header>
+
+                    <!-- widget div-->
+                    <div>
+
+                        <!-- widget edit box -->
+                        <div class="jarviswidget-editbox">
+                            <!-- This area used as dropdown edit box -->
+
+                        </div>
+                        <!-- end widget edit box -->
+                        <!-- widget content -->
+                        <div class="widget-body">
+
+
+                            <a href="@Url.Action("CreatePaymentBatch","ExternalPayment")" class="btn btn-info">
+                                <span class="glyphicon glyphicon-plus"></span>
+                                Add New 
+                            </a>
+                            <br />
+                            <table id="dt_basic" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                                <thead>
+                                    <tr style="background-color: #f5f5f5; color:black">
+
+                                        <th>#</th>
+                                        <th>Batch Number</th>
+                                        @*
+                                        <th>Batch Description</th>*@
+                                        <th style="width:150px;">Facility</th>
+                                        <th>Payment Category</th>
+                                        <th>Payment Channel</th>
+                                        <th style="text-align: center"> Number of Transaction </th>
+                                        <th style="text-align: center">Total Batch Amount</th>
+                                        @*
+                                        <th style="text-align: center">Operational Amount</th>*@
+                                        <th>GL Status</th>
+                                        <th style="text-align: center"> Status</th>
+
+
+                                        @*
+                                        <th>Reason</th>*@
+                                        <th>Action</th>
+
+                                    </tr>
+                                </thead>
+                                @{
+                                    int i = 0;
+                                    string glstatus = string.Empty;
+                                }
+                                @foreach (var item in Model)
+                                {
+                                    i++;
+
+                                    <tr>
+                                        <td>@i</td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.BatchNo)
+                                        </td>
+                                        @*<td>
+                        @Html.DisplayFor(modelItem => item.BatchDesc)
+                    </td>*@
+                                        <td style="text-align: left">
+                                            @Html.DisplayFor(modelItem => item.FacilityCode) -  @Html.DisplayFor(modelItem => item.FacilityName)
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.PaymentCategory)
+                                        </td> 
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.PaymentChannel)
+                                        </td>
+                                        <td style="text-align: center">
+                                            @string.Format("{0:#,0}", item.NoTrx)
+                                        </td>
+                                        <td style="text-align: right">
+                                            @string.Format("{0:#,0.00}", item.TotalAmount)
+                                        </td>
+
+                                        @*<td style="text-align: right">
+                        @string.Format("{0:#,0.00}", item.OperationalAmount)
+                    </td>*@
+                                        <td>
+                                            @*@Html.DisplayFor(modelItem => item.MsgID)*@
+                                            @if (item.GLstatus == "YES")
+                                            {
+                                                glstatus = "ASSIGNED";
+                                            }
+                                            else
+                                            {
+                                                glstatus = "N/A";
+                                            }
+                                            @glstatus
+                                        </td>
+                                        <td>
+                                            @Html.DisplayFor(modelItem => item.OverallStatus)
+                                        </td>
+
+                                        @*<td>
+                        <a href="@Url.Action("AttachmentView", "PaymentVoucherAttachments",new { groupId = item.PaymentBatchID, sourceModule = "bulkpayment" })"><i class="fa fa-file-pdf-o"></i></a>
+                    </td>*@
+                                        @*<td>
+                        @Html.DisplayFor(modelItem => item.RejectedReason)
+                    </td>*@
+
+                                        <td style="text-align: center">
+                                            <!-- Split button -->
+                                            <div class="btn-group">
+
+                                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                                    <span class="caret"></span>
+                                                    <span class="sr-only">Toggle Dropdown</span>
+                                                </button>
+                                                <ul class="dropdown-menu">
+
+                                                    @if (item.SourceModule == "External")
+                                                    {
+
+                                                        if (item.OverallStatus == "Rejected in Verification")
+                                                        {
+
+                                                            <li><a href="#" onclick="viewRejectionReason('@item.RejectedReason')"><i class="fa fa-eye fa-fw"></i> View Reason </a></li>
+                                                        }
+
+
+                                                        if (item.GLstatus == "No")
+                                                        {
+                                                            <li><a href="@Url.Action("AddGLitems", "ExternalPayment", new { id = item.PaymentBatchID })"><i class="fa fa-plus-circle fa-fw"></i> Add GL Item</a></li>
+                                                        }
+                                                        else
+                                                        {
+                                                            <li><a href="#" onclick="batchConfirmed(@item.PaymentBatchID)"><i class="fa fa-check-square fa-fw"></i> Confirm</a></li>
+                                                            <li><a href="#" onclick="uploadAttachment(@item.PaymentBatchID,'@item.SourceModule')"><i class="fa fa-cloud-upload fa-fw"></i> Upload Attachment</a></li>
+                                                            <li><a href="@Url.Action("EditGLitems", "ExternalPayment", new { id = item.PaymentBatchID })"><i class="fa fa-pencil fa-fw"></i> Edit GL Item</a></li>
+                                                        }
+                                                        <li><a href="@Url.Action("PaymentBatchDetails","ExternalPayment",new { id=item.PaymentBatchID })"><i class="fa fa-eye fa-fw"></i> Details </a></li>
+                                                        <li><a href="#" onclick="rejectExternalPayment(@item.PaymentBatchID)"><i class="fa fa-trash-o fa-fw"></i> Reject</a></li>
+
+                                                    }
+                                                </ul>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                }
+
+                            </table>
+
+                        </div>
+                        <!-- end widget content -->
+                    </div>
+                    <!-- end widget div -->
+
+                </div>
+                <!-- end widget -->
+
+            </article>
+            <!-- END COL -->
+
+        </div>
+
+        <!-- END ROW -->
+
+    </section>
+    <!-- end widget grid -->
+
+</div>
+<!-- END MAIN CONTENT -->
+<!--Start of delete confirmation modal section-->
+<div class="modal fade" id="modal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-danger" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm Delete</h4>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <p class="success-message">Are you sure you want to delete this record ? </p>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-info delete-confirm">Yes</button>
+                <button class="btn btn-info confirm-confirm">Yes</button>
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">No</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of delete confirmation modal section-->
+<!--Start of details modal section-->
+<div class="modal fade" id="modal-details" tabindex="-1" role="dialog" aria-labelledby="lbl-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lbl-modal-details">Payment Batch Details</h4>
+            </div>
+            <div class="modal-body" id="modal-details-body" style="padding: 0px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+<!--End of details modal section-->
+<!-------------ADD ATTACHMENT MODAL ----------->
+
+<div class="modal fade" id="AddAttachment" tabindex="-1" role="dialog" aria-labelledby="lbl-modal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-info" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lbl-modal-details"> Add Attachment </h4>
+            </div>
+            <div class="modal-body" id="modal-details-body" style="padding: 0px">
+
+
+                <input id="PaymentBatchId" type="hidden" />
+                <input id="SourceModule" type="hidden" />
+
+
+                <table style="margin-left: 10%;padding:4px;">
+
+                    <tr>
+                        <td class="form-label">
+                            Title
+                            &nbsp;
+                        </td>
+                        <td>
+                            <input id="Title" style="width:300px" class="form-control" type="text" />
+                            <br />
+                        </td>
+                    </tr>
+
+                    <tr class="IsStPaymentFlag">
+                        <td class="form-label">
+                            Description
+                            &nbsp;
+                        </td>
+                        <td>
+                            <textarea id="Description" class="form-control" rows="2" style="width:300px" type="text"></textarea>
+                            <br />
+                        </td>
+                    </tr>
+
+                    <tr class="is-dfund">
+                        <td class="form-label">
+                            File
+                            &nbsp;
+                        </td>
+                        <td>
+                            <input type="file" class="form-control" name="FileName" id="file" accept=".pdf" style="width:300px" />
+                            <br />
+                        </td>
+                    </tr>
+
+                    <tr>
+                        <td class="form-label">
+                        </td>
+                        <td>
+                            <div class="">
+                                <a class="btn btn-info" type="button" href="javascript:void(0);" onclick="addAttachments()">
+                                    <i class="glyphicon glyphicon-plus"></i>Add
+                                </a>
+
+                            </div>
+                        </td>
+                    </tr>
+
+                </table>
+
+                <br />
+                <table class="table" id="dt_attachments">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Title</th>
+                            <th>Description </th>
+                            <th>File </th>
+                            <th>Date </th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                </table>
+
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class="modal fade" id="ViewReasonModal">
+    x
+    <div class="modal-dialog">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h4 class="modal-title">  Rejection Reason </h4>
+            </div>
+            <div class="modal-body">
+                <div id="registration-form">
+                    @Html.TextArea("RejectionReason", null, new { @class = "form-control", @readonly = "readonly" })
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+
+@section Scripts{
+    <script>
+        // DO NOT REMOVE : GLOBAL FUNCTIONS!
+
+        $(document).ready(function () {
+
+            /* // DOM Position key index //
+
+            l - Length changing (dropdown)
+            f - Filtering input (search)
+            t - The Table! (datatable)
+            i - Information (records)
+            p - Pagination (paging)
+            r - pRocessing
+            < and > - div elements
+            <"#id" and > - div with an id
+            <"class" and > - div with a class
+            <"#id.class" and > - div with an id and class
+
+            Also see: http://legacy.datatables.net/usage/features
+            */
+
+            /* BASIC ;*/
+            var responsiveHelper_dt_basic = undefined;
+            var responsiveHelper_datatable_fixed_column = undefined;
+            var responsiveHelper_datatable_col_reorder = undefined;
+            var responsiveHelper_datatable_tabletools = undefined;
+
+            var breakpointDefinition = {
+                tablet: 1024,
+                phone: 480
+            };
+
+            $('#dt_basic').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-12 hidden-xs'l>r>" +
+                    "t" +
+                    "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_dt_basic) {
+                        responsiveHelper_dt_basic = new ResponsiveDatatablesHelper($('#dt_basic'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_dt_basic.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_dt_basic.respond();
+                }
+            });
+
+            /* END BASIC */
+
+            /* COLUMN FILTER  */
+            var otable = $('#datatable_fixed_column').DataTable({
+                //"bFilter": false,
+                //"bInfo": false,
+                //"bLengthChange": false
+                //"bAutoWidth": false,
+                //"bPaginate": false,
+                //"bStateSave": true // saves sort state using localStorage
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6 hidden-xs'f><'col-sm-6 col-xs-12 hidden-xs'<'toolbar'>>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-xs-12 col-sm-6'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_fixed_column) {
+                        responsiveHelper_datatable_fixed_column = new ResponsiveDatatablesHelper($('#datatable_fixed_column'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_fixed_column.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_fixed_column.respond();
+                }
+
+            });
+
+            // custom toolbar
+            $("div.toolbar").html('<div class="text-right"><img src="/Content/img/logo.png" alt="SmartAdmin" style="width: 111px; margin-top: 3px; margin-right: 10px;"></div>');
+
+            // Apply the filter
+            $("#datatable_fixed_column thead th input[type=text]").on('keyup change', function () {
+
+                otable
+                    .column($(this).parent().index() + ':visible')
+                    .search(this.value)
+                    .draw();
+
+            });
+            /* END COLUMN FILTER */
+
+            /* COLUMN SHOW - HIDE */
+            $('#datatable_col_reorder').dataTable({
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'C>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_col_reorder) {
+                        responsiveHelper_datatable_col_reorder = new ResponsiveDatatablesHelper($('#datatable_col_reorder'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_col_reorder.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_col_reorder.respond();
+                }
+            });
+
+            /* END COLUMN SHOW - HIDE */
+
+            /* TABLETOOLS */
+            $('#datatable_tabletools').dataTable({
+
+                // Tabletools options:
+                //   https://datatables.net/extensions/tabletools/button_options
+                "sDom": "<'dt-toolbar'<'col-xs-12 col-sm-6'f><'col-sm-6 col-xs-6 hidden-xs'T>r>" +
+                        "t" +
+                        "<'dt-toolbar-footer'<'col-sm-6 col-xs-12 hidden-xs'i><'col-sm-6 col-xs-12'p>>",
+                "oTableTools": {
+                    "aButtons": [
+                    "copy",
+                    "csv",
+                    "xls",
+                       {
+                           "sExtends": "pdf",
+                           "sTitle": "SmartAdmin_PDF",
+                           "sPdfMessage": "SmartAdmin PDF Export",
+                           "sPdfSize": "letter"
+                       },
+                       {
+                           "sExtends": "print",
+                           "sMessage": "Generated by SmartAdmin <i>(press Esc to close)</i>"
+                       }
+                    ],
+                    "sSwfPath": "/Scripts/plugin/datatables/swf/copy_csv_xls_pdf.swf"
+                },
+                "autoWidth": true,
+                "preDrawCallback": function () {
+                    // Initialize the responsive datatables helper once.
+                    if (!responsiveHelper_datatable_tabletools) {
+                        responsiveHelper_datatable_tabletools = new ResponsiveDatatablesHelper($('#datatable_tabletools'), breakpointDefinition);
+                    }
+                },
+                "rowCallback": function (nRow) {
+                    responsiveHelper_datatable_tabletools.createExpandIcon(nRow);
+                },
+                "drawCallback": function (oSettings) {
+                    responsiveHelper_datatable_tabletools.respond();
+                }
+            });
+
+            /* END TABLETOOLS */
+
+        });
+
+
+        //function to reset bootstrap modal popups
+        $('#modal').on('hidden.bs.modal', '.modal', function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.delete-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to delete this record ?');
+        });
+
+
+
+        function UpdatePaymentStatus(id) {
+
+            var url = '@Url.Action("UpdatePaymentStatus", "ExternalPayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { id: id,"status": "Confirmed" },
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Payment Confirmed successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+
+                    } else {
+                        swal(response, { icon: "warning" }).then((e) => {
+                            //window.location.reload();
+                        });
+                    }
+                },
+                error: function (xhr) {
+                    alert("An error has occured, contact system support");
+                    $("#divLoader").hide();
+                },
+            });
+        }
+
+        function batchConfirmed(id) {
+
+                swal({
+                    title: "Confirm",
+                    text: "Are you sure you want to Confirm this record ? ",
+                    buttons: [
+                      'Yes',
+                      'No'
+                    ],
+                    closeOnClickOutside: false,
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        swal("Cancelled", "No change was made");
+                    } else {
+
+                        UpdatePaymentStatus(id);
+                    }
+                });
+                $('#confirmModal').modal('hide');
+
+            }
+
+
+        ///ADDING ATTACHMENTS DIALOG STARTS HERE
+        var dt_attachments = $('#dt_attachments').dataTable({ searching: false, paging: false, info: false });
+        var allattachments = []
+        var attachments = []
+
+        function uploadAttachment(id,sourcemodule) {
+            debugger;
+            $("#PaymentBatchId").val(id);
+            $("#SourceModule").val(sourcemodule);
+            $('#AddAttachment').modal('show');
+            updateAttachmentsTables(id, sourcemodule);
+        }
+
+
+        function addAttachments() {
+            debugger;
+
+            var id = $("#PaymentBatchId").val();
+            var sourcemodule = $("#SourceModule").val();
+            var attachmentName = $("#Title").val();
+            if (attachmentName == 0) {
+                swal({
+                    text: "Please atacchment Tile!",
+                    icon: "info",
+                    button: "OK",
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                })
+                return false;
+            }
+
+            var vidFileLength = $("#file")[0].files.length;
+            if (vidFileLength === 0) {
+                swal({
+                    text: "Please choose file!",
+                    icon: "info",
+                    button: "OK",
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                })
+
+                return false;
+            }
+
+            $("#saveLoader").show();
+
+            if (!attachments.includes(attachmentName)) {
+                var formData = new FormData();
+
+                  formData.append('Title', $("#Title").val());
+                  formData.append('Description', $("#Description").val());
+                formData.append('GroupId', id);
+                formData.append('SourceModule', sourcemodule);
+                  formData.append('file', $('input[type=file]')[0].files[0]);
+
+                var url = '@Url.Action("AttachmentCreate", "ExternalPayment")';
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    data: formData,
+                    contentType: false,
+                    processData: false,
+                    success: function (response) {
+                        $("#saveLoader").hide();
+                        if (response = "Success") {
+                            swal("Uploaded Successfully", { icon: "success" });
+                            allattachments.push({
+                                FileName: $("#file").val()
+                            })
+                            attachments.push($("#Title").val());
+                            updateAttachmentsTables(id, sourcemodule);
+                        }
+                        else if (response = "exist") {
+                            swal({
+                                text: "Attachment exist!",
+                                icon: "info",
+                                button: "OK",
+                                customClass: {
+                                    container: 'my-swal'
+                                }
+                            })
+                        }
+                    },
+                    failure: function (response) {
+                        alert(response.d);
+                        $("#saveLoader").hide();
+                    }
+                });
+            } else {
+                 $("#saveLoader").hide();
+                swal({
+                    text: "Duplicate Attachment!",
+                    icon: "info",
+                    button: "OK",
+                    customClass: {
+                        container: 'my-swal'
+                    }
+                })
+            }
+        }
+
+        function confirmAttachmentRemoval(index, id) {
+            debugger;
+            swal({
+                title: "Are you sure",
+                text: "You want to Remove selected Attachment ? ",
+                buttons: [
+                    'Yes',
+                    'No'
+                ],
+                icon:"warning",
+                closeOnClickOutside: false,
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    swal("Cancelled", "No change was made");
+                } else {
+
+                    attachmentRemove(index, id);
+                }
+            });
+        }
+
+        function attachmentRemove(index, id) {
+            debugger;
+            var pbid = $("#PaymentBatchId").val();
+            var sourcemodule = $("#SourceModule").val();
+
+            var url = '@Url.Action("AttachmentRemove", "ExternalPayment")';
+            $.ajax({
+                type: "get",
+                url: url,
+                data: {"id":id},
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (response) {
+                    if (response = "Success") {
+                        swal("Attachment Removed Successfully!", { icon: "success" }).then((e) => {
+                            updateAttachmentsTables(pbid, sourcemodule);
+                        });
+                        updateAttachmentsTables(id, sourcemodule);
+                        allattachments.splice(index, 1);
+                        attachments.splice(index, 1);
+
+                    }
+                },
+                failure: function (response) {
+                    alert(response.d);
+                }
+            });
+        }
+
+        function updateAttachmentsTables(id, sourceModule) {
+
+            debugger;
+            var url = '@Url.Action("AttachmentsGet", "ExternalPayment")';
+            var params = { "groupId": id,"sourceModule":sourceModule };
+
+            $.ajax({
+                type: "get",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    datalength = data.length;
+                    console.log(data.length)
+                    dt_attachments.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        var attachmentUrl = `${window.location.origin}/Content/uploads/${data[i]["filePath"]}`
+                        dt_attachments.fnAddData([i + 1,
+                            data[i]["Title"],
+                            data[i]["Description"],
+                            '<a href="/Content/uploads/' + data[i]["FileName"] + '" target="_blank"><i class="fa fa-file-pdf-o"></i></a>',
+                            data[i]["CreatedAtFormatted"],
+                            '<a href="#"  onclick="confirmAttachmentRemoval(' + i + ',' + data[i]["PaymentVoucherAttachmentId"] + ')">\
+                                    <i class="glyphicon glyphicon-trash"></i></a>',
+                        ]);
+                    }
+                    $("#added_attachments").text(" (" + data.length + ")");
+                    $("#added_attachments").val(data.length);
+                },
+                failure: function (error) {
+                    swal.fire(error);
+                }
+            });
+        }
+
+
+
+        // REJECTION TO FFARS
+
+         function rejectExternalPayment(i) {
+            debugger;
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    confirmRejection(i, remark);
+                };
+            });
+        }
+
+        function confirmRejection(Id, remark) {
+            debugger;
+            var url = '@Url.Action("RejectExternalPaymentBatch", "ExternalPayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "remark": remark, "status":"Cancelled"},
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Payment Rejected Successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var viewRejectionReason = function (reason) {
+            $(".modal-body #RejectionReason").val(reason);
+            $("#ViewReasonModal").modal("show");  // show modal
+        };
+    </script>
+}

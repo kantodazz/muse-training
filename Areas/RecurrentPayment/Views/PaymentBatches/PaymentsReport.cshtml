@@ -1,0 +1,101 @@
+﻿@{
+    ViewBag.Title = "";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<div id="content">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>Payment Batches</h2>
+                    </header>
+                    <div>
+                        <div class="panel-body">
+                            <button type="button" class="btn btn-info"
+                                    onclick="PayrollReport('ALL',@ViewBag.InstitutionID)" title="Click button to Preview All Missing Beneficiary!">
+                                @*<span class="glyphicon glyphicon-print"></span>*@
+                                Preview All
+                            </button>
+                            </div>
+                            <div class="widget-body">
+                                <div class="panel-body">
+                                    <table class="table table-bordered table-condensed" id="tblUsers">
+                                        <thead>
+                                            <tr>
+                                                <th>#</th>
+                                                <th>Batch No</th>
+                                                <th>Batch Desc</th>
+                                                <th>Paystation</th>
+                                                <th>Amount</th>
+                                                <th>No of Employees</th>
+                                                <th></th>
+                                                <th></th>
+                                            </tr>
+                                        </thead>
+
+                                        <tbody></tbody>
+
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@section Scripts {
+    <script>
+
+        $(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+            var url = '@Url.Action("GetPaymentsReport", "PaymentBatches")';
+            $("#tblUsers").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": url,
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "GET",
+                        url: sSource,
+                        data: aoData,
+                        success: fnCallback
+                    });
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "BatchNo" },
+                    { "mData": "BatchDesc" },
+                    { "mData": "PayStationName" },
+                    { "mData": "TotalAmount" },
+                    { "mData": "NoTrx" },
+                    {
+                        "mData": "PaymentBatchID",
+                        "bSortable": false,
+                        "render": function (Id, type, full, meta) {
+                            return '<a href="#" onclick="PayrollReport(' + Id + ',' + full.InstitutionId +')"><i class="glyphicon glyphicon-download-alt"></i></a>'
+
+                        }
+                    },
+                ]
+            });
+        };
+        function PayrollReport(PaymentBatch,id) {
+            debugger;
+            window.open("../../Areas/RecurrentPayment/Reports/PaymentsReport.aspx?PaymentBatchID=" + PaymentBatch + "&&InstitutionId=" + id);
+        }
+    </script>
+}

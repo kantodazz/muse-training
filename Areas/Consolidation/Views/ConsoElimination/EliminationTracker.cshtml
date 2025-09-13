@@ -1,0 +1,360 @@
+﻿<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div style="display: flex; justify-content: space-between">
+                                <div>
+                                    Financial Year: <select id="fy"></select>
+                                </div>
+                                <div>
+                                    Note: <select id="notes"><option value="">ALL</option></select>
+                                </div>
+                                <div>
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount"></table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+        $("#saveLoader").toggle(false);
+
+        var dt_table = $('#dt_table').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+            },
+            "data": [],
+            "columns": [
+                {
+                    "className": 'details-control',
+                    "orderable": false,
+                    "data": null,
+                    "defaultContent": ''
+                },
+                { title: "GFSCode" },
+                { title: "GFSCodeDesc" },
+                { title: "TB Amount" },
+                { title: "Counterpart Amount" },
+                { title: "Elimination Amount" },
+                { title: "Status" }
+            ]
+        });
+
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+
+        $('#dt_table').on('draw.dt', function () {
+            $(".loading-gif").toggle(false);
+        });
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_table.DataTable().search(this.value).draw
+        });
+
+        var data = []
+        var amounts = {}
+
+        $("#notes").on("change", function () {
+            if ($("#notes").val() != "0") {
+                loadData();
+            }
+        });
+
+        $("#fy").on("change", function () {
+            if ($("#notes").val() != "0") {
+                loadData();
+            }
+        });
+
+        function loadData() {
+            dt_table.fnClearTable();
+            $("#loader").text("Loading Please Wait...")
+                  $.ajax({
+                      type: "GET",
+                      url: '@Url.Action("GetTrackElimination", "ConsoElimination")',
+                      contenttype: "application/json; charset=utf-8",
+                      data: {
+                          fy: $("#fy").val(),
+                          note: $("#notes").val()
+                      },
+                      datatype: "json",
+                      success: function (response) {
+                          data = response.data;
+                          if (!data.length) {
+                              $("#loader").text("No matching records found.")
+                          }
+                          for (var i = 0; i < data.length; i++) {
+                              var CounterpartAmount = data[i].b.reduce((a, b) => a + (b.ConsoCounterpartActualTotal + 0), 0)
+                              var d = data[i].a;
+                              dt_table.fnAddData([
+                                  "",
+                                  d.GFSCode,
+                                  d.GFSCodeDesc,
+                                  toLabel(Math.abs(d.TBAmount)),
+                                  toLabel(CounterpartAmount),
+                                  toLabel(d.EliminationAmount),
+                                  d.OverallStatus
+                              ]);
+                              $("#saveLoader-" + d.ConsoInstitutionEliminationSummaryId).toggle(false);
+                          }
+                      },
+                      failure: function (error) {
+                          swal(error);
+                      }
+                  });
+        }
+
+        function initDetailsTable(i) {
+            window["dt_view_back_log" + i] = $('#dt_view_back_log' + i)
+                .dataTable({
+                    "columnDefs": [{ "width": "20%", "targets": 4 }],
+                    "columns": [
+                        { title: "#" },
+                        { title: "InstitutionCode" },
+                        { title: "InstitutionName" },
+                        { title: "GFSCode" },
+                        { title: "GFSCodeDesc" },
+                        { title: "Counterpart Amount" },
+                        { title: "Elimination Amount" },
+                    ]
+                });
+                $("#dt_view_back_log" + i + "_wrapper .dt-toolbar").remove();
+        }
+
+        $('#dt_table tbody').on('click', 'td.details-control', function () {
+            var tr = $(this).closest('tr');
+            var row = dt_table.DataTable().row(tr);
+
+            var format = function (i) {
+                return '<table id="dt_view_back_log' + i + '" class="table table-bordered table-condensed"></table>';
+            }
+
+            if (row.child.isShown()) {
+                row.child.hide();
+                tr.removeClass('shown');
+            }
+            else {
+                var rowId = row['0'][0]
+                row.child(format(rowId)).show();
+                initDetailsTable(rowId);
+                tr.addClass('shown');
+
+                window["dt_view_back_log" + rowId].fnClearTable();
+
+                data[rowId].b.forEach((d, index) => {
+                    window["dt_view_back_log" + rowId].fnAddData([
+                        `${index+1}`,
+                        d.ConsoCounterpartInstCode,
+                        d.ConsoCounterpartEntityDescription,
+                        d.ConsoCounterpartGfsCode,
+                        d.ConsoCounterpartGfsDesc,
+                        toLabel(d.EliminatingEntityAmount),
+                        toLabel(d.ConsoCounterpartActualTotal),
+                    ]);
+                })
+            }
+        });
+
+
+        function getNotes() {
+              $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetTrackNote", "ConsoElimination")',
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+                  success: function (response) {
+                      var options = response.data;
+                  var select = document.getElementById("notes")
+                      options.forEach(opt => {
+                      let option = document.createElement('option')
+                          option.value = opt.Note
+                          option.text = `${opt.Note}-${opt.NoteDesc}`
+                      select.appendChild(option);
+                      });
+              },
+              failure: function (error) {
+                  swal(error);
+                }
+              });
+        }
+        getNotes();
+
+    function getFinancialyear() {
+              $.ajax({
+              type: "GET",
+              url: '@Url.Action("GetTrackFinancialYear", "ConsoElimination")',
+              contenttype: "application/json; charset=utf-8",
+              datatype: "json",
+                  success: function (response) {
+                      var options = response.data;
+                  var select = document.getElementById("fy")
+                      options.forEach(opt => {
+                      let option = document.createElement('option')
+                          option.value = opt.FinancialYear
+                          option.text = opt.FinancialYear
+                      select.appendChild(option);
+                      });
+                      $("#fy").trigger('change')
+              },
+              failure: function (error) {
+                  swal(error);
+                }
+              });
+        }
+
+        getFinancialyear();
+
+        function reject(id) {
+            swal({
+                title: 'Are you sure?',
+                buttons: ['NO', 'YES'],
+                dangerMode: true,
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    confirmPost(id, 3)
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmPost(id, actionId) {
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("ConsoActions", "ConsoElimination")',
+                data: { idz: [id].toString(), actionId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Rejected Successfully!", { icon: "success" })
+                            .then((e) => {
+                                window.location.reload();
+                            });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,1424 @@
+﻿@model IFMIS.Areas.LoanMod.Models.LoanCustomerVM
+@{
+    ViewBag.Title = "Loan Application";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    body {
+        margin-top: 40px;
+    }
+
+    .stepwizard-step p {
+        margin-top: 10px;
+    }
+
+    .stepwizard-row {
+        display: table-row;
+    }
+
+    .stepwizard {
+        display: table;
+        width: 100%;
+        position: relative;
+    }
+
+    .stepwizard-step button[disabled] {
+        opacity: 1 !important;
+        filter: alpha(opacity=100) !important;
+    }
+
+    .stepwizard-row:before {
+        top: 14px;
+        bottom: 0;
+        position: absolute;
+        content: " ";
+        width: 100%;
+        height: 1px;
+        background-color: #ccc;
+        z-order: 0;
+    }
+
+    .stepwizard-step {
+        display: table-cell;
+        text-align: center;
+        position: relative;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    #itemUL li {
+        margin-left: -40px;
+        border-bottom: 1px solid silver;
+        height: 26px;
+        padding-left: 5px;
+        padding-top: 8px;
+        cursor: pointer;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row">
+
+
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                          @if (ViewBag.CustomerTypeCount > 0)
+                           {
+                            <div class="form-horizontal">
+                                <div class="row" style="padding:1% 5% 0 5%;">
+                                    <div class="col-xs-12">
+                                        <div class="col-md-6 col-lg-6 col-sm-12 ">
+                                            <table>
+                                                @Html.AntiForgeryToken()
+                                                <tr id="CustomerTypeHolder">
+                                                    <td class="form-label">
+                                                        Customer Type
+                                                        <i class="fa fa-times" style="color:white"></i>
+                                                    </td>
+                                                    <td>
+
+                                                        <select name="CustomerTypeId" id="customerTypeId" required style="width:300px" onchange="CustomerTypeChange()"  class="form-control select2">
+                                                            @if (ViewBag.CustomerTypeList != null)
+                                                            {
+                                                                <option>Select Customer Type</option>
+                                                                foreach (var customerType in ViewBag.CustomerTypeList)
+                                                                {
+                                                                    <option value='@customerType.Label'>@customerType.CustomerName</option>
+                                                                }
+                                                            }
+                                                            }
+
+                                                        </select>
+                                                    </td>
+                                                </tr>
+                                            </table>
+                                        </div>
+                                        <div class="col-md-6 col-lg-6 col-sm-12 "></div>
+                                    </div>
+                                </div>
+                                <fieldset>
+                                    <div class="row" style="padding:1% 5% 0 5%;">
+                                        <div class="col-md-12" id="applicationInfo">
+
+                                            <div class="col-md-6 col-lg-6 col-sm-12 ">
+                                                <table>
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Full Name
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.CustomerName, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                                @Html.ValidationMessageFor(model => model.CustomerName, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Tin No
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.TinNo, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Gender
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                Male:   @Html.RadioButton("Gender", "Male")
+                                                                Female: @Html.RadioButton("Gender", "Female")
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Marital Status
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("MaritalStatus", new List<SelectListItem>{
+                                                            new SelectListItem{ Text="Select Marital Status", Value = "" },
+                                                            new SelectListItem{ Text="Single", Value = "Single" },
+                                                            new SelectListItem{ Text="Married", Value = "Married" },
+                                                            new SelectListItem{ Text="Divorce", Value = "Divorce" },
+                                                             }, new { @class = "form-control select2", @required = "required",id= "MaritalStatus", onchange = "maritalStatusChange()", style = "width:300px;" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Date of Birth
+                                                        </td>
+                                                        <td>
+                                                            <div class="flatpickr date-group">
+                                                                <input type="text" placeholder="Select Date.."
+                                                                       data-input
+                                                                       style="width:250px;border:none;"
+                                                                       autocomplete="off" name="DateOfBirth" id="DateOfBirth">
+
+                                                                <a class="input-button" title="open" data-toggle href="#">
+                                                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Principal Activity
+                                                            <i class="fa fa-times" style="color:white" id="description"></i>
+                                                        </td>
+                                                        <td>
+                                                            @Html.TextArea("Occupation", null, new { @class = "form-control", @required = "required", rows = "2", cols = "41", @style = "width:300px;" })
+
+                                                        </td>
+                                                    </tr>
+
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Region
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("RegionId", ViewBag.RegionList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            District
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("DistrictId", ViewBag.DistrictList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Division
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("DivisionId", ViewBag.DivisionList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Ward
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("WardId", ViewBag.WardList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Full Name
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseName, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Date Of Birth
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="flatpickr date-group">
+                                                                <input type="text" placeholder="Select Date.."
+                                                                       data-input
+                                                                       style="width:250px;border:none;"
+                                                                       autocomplete="off" name="SpouseDateOfBirth" id="SpouseDateOfBirth">
+
+                                                                <a class="input-button" title="open" data-toggle href="#">
+                                                                    <span class="input-group-addon"><i class="fa fa-calendar"></i></span>
+                                                                </a>
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Principal Activity
+                                                            <i class="fa fa-times" style="color:white" id="description"></i>
+                                                        </td>
+                                                        <td>
+                                                            @Html.TextArea("SpouseOccupation", null, new { @class = "form-control", @required = "required", rows = "2", cols = "41", @style = "width:300px;" })
+
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Region
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("SpouseRegionId", ViewBag.RegionList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse District
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("SpouseDistrictId", ViewBag.DistrictList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Division
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("SpouseDivisionId", ViewBag.DivisionList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Ward
+                                                        </td>
+                                                        <td>
+                                                            @Html.DropDownList("SpouseWardId", ViewBag.WardList as SelectList, "", new { @Class = "input", style = "width:300px", required = "required" })
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Village / Street
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseVillage, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Hamlet
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseHamlet, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                </table>
+                                            </div>
+
+                                            <div class="col-lg-6 col-sm-12 ">
+                                                <table>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Email
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.Email, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                                @Html.ValidationMessageFor(model => model.Email, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Phone Number
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.PhoneNo, new { @Class = "input", @required = "required", style = "width:300px; ", type = "number", min = "0" })
+                                                                @Html.ValidationMessageFor(model => model.PhoneNo, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                           Physical Address
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            @Html.TextArea("PhysicalAddress", null, new { @class = "form-control", @required = "required", rows = "2", cols = "41", @style = "width:300px;" })
+
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Fax
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.Fax, new { @Class = "input", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Location
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.Location, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                                @Html.ValidationMessageFor(model => model.Location, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Photo
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.PhotoUrl, new { @Class = "input",type="file", style = "width:300px; " })
+                                                                @Html.ValidationMessageFor(model => model.PhotoUrl, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Village / Street
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.Village, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Hamlet
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.Hamlet, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Plot No
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.PlotNo, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+
+                                                    <tr>
+                                                        <td class="form-label">
+                                                            Status
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.DropDownList("Status", new List<SelectListItem>{
+                                                new SelectListItem{ Text="--Select ---", Value = "" },
+                                                new SelectListItem{ Text="ACTIVE", Value = "Active" },
+                                                new SelectListItem{ Text="INACTIVE", Value = "Inactive" },
+                                                 }, new { @class = "form-control", @required = "required", style = "width:300px;" })
+                                                                @Html.ValidationMessageFor(model => model.Status, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Email
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseEmail, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Phone Number
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpousePhoneNumber, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Physical Address
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+  
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpousePhysicalAddress, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Fax
+                                                            <i class="fa fa-times" style="color:white" id="description"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseFax, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Location
+                                                            <i class="fa fa-times" style="color:white" id="description"></i>
+                                                        </td>
+
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpouseLocation, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Photo
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpousePhotoUrl, new { @Class = "input", @required = "required",type="file", style = "width:300px; " })
+                                                                @Html.ValidationMessageFor(model => model.SpousePhotoUrl, "", new { @class = "text-danger" })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+          
+                                                    <tr class="spouseInfo">
+                                                        <td class="form-label">
+                                                            Spouse Plot No
+                                                            <i class="fa fa-times" style="color:white"></i>
+                                                        </td>
+                                                        <td>
+                                                            <div class="input-group">
+                                                                @Html.TextBoxFor(model => model.SpousePlotNo, new { @Class = "input", @required = "required", style = "width:300px; " })
+                                                            </div>
+                                                        </td>
+                                                    </tr>
+
+                                                </table>
+                                            </div>
+                                        </div>
+
+
+                                    </div>
+                                </fieldset>
+                                <div class="col-md-12" id="institutionInfo">
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Fullname</label>
+                                        <div class="col-md-3">
+
+                                            <input type="text" class="form-control" />
+                                        </div>
+                                        <label class="control-label col-md-2">Registration Date</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Business licence</label>
+                                        <div class="col-md-3">
+
+                                            <input type="text" class="form-control" />
+                                        </div>
+                                        <label class="control-label col-md-2">Registration number</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Declaration Date</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+                                        <label class="control-label col-md-2">Physical Address</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">BOT Licence</label>
+                                        <div class="col-md-3">
+
+                                            <input type="text" class="form-control" />
+                                        </div>
+                                        <label class="control-label col-md-2">TIN No</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Board Resolution</label>
+                                        <div class="col-md-3">
+
+                                            <input type="text" class="form-control" />
+                                        </div>
+                                        <label class="control-label col-md-2">Certificate of Incorporation</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Region</label>
+                                        <div class="col-md-3">
+                                            <select name="country" class="form-control">
+                                                <option value="">Choose Region</option>
+                                                <option value="Individual">Dodoma</option>
+                                                <option value="Individual">Mwanza</option>
+                                            </select>
+                                        </div>
+                                        <label class="control-label col-md-2">District</label>
+                                        <div class="col-md-3">
+                                            <select name="country" class="form-control">
+                                                <option value="">Choose District</option>
+                                                <option value="Individual">Dodoma mjini</option>
+                                                <option value="Individual">Mtumba</option>
+                                            </select>
+                                        </div>
+
+                                    </div>
+
+
+                                    <div class="form-group">
+                                        <label class="control-label col-md-2">Ward</label>
+                                        <div class="col-md-3">
+
+                                            <select name="country" class="form-control">
+                                                <option value="">Choose Ward</option>
+                                                <option value="Individual">Dodoma</option>
+                                                <option value="Individual">Mwanza</option>
+                                            </select>
+                                        </div>
+                                        <label class="control-label col-md-2">Village / Street</label>
+                                        <div class="col-md-3">
+                                            <input type="text" class="form-control" />
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                                <div class="col-md-offset-2 btnSaveBack">
+                                    <a href="#step-1" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                    @*<button type="submit" class="btn btn-info" id="form_submision">
+                                        <i class="fa fa-save"></i>Save
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                    </button>*@
+                                    <button type="submit" class="btn btn-info" onclick="saveForm()">
+                                        <i class="fa fa-save"></i>Save
+                                        <img src="~/Content/img/loading.gif" id="saveLoader" />
+                                    </button>
+
+                                </div>
+                            </div>
+                            }
+
+                        </div>
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script src="~/Scripts/jquery-ui-1.12.1.min.js"></script>
+    <script type="text/javascript">
+
+        if ('@ViewBag.CustomerTypeCount' == 0) {
+            swal("Customer Type not Found,Contact Administrator to add Customer Type", { icon: "warning" })
+                              .then((value) => {
+                                  var url = '@Url.Action("LoanCustomerList", "LoanCustomer")';
+                                  window.location.replace(url);
+                              });
+        }
+
+
+
+        $(document).ready(function () {
+
+            $("#RegionId").change(function () {
+                var region = $(this).val();
+
+                document.getElementById("DivisionId").value = "";
+                document.getElementById("WardId").value = "";
+                document.getElementById("DivisionId").disabled = true;
+                document.getElementById("WardId").disabled = true;
+                getDistricts(region);
+            });
+
+            $("#DistrictId").change(function () {
+                var district = $(this).val();
+                document.getElementById("DivisionId").disabled = false;
+                getDivisions(district);
+            });
+
+            $("#DivisionId").change(function () {
+                var division = $(this).val();
+                document.getElementById("WardId").disabled = false;
+                getWards(division);
+            });
+
+            //$("#SpouseRegionId").change(function () {
+            //    var region = $(this).val();
+            //    getSpouseDistricts(region);
+            //});
+
+            //$("#SpouseDistrictId").change(function () {
+            //    var district = $(this).val();
+            //    getSpouseDivisions(district);
+            //});
+
+            //$("#SpouseDivisionId").change(function () {
+            //    var division = $(this).val();
+            //    getSpouseWards(division);
+            //});
+
+
+            function getDistricts(region) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetDistricts", "Setting")/?region=' + region + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.push('<option value="">Select District</option>');
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#DistrictId").html(option);
+                    }
+                })
+            }
+
+            function getDivisions(district) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetDivisions", "Setting")/?district=' + district + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.push('<option value="">Select Division</option>');
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#DivisionId").html(option);
+                    }
+                })
+            }
+
+            function getWards(division) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetWards", "Setting")/?division=' + division + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        option.push('<option value="">Select Ward</option>');
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#WardId").html(option);
+                    }
+                })
+            }
+
+
+            function getSpouseDistricts(region) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetDistricts", "Setting")/?region=' + region + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#SpouseDistrictId").html(option);
+                    }
+                })
+            }
+
+            function getSpouseDivisions(district) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetDivisions", "Setting")/?district=' + district + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#SpouseDivisionId").html(option);
+                    }
+                })
+            }
+
+            function getSpouseWards(division) {
+                var option = [];
+                $.ajax({
+                    url: '@Url.Action("GetWards", "Setting")/?division=' + division + '',
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+                        data.forEach(d=> {
+                            option.push('<option value=' + d["Value"] + '>' + d["Text"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        $("#SpouseWardId").html(option);
+                    }
+                })
+            }
+
+
+        });
+
+        $("#applicationInfo").hide();
+        $(".spouseInfo").hide();
+        $("#institutionInfo").hide();
+
+        $("#endorsementInfo").hide();
+        $("#managementInfo").hide();
+        $(".btnSaveBack").hide();
+
+        $("#CustomerTypeHolder").show();
+
+        var customerType = document.getElementById("customerTypeId");
+
+        function CustomerTypeChange() {
+            $("#CustomerTypeHolder").show();
+            if (customerType.value == "INDIVIDUAL") {
+                $("#applicationInfo").show();
+                $(".spouseInfo").hide();
+                $("#institutionInfo").hide();
+                $("#managementInfo").hide();
+                $(".btnSaveBack").show();
+            }
+            else {
+                $("#applicationInfo").hide();
+                $(".spouseInfo").hide();
+                if (customerType.value == "") {
+                    $("#institutionInfo").hide();
+                } else {
+                    $("#institutionInfo").show();
+                    $("#managementInfo").show();
+                }
+                $(".btnSaveBack").show();
+            }
+        }
+
+        var maritalStatus = document.getElementById("MaritalStatus");
+        function maritalStatusChange() {
+            $("#CustomerTypeHolder").show();
+            if (maritalStatus.value == "Married") {
+                $(".spouseInfo").show();
+            }
+            else {
+                $(".spouseInfo").hide();
+            }
+        }
+
+        $("#saveLoader").toggle(false);
+        function saveForm() {
+            var customerType = document.getElementById("customerTypeId");
+            if (customerType.value == "INDIVIDUAL") {
+
+                var CustomerName = $("#CustomerName").val();
+                var Occupation = $("#Occupation").val();
+                var WardId = $("#WardId").val();
+                var status = $("#Status").val();
+                var Gender = $("#Gender").val();
+                var MaritalStatus = $("#MaritalStatus").val();
+                var DateOfBirth = $("#DateOfBirth").val();
+                var Email = $("#Email").val();
+                var PhoneNo = $("#PhoneNo").val();
+                var PhysicalAddress = $("#PhysicalAddress").val();
+                var Location = $("#Location").val();
+                var PhotoUrl = $("#PhotoUrl").val();
+                var Village = $("#Village").val();
+                var Hamlet = $("#Hamlet").val();
+                var PlotNo = $("#PlotNo").val();
+                var TinNo = $("#TinNo").val();
+                var Fax = $("#Fax").val();
+                var CustomerTypeLabel = customerType.value;
+
+
+                if (maritalStatus.value == "Married") {
+                    var SpouseName = $("#SpouseName").val();
+                    var SpouseDateOfBirth = $("#SpouseDateOfBirth").val();
+                    var SpouseOccupation = $("#SpouseOccupation").val();
+                    var SpouseWardId = $("#SpouseWardId").val();
+                    var SpouseEmail = $("#SpouseEmail").val();
+                    var SpousePhoneNumber = $("#SpousePhoneNumber").val();
+                    var SpousePhysicalAddress = $("#SpousePhysicalAddress").val();
+                    var SpouseLocation = $("#SpouseLocation").val();
+                    var SpousePhotoUrl = $("#SpousePhotoUrl").val();
+                    var SpousePlotNo = $("#SpousePlotNo").val();
+                    var SpouseFax = $("#SpouseFax").val();
+                    var SpouseHamlet = $("#SpouseHamlet").val();
+                    var SpouseVillage = $("#SpouseVillage").val();
+
+                    if (SpouseName == '' || SpouseDateOfBirth == '' || SpouseOccupation == '' || SpouseWardId == '' || SpousePhysicalAddress == '' || SpousePhoneNumber == '' || SpouseLocation == '' || SpousePlotNo == '') {
+                        var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+                        swal("Please Fill All the required Fields");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseName) == false) {
+                        swal("Special Characters for Spouse Full Name are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseOccupation) == false) {
+                        swal("Special Characters for Spouse Principal Activity are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpousePhysicalAddress) == false) {
+                        swal("Special Characters for Spouse Physical Address are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseLocation) == false) {
+                        swal("Special Characters for Spouse Location are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpousePlotNo) == false) {
+                        swal("Special Characters for Spouse Plot No are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseFax) == false) {
+                        swal("Special Characters for Spouse Fax are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseHamlet) == false) {
+                        swal("Special Characters for Spouse Hamlet are not allowed");
+                        return false;
+                    }
+
+                    if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseVillage) == false) {
+                        swal("Special Characters for Spouse Village are not allowed");
+                        return false;
+                    }
+
+                }
+
+
+                if (CustomerName == '' || Occupation == '' || status == '' || Gender == '' || MaritalStatus == '' || DateOfBirth == '' || WardId == '' || PhoneNo == '' || PhysicalAddress == '' || Location == '' || Village == '' || Hamlet == '') {
+                    var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+                    swal("Please Fill All the required Fields");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(CustomerName) == false) {
+                    swal("Special Characters for Full Name are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(Occupation) == false) {
+                    swal("Special Characters for Principal Activity are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(PhysicalAddress) == false) {
+                    swal("Special Characters for Physical Address are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(Location) == false) {
+                    swal("Special Characters for Location are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(Village) == false) {
+                    swal("Special Characters for Village are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(Hamlet) == false) {
+                    swal("Special Characters for Hamlet are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(PlotNo) == false) {
+                    swal("Special Characters for Plot No are not allowed");
+                    return false;
+                }
+
+                if (/^[a-zA-Z0-9\-_\s]*$/.test(Fax) == false) {
+                    swal("Special Characters for Fax are not allowed");
+                    return false;
+                }
+            }
+            var formData = new FormData()
+            if (maritalStatus.value == "Married") {
+               
+            } else {
+
+                formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+                formData.append('CustomerType', CustomerTypeLabel);
+                formData.append('CustomerName', CustomerName);
+                formData.append('Occupation', Occupation);
+                formData.append('WardId', WardId);
+                formData.append('Gender', Gender);
+                formData.append('MaritalStatus', MaritalStatus);
+                formData.append('DateOfBirth', DateOfBirth);
+                formData.append('Email', Email);
+                formData.append('PhoneNo', PhoneNo);
+                formData.append('PhysicalAddress', PhysicalAddress);
+                formData.append('Location', Location);
+                formData.append('Village', Village);
+                formData.append('Hamlet', Hamlet);
+                formData.append('PlotNo', PlotNo);
+                formData.append('TinNo', TinNo);
+                formData.append('Fax', Fax);
+                formData.append('Status', status);
+                formData.append('PhotoUrl', $("#PhotoUrl")[0].files[0]);
+            }
+            postFormData(formData);
+
+        }
+
+        function postFormData(formData) {
+            $("#saveForm").prop('disabled', true);
+            $("#saveLoader").toggle(true);
+            var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    $("#saveForm").prop('disabled', true);
+                    $("#saveLoader").toggle(true);
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((m) => {
+                                window.location.href = '@Url.Action("LoanCustomerList", "LoanCustomer")';
+                            });
+                    } else {
+                        swal(response)
+                    }
+                },
+                failure: function (error) {
+                    swal(error)
+                }
+            });
+        }
+        //$("#form_submision").click(function () {
+
+        //    if (customerType.value == "INDIVIDUAL") {
+
+        //        var CustomerName = $("#CustomerName").val();
+        //        var Occupation = $("#Occupation").val();
+        //        var WardId = $("#WardId").val();
+        //        var status = $("#Status").val();
+        //        var Gender = $("#Gender").val();
+        //        var MaritalStatus = $("#MaritalStatus").val();
+        //        var DateOfBirth = $("#DateOfBirth").val();
+        //        var Email = $("#Email").val();
+        //        var PhoneNo = $("#PhoneNo").val();
+        //        var PhysicalAddress = $("#PhysicalAddress").val();
+        //        var Location = $("#Location").val();
+        //        var PhotoUrl = $("#PhotoUrl").val();
+        //        var Village = $("#Village").val();
+        //        var Hamlet = $("#Hamlet").val();
+        //        var PlotNo = $("#PlotNo").val();
+        //        var Fax = $("#Fax").val();
+        //        var CustomerTypeLabel = customerType.value;
+
+
+        //        if (maritalStatus.value == "Married") {
+        //            var SpouseName = $("#SpouseName").val();
+        //            var SpouseDateOfBirth = $("#SpouseDateOfBirth").val();
+        //            var SpouseOccupation = $("#SpouseOccupation").val();
+        //            var SpouseWardId = $("#SpouseWardId").val();
+        //            var SpouseEmail = $("#SpouseEmail").val();
+        //            var SpousePhoneNumber = $("#SpousePhoneNumber").val();
+        //            var SpousePhysicalAddress = $("#SpousePhysicalAddress").val();
+        //            var SpouseLocation = $("#SpouseLocation").val();
+        //            var SpousePhotoUrl = $("#SpousePhotoUrl").val(); 
+        //            var SpousePlotNo = $("#SpousePlotNo").val();
+        //            var SpouseFax = $("#SpouseFax").val();
+        //            var SpouseHamlet = $("#SpouseHamlet").val();
+        //            var SpouseVillage = $("#SpouseVillage").val();
+
+        //            if (SpouseName == '' || SpouseDateOfBirth == '' || SpouseOccupation == '' || SpouseWardId == '' || SpousePhysicalAddress == '' || SpousePhoneNumber == '' || SpouseLocation == '' || SpousePlotNo == '') {
+        //                var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+        //                swal("Please Fill All the required Fields");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseName) == false) {
+        //                swal("Special Characters for Spouse Full Name are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseOccupation) == false) {
+        //                swal("Special Characters for Spouse Principal Activity are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpousePhysicalAddress) == false) {
+        //                swal("Special Characters for Spouse Physical Address are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseLocation) == false) {
+        //                swal("Special Characters for Spouse Location are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpousePlotNo) == false) {
+        //                swal("Special Characters for Spouse Plot No are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseFax) == false) {
+        //                swal("Special Characters for Spouse Fax are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseHamlet) == false) {
+        //                swal("Special Characters for Spouse Hamlet are not allowed");
+        //                return false;
+        //            }
+
+        //            if (/^[a-zA-Z0-9\-_\s]*$/.test(SpouseVillage) == false) {
+        //                swal("Special Characters for Spouse Village are not allowed");
+        //                return false;
+        //            }
+                    
+        //        }
+
+
+        //        if (CustomerName == '' || Occupation == '' || status == '' || Gender == '' || MaritalStatus == '' || DateOfBirth == '' || WardId == '' || PhoneNo == '' || PhysicalAddress == '' || Location == '' || Village == '' || Hamlet == '') {
+        //            var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+        //            swal("Please Fill All the required Fields");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(CustomerName) == false) {
+        //            swal("Special Characters for Full Name are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(Occupation) == false) {
+        //            swal("Special Characters for Principal Activity are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(PhysicalAddress) == false) {
+        //            swal("Special Characters for Physical Address are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(Location) == false) {
+        //            swal("Special Characters for Location are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(Village) == false) {
+        //            swal("Special Characters for Village are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(Hamlet) == false) {
+        //            swal("Special Characters for Hamlet are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(PlotNo) == false) {
+        //            swal("Special Characters for Plot No are not allowed");
+        //            return false;
+        //        }
+
+        //        if (/^[a-zA-Z0-9\-_\s]*$/.test(Fax) == false) {
+        //            swal("Special Characters for Fax are not allowed");
+        //            return false;
+        //        }
+
+
+        //        if (maritalStatus.value == "Married") {
+
+        //            var form_data = {
+        //                "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+        //                "CustomerType": CustomerTypeLabel,
+        //                "CustomerName": CustomerName,
+        //                "Occupation": Occupation,
+        //                "WardId": WardId,
+        //                "Gender": Gender,
+        //                "MaritalStatus": MaritalStatus,
+        //                "DateOfBirth": DateOfBirth,
+        //                "Email": Email,
+        //                "PhoneNo": PhoneNo,
+        //                "PhysicalAddress": PhysicalAddress,
+        //                "Location": Location,
+        //                "Village": Village,
+        //                "Hamlet": Hamlet,
+        //                "PlotNo": PlotNo,
+        //                "Fax": Fax,
+        //                //"PhotoUrl": PhotoUrl,
+        //                "Status": status,
+        //                "SpouseName": SpouseName,
+        //                "SpouseDateOfBirth": SpouseDateOfBirth,
+        //                "SpouseOccupation": SpouseOccupation,
+        //                "SpouseWardId": SpouseWardId,
+        //                "SpouseEmail": SpouseEmail,
+        //                "SpousePhoneNumber": SpousePhoneNumber,
+        //                "SpousePhysicalAddress": SpousePhysicalAddress,
+        //                "SpouseLocation": SpouseLocation,
+        //                "SpousePhotoUrl": SpousePhotoUrl,
+        //                "SpousePlotNo": SpousePlotNo,
+        //                "SpouseFax": SpouseFax,
+        //                "SpouseHamlet": SpouseHamlet,
+        //                "SpouseVillage": SpouseVillage
+        //            }
+        //            console.log(form_data);
+        //        } else {
+                   
+        //        var form_data = {
+        //            "__RequestVerificationToken": $('[name=__RequestVerificationToken]').val(),
+        //            "CustomerType": CustomerTypeLabel,
+        //            "CustomerName": CustomerName,
+        //            "Occupation": Occupation,
+        //            "WardId": WardId,
+        //            "Gender": Gender,
+        //            "MaritalStatus": MaritalStatus,
+        //            "DateOfBirth": DateOfBirth,
+        //            "Email": Email,
+        //            "PhoneNo": PhoneNo,
+        //            "PhysicalAddress": PhysicalAddress,
+        //            "Location": Location,
+        //            "Village": Village,
+        //            "Hamlet": Hamlet,
+        //            "PlotNo": PlotNo,
+        //            "Fax": Fax,
+        //            //"PhotoUrl": PhotoUrl,
+        //            "Status": status
+        //        }
+        //        console.log(form_data);
+        //    }
+        //    }
+        //    var url = '@Url.Action("CreateLoanCustomer", "LoanCustomer")';
+        //    var urlList = '@Url.Action("LoanCustomerList", "LoanCustomer")';
+        //    $("#form_submision").prop('disabled', true);
+        //    $("#saveLoader").toggle(true);
+        //    $.ajax({
+        //        type: "post",
+        //        url: url,
+        //        data: form_data,
+        //        contenttype: "application/json; charset=utf-8",
+        //        datatype: "json",
+        //        //contentType: false,
+        //        //processData: false,
+        //        success: function (response) {
+        //            $("#form_submision").prop('disabled', false);
+        //            $("#saveLoader").toggle(false);
+        //            if (response == "Success") {
+        //                swal("Saved Successfully!", { icon: "success" })
+        //                    .then((value) => {
+        //                        window.location.href = urlList;
+        //                    });
+        //            }
+        //            else {
+        //                swal(response);
+        //            }
+        //        },
+        //        failure: function (error) {
+        //            $("#form_submision").prop('disabled', false);
+        //            $("#saveLoader").toggle(false);
+        //            swal(error);
+        //        }
+        //    });
+        //});
+
+    </script>
+}
+
+
+
+

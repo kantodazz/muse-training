@@ -1,0 +1,142 @@
+﻿@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=text], input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    td {
+        padding: 5px;
+    }
+      
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+        <div class="col-xs-12 col-sm-3 col-md-3 col-lg-3">
+        </div>
+    </div>
+
+    <section id="widget-grid" class="">
+
+        <div class="row">
+
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Attachments</h2>
+
+                    </header>
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+
+                            <table id="dt_table" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Title</th>
+                                        <th>Description</th>
+                                        <th>File</th>
+                                        <th>Created At</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                            <div style="padding-bottom:10px" id="infoPanel">
+                                <div class="info-box">No Attachements</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row" style="padding-bottom:10px">
+                        <div class="col-md-2"></div>
+                        <div class="col-md-6">
+
+                            <a class="btn btn-info" style="margin-right:5px" onclick="window.history.back()">
+                                <i class="glyphicon glyphicon-arrow-left"></i>Back
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </article>
+
+        </div>
+    </section>
+</div>
+
+@section pagespecific {
+    <script>
+          var dt_table = $('#dt_table').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_table_wrapper .dt-toolbar").remove();
+        $("#dt_table_wrapper .dt-toolbar-footer").remove();
+
+        var data = []
+        function loadData() {
+         $.ajax({
+            type: "get",
+            data: {
+                     groupId: '@ViewBag.groupId',
+                     sourceModule: '@ViewBag.sourceModule'
+            },
+            url: '@Url.Action("AttachmentsGet", "PaymentVoucherAttachments")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_table.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_table.fnAddData([i + 1,
+                       data[i]["Title"],
+                       data[i]["Description"],
+                       '<a href="/Content/uploads/' + data[i]["FileName"] + '"><i class="fa fa-file-pdf-o"></i></a>',
+                       data[i]["CreatedAtFormatted"],
+                    ]);
+                }
+                toggleTableInfo();
+            },
+            failure: function (error) {
+                swal(error);
+            }
+          });
+        }
+        loadData();
+
+         toggleTableInfo();
+        function toggleTableInfo() {
+            var data = dt_table.DataTable().rows().data();
+            if (data.length > 0) {
+                $("#dt_table").toggle(true);
+                $("#infoPanel").toggle(false);
+            } else {
+                $("#dt_table").toggle(false);
+                $("#infoPanel").toggle(true);
+            }
+        }
+    </script>
+}

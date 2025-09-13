@@ -1,0 +1,186 @@
+﻿@{
+    ViewBag.Title = "Payment Status";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .status-pending {
+    }
+
+    .status-approved {
+        font-weight: bold;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                   
+
+                                        <th>
+                                            Batch Number
+                                        </th>
+                                        <th>
+                                            Batch Description
+                                        </th>
+                                        <th>
+                                            Institution Code
+                                        </th>
+                                        <th>
+                                            Payment Category
+                                        </th>
+                                        <th style="text-align: center">
+                                            Number of Transaction
+                                        </th>
+                                        <th style="text-align: center">
+                                            Total Batch Amount
+                                        </th>
+                                        <th style="text-align: center">
+                                            Overall Status
+                                        </th>
+                           
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+
+
+
+
+@section pagespecific{
+    <script>
+        // ============ INIT DATA TABLES START =====================
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable();
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+
+        var data = [];
+
+        function loadPaymentData() {
+            debugger;
+            statusTemplate = function (status) {
+                return status == "Confirmed" ?'<div class="status-pending">Pending</div>' : '<div class="status-approved">Approved</div>'
+            }
+
+            actionTemplate = function (i, status) {
+                return '<div class="btn-group">\
+                         <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                           <span class="caret"></span\
+                            <span class="sr-only"></span>\
+                         </button>\
+                         <ul class="dropdown-menu">\
+                           <li><a href="#" onclick= "openViewDialog(' + i + ')">View</a></li>\
+                           <li><a href="#" onclick="printSlip(' + i + ')">Print slip</a></li>\
+                         </ul>\
+                      </div>'
+            }
+
+            $.ajax({
+                type: "get",
+                data: { "OverallStatus": "Sent To BoT" },
+                url: '@Url.Action("GetPaymentFile", "PaymentBatches")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    dt_voucher_listing.fnClearTable();
+                    for (var i = 0; i < data.length; i++) {
+                        dt_voucher_listing.fnAddData([i + 1,
+                           data[i]["BatchNo"],
+                           data[i]["BatchDesc"],
+                           data[i]["InstitutionCode"],
+                           data[i]["PaymentCategory"].toLocaleString(),
+                           data[i]["NoTrx"],
+                           data[i]["TotalAmount"],
+                           data[i]["OverallStatus"],
+                           actionTemplate(i, data[i]["OverallStatus"])
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        loadPaymentData();
+       
+       
+
+
+    </script>
+}

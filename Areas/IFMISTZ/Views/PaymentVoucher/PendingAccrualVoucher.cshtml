@@ -1,0 +1,1654 @@
+﻿
+@{
+    ViewBag.Title = "Pending Accrual Voucher";
+}
+
+<style>
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+        width: 40px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text], textarea {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(7) {
+        text-align: right;
+    }
+
+    .table-view-details td:nth-child(4) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .wh-holding {
+        color: #008636;
+        font-size: 10px;
+    }
+
+    .bubble-w {
+        width: 5px;
+        height: 5px;
+        border-radius: 100%;
+        background-color: plum;
+        border: 1px solid red;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed table-amount">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Legal Number</th>
+                                        <th>Payee Name</th>
+                                        <th>Payee Account Name</th>
+                                        <th>Payee Bank Account</th>
+                                        <th>Payee Bank Name</th>
+                                        <th>Amount</th>
+                                        <th>DEDUCTIONS</th>
+                                        <th>Source Module</th>
+                                        <th>Status</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+<!----------- EDIT DIALOG ----------------->
+<div class="modal fade" id="editModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Edit Pending Voucher</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body " style="padding-top:10px">
+                        <div style="display:flex;justify-content:space-evenly">
+                            <div>
+                                <table>
+                                    <tr>
+                                        <td class="form-label">Payment in Respect Of</td>
+                                        <td>
+                                            <textarea style="width:300px" rows="2" id="Comments"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">Invoice No</td>
+                                        <td>
+                                            <input style="width:300px" type="text" id="InvoiceNo" placeholder="Optional">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">Short Description</td>
+                                        <td>
+                                            <textarea rows="2" id="PaymentDescription" style="width:300px;"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">Apply Date</td>
+                                        <td>
+                                            <div>
+                                                <div><input type="date" style="width:300px;" id="ApplyDate"></div>
+                                                <div>Previous Date: <strong id="ApplyDateOld" style="padding-right:5px"></strong></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">Invoice Date</td>
+                                        <td>
+                                            <div>
+                                                <div><input type="date" style="width:300px;" id="InvoiceDate"></div>
+                                                <div>Previous Date: <strong id="InvoiceDateOld" style="padding-right:5px"></strong></div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                            <div>
+                                <table>
+                                    <tr>
+                                        <td class="form-label">Payment Method</td>
+                                        <td>
+                                            <div class="input-group">
+                                                <select id="PaymentMethod" style="width:300px">
+                                                    <option value="EFT">EFT</option>
+                                                    <option value="Cheque">Cheque</option>
+                                                </select>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">Control Number</td>
+                                        <td>
+                                            <input id="ControlNumber" style="width:300px;" type="text">
+                                            <input id="PaymentVoucherId" style="width:300px;" type="hidden">
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">
+                                            Total Amount
+                                        </td>
+                                        <td>
+                                            <input type="text" style="width:300px" id="AvailableTotalAmount" disabled>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">
+                                            With holding
+                                            <i class="fa fa-times" style="color:white" id="WithHolding_1"></i>
+                                        </td>
+                                        <td>
+                                            <input type="checkbox" style="width:30px" id="WithHoldingCheckbox">
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            Withholding Amount
+                                        </td>
+                                        <td>
+                                            <pre id="WithHoldingAmount" style="width:300px">0</pre>
+                                            (Service)x5% + (Goods)x2% <span id="other_w"></span>
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            VAT
+                                            <i class="fa fa-times" style="color:white" id="VATOnService_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong class="currency">TZS</strong>
+                                                </span>
+                                                <amount-input type="text" style="width:250px" id="VATOnService" onkeyup="computeWithHoldTotal()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            Service Fee
+                                            <i class="fa fa-times" style="color:white" id="ServiceAmount_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong class="currency">TZS</strong>
+                                                </span>
+                                                <amount-input type="text" style="width:250px" id="ServiceAmount" onkeyup="computeWithHoldTotal()" />
+
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            Goods
+                                            <i class="fa fa-times" style="color:white" id="GoodsAmount_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong class="currency">TZS</strong>
+                                                </span>
+                                                <amount-input type="text" style="width:250px" id="GoodsAmount" onkeyup="computeWithHoldTotal()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            Other
+                                            <i class="fa fa-times" style="color:white" id="Other_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <input type="checkbox" id="Other" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="other">
+                                        <td class="form-label">
+                                            Amount
+                                            <i class="fa fa-times" style="color:white" id="OtherWithholdingAmount_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong class="currency">TZS</strong>
+                                                </span>
+                                                <amount-input type="text" style="width:250px" id="OtherWithholdingAmount" onkeyup="computeWithHoldTotal()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="other">
+                                        <td class="form-label">
+                                            Percent
+                                            <i class="fa fa-times" style="color:white" id="OtherWithholdingPercent_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="input-group">
+                                                <span class="input-group-addon">
+                                                    <strong>(%)</strong>
+                                                </span>
+                                                <percent-input type="text" style="width:250px" id="OtherWithholdingPercent" onkeyup="computeWithHoldTotal()" />
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    <tr class="with-holding">
+                                        <td class="form-label">
+                                            Total Amount(WithHold)
+                                        </td>
+                                        <td>
+                                            <input class="with-holding" value="0" type="text" style="width:300px" id="WithHoldingTotalAmount" disabled>
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td class="form-label">
+                                            Misc Deduction Amount
+                                            <i class="fa fa-times" style="color:white" id="MiscDeduction_1"></i>
+                                        </td>
+                                        <td>
+                                            @*<input type="checkbox" style="width:30px" id="MiscDeductionCheckbox">*@
+                                            <amount-input id="MiscDeduction" style="width:265px;" />
+                                        </td>
+                                    </tr>
+                                    <tr class="MiscDeduction">
+                                        <td class="form-label">
+                                            Misc Ded. Description
+                                            <i class="fa fa-times" style="color:white" id="MiscDeductionDescription_1"></i>
+                                        </td>
+                                        <td>
+                                            <textarea rows="2" id="MiscDeductionDescription" style="width:300px;" maxlength="80"></textarea>
+                                        </td>
+                                    </tr>
+                                    <tr class="MiscDeduction">
+                                        <td class="form-label">
+                                            Misc Ded. Payee
+                                            <i class="fa fa-times" style="color:white" id="MiscDeductionPayee_1"></i>
+                                        </td>
+                                        <td>
+                                            <div class="name-input-container">
+                                                <input type="text" readonly id="MiscDeductionPayee" placeholder="No Payee Selected" style="width:260px" />
+                                                <a class="search-btn" onclick="SearchPayee()"
+                                                   href="#" style="float:right">
+                                                    <i class="fa fa-search search-icon"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" onclick="postEditFormData()" style="width:100px;">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    @*<button class="btn btn-info" onclick="advancedEdit()" style="width:100px;">
+                            <i class="fa fa-edit"></i>Advanced
+                        </button>*@
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------- VIEW DIALOG ----------------->
+<div class="modal fade" id="confirmModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Voucher Information</h3>
+
+            </div>
+            <div class="modal-body">
+                <div>
+                    <div class="widget-body ">
+                        <div class="payee-entry">
+                            <div class="entry-label">Payee Details</div>
+                            <div style="padding-left:20px">
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>1. Payee Name: </th>
+                                                <td id="_Payeename"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Payee Code:</th>
+                                                <td id="_PayeeCode"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <table>
+                                            <tr>
+                                                <th>3. Payee Bank Name:</th>
+                                                <td id="_PayeeBankName"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>4. Payee Address:</th>
+                                                <td id="_PayeeAddress"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry">
+                            <div class="entry-label">Voucher Entries</div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>1. Description: </th>
+                                                <td id="Description1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>2. Comments:</th>
+                                                <td id="Comments1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>3. Apply Date:</th>
+                                                <td id="ApplyDate1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div style="padding-left:20px">
+                                        <table>
+                                            <tr>
+                                                <th>4. Payment Method:</th>
+                                                <td id="PaymentMethod1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>5. Control Number:</th>
+                                                <td id="ControlNumber1"></td>
+                                            </tr>
+                                            <tr>
+                                                <th>6. Sub Budget Class:</th>
+                                                <td id="SubBudgetClass1"></td>
+                                            </tr>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry with-holding">
+                            <div class="entry-label1">With-holding Entries</div>
+                            <div style="padding-left:20px">
+                                <table>
+                                    <tr>
+                                        <th>Service Fee: </th>
+                                        <td id="ServiceAmount1"></td>
+                                        <th style="padding:10px">VAT:</th>
+                                        <td style="padding:10px" id="VATOnService1"></td>
+                                        <th style="padding:10px">Goods Amount:</th>
+                                        <td style="padding:10px" id="GoodsAmount1"></td>
+                                        <th style="padding:10px">Other:</th>
+                                        <td style="padding:10px" id="Other1"></td>
+                                        <td style="padding:10px" id="OtherPercent1"></td>
+                                        <th style="padding:10px">Total Withholding Amount:</th>
+                                        <td style="padding:10px" id="TotalWithholdingAmount1"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry liquidated-demage">
+                            <div class="entry-label1">Liquidated Demage</div>
+                            <div style="padding-left:20px">
+                                <table>
+                                    <tr>
+                                        <th>Amount: </th>
+                                        <td id="LiquidatedDemageAmount"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry rentation">
+                            <div class="entry-label1">Rentation Details</div>
+                            <div style="padding-left:20px">
+                                <table>
+                                    <tr>
+                                        <th style="padding:10px">Amount: </th>
+                                        <td style="padding:10px" id="RetentionAmount"></td>
+                                        <th style="padding:10px">TransfertType: </th>
+                                        <td style="padding:10px" id="TransfertType"></td>
+                                    </tr>
+                                    <tr>
+                                        <th style="padding:10px">SubBudgetClassTo: </th>
+                                        <td style="padding:10px" id="SubBudgetClassTo"></td>
+                                        <th style="padding:10px">BankAccountTo: </th>
+                                        <td style="padding:10px" id="BankAccountTo"></td>
+                                    </tr>
+                                </table>
+                            </div>
+                        </div>
+                        <br />
+                        <div class="payee-entry accrual">
+                            <div class="entry-label1">Accrual Payments</div>
+                            <div style="padding-left:20px">
+                                <table id="dt_accrual" class="table table-striped table-bordered table-hover table-condensed table-view-details">
+                                    <thead>
+                                        <tr>
+                                            <th style="width:20px">#</th>
+                                            <th>PVNO</th>
+                                            <th>Amount</th>
+                                            <th>OverallStatus</th>
+                                        </tr>
+                                    </thead>
+                                </table>
+                            </div>
+                        </div>
+                        <br />
+                        <table id="dt_voucher_detail" class="table table-striped table-bordered table-hover table-condensed table-view-details" width="100%"></table>
+                        <div class="total-amount">TOTAL <strong id="totalAmount">0.00</strong></div>
+                        <table>
+                            <tr>
+                                <td><strong style="color:#2196F3">Status:</strong> <label id="statusId">-</label></td>
+                                <td><strong style="color:#2196F3">Remarks:</strong> <label id="reasonId">-</label></td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal" style="width:100px;">
+                        <i class="fa fa-times"></i>Close
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<!----------- Search GL Items ----------------->
+<div class="modal fade" id="glItemsModal" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Gl Item(s)</h3>
+            </div>
+            <div class="modal-body">
+                <table>
+                    <tr>
+                        <td style="padding:5px">Total Voucher Amount</td>
+                        <td style="padding:5px">
+                            <input type="text" disabled id="total_voucher_amount2">
+                        </td>
+
+                        <td style="padding:5px">Total Line Amount</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="total_line_amount">
+                        </td>
+
+                        <td style="padding:5px">Difference</td>
+                        <td style="padding:5px">
+                            <input value="0" type="text" disabled id="difference" style="width:250px">
+                        </td>
+                    </tr>
+                </table>
+                <div>
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="searchbox2">
+                            </div>
+                        </div>
+                    </div>
+                    <table id="dt_search_gl_item" class="table table-striped table-bordered table-hover table-condensed" width="100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Expenditure Line Item</th>
+                                <th>Item Description</th>
+                                <th id="BalanceTitle">Fund Balance</th>
+                                <th id="FundingRef">Funding Reference</th>
+                                <th>Expense Amount</th>
+                            </tr>
+                        </thead>
+                    </table>
+                </div>
+                <div class="modal-footer">
+                    <button type="submit" class="btn btn-info" id="btn_save_gl_items">
+                        <i class="fa fa-save"></i>Save
+                    </button>
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+        // ============ INIT DATA TABLES START =====================
+        var dt_search_gl_item = $('#dt_search_gl_item').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader" style="color:green">No matching records found</strong>',
+                "zeroRecords": "No matching records found"
+            },
+        });
+
+        var dt_accrual = $('#dt_accrual').dataTable()
+        $("#dt_accrual_wrapper .dt-toolbar").remove();
+        $("#dt_accrual_wrapper .dt-toolbar-footer").remove();
+
+        var dt_search_payee = $('#dt_search_payee').dataTable({
+            "aoColumnDefs": [{ "bVisible": false, "aTargets": [1, 2, 3] }],
+        });
+        $("#dt_search_payee_wrapper .dt-toolbar").remove();
+        function SearchPayee() {
+            $('#payeeModal').modal('show');
+        }
+        $("#searchboxPayee").on("keyup search input paste cut", function () {
+            if (!this.value) {
+                dt_search_payee.fnClearTable();
+            } else {
+                searchPayeeTableUpdate(this.value);
+            }
+        });
+
+        function searchPayeeTableUpdate(search) {
+            var url = '@Url.Action("GetPayee", "PaymentVoucher")';
+            $.ajax({
+                type: "get",
+                url: url + "/?search=" + search + "",
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var d = response.data;
+                    dt_search_payee.fnClearTable();
+                    for (var i = 0; i < d.length; i++) {
+                        dt_search_payee.fnAddData([i + 1,
+                           d[i]["PayeeDetailId"],
+                           d[i]["BIC"],
+                           d[i]["RequireControlNum"],
+                           d[i]["PayeeName"],
+                           d[i]["AccountName"],
+                           d[i]["PayeeCode"],
+                           d[i]["BankName"],
+                           d[i]["Accountnumber"],
+                           d[i]["PayeeType"],
+                           d[i]["Address1"],
+                           '<a href="#" onclick="payeeClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                        ]);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+
+        var miscDedeductionPayeeId = 0
+        function payeeClicked(rowId) {
+            var data = dt_search_payee.DataTable().rows().data();
+            var row = data[rowId];
+            miscDedeductionPayeeId = row[1]
+            $("#MiscDeductionPayee").val(row[5]);
+            $("#payeeModal").modal("hide");
+        }
+
+        MiscDeductionIsProvided = false;
+        $("#MiscDeductionCheckbox").change(function () {
+            $('#MiscDeduction').toggle(this.checked);
+            $('.MiscDeduction').toggle(this.checked);
+            MiscDeductionIsProvided = this.checked;
+        });
+
+        $('#MiscDeduction').toggle(false);
+        $('.MiscDeduction').toggle(false);
+
+        $(document).ready(function () {
+            $("#dt_search_gl_item_wrapper .dt-toolbar").remove();
+        });
+
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "fnDrawCallback": function (oSettings) {
+                $(".loading-gif").toggle(false)
+            }
+        });
+
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            "sDom": 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+        WithHoldingIsProvided = false;
+        $("#WithHoldingCheckbox").change(function () {
+            $(".with-holding").toggle(this.checked);
+            WithHoldingIsProvided = this.checked;
+        });
+
+
+        var data = [];
+        var globalPayeeId = null;
+
+        function actionTypes(i) {
+            return '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" \
+                              data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                <li><a href="#" onclick= "openViewDialog(' + i + ')">Details</a></li>\
+                                <li><a href="#" onclick="confirmDialog(' + i + ')"> Pay</a></li>\
+                                <li><a href="#" onclick="reject(' + i + ')">Reject</a></li>\
+                                <li><a href="#" onclick="attach(' + i + ')">Attach</a></li>\
+                            </ul>\
+                        </div>\
+                  <img src="/Content/img/loading.gif" id="saveLoader-' + i + '" class="loading-gif"/>'
+        }
+
+        function sourceModule(d) {
+            switch (d["SourceModule"]) {
+                case "Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Prepayment":
+                    return '<a href="@Url.Action("PreviewPrepayment","Prepayment")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Imprest":
+                    return '<a href="@Url.Action("ImprestDetails","Imprest")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Unapplied":
+                    return '<a href="@Url.Action("Details","Unapplieds")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "BulkPayment":
+                    return '<a href="@Url.Action("PaymentDetails", "PaymentBatches")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Loan":
+                    return '<a href="@Url.Action("PreviewLoanTracker","Loan")/' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                default:
+                    return d["SourceModule"] + withholdingTemplate(d);
+            }
+        }
+
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPaymentAccrualVoucher", "PaymentVoucher")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                dt_voucher_listing.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+                    dt_voucher_listing.fnAddData([i + 1,
+                       data[i]["PVNo"],
+                       data[i]["Payeename"],
+                       data[i]["PayeeAccountName"],
+                       data[i]["PayeeBankAccount"],
+                       data[i]["PayeeBankName"],
+                       toLabel(data[i]["OperationalAmount"]),
+                       calculate(data[i]),
+                       sourceModule(data[i]),
+                       data[i]["OverallStatus"],
+                       '<a href="#" onclick="viewAttachment('+i+')"><i class="fa fa-file-pdf-o"></i></a>',
+                       actionTypes(i)
+                    ]);
+                    $("#saveLoader-"+i+"").toggle(false)
+                }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        $(".with-holding").toggle(false)
+        $(".liquidated-demage").toggle(false)
+        $(".rentation").toggle(false)
+        $(".other").toggle(false)
+
+        OtherIsProvided = false;
+        $("#Other").change(function () {
+            $(".other").toggle(this.checked);
+            OtherIsProvided = this.checked;
+        });
+
+        function openViewDialog(i) {
+            globalPayeeId = i;
+            GetAccrualPayed(i)
+            $("#_Payeename").text(data[i]["Payeename"]);
+            $("#_PayeeCode").text(data[i]["PayeeCode"]);
+            $("#_PayeeBankName").text(data[i]["PayeeBankName"]);
+            $("#_PayeeAddress").text(data[i]["PayeeAddress"]);
+
+            if (data[i]["hasWithHolding"]) {
+                $(".with-holding").toggle(true)
+            } else {
+                $(".with-holding").toggle(false)
+            }
+
+            if (data[i]["LiquidatedDemageAmount"] != null) {
+                $(".liquidated-demage").toggle(true)
+                $("#LiquidatedDemageAmount").text(toLabel(data[i]["LiquidatedDemageAmount"]));
+            } else {
+                $(".liquidated-demage").toggle(false)
+            }
+
+            if (data[i]["RetentionAmount"] != null) {
+                $(".rentation").toggle(true)
+                $("#TransfertType").text(toLabel(data[i]["TransfertType"]));
+                $("#SubBudgetClassTo").text(toLabel(data[i]["SubBudgetClassTo"]));
+                $("#BankAccountTo").text(toLabel(data[i]["BankAccountTo"]));
+                $("#RetentionAmount").text(toLabel(data[i]["RetentionAmount"]));
+            } else {
+                $(".rentation").toggle(false)
+            }
+
+            dt_voucher_detail.fnClearTable();
+            var totalAmount = 0;
+            data[i]["VoucherDetails"].forEach(row => {
+                dt_voucher_detail.fnAddData([
+                    row["DrGlAccount"].split("|").join("-"),
+                    row["DrGlAccountDesc"],
+                    row["FundingReferenceNo"],
+                    toLabel(row["OperationalAmount"]),
+                ]);
+                totalAmount = totalAmount + parseFloat(row["OperationalAmount"]);
+            });
+
+            $("#totalAmount").text(toLabel(totalAmount));
+            $("#Description1").text(data[i]["PaymentDesc"]);
+            $("#reasonId").text(data[i]["OverallStatusDesc"] ? data[i]["OverallStatusDesc"] : data[i]["RejectedReason"]);
+            $("#statusId").text(data[i]["OverallStatus"]);
+            $("#InvoiceNo1").text(data[i]["InvoiceNo"]);
+            $("#total_voucher_amount1").val(data[i]["OperationalAmount"]);
+            $("#ApplyDate1").text(data[i]["ApplyDateFormatted"]);
+            $("#Comments1").text(data[i]["Narration"]);
+            $("#PaymentMethod1").text(data[i]["PaymentMethod"]);
+            $("#ControlNumber1").text(data[i]["ControlNumber"] ? data[i]["ControlNumber"] : "-");
+            $("#SubBudgetClass1").text(data[i]["SubBudgetClass"]);
+
+            $("#ServiceAmount1").text(data[i]["ServiceAmount"] ? toLabel(data[i]["ServiceAmount"]) : 0);
+            $("#VATOnService1").text(data[i]["VATOnService"] ? toLabel(data[i]["VATOnService"]) : 0);
+            $("#GoodsAmount1").text(data[i]["GoodsAmount"] ? toLabel(data[i]["GoodsAmount"]) : 0);
+            $("#VATOnGoods1").text(data[i]["VATOnGoods"] ? toLabel(data[i]["VATOnGoods"]) : 0);
+            $("#Other1").text(data[i]["OtherWithholdingAmount"] ? toLabel(data[i]["OtherWithholdingAmount"]) : 0);
+            $("#OtherPercent1").text(data[i]["OtherWithholdingPercent"] ? data[i]["OtherWithholdingPercent"] + "%" : "0%");
+            $("#TotalWithholdingAmount1").text(data[i]["OperationalWithHoldingAmount"] ? toLabel(data[i]["OperationalWithHoldingAmount"]) : 0);
+            $('#confirmModal').modal('show');
+        }
+
+        function edit(i) {
+            WithHoldingIsProvided = false;
+            $(".with-holding").toggle(false);
+            $("#WithHoldingCheckbox").prop('checked', false)
+
+            if (i == 'x') i = globalPayeeId;
+            localStorage.setItem("globalPayeeId", i);
+            $("#ApplyDate").val('');
+            $("#InvoiceDate").val('');
+            $("#PaymentVoucherId").val(data[i]["PaymentVoucherId"]);
+            $("#ControlNumber").val(data[i]["ControlNumber"]);
+            $("#PaymentMethod").val(data[i]["PaymentMethod"]);
+            $("#InvoiceNo").val(data[i]["InvoiceNo"]);
+            $("#total_voucher_amount").val(data[i]["OperationalAmount"]);
+            $("#InvoiceDateOld").text(data[i]["InvoiceDateFormatted"]);
+            $("#ApplyDateOld").text(data[i]["ApplyDateFormatted"]);
+            $("#PaymentDescription").val(data[i]["PaymentDesc"]);
+            $("#Comments").val(data[i]["Narration"]);
+            $("#AvailableTotalAmount").val(toLabel(data[i]["OperationalAmount"]));
+
+            $("#WithHoldingCheckbox").prop('disabled', false)
+            $("#_ServiceAmount").prop('disabled', false)
+            $("#_VATOnService").prop('disabled', false)
+            $("#_GoodsAmount").prop('disabled', false)
+            $("#_VATOnGoods").prop('disabled', false)
+            $("#_OtherWithholdingAmount").prop('disabled', false)
+            $("#_OtherWithholdingPercent").prop('disabled', false)
+
+            if (data[i]["MiscDeductionPayeeDetailsId"]) {
+                $("#MiscDeductionCheckbox").prop('checked', true)
+                $("#MiscDeduction").val(toLabel(data[i]["MiscDeduction"]))
+                $("#_MiscDeduction").val(toLabel(data[i]["MiscDeduction"]))
+                $("#MiscDeductionDescription").val(data[i]["MiscDeductionDescription"])
+                $("#MiscDeductionPayee").val(data[i].MiscDeductionPayeeName)
+                miscDedeductionPayeeId = data[i].MiscDeductionPayeeDetailsId
+                MiscDeductionIsProvided = true
+                $('#MiscDeduction').toggle(true);
+                $('.MiscDeduction').toggle(true);
+            } else {
+                $("#MiscDeductionCheckbox").prop('checked', false)
+                $("#MiscDeduction").val('')
+                $("#_MiscDeduction").val('')
+                $("#MiscDeductionDescription").val('')
+                $("#MiscDeductionPayee").val('')
+                miscDedeductionPayeeId = null
+                MiscDeductionIsProvided = false
+                $('#MiscDeduction').toggle(false);
+                $('.MiscDeduction').toggle(false);
+            }
+
+            if (data[i]["hasWithHolding"]) {
+                WithHoldingIsProvided = true
+                $(".with-holding").toggle(true)
+                $("#WithHoldingCheckbox").prop('checked', true)
+                $("#_ServiceAmount").val(toLabel(data[i]["ServiceAmount"] || 0))
+                $("#_VATOnService").val(toLabel(data[i]["VATOnService"] || 0))
+                $("#_GoodsAmount").val(toLabel(data[i]["GoodsAmount"] || 0))
+                $("#_VATOnGoods").val(toLabel(data[i]["VATOnGoods"] || 0))
+                $("#WithHoldingAmount").text(toLabel(data[i]["OperationalWithHoldingAmount"] || 0))
+                $("#WithHoldingTotalAmount").val(toLabel(data[i]["OperationalAmount"] || 0));
+                if (data[i]["OtherWithholdingAmount"]) {
+                    if (toNumber(data[i]["OtherWithholdingAmount"]) > 0) {
+                        $("#_OtherWithholdingAmount").val(toLabel(data[i]["OtherWithholdingAmount"]));
+                        $("#_OtherWithholdingPercent").val(data[i]["OtherWithholdingPercent"]);
+                        $("#other_w").text("+ " + toLabel(data[i]["OtherWithholdingAmount"]) + "x" + data[i]["OtherWithholdingPercent"] + "%");
+                        $("#Other").prop('checked', true);
+                        $(".other").toggle(true);
+                    }
+                }
+
+                if (data[i]["OverallStatusDesc"] == "WORKS") {
+                    $("#WithHoldingCheckbox").prop('disabled', true)
+                    $("#_ServiceAmount").prop('disabled', true)
+                    $("#_VATOnService").prop('disabled', true)
+                    $("#_GoodsAmount").prop('disabled', true)
+                    $("#_VATOnGoods").prop('disabled', true)
+                    $("#_OtherWithholdingAmount").prop('disabled', true)
+                    $("#_OtherWithholdingPercent").prop('disabled', true)
+                }
+
+            } else {
+                $("#_ServiceAmount").val('')
+                $("#_VATOnService").val('')
+                $("#_GoodsAmount").val('')
+                $("#_VATOnGoods").val('')
+                $("#WithHoldingAmount").text('')
+                $("#WithHoldingTotalAmount").val('')
+                $("#_OtherWithholdingAmount").val('');
+                $("#_OtherWithholdingPercent").val('');
+                $("#other_w").text('');
+                $("#Other").prop('checked', false);
+                $(".other").toggle(false);
+            }
+            $('#confirmModal').modal('hide');
+            $('#editModal').modal('show');
+        }
+
+        function postEditFormData() {
+
+            var form_data = {}
+
+            form_data['PaymentVoucherId'] = $("#PaymentVoucherId").val();
+            form_data['Narration'] = $("#Comments").val();
+            form_data['PaymentDesc'] = $("#PaymentDescription").val();
+            form_data['InvoiceNo'] = $("#InvoiceNo").val();
+            form_data['ControlNumber'] = $("#ControlNumber").val();
+            form_data['ApplyDate'] = $("#ApplyDate").val() != "" ? $("#ApplyDate").val() : $("#ApplyDateOld").text();
+            form_data['InvoiceDate'] = $("#InvoiceDate").val() != "" ? $("#InvoiceDate").val() : $("#InvoiceDateOld").text();
+            form_data['PaymentMethod'] = $("#PaymentMethod").val();
+
+            form_data['hasWithHolding'] = $("#WithHoldingCheckbox").is(":checked");
+            form_data['ServiceAmount'] = $("#_ServiceAmount").val() ? $("#_ServiceAmount").val() : 0;
+            form_data['VATOnService'] = $("#_VATOnService").val() ? $("#_VATOnService").val() : 0;
+            form_data['GoodsAmount'] = $("#_GoodsAmount").val() ? $("#_GoodsAmount").val() : 0;
+            form_data['OtherWithholdingAmount'] = $("#_OtherWithholdingAmount").val() ? $("#_OtherWithholdingAmount").val() : 0,
+            form_data['OtherWithholdingPercent'] = $("#_OtherWithholdingPercent").val() ? $("#_OtherWithholdingPercent").val() : 0,
+            form_data['VATOnGoods'] = 0;
+            form_data['OperationalWithHoldingAmount'] = $("#WithHoldingAmount").text() ? toNumber($("#WithHoldingAmount").text()) : 0;
+            form_data['BaseWithHoldingAmount'] = $("#WithHoldingAmount").text() ? toNumber($("#WithHoldingAmount").text()) : 0;
+
+            if (MiscDeductionIsProvided) {
+                form_data.MiscDeduction = $("#MiscDeduction").val()
+                form_data.MiscDeductionDescription = $("#MiscDeductionDescription").val()
+                form_data.MiscDeductionPayeeDetailsId = miscDedeductionPayeeId
+                form_data.MiscDeductionPayeeName = $("#MiscDeductionPayee").val()
+            }
+
+            if (WithHoldingIsProvided) {
+                if (toNumber($("#AvailableTotalAmount").val())
+                   == toNumber($("#WithHoldingTotalAmount").val())
+                   && toNumber($("#WithHoldingTotalAmount").val()) > 0) {
+                    saveEdits(form_data)
+                } else {
+                    swal("Total amount didn't match!")
+                }
+            } else {
+                if (validateMiscDed()) {
+                    saveEdits(form_data);
+                }
+            }
+      }
+
+        function validateMiscDed() {
+            if (MiscDeductionIsProvided) {
+                if (!$("#_MiscDeduction").val()) {
+                    $("#MiscDeduction_1").attr("style", "color: red;");
+                    return false
+                }
+
+                if (!$("#MiscDeductionDescription").val()) {
+                    $("#MiscDeductionDescription_1").attr("style", "color: red;");
+                    return false
+                }
+                if (!$("#MiscDeductionPayee").val()) {
+                    $("#MiscDeductionPayee_1").attr("style", "color: red;");
+                    return false
+                }
+                if (toNumber($("#_MiscDeduction").val()) > toNumber($("#AvailableTotalAmount").val())) {
+                    swal("Misc Deduction exceeds voucher amount.")
+                    return false
+                }
+
+                var amount = toNumber($("#AvailableTotalAmount").val()) - toNumber($("#_MiscDeduction").val());
+                if (amount < 5000) {
+                    swal("[Voucher Amount - Misc Deduction Amount] should not be less than 5,000")
+                    return false
+                }
+            }
+            return true
+        }
+
+        function saveEdits(form_data) {
+            var url = '@Url.Action("EditVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: form_data,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                             .then((value) => {
+                                 window.location.reload();
+                             });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#editModal').modal('hide');
+        }
+
+        function Delete(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: "Are you sure?",
+                text: "Once Cancelled, you will not be able to recover this voucher!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    deleteItemConfirmed(data[i]["PaymentVoucherId"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function deleteItemConfirmed(Id) {
+            var url = '@Url.Action("DeleteVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PaymentVoucherId": Id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        let PaymentVoucherId = 0
+        function confirmDialog(i) {
+            dt_search_gl_item.fnClearTable();
+            _data = []
+            PaymentVoucherId = data[i].PaymentVoucherId;
+            $("#total_voucher_amount2").val(0)
+                $("#difference").val(0)
+                $.ajax({
+                    type: "GET",
+                    url: '@Url.Action("GetAccrualPayed", "PaymentVoucher")',
+                    data: { PVNo: data[i].PVNo },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        //var totalAmount = parseFloat(data[i]["OperationalAmount"]);
+                        var totalAmount = 0;
+                        data[i]["VoucherDetails"].forEach(row => {
+                            totalAmount = totalAmount + parseFloat(row["OperationalAmount"]);
+                        });
+                        var initAmount = totalAmount;// - (response.sum || 0)
+                        $("#total_voucher_amount2").val(initAmount.toFixed(2))
+                        $("#difference").val(initAmount.toFixed(2))
+                    },
+                    failure: function (error) {
+                        swal(error);
+                    }
+                });
+                if (_data.length == 0) {
+                    var isAccrualPayment = true;
+                    updateSearchGITable({
+                        applyDate: data[i].ApplyDate,
+                        subBudgetClass: data[i].SubBudgetClass,
+                        IsAccrualPayment: isAccrualPayment,
+                        SourceModuleRefNo: data[i].PVNo
+                    })
+                }
+                $("#glItemsModal").modal("show")
+        }
+
+        let _data = []
+        function updateSearchGITable(params) {
+            updateGLSearchTable([])
+            $("#loader").text("Loading Please Wait...")
+            var url = '@Url.Action("GetFundBalance", "PaymentVoucher")';
+            $.ajax({
+                type: "POST",
+                url: url,
+                data: params,
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    _data = response.data;
+                    updateGLSearchTable(_data)
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        $('#dt_search_gl_item').on('draw.dt', function () {
+            Object.keys(selectedItems).forEach(Id => {
+                $("#_Id-" + Id + "").val(toLabel(selectedItems[Id].Amount))
+                $("#Id-" + Id + "").val(toLabel(selectedItems[Id].Amount))
+            })
+        });
+
+        function GetAccrualPayed(i) {
+            $(".accrual").toggle(false)
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetAccrualPayed", "PaymentVoucher")',
+                data: { PVNo: data[i].PVNo },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    var ac = response.data
+                    dt_accrual.fnClearTable();
+                    for (var i = 0; i < ac.length; i++) {
+                        dt_accrual.fnAddData([i + 1,
+                           ac[i]["PVNo"],
+                           toLabel(ac[i]["OperationalAmount"]),
+                           ac[i]["OverallStatus"],
+                        ]);
+                        $(".accrual").toggle(true)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function updateGLSearchTable(d) {
+            dt_search_gl_item.fnClearTable();
+            for (var i = 0; i < d.length; i++) {
+                var Id = d[i].FundBalanceViewId
+                dt_search_gl_item.fnAddData([i + 1,
+                      d[i]["GlAccount"].split("|").join("-"),
+                      d[i]["GlAccountDesc"],
+                      toLabel(d[i]["FundBalance"]),
+                      d[i]["FundingRefNo"],
+                    '<amount-input placeholder="Amount" id="Id-' + Id + '" onkeyup="amountChanged(' + Id + ')" />'
+                ]);
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        var form_data_status = [];
+        var all_amounts = {};
+        var selectedItems = {}
+        function amountChanged(Id) {
+            var Amount = toNumber($("#_Id-" + Id).val() || "0");
+            var row = _data.filter(a => a.FundBalanceViewId == Id)[0]
+            if (Amount > 0) {
+                selectedItems[Id] = { ...row, Amount };
+                var fundBalance = row.FundBalance
+
+                if (toNumber(fundBalance) >= Amount) {
+                    $("#_Id-" + Id).css({ 'color': 'black' });
+                    remove(form_data_status, Id);
+                    computeTotalAmount();
+                } else {
+                    form_data_status.push(Id);
+                    $("#_Id-" + Id).css({ 'color': 'red' });
+                }
+            } else {
+                remove(form_data_status, Id);
+                $("#_Id-" + Id).css({ 'color': 'black' });
+                delete selectedItems[Id]
+            }
+        }
+
+        function computeTotalAmount() {
+            var total_amount = 0;
+            var difference = 0;
+            Object.keys(selectedItems).forEach(Id => {
+                total_amount += selectedItems[Id].Amount
+            })
+            try {
+                difference = toNumber($('#total_voucher_amount2').val()).toFixed(2) - toNumber(total_amount).toFixed(2);
+                $('#difference').val(toLabel(difference));
+                if (difference < 0) {
+                    $("#difference").css({ 'color': 'red' });
+                } else {
+                    $("#difference").css({ 'color': 'black' });
+                }
+            } catch (e) { }
+            $("#total_line_amount").val(toLabel(total_amount));
+        }
+
+        $("#btn_save_gl_items").click(function () {
+            var total_amount = 0;
+            var difference = 0;
+            if (form_data_status.length == 0) {
+                $("#total_amount").text("0.00");
+                Object.keys(selectedItems).forEach(Id => {
+                    if (selectedItems[Id].GlAccount) {
+                        total_amount += selectedItems[Id].Amount
+                    }
+                })
+                $("#total_amount").text(toLabel(total_amount));
+                difference = toNumber($('#total_voucher_amount2').val()).toFixed(2) - toNumber(total_amount).toFixed(2);
+                if (difference < 0) {
+                    swal("Difference Cannot be negative..");
+                } else {
+                    $('#glItemsModal').modal('hide');
+                    saveAccrual()
+                }
+            } else {
+                swal("Item has insufficient fund balance....");
+            }
+        });
+
+        function saveAccrual() {
+            swal({
+                title: 'Confirm Acrual Voucher?',
+                buttons: ['No', 'Yes'],
+            }).then(function (isConfirmed) {
+                if (isConfirmed) {
+                    saveAccrualVoucher();
+                } else {
+                    swal("Cancelled", "No change was made");
+                    window.location.reload();
+                }
+            });
+        }
+
+        function saveAccrualVoucher() {
+            var voucherDetails = []
+            Object.keys(selectedItems).forEach(Id => {
+                if (selectedItems[Id].GlAccount) {
+                    voucherDetails.push({
+                        "ExpenditureLineItem": selectedItems[Id].GlAccount.split("-").join("|"),
+                        "ItemDescription": selectedItems[Id].GlAccountDesc,
+                        "FundingReference": selectedItems[Id].FundingRefNo,
+                        "ExpenseAmount": selectedItems[Id].Amount,
+                    })
+                }
+            })
+
+            if (voucherDetails.length > 0) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("ApproveAccrualVoucher", "PaymentVoucher")',
+                    data: { voucherDetails, PaymentVoucherId },
+                    contenttype: "application/json; charset=utf-8",
+                    datatype: "json",
+                    success: function (response) {
+                        if (response == "Success") {
+                            swal("Saved Successfully!", { icon: "success" })
+                                .then((e) => {
+                                    window.location.reload();
+                                });
+                        }
+                        else {
+                            swal(response).then((e) => {
+                                window.location.reload();
+                            });
+                        }
+                    },
+                    failure: function (error) {
+                        swal(error).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                });
+            }
+            $('#glItemsModal').modal('hide');
+        }
+
+        function _confirmDialog(i) {
+            if (data[i]["SourceModule"] == "Imprest") {
+                confirmedDialog(i);
+            } else {
+                if (data[i]["hasWithHolding"]) {
+                    confirmedDialog(i)
+                } else {
+                    swal({
+                        title: 'Does the voucher contain Withholding?',
+                        text: "Press 'Yes' to add Withholding Details",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                            edit(i)
+                        } else {
+                            confirmedDialog(i);
+                        }
+                    });
+                }
+            }
+        }
+
+        function confirmedDialog(i) {
+            if (i == 'x') i = globalPayeeId;
+            swal({
+                title: 'Confirm this Voucher ?',
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmPendingVoucher(data[i]["PaymentVoucherId"]);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        /**
+        * Send confirm signal to the backend
+        * param  {Int} i - Id of the selected Item
+        */
+        function confirmPendingVoucher(id) {
+            var url = '@Url.Action("ConfirmVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PaymentVoucherId": id },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+        // **************** CONFIRM END **************************
+
+        function advancedEdit() {
+            console.log(data[localStorage.getItem("globalPayeeId")]["SourceModule"])
+            if (data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "Normal Voucher"
+                && data[localStorage.getItem("globalPayeeId")]["SourceModule"] != "Accrual Voucher") {
+                swal("Sorry..! You cannot edit voucher which originates from other source modules.")
+            } else {
+                var Id = data[localStorage.getItem("globalPayeeId")]["PaymentVoucherId"]
+                window.location.href = '@Url.Action("AdvancedEdit", "PaymentVoucher")/?paymentId=' + Id + '';
+            }
+        }
+
+        function computeWithHoldTotal() {
+            var ServiceAmount = $("#_ServiceAmount").val() ? $("#_ServiceAmount").val() : 0;
+            var VATOnService = $("#_VATOnService").val() ? $("#_VATOnService").val() : 0;
+            var GoodsAmount = $("#_GoodsAmount").val() ? $("#_GoodsAmount").val() : 0;
+            var VATOnGoods = $("#_VATOnGoods").val() ? $("#_VATOnGoods").val() : 0;
+            var OtherWithholdingAmount = $("#_OtherWithholdingAmount").val() ? $("#_OtherWithholdingAmount").val() : 0;
+            var OtherWithholdingPercent = $("#_OtherWithholdingPercent").val() ? $("#_OtherWithholdingPercent").val() : 0;
+
+            var total = toNumber(ServiceAmount)
+                + toNumber(VATOnGoods)
+                + toNumber(VATOnService)
+                + toNumber(GoodsAmount)
+                + toNumber(OtherWithholdingAmount);
+
+            var withHoldingAmount = toNumber(ServiceAmount) * 0.05
+                + toNumber(GoodsAmount) * 0.02
+                + toNumber(OtherWithholdingAmount) * toNumber(OtherWithholdingPercent) / 100;
+
+            $("#WithHoldingAmount").text(toLabel(withHoldingAmount))
+            $("#WithHoldingTotalAmount").val(toLabel(total))
+
+            $("#other_w").text("+ " + OtherWithholdingAmount + "x" + OtherWithholdingPercent + "%");
+        }
+
+       function attach(i) {
+           window.location.href =
+               '@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentVoucherId"] + '&&sourceModule='+data[i]["SourceModule"];
+        }
+
+       function viewAttachment(i) {
+           window.location.href =
+               '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + data[i]["PaymentVoucherId"] + '&&sourceModule='+data[i]["SourceModule"];
+        }
+
+         function reverseWitholding(i) {
+            swal({
+                title: "Reverse this Voucher?",
+                text: "You will find it here => Withholding Tax Entry!",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    reverseConfirmed(data[i]["PVNo"])
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+        }
+
+          function reverseConfirmed(PVNo) {
+            var url = '@Url.Action("ReverseWithholding", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "PVNo": PVNo },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Reversed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+          }
+
+        function reject(i) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmRejection(data[i]["PaymentVoucherId"], remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, remark) {
+            var url = '@Url.Action("RejectVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "Id": Id, "Remark": remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" }).then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+    </script>
+}

@@ -1,0 +1,666 @@
+﻿@{
+    ViewBag.Title = "Generate CHW Payment";
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 5px;
+        padding-left: 5px;
+        display: flex;
+        justify-content: space-between;
+        flex-wrap: nowrap;
+        flex-direction: row;
+    }
+
+    .searchIcon {
+        margin-top: 5px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        resize: vertical;
+    }
+
+    .info-box {
+        padding: 8px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    table td:nth-child(7) {
+        text-align: right;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .entry-label1 {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 140px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .row-align {
+        display: flex;
+        flex-direction: row;
+        flex-wrap: nowrap;
+        justify-content: space-between;
+    }
+</style>
+<div style="padding:1em;padding-top:4em">
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px">
+                            <div class="row-align">
+                                <div>
+                                    <button class="btn btn-info" id="generate" onclick="GetCashBookBalance(this)">
+                                        <i class="fa fa-file-text-o"></i> <span id="Generate">Generate</span>
+                                    </button>
+                                </div>
+
+                                <div>
+                                    <div class="search-container">
+                                        <i class="fa fa-search searchIcon"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="searchbox">
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row-align">
+                                <div>
+                                    <strong>Acc: </strong>
+                                    <select id="bankAccounts" style="background-color:#ECF3F8" class="filters"></select>
+                                </div>
+                                <div class="dfund-filter">
+                                    <strong>DFundRef: </strong>
+                                    <select id="dfundRefs" style="background-color:#ECF3F8" class="filters">
+                                    </select>
+                                </div>
+                                <div class="sub-warrant-filter">
+                                    <strong>SubWarrant: </strong>
+                                    <select id="subWarrantCodes" style="background-color:#ECF3F8" class="filters">
+                                    </select>
+                                </div>
+                                <div>
+                                    <strong>SBC: </strong>
+                                    <select id="SBC" style="background-color:#ECF3F8" class="filters">
+                                    </select>
+                                </div>
+                                <div>
+                                    <strong>Pay.Method: </strong>
+                                    <select id="paymentMethod" style="background-color:#ECF3F8" class="filters">
+                                        <option value="EFT">EFT</option>
+                                        <option value="Cheque">Cheque</option>
+                                    </select>
+                                </div>
+                                @*<div class="ex-rate-filter">
+                                        <strong>ExRateDate: </strong>
+                                        <select id="exRateDate" style="background-color:#ECF3F8" class="filters">
+                                        </select>
+                                    </div>*@
+                            </div>
+                            <table id="dt_voucher_listing" class="table table-bordered table-condensed">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>PVNo</th>
+                                        <th>Payee Name</th>
+                                        <th>Payee Bank Account</th>
+                                        <th>Amount</th>
+                                        <th>Currency</th>
+                                        @*<th>DEDUCTIONS</th>*@
+                                        <th>Source Module</th>
+                                        <th></th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+@{ Html.RenderPartial("_CommVoucherListDialogs"); }
+@section pagespecific{
+    <script>
+        function openLink(id) {
+            var url = `@Url.Action("EofficeDetails", "DFundApprovals")/${id}`
+            window.open(url,'_blank');
+        }
+
+        function dataLink(value, id) {
+            return `<a href="#" onclick="openLink(${id})"><strong>${value}</strong></a>`
+        }
+        var dt_voucher_listing = $('#dt_voucher_listing').dataTable({
+            "language": {
+                "emptyTable": '<strong id="loader">Loading...</strong>',
+                "zeroRecords": "Please Choose Acc"
+            }
+        });
+        /* $("#loader").text("Please Choose Bank Acc");*/
+        $("#loader").text("Loading...Please Wait");
+        $("#dt_voucher_listing_wrapper .dt-toolbar").remove();
+
+        $("#searchbox").on("keyup search input paste cut", function () {
+            dt_voucher_listing.DataTable().search(this.value).draw();
+        });
+
+        var dt_voucher_detail = $('#dt_voucher_detail').dataTable({
+            'sDom': 't',
+            "autoWidth": true,
+            "searching": false,
+            "bPaginate": false,
+            "info": false,
+            "data": [],
+            "columns": [
+                { title: "Expenditure Line Item" },
+                { title: "Item Description" },
+                { title: "Funding Reference" },
+                { title: "Expense Amount" }
+            ]
+        });
+
+ function sourceModule(d) {
+            switch (d["SourceModule"]) {
+                case "Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Purchase":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                         case "Accrual Contract":
+                    if (!d["SourceModuleReferenceNo"]) {
+                        return d["SourceModule"];
+                    } else {
+                        return d["SourceModuleReferenceNo"].includes("PO") ?
+                        '<a href="@Url.Action("PreviewReceiving","Procurement")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d) :
+                        '<a href="@Url.Action("PreviewReceiving", "Contract")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    }
+                    break;
+                case "Prepayment":
+                    return '<a href="@Url.Action("PreviewPrepayment","Prepayment")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Imprest":
+                    return '<a href="@Url.Action("ImprestDetails","Imprest")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "BulkPayment":
+                    return '<a href="@Url.Action("PaymentDetails", "PaymentBatches")/' + d["OtherSourceId"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                    break;
+                case "Loan":
+                    return '<a href="@Url.Action("PreviewLoanTracker","Loan")/' + d["SourceModuleReferenceNo"] + '">' + d["SourceModule"] + '</a>' + withholdingTemplate(d);
+                default:
+                    return d["SourceModule"] + withholdingTemplate(d);
+            }
+        }
+
+        var data = [];
+        var globalPayeeId = null;
+        function LoadTableData() {
+            let bankAccounts = []
+            let SBC = []
+            let subWarrantCodes = []
+            let DfundApprovalRefs = []
+            let exRateDates = []
+            $("#generate").attr('disabled', true);
+            $.ajax({
+                type: "get",
+                url: '@Url.Action("GetCHWVoucherGenerate", "CommunityPaymentBatch")',
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    data = response.data;
+                    for (var i = 0; i < data.length; i++) {
+                        if (!bankAccounts.includes(data[i].PayerBankAccount)) {
+                            bankAccounts.push(data[i].PayerBankAccount);
+                        }
+                        if (!SBC.includes(data[i].SubBudgetClass)) {
+                            SBC.push(data[i].SubBudgetClass)
+                        }
+                        if (!subWarrantCodes.includes(data[i].SubWarrantCode) && data[i].SubWarrantCode && data[i].StPaymentFlag) {
+                            subWarrantCodes.push(data[i].SubWarrantCode)
+                        }
+                        if (data[i].DfundApprovalRef && !DfundApprovalRefs.includes(data[i].DfundApprovalRef)) {
+                            DfundApprovalRefs.push(data[i].DfundApprovalRef)
+                        }
+                        //if (data[i].TransactionExchangeRateDateFormatted && !exRateDates.includes(data[i].TransactionExchangeRateDateFormatted)) {
+                        //    exRateDates.push(data[i].TransactionExchangeRateDateFormatted)
+                        //}
+                    }
+                    createBankAccountsFilter(bankAccounts);
+                    createSubWarrantFilter(subWarrantCodes);
+                   // createExRateDateFilter(exRateDates);
+                    createSBCFilter(SBC);
+                    createDfundApprovalRefFilter(DfundApprovalRefs);
+                    filterTableData();
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        LoadTableData()
+
+        $(".with-holding").toggle(false)
+        $(".liquidated-demage").toggle(false)
+        $(".rentation").toggle(false)
+
+
+        var checkedRows = [];
+        function rowChecked(pvId) {
+            if ($("#row-" + pvId).is(":checked")) {
+                checkedRows.push(pvId);
+            } else {
+                remove(checkedRows, pvId);
+            }
+            toggleGenerateButton();
+        }
+
+        function checkAll() {
+            checkedRows = [];
+            if ($("#checkall").is(":checked")) {
+                for (var i = 0; i < data.length; i++) {
+                    checkedRows.push(i);
+                    $("#row-" + i).prop('checked', true);
+                }
+            } else {
+                for (var i = 0; i < data.length; i++) {
+                    $("#row-" + i).prop('checked', false);
+                }
+            }
+            toggleGenerateButton();
+        }
+
+        $("#generate").attr('disabled', true);
+
+        var TotalAmount = 0;
+        function toggleGenerateButton() {
+            TotalAmount = 0;
+            if (checkedRows.length > 0) {
+                checkedRows.forEach(pvId=> {
+                    var row = data.filter(a=>a.PaymentVoucherId == pvId)[0];
+                   /* TotalAmount = TotalAmount + toNumber(row.NetOperationalAmount || row.OperationalAmount) - toNumber(row.AdvancePayment);*/
+                    TotalAmount = TotalAmount + toNumber(row.NetOperationalAmount || row.OperationalAmount);
+                });
+                $("#generate").attr('disabled', false);
+                $("#selectedItems").text(checkedRows.length + " Item(s) Selected ~ Total: " + toLabel(TotalAmount));
+            } else {
+                $("#generate").attr('disabled', true);
+                $("#selectedItems").text("No Item(s) Selected");
+            }
+        }
+
+        function remove(array, val) {
+            var found = array.indexOf(val);
+            while (found !== -1) {
+                array.splice(found, 1);
+                found = array.indexOf(val);
+            }
+        }
+
+        let CashBookBalance = 0
+        let CashCommitment = 0
+        let AvailableBalance = 0
+        let NewBalance = 0
+
+        function GetCashBookBalance(target) {
+            $(target).prop('disabled', true)
+            $("#Generate").text("Verifying...")
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetCashBookBalance", "PaymentVoucher")',
+                data: {
+                    accountNo: $("#bankAccounts").val(),
+                    SBC: $("#SBC").val()
+                },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                      $(target).prop('disabled', false)
+                    $("#Generate").text("Generate")
+                    if (response.data && response.status == "Success") {
+                        CashBookBalance = response.data.CashBookBalance
+                        CashCommitment = response.data.CommittedAmount
+                        AvailableBalance = response.data.AvailableBalance
+                        NewBalance = AvailableBalance.toFixed(2) - TotalAmount.toFixed(2)
+                        if (NewBalance>=0) {
+                            generateVoucher1()
+                        } else {
+                            generateVoucher1() // generateVoucher()
+                        }
+                    } else {
+                        swal(response.status)
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        var called = false
+        function generateVoucher1() {
+            swal({
+                title: "Generate Selected Item(s)?",
+                text: `Acc: ${$("#bankAccounts").val()} SBC:${$("#SBC").val()}
+                       CashBook Balance  : ${CashBookBalance.toLocaleString()}\n
+                       Committed Amount  : ${CashCommitment.toLocaleString()}\n
+                       Available Balance: ${AvailableBalance.toLocaleString()}\n
+                       Amount to be Expensed: ${TotalAmount.toLocaleString()}\n
+                       New Balance       : ${NewBalance.toLocaleString()}\n`,
+                buttons: ["NO", "YES"],
+            }).then((willGenerate) => {
+                if (!called) {
+                    if (willGenerate) {
+                        postGeneratedVoucher();
+                    } else {
+                        swal("Cancelled");
+                    }
+                    called = true
+                }
+            });
+        }
+
+        function generateVoucher() {
+            swal({
+                title: "Payment Exceeds CashBook Balance",
+                text: `Acc: ${$("#bankAccounts").val()} SBC:${$("#SBC").val()}
+                       CashBook Balance  : ${CashBookBalance.toLocaleString()}\n
+                       Committed Amount  : ${CashCommitment.toLocaleString()}\n
+                       Available Balance: ${AvailableBalance.toLocaleString()}\n
+                       Amount to be Expensed: ${TotalAmount.toLocaleString()}\n
+                       New Balance       : ${NewBalance.toLocaleString()}\n`,
+                buttons: "OK",
+            })
+        }
+
+        function postGeneratedVoucher() {
+            var url = '@Url.Action("GenerateCHWVoucher", "CommunityPaymentBatch")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "paymentVoucherIds": checkedRows },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == 'Success') {
+                        swal("Generated successfully!", { icon: "success" })
+                        .then((e) => {
+                            window.location.reload();
+                        });
+                    } else {
+                        swal(response);
+                    }
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function reject(PaymentVoucherId) {
+            swal({
+                text: 'Rejection Reason',
+                content: "input",
+                button: {
+                    text: "SAVE",
+                    closeModal: true,
+                },
+            }).then(remark => {
+                if (!remark) {
+                    swal("No reason was provided");
+                } else {
+                    confirmRejection(PaymentVoucherId, remark);
+                };
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function confirmRejection(Id, Remark) {
+            var url = '@Url.Action("RejectVoucher", "PaymentVoucher")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { Id, Remark },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+
+                    if (response == "Success") {
+                        swal("Saved Successfully!", { icon: "success" })
+                            .then((e) => {
+                            window.location.reload();
+                        });
+                    }
+                    else {
+                        swal(response);
+                    }
+
+                },
+                failure: function (error) {
+                    swal(error);
+                }
+            });
+        }
+
+        function viewAttachment(pvId) {
+            var pv = data.filter(a=>a.PaymentVoucherId == pvId)[0]
+           window.location.href =
+               '@Url.Action("AttachmentView", "PaymentVoucherAttachments")/?groupId=' + pvId + '&&sourceModule=' + pv.SourceModule;
+        }
+
+        function createBankAccountsFilter(bankAccounts) {
+            var bankAccSelect = document.getElementById("bankAccounts")
+            bankAccounts.forEach(bankAcc => {
+                let option = document.createElement('option')
+                option.value = bankAcc
+                option.text = bankAcc
+                bankAccSelect.appendChild(option);
+            });
+            $("#bankAccounts").trigger('change');
+        }
+
+        $(".sub-warrant-filter").toggle(false)
+        function createSubWarrantFilter(items) {
+            if (!items.length) {
+                return;
+            }
+            $(".sub-warrant-filter").toggle(true)
+            var select = document.getElementById("subWarrantCodes")
+            items.forEach(item => {
+                let option = document.createElement('option')
+                option.value = item;
+                option.text = item;
+                select.appendChild(option);
+            });
+            $("#subWarrantCodes").trigger('change');
+        }
+
+        $(".ex-rate-filter").toggle(false)
+        function createExRateDateFilter(items) {
+            if (!items.length) {
+                return;
+            }
+            $(".ex-rate-filter").toggle(true)
+            var select = document.getElementById("exRateDate");
+            items.forEach(item => {
+                let option = document.createElement('option');
+                if (item.includes("01/01/0001")) {
+                    option.text = "NA";
+                } else {
+                    option.text = item;
+                }
+                option.value = item;
+                select.appendChild(option);
+            });
+            $("#exRateDate").trigger('change');
+        }
+        $(".dfund-filter").toggle(false)
+        function createDfundApprovalRefFilter(items) {
+            if (!items.length) {
+                return;
+            }
+            $(".dfund-filter").toggle(true)
+            var select = document.getElementById("dfundRefs");
+
+            let _option = document.createElement('option')
+            _option.value = "";
+            _option.text = "NA";
+            select.appendChild(_option);
+
+            items.forEach(item => {
+                let option = document.createElement('option')
+                option.value = item;
+                option.text = item;
+                select.appendChild(option);
+            });
+            $("#dfundRefs").trigger('change');
+        }
+
+        function createSBCFilter(SBCs) {
+            var sbcSelect = document.getElementById("SBC")
+            SBCs.forEach(sbc => {
+                let option = document.createElement('option')
+                option.value = sbc
+                option.text = sbc
+                sbcSelect.appendChild(option);
+            });
+            $("#SBC").trigger('change');
+        }
+
+        $(".filters").change(function () {
+            filterTableData()
+            checkedRows = [];
+            toggleGenerateButton();
+        })
+
+        function filterTableData() {
+            let _data = data
+                .filter((row) => row.PayerBankAccount == $("#bankAccounts").val()
+                 && row.PaymentMethod == $("#paymentMethod").val()
+                    && row.SubBudgetClass == $("#SBC").val())
+
+            if ($("#subWarrantCodes").val()) {
+                _data = _data.filter((row) => row.SubWarrantCode == $("#subWarrantCodes").val())
+            }
+
+            if ($("#dfundRefs").val()) {
+                _data = _data.filter((row) => row.DfundApprovalRef == $("#dfundRefs").val())
+            }
+
+            if ($("#exRateDate").val()) {
+                                console.log({ x: $("#exRateDate").val() })
+                console.log(_data)
+                _data = _data.filter((row) => row.TransactionExchangeRateDateFormatted == $("#exRateDate").val())
+
+            }
+
+            displayData(_data);
+        }
+
+        function displayData(_data) {
+            dt_voucher_listing.fnClearTable();
+            for (var i = 0; i < _data.length; i++) {
+                var pvId = _data[i].PaymentVoucherId
+                dt_voucher_listing.fnAddData([i + 1,
+                    data[i]["PVNo"],
+                    data[i]["PayeeAccountName"],
+                    data[i]["PayeeBankAccount"],
+                    toLabel(data[i]["OperationalAmount"]),
+                    data[i]["OperationalCurrency"],
+                   /*calculate(_data[i]),*/
+                   sourceModule(_data[i]),
+                    '<a href="#" onclick="viewAttachment(' + pvId + ')"><i class="fa fa-file-pdf-o"></i></a>\
+                             <a href = "#" onclick = "openViewDialog(' + i + ')" > View</i></a>\
+                             <a href="#" onclick="reject(' + pvId + ')">Reject</a>',
+                    '<input  type="checkbox" id="row-' + pvId + '" onchange="rowChecked(' + pvId + ')"/>'
+                ]);
+            }
+            if (_data.length == 0) {
+                $("#loader").text("No matching records found")
+            }
+        }
+    </script>
+}

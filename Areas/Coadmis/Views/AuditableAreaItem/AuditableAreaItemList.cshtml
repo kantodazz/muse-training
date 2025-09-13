@@ -1,0 +1,199 @@
+﻿
+@{
+    ViewBag.Title = "Auditable Area Item List";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px;">
+    <div class="row"></div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+        <div class="row">
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> @ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <a class="btn btn-info" href='@Url.Action("CreateAuditableAreaItem", "AuditableAreaItem")'>
+                                    <i class="glyphicon glyphicon-plus"></i> Add New
+                                </a>
+                            </div>
+                            <div class="col-md-6"></div>
+                        </div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            @Html.AntiForgeryToken()
+                            <table class="table  table-bordered table-hover table-condensed" id="dataTableList">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%">#</th>
+                                        <th style="text-align:left;">Name</th>
+                                        <th>Auditable Area</th>
+                                        <th>Status</th>
+                                        <th style="text-align:center">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+    <script type="text/javascript">
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ready(function () {
+            BindDataTable();
+        });
+
+        var BindDataTable = function (response) {
+
+            $("#dataTableList").DataTable({
+                "bServerSide": true,
+                "sAjaxSource": '@Url.Action("GetAuditableAreaItemList", "AuditableAreaItem")',
+                "iDisplayLength": 10,
+                "aLengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]],
+                "fnServerData": function (sSource, aoData, fnCallback) {
+                    $.ajax({
+                        type: "Get",
+                        data: aoData,
+                        url: sSource,
+                        success: fnCallback
+                    })
+                },
+                "aoColumns": [
+                    {
+                        render: function (data, type, row, meta) {
+                            return meta.row + meta.settings._iDisplayStart + 1;
+                        }
+                    },
+                    { "mData": "Name" },
+                    //{ "mData": "EngagementName" },
+                    { "mData": "AuditableAreaName" },
+                    { "mData": "Status" },
+                    /*{
+                        "mData": "PreviousYearAmount",
+                        "render": function (PreviousYearAmount, type, full, meta) {
+                            var amount = null;
+                            if (PreviousYearAmount == null) {
+                                amount = "<p align='right'>0</p>";
+                            }
+                            else {
+                                amount = "<p align='right'>" + PreviousYearAmount.toLocaleString() + "</p>";
+                            }
+                            return amount;
+                        }
+                    },
+                    {
+                        "mData": "CurrentYearAmount",
+                        "render": function (CurrentYearAmount, type, full, meta) {
+                            var amount = null;
+                            if (CurrentYearAmount == null) {
+                                amount = "<p align='right'>0</p>";
+                            }
+                            else {
+                                amount = "<p align='right'>" + CurrentYearAmount.toLocaleString() + "</p>";
+                            }
+                            return amount;
+                        }
+                    },*/
+                    {
+                        "mData": "AuditableAreaItemId",
+                        "render": function (AuditableAreaItemId, type, full, meta) {
+                               return '<div class="btn-group" id="drop">\
+                                <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                <span class="caret"></span\
+                                <span class="sr-only"></span>\
+                                </button>\
+                                <ul class="dropdown-menu dropdown-menu-right">\
+                                    <li><a class="dropdown-item" href="@Url.Action("EditAuditableAreaItem", "AuditableAreaItem")/?id=' + AuditableAreaItemId + '">Edit</a></li>\
+                                    <li><a href="#" onclick="cancelAuditableAreaItem('+ full.AuditableAreaItemId+')">Cancel</a></li>\
+                                </ul>\
+                            </div>\ ';
+                        }
+                    },
+                ]
+            });
+        }
+
+        function cancelAuditableAreaItem(id) {
+            swal({
+                title: 'Cancel Auditable Area Item ?',
+                text: "Are you sure you want to Cancel Auditable Area Item , This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    cancelAuditableAreaItemDetail(id);
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelAuditableAreaItemDetail(id) {
+            var url = '@Url.Action("CancelAuditableAreaItem", "AuditableAreaItem")';
+            var formData = new FormData()
+            formData.append('__RequestVerificationToken', $('[name=__RequestVerificationToken]').val());
+            formData.append('id', id);
+            $.ajax({
+                url: url,
+                data: formData,
+                type: 'POST',
+                contentType: false,
+                processData: false,
+                success: function (response) {
+                    if (response == "Success") {
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        swal("Error Cancelling Auditable Area Item", { icon: "warning" });
+                    }
+                },
+                failure: function (error) {
+                    swal("Error Cancelling Auditable Area Item", { icon: "warning" });
+                }
+            });
+        }
+    </script>
+}
+
+
+
+

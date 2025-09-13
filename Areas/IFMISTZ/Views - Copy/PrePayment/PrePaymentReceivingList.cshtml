@@ -1,0 +1,372 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.PrePaymentVM>
+@{
+    ViewBag.Title = "Prepayment Receiving Entry";
+}
+
+<style type="text/css">
+    .loadingImg {
+        display: none;
+    }
+</style>
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Pending Prepayment Receiving Entry</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" />
+                            </div>
+
+                            <div class="row">
+
+                                <div class="col-xs-9 col-sm-3 col-md-3 col-lg-3">
+                                    <div class="input-group">
+                                        <a href="@Url.Action("ReceivingItems", "PrePayment")" class="btn btn-info" style="width:120px;border-radius:1px;">
+                                            <i class="fa fa-plus"></i>Add New
+                                        </a>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <br />
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_prepayment">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:right;width:4%"></th>
+                                        <th style="text-align:left;">Receiving #</th>
+                                        <th style="text-align:left">Prepayment Number</th>
+                                        <th style="text-align:left">Supplier</th>
+                                        <th style="text-align:right">Prepayment Amount</th>
+                                        <th style="text-align:right;width:10%">Total Received</th>
+                                        <th style="text-align:right">Receiving Amount</th>
+                                        <th style="text-align:right">Remaining Amount</th>
+                                        <th style="text-align:right">Status</th>
+                                        <th style="text-align:center">Action</th>
+
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+
+                        </div>
+
+                    </div>
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<div class="modal fade" id="PrepaymentRejection">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h5 align="center">Rejected Receiving Prepayment: <span id="PrepaymentNo"></span></h5>
+            </div>
+
+            <div class="modal-body form-horizontal">
+
+                <div class="form-group">
+                    <div class="col-md-7">
+                        <span id="Remarks"></span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+           /// $(document).ready(function () {
+                var dt_prepayment = $('#dt_prepayment').dataTable({
+                    "language": {
+                        "emptyTable": '<strong id="loader">Loading...</strong>',
+                        "zeroRecords": "No matching records found"
+                    }
+                });
+
+
+                $("#dt_prepayment .dt-toolbar").remove();
+
+        $(".rejected_prepayment").on('click', function () {
+            alert(0);
+                    var reason = $(this).data('reason');
+                      var pno = $(this).data('pno');
+                      console.log('reason' + reason);
+                      console.log('pno' + pno);
+
+                    $("#prepayment_number").text(pno);
+                    $("#reason").text(reason);
+        });
+
+        function rejectedDialog(i) {
+            $("#Remarks").text(data[i]["ApprovalStatus"]);
+            $("#PrepaymentNo").text(data[i]["PrePaymentNo"]);
+            $('#PrepaymentRejection').modal('show');
+        }
+
+                  var data = [];
+        //var PrepaymentId = null;
+        $.ajax({
+            type: "get",
+            url: '@Url.Action("GetPrePaymentReceivingList", "PrePayment")',
+            contenttype: "application/json; charset=utf-8",
+            datatype: "json",
+            success: function (response) {
+                data = response.data;
+                if (data == "") {
+                    document.getElementById("loader").textContent = "Data  not available in our records";
+                }
+                else {
+                dt_prepayment.fnClearTable();
+                for (var i = 0; i < data.length; i++) {
+
+                    var displayConfirm = 'display:none;';
+                    var displayEdit = 'display:none;';
+                    var displayAttach = 'display:none;';
+                    var displayCancel = 'display:none;';
+
+                    //var balance = parseFloat(data[i]["PrePaymentAmount"]).toFixed(2) - parseFloat(data[i]["ReceivingItemsValue"]).toFixed(2);
+
+                    var receivedAmt = parseFloat(data[i]["ReceivedAmount"]).toFixed(2);
+
+                    var Balance = data[i]["Balance"];
+                    if (Balance != null) {
+                        Balance = "<p align='right'>" + toLabel(data[i]["Balance"]); +"</p>"
+                    } else {
+                        Balance = "<p align='right'>" + data[i]["Balance"]; +"</p>"
+                    }
+
+
+                    var receivedAmt = data[i]["ReceivedAmount"];
+                    if (receivedAmt != null) {
+                        receivedAmt = "<p align='right'>" + toLabel(data[i]["ReceivedAmount"]); +"</p>"
+                    } else {
+                        receivedAmt = "<p align='right'>" + data[i]["ReceivedAmount"]; +"</p>"
+                    }
+
+                    var receivingItemsValue = data[i]["ReceivingItemsValue"];
+                    if (receivingItemsValue != null) {
+                        receivingItemsValue = "<p align='right'>" + toLabel(data[i]["ReceivingItemsValue"]); +"</p>"
+                    } else {
+                        receivingItemsValue = "<p align='right'>" + data[i]["ReceivingItemsValue"]; +"</p>"
+                    }
+
+                    var prepaymentAmount = data[i]["PrePaymentAmount"];
+                    if (prepaymentAmount != null) {
+                        prepaymentAmount = "<p align='right'>" + data[i]["Currency"] + " " + toLabel(data[i]["PrePaymentAmount"]); +"</p>"
+                    } else {
+                        prepaymentAmount = "<p align='right'>" + data[i]["Currency"] + " " + data[i]["PrePaymentAmount"]; +"</p>"
+                    }
+
+                    var overallStatus = data[i]["OverallStatus"];
+                    if (overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.REJECTED.ToUpper()') {
+                        displayEdit = 'display:block;';
+                        displayAttach = 'display:block;';
+                        displayCancel = 'display:block;';
+                        displayConfirm = 'display:block;';
+                        overallStatus = '<a href="#" onclick="rejectedDialog(' + i + ')"><i class="fa fa-eye"></i> Rejected</a>';
+                    } else {
+                        overallStatus = overallStatus;
+                    }
+
+                    if (overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.PENDING.ToUpper()' || overallStatus.toString().toUpperCase() == '@IFMIS.Libraries.Constants.REJECTED.ToUpper()') {
+                        displayEdit = 'display:block;';
+                        displayAttach = 'display:block;';
+                        displayCancel = 'display:block;';
+                        displayConfirm = 'display:block;';
+                    }
+
+                    dt_prepayment.fnAddData([i + 1,
+                    data[i]["ReceivingNumber"],
+                    data[i]["PrePaymentNo"],
+                    data[i]["SupplierName"],
+                        prepaymentAmount,
+                        receivedAmt,
+                        receivingItemsValue,
+                    data[i]["Currency"] + " " + data[i]["Balance"],
+                        overallStatus,
+                    '<div class="btn-group" id="drop-' + i + '">\
+                              <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">\
+                                 <span class="caret"></span\
+                                     <span class="sr-only"></span>\
+                             </button>\
+                            <ul class="dropdown-menu">\
+                                 <li><a href="@Url.Action("PreviewReceiving", "PrePayment")/?id=' + data[i]["ReceivingSummaryId"] + '">Preview</a></li>\
+                                <li style="' + displayEdit + '"><a href="@Url.Action("EditReceivingItems", "PrePayment")/?id=' + data[i]["PrePaymentId"] + '">Edit</a></li>\
+                                <li style="' + displayAttach + '"><a href="@Url.Action("AttachmentEntry", "PaymentVoucherAttachments")/?groupId=' + data[i]["ReceivingSummaryId"] + '&&sourceModule=' + "Prepayment" + '">Attach</a></li>\
+                                <li id="decisionList" style="'+ displayConfirm + '"><a href="#" onclick="confirmDialog(' + i + ')">Confirm</a></li>\
+                                <li id="decisionList" style="'+ displayCancel + '"><a href="#" onclick="cancelDialog(' + i + ')">Cancel</a></li>\
+                            </ul>\
+                        </div>\ '
+                    ]);
+
+                }
+            }
+            },
+            failure: function (error) {
+                swal(error);
+            }
+        });
+
+        function confirmDialog(i) {
+            swal({
+                title: 'Prepayment Receiving Confirmation ?',
+                text: "Do you what to confirm receiving Prepayment: " + data[i]["ReceivingNumber"],
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                document.getElementById("decisionList").style.display = "none";
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    confirmPrepayment(data[i]["ReceivingSummaryId"]);
+                } else {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function confirmPrepayment(PrepaymentId) {
+            var url = '@Url.Action("ConfirmReceiving", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": PrepaymentId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal("Confirmed Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal(response, { icon: "warning" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                    }
+
+                },
+                failure: function (error) {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Error Confirming Prepayment", { icon: "warning" })
+                    .then((value) => {
+                        window.location.reload();
+                    });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+        function cancelDialog(i) {
+            swal({
+                title: 'Prepayment Receiving Cancellation',
+                text: "Do you what to cancel Receiving Prepayment: " + data[i]["ReceivingNumber"] + " This process cannot be undone",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                document.getElementById("decisionList").style.display = "none";
+                if (isConfirm) {
+                    $("#saveLoader-" + i + "").toggle(true)
+                    $("#drop-" + i + "").toggle(false)
+                    cancelPrepayment(data[i]["ReceivingSummaryId"]);
+                } else {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        }
+
+        function cancelPrepayment(PrepaymentId) {
+            var url = '@Url.Action("CancelReceiving", "PrePayment")';
+            $.ajax({
+                type: "post",
+                url: url,
+                data: { "id": PrepaymentId },
+                contenttype: "application/json; charset=utf-8",
+                datatype: "json",
+                success: function (response) {
+                    if (response == "Success") {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal("Cancelled Successfully!", { icon: "success" })
+                            .then((value) => {
+                                window.location.reload();
+                            });
+                    }
+                    else {
+                        document.getElementById("decisionList").style.display = "block";
+                        swal(response, { icon: "warning" });
+                    }
+
+                },
+                failure: function (error) {
+                    document.getElementById("decisionList").style.display = "block";
+                    swal("Error Cancelling Receiving Prepayment", { icon: "warning" });
+                }
+            });
+            $('#confirmModal').modal('hide');
+        }
+
+           ///});
+
+    </script>
+}
+
+
+
+

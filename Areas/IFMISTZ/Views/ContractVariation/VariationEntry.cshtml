@@ -1,0 +1,307 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+    ViewBag.Title = "Contract Receiving";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid 1 -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID start)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Contract Variation Entry</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <br />
+                            <br />
+
+
+                            <div class="row">
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    <input class="form-control" id="PayeeDetailId" name="PayeeDetailId" placeholder="Select Payee Name" />
+                                </div>
+                                <div class="col-lg-3 col-sm-3 col-xs-3">
+                                    <div class="input-group"><input class="form-control" id="ContractNo" name="ContractNo" placeholder="Click here to search Contract" value='' type="text" autocomplete="off" onclick="SearchContract()" /><span class="input-group-btn"><button class="btn shiny  " id="search" onclick="SearchContract()">Search</button></span></div>
+                                </div>
+                                <div class="col-md-3 col-md-offset-1" id="variation_type" style="display:none">
+                                    @Html.DropDownList("VariationType", new List<SelectListItem>{
+                                    new SelectListItem{ Text="--Select Variation Type--", Value = "" },
+                                    new SelectListItem{ Text="Chage Date", Value = "ChageDateOnly" },
+                                    new SelectListItem{ Text="Increasing Amount", Value = "ByIncreasingAmount" },
+                                    new SelectListItem{ Text="Decreasing Amount", Value = "ByDescreasingAmount" },
+                        }, new { @class = "form-control" })
+                                </div>
+                                @Html.HiddenFor(model => model.ContractId)
+                                <br />
+                                <br />
+                                <hr />
+                            </div>
+                            <fieldset class="scheduler-border" style="display:none" id="contract_details">
+                                <legend class="scheduler-border">Contract Details</legend>
+                                <div id="contract_data">
+
+                                </div>
+                            </fieldset>
+                            <div class="col-md-offset-1">
+                                <a href="@Url.Action("PendingVariation","ContractVariation")" style="margin-right:5px" type="submit" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                <button type="button" class="save_button btn btn-info" style="margin-right:2px;display:none">
+                                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                </button>
+
+                            </div>
+
+                            <br />
+                            <br />
+
+
+                        </div>
+
+
+
+
+
+                            </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<!----------- Search  Contract----------------->
+<div class="modal fade" id="search_contracts" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title">Approved Contract</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+
+
+                    <div class="row" style="padding-top:1%;padding-bottom:1%">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container " style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search" placeholder="Search..." id="search_contract">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_search_contract" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Contract Id</th>
+                                <th>Contract</th>
+                                <th>SBC</th>
+                                <th>Payee Code</th>
+                                <th>Currency</th>
+                                <th>Received</th>
+                                <th>Balance</th>
+                                <th>Contract type</th>
+                                <th>Contract Reg#</th>
+                                <th>Contract Number</th>
+                                <th>Contract Description</th>
+                                <th>Contract Amount</th>
+                                <th> Payee Name</th>
+                                <th> Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+            $(function () {
+
+            var url = '@Url.Action("GetContractPayees", "ContractVariation")';
+
+              $("#PayeeDetailId").select2({
+                minimumInputLength: 3,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.contractPayees }; // data.exchequers returning json data from Controller
+                    }
+                }
+            });
+
+        });
+
+           var selectedContract = [];
+            var dt_search_contract = $('#dt_search_contract').dataTable({
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1, 2, 3,4,5,6,7,8,11] }],
+                }
+                );
+                $("#dt_search_contract_wrapper .dt-toolbar").remove();
+               $("#search_contract").on("keyup search input paste cut", function () {
+                dt_search_contract.DataTable().search(this.value).draw();
+               });
+        function SearchContract() {
+            var payeeDetailId = $("#PayeeDetailId").val();
+            if (!payeeDetailId) {
+                swal("Please select Payee Name first");
+                return false;
+            }
+
+            $('#search_contracts').modal('show');
+            selectedContract = [];
+                    var url = '@Url.Action("GetContracts", "ContractVariation")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: { id: payeeDetailId },
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                            if (response == "NoContract") {
+                              swal("No any contract to apply variation");
+                            }
+                            else if (response == "NotAuthorizes") {
+                        swal("You have role which restrict you to receive contract to this institution");
+                            }
+                            else if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                debugger
+                                data = response.data;
+                                dt_search_contract.fnClearTable();
+                                for (var i = 0; i < data.length; i++) {
+
+                                    dt_search_contract.fnAddData([i + 1,
+                                    data[i]["ContractId"],
+                                    data[i]["ContractName"],
+                                    data[i]["SubBudgetClass"],
+                                    data[i]["PayeeCode"],
+                                    data[i]["Currency"],
+                                    data[i]["ReceivedAmount"],
+                                    data[i]["RemainingAmount"],
+                                    data[i]["ContractType"],
+                                    data[i]["ContractNo"],
+                                    data[i]["ContractNumber"],
+                                    data[i]["ContractDescription"],
+                                    toLabel(data[i]["ContractAmount"]),
+                                    data[i]["Payeename"],
+                                    '<a href="#" onclick="contractClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a>'
+                                    ]);
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                 }
+        function contractClicked(rowId) {
+            $("#variation_type").show();
+            $("#VariationType").prop('selectedIndex', 0);
+            var data = dt_search_contract.DataTable().rows().data();
+            var row = data[rowId];
+            $("#ContractId").val(row[1]);
+            $("#ContractNo").val(row[9]);
+            $("#contract_details").show();
+            $('#contract_data').empty();
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Number&nbsp;:</strong>&nbsp;' + row[10] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Sub Budget Class&nbsp;:</strong>&nbsp;' + row[3] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Name&nbsp:</strong>&nbsp;' + row[2] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Code&nbsp;:</strong>&nbsp;' + row[4] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row">  <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Description&nbsp:</strong>&nbsp;' + row[11] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Payee Name&nbsp;:</strong>&nbsp;' + row[13] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Amount&nbsp;:</strong>&nbsp;' + row[12] + ' ' + row[5] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Amount Received&nbsp;:</strong>&nbsp;' + toLabel(row[6]) + ' ' + row[5] + '</div></div>').appendTo('#contract_data');
+            $('<div class="row"> <div class="col-sm-6 col-md-6 col-lg-6"><strong>Balance&nbsp:</strong>&nbsp;' + toLabel(row[7]) + ' ' + row[5] + '</div><div class="col-sm-6 col-md-6 col-lg-6"><strong>Contract Type&nbsp;&nbsp;&nbsp;:</strong>&nbsp;' + row[8] + '</div></div>').appendTo('#contract_data');
+
+            $("#search_contracts").modal("hide");
+
+    }
+    //END SEARCH CONTRACT
+
+        $("#VariationType").change(function () {
+            debugger;
+            var variationType = $(this).val();
+            var id = $("#ContractId").val();
+            if (variationType != "") {
+                if (variationType == "ChageDateOnly") {
+                   var url = '@Url.Action("VariationByDate", "ContractVariation")';
+                    url = url + "?id=" + id;
+                    window.location.replace(url);
+                }
+                else if (variationType == "ByIncreasingAmount") {
+                    var url = '@Url.Action("ByIncreasingAmount", "ContractVariation")';
+                    url = url + "?id=" + id;
+                    window.location.replace(url);
+                }
+                else {
+                    var url = '@Url.Action("ByDecreasingAmount", "ContractVariation")';
+                    url = url + "?id=" + id;
+                    window.location.replace(url);
+                }
+            }
+        });
+
+
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+    </script>
+}
+
+

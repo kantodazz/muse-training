@@ -1,0 +1,315 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.ContractVM
+@{
+    ViewBag.Title = "Contract Receiving";
+}
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> Contract Variation </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <p align="left">
+                                Contract Reg # &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.ContractNo</strong></span><br />
+                                Contract Number &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.ContractNumber</strong></span><br />
+                                Payee &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.Payeename</strong></span><br />
+                                Contract Name &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.ContractName</strong></span><br />
+                                Contract Category &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.ContractType)</strong></span><br />
+                                Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.ContractDescription</strong></span><br />
+                                Procurement Method &nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.ProcurementMethod)</strong></span><br />
+
+                                @if (Model.Lotted)
+                                {
+                                    <span> Lot Number&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span><span><strong>@Model.LotNo</strong></span><br />
+                                    <span> Lot Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</span><span><strong>@Model.LotDescription</strong></span><br />
+                                }
+                                Sub Budget Class &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.SubBudgetClass)</strong></span><br />
+                                Currency &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Model.OperationalCurrency</strong></span><br />
+                                Contract Start Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Convert.ToDateTime(Model.ContractStartDate).ToString("dd/MM/yyyy")</strong></span><br />
+                                Contract End Date &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Convert.ToDateTime(Model.ContractEndDate).ToString("dd/MM/yyyy")</strong></span><br />
+                                Contract Amount &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:<span><strong>@Html.DisplayFor(model => model.ContractAmount)</strong></span><br />
+                              
+                            </p>
+
+                            <div align="center">
+                                <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+@using (Html.BeginForm("Variation", "Contract", FormMethod.Post, new { id = "SubmitVariation" }))
+{
+    @Html.AntiForgeryToken()
+    @Html.HiddenFor(model => model.ContractId)
+    <div class="form-horizontal">
+        <div class="col-md-12">
+
+            @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+            <div class="form-group">
+                <label class="col-md-2 control-label">Variation Type</label>
+                <div class="col-md-3">
+                    @Html.DropDownListFor(model => model.VariationType, new List<SelectListItem>{
+                                                new SelectListItem{ Text="--Select Variation Type--", Value = "" },
+                                                new SelectListItem{ Text="Change End Date", Value = "1" },
+                                                new SelectListItem{ Text="Add Contract Amount", Value = "2" },
+                                                new SelectListItem{ Text="Add Contract Amount and Change End Date", Value = "3" },
+                                            }, new { @class = "form-control", @required = "required" })
+                </div>
+            </div>
+            <div class="form-group">
+                @Html.LabelFor(model => model.VariationReason, htmlAttributes: new { @class = "control-label   col-md-2" })
+                <div class="col-md-3">
+
+                    @Html.EditorFor(model => model.VariationReason, new { htmlAttributes = new { @class = "form-control", @required = "required", rows = "4" } })
+
+                    @Html.ValidationMessageFor(model => model.VariationReason, "", new { @class = "text-danger" })
+                </div>
+            </div>
+            <div id="new_date" style="display:none">
+            <div class="form-group">
+                @Html.LabelFor(model => model.NewEndDate, htmlAttributes: new { @class = "control-label   col-md-2" })
+                <div class="col-md-3">
+                    <div class="input-group">
+                        <div class="flatpickr3 date-group">
+                            <input type="text" placeholder="Select Date.."
+                                   data-input
+                              
+                                   class="form-control"
+                                   style="width:120px;padding-left:10px;border:none"
+                                   autocomplete="off" name="NewEndDate" id="NewEndDate" >
+                            <a class="input-button" title="open" data-toggle href="#">
+                                <span class="input-group-addon" style="height:32px"><i class="fa fa-calendar"></i></span>
+                            </a>
+                        </div>
+                    </div>
+                 </div>
+            </div>
+                </div>
+            <div id="varied_amount" style="display:none">
+                <div class="form-group">
+                    @Html.LabelFor(model => model.VariedAmount, htmlAttributes: new { @class = "control-label col-md-2" })
+                    <div class="col-md-3">
+                        <div class="input-group">
+
+                            <span class="input-group-addon" id="currencyDisp">@Html.DisplayFor(model => model.OperationalCurrency)</span>
+                            @Html.EditorFor(model => model.VariedAmount, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off",@value=0 } })
+                            @Html.ValidationMessageFor(model => model.VariedAmount, "", new { @class = "text-danger" })
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+            <div class="form-group">
+               
+                <div class="col-md-offset-1 col-md-1">
+                    <a href="@Request.UrlReferrer" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                </div>
+                <div class="col-md-offset-1">
+                    <button type="submit" class="btn btn-info" style="margin-right:2px">
+                        <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                    </button>
+                 </div>
+             
+                </div>
+        </div>
+        </div>
+        }
+    
+
+
+                        </div>
+                   
+                            </div>
+
+
+                        </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+        $(document).ready(function () {
+            $(':input[type="submit"]').prop('disabled', true);
+            $(function () {
+                $("#VariationType").change(function (e) {
+                    var variation = $("#VariationType").val();
+                   
+                    if (variation ==1) {
+                        $(':input[type="submit"]').prop('disabled', false);
+                        $("#new_date").show();
+                        $("#varied_amount").hide();
+                    }
+                    else if (variation ==2) {
+                        $(':input[type="submit"]').prop('disabled', false);
+                        $("#new_date").hide();
+                        $("#varied_amount").show();
+                    }
+                    else if (variation ==3) {
+                        $(':input[type="submit"]').prop('disabled', false);
+                        $("#new_date").show();
+                        $("#varied_amount").show();
+                    } else {
+                        $(':input[type="submit"]').prop('disabled', true);
+                        $("#new_date").hide();
+                        $("#varied_amount").hide();
+                    }
+                });
+            });
+
+            $("#SubmitVariation").on('submit', function (e) {
+                e.preventDefault();
+                var variation = $("#VariationType").val();
+                var newEndDate = null;
+                var variedAmount = 0;
+                if (variation == 1) {
+                    var new_EndDate = $("#NewEndDate").val();
+                    if (!new_EndDate) {
+                        swal("Please select new end date!");
+                        return
+                    }
+                    newEndDate = new_EndDate;
+                }
+                else if (variation == 2) {
+                    var varied_Amount = $("#VariedAmount").val();
+                    if (!varied_Amount) {
+                        swal("Please insert amount!");
+                        return
+                    }
+                    variedAmount = varied_Amount.split(",").join("");
+                }
+                else if (variation == 3) {
+                    var new_EndDate = $("#NewEndDate").val();
+                    if (!new_EndDate) {
+                        swal("Please select new end date!");
+                        return
+                    }
+                    var varied_Amount = $("#VariedAmount").val();
+                    if (!varied_Amount) {
+                        swal("Please insert amount!");
+                        return
+                    }
+                    newEndDate = new_EndDate;
+                    variedAmount = varied_Amount.split(",").join("");
+                } 
+                swal({
+                    title: 'Confirmation',
+                    text: "Save Contract variation ?",
+                    buttons: [
+                      'No',
+                      'Yes'
+                    ],
+                }).then(function (isConfirm) {
+                    if (isConfirm) {
+                        var url = '@Url.Action("VariationContract", "Contract")';
+                        var contractId = $("#ContractId").val();                     
+                        var variationReason = $("#VariationReason").val();
+                       
+                        var formData = {
+                            "ContractId": contractId,
+                            "VariationType": variation,
+                            "VariationReason": variationReason,
+                            "VariedAmount": variedAmount,
+                            "NewEndDate": newEndDate
+                        }
+                        $.ajax(
+                    {
+                        type: "POST",
+                        url: url,
+                        data: formData,
+                        success: function (response) {
+                            if (response == "Success") {         
+                                swal("Saved successfully!", { icon: "success" })
+                                                .then((value) => {
+                                                    var url = '@Url.Action("ContractVariation", "Contract")';
+                                                    var new_url = url + "?status=Pending";
+                                                    window.location.replace(new_url);
+                                                });
+         
+                            }
+                            else {
+
+                                swal("Failed to save data ,DbException");
+                            }
+                        },
+                        error: function (xhr) {
+                            swal(error);
+
+                        },
+
+                    });
+                    } else {
+                        swal("Cancelled", "No change was made");
+                    }
+                });
+                      
+            });
+
+        });
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+        $("#VariedAmount").on("keyup input paste", function () {
+            $("#VariedAmount").val(inputThousandSeparator(this.value))
+        });
+        var OldVal = 0;
+        function inputThousandSeparator(NewVal) {
+            if (NewVal) {
+                try {
+                    NewVal = parseFloat(NewVal.split(",").join(""))
+                    if (typeof NewVal == 'number' && !Number.isNaN(NewVal)) {
+                        OldVal = NewVal;
+                        return NewVal.toLocaleString()
+                    } else {
+                        return OldVal
+                    }
+                } catch (e) {
+                    console.log(e)
+                }
+            }
+        }
+    
+    </script>
+}
+
+
+
+

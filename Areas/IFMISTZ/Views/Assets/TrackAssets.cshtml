@@ -1,0 +1,199 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.AssetsVM
+@{
+    ViewBag.Title = "Track Assets";
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br/>
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+
+                    </header>
+
+
+                    <div>
+
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            <div class="row">
+                            
+                                            <div class="col-md-3">
+                                                @Html.DropDownList("SourceModule", new List<SelectListItem>{
+                                                new SelectListItem{ Text="--Select--", Value = "" },
+                                                new SelectListItem{ Text="Single Asset", Value = "Single" },
+                                                new SelectListItem{ Text="Multiple Assets", Value = "Multiple" },
+                                                }, new { @class = "form-control" })
+                                            </div>
+                                            <div id="multiple">
+                                                @Html.LabelFor(model => model.AssetClassId, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                                <div class="col-md-3">
+                                                    @Html.DropDownListFor(model => model.AssetClassId, Model.AssetClassList, "Select", new { @class = "form-control select2", @required = "required" })
+                                                </div>
+                                            </div>
+                                            <div style="display:none" id="single">
+                                                @Html.LabelFor(model => model.AssetDetailId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                                <div class="col-md-3">
+                                                    @Html.EditorFor(model => model.AssetDetailId, new { htmlAttributes = new { @class = "form-control", @placeholder = "Asset Number", @autocomplete = "off" } })
+                                                </div>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <div class="input-group"><span class="input-group-btn"><button class="btn" style="background-color:#2196F3;color:white" onclick="traceAsset()" type="submit">Search</button></span></div>
+                                            </div>
+                               
+                            </div>
+                            <hr/>
+                           <div id="asset-detail"></div>
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+        $("#SourceModule").change(function () {
+            var trackType = $(this).val();
+            if (trackType == "Single") {
+                $("#single").show();
+                $("#multiple").hide();
+            }
+            else {
+                $("#multiple").show();
+                $("#single").hide();
+            }
+        });
+
+               $(function () {
+
+            var url = '@Url.Action("TraceAsset", "Assets")';
+
+               $("#AssetDetailId").select2({
+                minimumInputLength: 5,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.assetNumbers }; // data.exchequers returning json data from Controller
+                    }
+                }
+            });
+
+        });
+
+        function traceAsset() {
+            var type = $("#SourceModule").val();
+            if (!type) {
+                swal("Please select either single or multiple asset");
+                return;
+            }
+
+            if (type == "Single") {
+
+                var assetDetailId = $("#AssetDetailId").val();
+                if (!assetDetailId) {
+                    swal("Please select Asset Number");
+                    return;
+                }
+                loadAssetDetails(type, 0, assetDetailId);
+            }
+            else {
+                var classId = $("#AssetClassId").val();
+                if (!classId) {
+                    swal("Please select Asset Class");
+                    return;
+                }
+                loadAssetDetails(type, classId,0);
+            }
+
+        }
+
+        function loadAssetDetails(source,id,detailId) {
+            var url = '@Url.Action("AssetTracker", "Assets")';
+            $("#asset-detail").load(url, { SourceModule: source, AssetClassId: id, AssetDetailId: detailId }, function (response, status, xhr) {
+                if (status == "error") {
+                    $("#asset-detail").html("Error on loading Asset details");
+                }
+
+            });
+        }
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}
+
+

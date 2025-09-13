@@ -1,0 +1,810 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.InventoryDetailVM
+@{
+    ViewBag.Title = "Inventory Issuing Entry";
+}
+<style>
+
+    .search-btn {
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 5px;
+        padding-right: 10px;
+    }
+
+    .search-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        overflow: hidden;
+        padding-left: 10px;
+    }
+
+    .name-input-container {
+        display: inline-flex;
+        flex: 1 1 300px;
+        position: relative;
+        overflow: hidden;
+    }
+
+    .search-icon {
+        padding: 0.5rem;
+    }
+
+    .search-button {
+        background: #538AC5;
+        border: 0;
+        color: white;
+        padding: 8px;
+        border-radius: 0;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        width: 205px;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+
+    textarea {
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    .action-btn {
+        width: 100px;
+        color: white;
+    }
+
+    .form-label {
+        text-align: right;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .info-box {
+        padding: 10px;
+        background-color: #ECF3F8;
+        text-align: center;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+</style>
+
+
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>Inventory Requisition Form </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return SubmitIssuing(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+                                @Html.HiddenFor(model => model.InventoryItemCardId)
+                                @Html.HiddenFor(model => model.InventoryDetailId)
+                                @Html.HiddenFor(model => model.ParentInstitutionCode)
+                                @Html.HiddenFor(model => model.SubWarrantCode)
+                                @Html.HiddenFor(model => model.AssetDetailId)
+                                <div class="form-horizontal">
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.ItemCard, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <span class="input-group-addon" onclick="SearchInventoryCard()"><i class="fa fa-search"></i></span>
+                                                @Html.EditorFor(model => model.ItemCard, new { htmlAttributes = new { @class = "form-control", @placeholder = "Search", @required = "required", autocomplete = "off", @onclick = "SearchInventoryCard()" } })
+                                            </div>
+                                        </div>
+                                        @Html.Label("Inventory", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            <div class="input-group">
+                                                <span class="input-group-addon" onclick="SearchInventory()"><i class="fa fa-search"></i></span>
+                                                @Html.EditorFor(model => model.InventoryCode, new { htmlAttributes = new { @class = "form-control", @placeholder = "Search Inventory in the Item Card", @required = "required", autocomplete = "off", @onclick = "SearchInventory()" } })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group selected_inventory" style="display:none">
+                                        @Html.LabelFor(model => model.ItemName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.ItemName, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.ItemName, "", new { @class = "text-danger" })
+                                        </div>
+
+                                        @Html.LabelFor(model => model.BalanceQuantity, htmlAttributes: new { @class = "control-label col-md-2" })
+
+                                        <div class="col-md-3 input-group">
+
+                                            <span class="input-group-addon uomDisp"></span>
+                                            @Html.EditorFor(model => model.BalanceQuantity, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.BalanceQuantity, "", new { @class = "text-danger" })
+
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <div id="department">
+                                        @Html.LabelFor(model => model.SubVote, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.DropDownListFor(model => model.SubVote, Model.SubVotesList, "Select ", new { @class = "form-control", @required = "required" })
+                                            @Html.ValidationMessageFor(model => model.SubVote, "", new { @class = "text-danger" })
+                                        </div>
+                                        </div>
+                                        @Html.LabelFor(model => model.Quantity, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3 input-group">
+
+                                            <span class="input-group-addon uomDisp"></span>
+                                            @Html.EditorFor(model => model.Quantity, new { htmlAttributes = new { @class = "form-control", @required = "required", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.Quantity, "", new { @class = "text-danger" })
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.ApplyDate, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.ApplyDate, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })
+                                            @Html.ValidationMessageFor(model => model.ApplyDate, "", new { @class = "text-danger" })
+                                        </div>
+                                        <div class="selected_inventory" style="display:none">
+                                            @Html.LabelFor(model => model.UnitPrice, htmlAttributes: new { @class = "control-label col-md-2" })
+                                            <div class="col-md-3 input-group">
+                                                <span class="input-group-addon currencyDisp"></span>
+                                                @Html.EditorFor(model => model.UnitPrice, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly", @autocomplete = "off" } })
+                                                @Html.ValidationMessageFor(model => model.UnitPrice, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="form-group">
+                                        @Html.LabelFor(model => model.AssociateWithAsset, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            <input type="checkbox" name="UseInAsset" id="UseInAsset">
+                                            <input id="AssociateWithAsset" name="AssociateWithAsset" style="width:40px;font-weight:bold" type="text" readonly value="NO">
+
+                                        </div>
+                                        <div class="selected_inventory" style="display:none">
+                                            @Html.Label("Inventory Value", htmlAttributes: new { @class = "control-label col-md-2" })
+                                            <div class="col-md-3 input-group">
+                                                <span class="input-group-addon currencyDisp"></span>
+                                                @Html.EditorFor(model => model.InventoryValue, new { htmlAttributes = new { @class = "form-control", @readonly = "@readonly", @autocomplete = "off" } })
+                                                @Html.ValidationMessageFor(model => model.InventoryValue, "", new { @class = "text-danger" })
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="form-group asset" style="display:none">
+                                        @*@Html.LabelFor(model => model.AssetClassId, htmlAttributes: new { @class = "control-label   col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.DropDownListFor(model => model.AssetClassId, Model.AssetClassList, "Select ", new { @class = "form-control" })
+                                            @Html.ValidationMessageFor(model => model.AssetClassId, "", new { @class = "text-danger" })
+                                        </div>*@
+                                        @Html.Label("Asset No", htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            <input type="text" name="AssetId" id="AssetId" class="form-control" placeholder="Select Asset" />
+                                            @*@Html.EditorFor(model => model.AssetDetailId, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off" } })*@
+                                            @Html.ValidationMessageFor(model => model.AssetDetailId, "", new { @class = "text-danger" })
+                                        </div>
+
+                                    </div>
+
+                                    <div class="form-group isStPayment" style="display:none">
+                                        @Html.LabelFor(model => model.ParentInstitutionName, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.ParentInstitutionName, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.ParentInstitutionName, "", new { @class = "text-danger" })
+                                        </div>
+                                        @Html.LabelFor(model => model.SubWarrantDescription, htmlAttributes: new { @class = "control-label col-md-2" })
+                                        <div class="col-md-3">
+                                            @Html.EditorFor(model => model.SubWarrantDescription, new { htmlAttributes = new { @class = "form-control", @autocomplete = "off", @readonly = true } })
+                                            @Html.ValidationMessageFor(model => model.SubWarrantDescription, "", new { @class = "text-danger" })
+                                        </div>
+
+                                    </div>
+
+
+                                    @*<div class="form-group">
+
+                    @Html.LabelFor(model => model.StoreId, htmlAttributes: new { @class = "control-label   col-md-2" })
+                    <div class="col-md-3">
+                        @Html.DropDownListFor(model => model.StoreId, Model.StoresList, "Select ", new { @class = "form-control" })
+                        @Html.ValidationMessageFor(model => model.StoreId, "", new { @class = "text-danger" })
+                    </div>
+                </div>*@
+                                    <div class="form-actions">
+                                        <div class="row">
+                                            <div class="col-md-offset-2">
+                                                <a href="@Url.Action("PendingIssuing","InventoriesIssuing")" style="margin-right:5px" class="btn btn-info pull-left"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+                                                <button type="submit" id="save_button" class="btn btn-info" style="float: left; margin-left: 5px">
+                                                    <i class="glyphicon glyphicon-floppy-disk"></i> Save
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            }
+
+
+
+                            <div align="center">
+                                <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                            </div>
+
+
+
+                        </div>
+
+                            </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<!----------- Search  Item Card----------------->
+<div class="modal fade" id="search_item_card" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Item Card</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+                    <div class="row">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search1" placeholder="Search..." id="searchbox1">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_search_item_card" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>InventoryItemCardId</th>
+                                <th>Item Card</th>
+                                <th>Description</th>
+                                <th>UOM</th>
+                                <th style="text-align:center">Reorder Level</th>
+                                <th style="text-align:center">Available Quantity</th>
+                                <th style="text-align:center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------- Search  inventory----------------->
+<div class="modal fade" id="search_inventories" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Inventory</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+             
+                    <div class="row">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search2" placeholder="Search..." id="searchbox2">
+                            </div>
+                        </div>
+                    </div>
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_inventories" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th style="text-align:right;width:7%">#</th>
+                                <th>InventoryDetailId</th>
+                                <th>BalanceQuantity</th>
+                                <th>UnitPrice</th>
+                                <th>Currency</th>
+                                <th>Stored</th>
+                                <th>Inventory Code</th>
+                                <th>Item Name</th>
+                                <th style="text-align:center">Available Quantity</th>
+                                <th style="text-align:center">Unit Price</th>
+                                <th>Source</th>
+                                <th>Store</th>
+                                <th style="text-align:center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!----------- Search  Asset----------------->
+<div class="modal fade" id="search_asset" style="left:4%">
+
+    <div class="modal-dialog" style="width:80%;">
+        <div class="modal-content panel-info">
+            <div class="modal-header panel-heading">
+                <a href="#" class="close" data-dismiss="modal">&times;</a>
+                <h3 class="modal-title"> Search Asset</h3>
+            </div>
+            <div class="modal-body">
+
+                <div>
+            
+                    <div class="row">
+                        <div class="col-md-6">
+                        </div>
+                        <div class="col-md-6">
+                            <div class="search-container" style="float:right">
+                                <i class="fa fa-search search-icon"></i>
+                                <input type="search" name="search3" placeholder="Search..." id="searchbox3">
+                            </div>
+                        </div>
+                    </div>
+             
+                    <div align="center">
+                        <img src="/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                    </div>
+                    <table id="dt_assets" class="table table-striped table-bordered table-hover table-condensed">
+                        <thead>
+                            <tr>
+                                <th style="text-align:right;width:7%">#</th>
+                                <th>Asset ID</th>
+                                <th>Asset Number</th>
+                                <th>Asset Name</th>
+                                <th style="text-align:center">Action</th>
+                            </tr>
+                        </thead>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+
+                    <button class="btn btn-info" data-dismiss="modal">
+                        <i class="fa  fa-times"></i>Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+             $("#ApplyDate")
+            .wrap('<div class="input-group">')
+            .datepicker({
+                dateFormat: "yy-mm-dd",
+                changeMonth: true,
+                changeYear: true,
+                showOn: "both",
+                buttonImage: '@Url.Content("~/Content/img/calendar.gif")',
+                maxDate: "+0D"
+            })
+            .next("button").button({
+                icons: { primary: "ui-icon-calendar" },
+                label: "Select Date",
+                text: false
+            })
+            .addClass("btn btn-default")
+            .wrap('<span class="input-group-btn">')
+            .find('.ui-button-text')
+            .css({
+                'visibility': 'hidden',
+                'display': 'inline'
+            });
+
+        var uom = "";
+        var availableQuantity = 0;
+
+        var dt_search_item_card = $('#dt_search_item_card').dataTable(
+        {
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1] }],
+            });
+
+        $("#dt_search_item_card_wrapper .dt-toolbar").remove();
+
+        $("#searchbox1").on("keyup search input paste cut", function () {
+                dt_search_item_card.DataTable().search(this.value).draw();
+           });
+
+        var dt_inventories = $('#dt_inventories').dataTable(
+           {
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1,2,3,4,5] }],
+            }
+        );
+          $("#dt_inventories_wrapper .dt-toolbar").remove();
+
+           $("#searchbox2").on("keyup search input paste cut", function () {
+                dt_inventories.DataTable().search(this.value).draw();
+           });
+
+        var dt_assets = $('#dt_assets').dataTable(
+        {
+        "aoColumnDefs": [{ "bVisible": false, "aTargets": [1] }],
+            }
+        );
+        $("#dt_assets_wrapper .dt-toolbar").remove();
+
+          $("#searchbox3").on("keyup search input paste cut", function () {
+                if (!this.value) {
+                    dt_assets.fnClearTable();
+                } else {
+                    searchAssetUpdate(this.value);
+                }
+         });
+
+
+                //$("#dt_search_item_card_wrapper .dt-toolbar").remove();
+
+        function SearchInventoryCard() {
+
+                    $('#search_item_card').modal('show');
+                      dt_search_item_card.fnClearTable();
+                      SearchItemCards();
+                }
+
+        function SearchItemCards() {
+                 var url = '@Url.Action("GetItemCards", "InventoriesIssuing")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                           if (response == "DbException") {
+                              swal("Db Exception,Please contact technical supporter ");
+                            }
+                            else {
+                                data = response.data;
+                               dt_search_item_card.fnClearTable();
+                               if (data.length == 0) {
+                                   swal("No any inventory available for issuing in any Item Card");
+                                   return;
+                                  }
+                               for (var i = 0; i < data.length; i++) {
+
+                                   dt_search_item_card.fnAddData([i + 1,
+                                    data[i]["InventoryItemCardId"],
+                                    data[i]["ItemCard"],
+                                    data[i]["ItemDescription"],
+                                    data[i]["UOM"],
+                                    '<div align="center"><span class="badge">'+data[i]["OrderLevel"]+'</span></div>',
+                                    '<div align="center"><span class="badge">'+data[i]["AvailableQuantity"]+'</span></div>',
+                                    '<div align="center"><a href="#" onclick="ItemCardClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a></div>'
+                                    ]);
+
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+                        }
+        function ItemCardClicked(rowId) {
+                    var data = dt_search_item_card.DataTable().rows().data();
+                    var row = data[rowId];
+            $("#search_item_card").modal("hide");
+            $("#InventoryItemCardId").val(row[1]);
+            $("#ItemCard").val(row[2]);
+            uom = row[4];
+            $(".uomDisp").text(uom);
+        }
+
+       function SearchInventory() {
+            var item_card_id = $("#InventoryItemCardId").val();
+            if (item_card_id) {
+                $('#search_inventories').modal('show');
+            }
+            else {
+                swal("Please select Item Card first !");
+           }
+            dt_inventories.fnClearTable();
+           InventoriesByItemCard(item_card_id);
+        }
+            function InventoriesByItemCard(id) {
+                 var formData = { "id": id };
+                 var url = '@Url.Action("GetInventories", "InventoriesIssuing")';
+                    $.ajax({
+                        type: "get",
+                        url: url,
+                        data: formData,
+                        contenttype: "application/json; charset=utf-8",
+                        datatype: "json",
+                        success: function (response) {
+                           if (response == "DbException") {
+                               swal("Db Exception,Please contact technical supporter ");
+                           }
+                           else {
+                                data = response.data;
+                               for (var i = 0; i < data.length; i++) {
+
+                                   dt_inventories.fnAddData([i + 1,
+                                       data[i]["InventoryDetailId"],
+                                       data[i]["BalanceQuantity"],
+                                       data[i]["UnitPrice"],
+                                       data[i]["Currency"],
+                                       data[i]["Stored"],
+                                       data[i]["InventoryCode"],
+                                       data[i]["ItemName"],
+                                      '<div align="center">' + data[i]["BalanceQuantity"] + '</div>',
+                                        '<span style="float:right">' + toLabel(data[i]["UnitPrice"]) + ' '+data[i]["Currency"]+'</span>',
+                                       data[i]["SourceModule"],
+                                       data[i]["StoreName"],
+                                         '<div align="center"><a href="#" onclick="InventoryClicked(' + i + ')"><i class="glyphicon glyphicon-plus-sign"></i></a></div>'
+
+                                     ]);
+
+
+
+                                }
+                            }
+                        },
+                        failure: function (error) {
+                            swal(error);
+                        }
+                    });
+        }
+
+              function InventoryClicked(rowId) {
+              var data = dt_inventories.DataTable().rows().data();
+                  var row = data[rowId];
+                  //if (row[5] == "Yes") {
+                  //    $("#store").show();
+                  //} else {
+                  //    $("#store").hide();
+                  //}
+                  $(".selected_inventory").show();
+                  $("#search_inventories").modal("hide");
+                  $("#InventoryDetailId").val(row[1]);
+                  $("#InventoryCode").val(row[6]);
+                  $("#ItemName").val(row[7]);
+                  $("#BalanceQuantity").val(row[2]);
+                  $("#UnitPrice").val(row[3].toLocaleString('en'));
+                  $(".currencyDisp").text(row[4]);
+                  availableQuantity = row[2];
+                  if ('@Model.StPaymentFlag') {
+                      GetSubWarantData(row[1]);
+                  }
+               }
+
+
+            $(document).ready(function () {
+
+
+
+
+                        });
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+
+        $("#UseInAsset").change(function (e) {
+           $("#AssociateWithAsset").val(e.target.checked ? "YES" : "NO");
+            if ($(this).is(":checked")) {
+        $(".asset").show();
+            } else {
+           $(".asset").hide();
+            }
+        });
+
+        function SubmitIssuing(formData) {
+            var apply_date = $("#ApplyDate").val();
+            if (!apply_date) {
+                swal("Please Select Apply Date");
+                return false;
+            }
+
+                $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("SaveIssuing", "InventoriesIssuing")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                 $("#save_button").prop('disabled', false);
+                  if (response == "Success") {
+                 swal("Data saved successfully", { icon: "success" })
+                            .then((value) => {
+                              var url = '@Url.Action("PendingIssuing", "InventoriesIssuing")';
+                                        window.location.replace(url);
+                            });
+                                        }
+           else {
+               swal(response);
+                }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+
+        $(function () { // this will be called when the DOM is ready
+            $("#Quantity").keyup(function () {
+                if (availableQuantity > 0) {
+                    var quantity = parseFloat($("#Quantity").val().split(",").join(""));
+                    if (quantity > availableQuantity) {
+                        $("#Quantity").val("");
+                        $("#InventoryValue").val("");
+                        swal("Please issuing Quantity can not exceed Available Quantity");
+                    }
+                    else {
+                        var unit_price = parseFloat($("#UnitPrice").val().split(",").join(""));
+                        var total_amount = quantity * unit_price;
+                     /*   total_amount = total_amount.toFixed(2);*/
+                        $("#InventoryValue").val(total_amount.toLocaleString('en'));
+                    }
+
+                } else {
+                    $("#Quantity").val("");
+                    $("#InventoryValue").val("");
+                    swal("Please first select Inventory from Item Card");
+                }
+
+            });
+
+        });
+
+        $(function () {
+
+            var url = '@Url.Action("GetAssets", "InventoriesIssuing")';
+
+            $("#AssetId").select2({
+                minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+                width: 'resolve',   // to adjust proper width of select2 wrapped elements
+                ajax: {
+                    url: url, // Controller - Select2Demo and Action -AccessRemoteData
+                    type: "GET",
+                    dataType: 'json',
+                    data: function (term) {
+                        return {
+                            term: term
+                        };
+                    },
+                    results: function (data, page) {
+                        return { results: data.assets }; // data.assets returning json data from Controlle
+                    }
+                }
+            });
+
+        });
+
+
+        $("#InventoryValue").autoNumeric('init');
+        function GetSubWarantData(id) {
+                  var url = '@Url.Action("GetSubwarant", "InventoriesIssuing")';
+                            $.ajax({
+                                type: "POST",
+                                url: url,
+                                data: {id:id },
+                                success: function (result) {
+                                    if (result.response == "subwarant") {
+                                        $(".isStPayment").show();
+                                        $("#department").hide();
+                                        $("#ParentInstitutionCode").val(result.parent_code);
+                                        $("#SubWarrantCode").val(result.subwarant_code);
+                                        $("#ParentInstitutionName").val(result.parent_name);
+                                        $("#SubWarrantDescription").val(result.subwarant_name);
+                                    } else if (result.response == "Notsubwarant") {
+                                        $(".isStPayment").hide();
+                                        $("#department").show();
+                                     }
+                                    else {
+                                        $(".isStPayment").hide();
+                                        $("#department").show();
+                                        swal(result.response);
+                                       }
+
+
+                                }
+                            })
+        }
+    </script>
+}
+
+
+
+
+
+
+
+
+
+
+
+

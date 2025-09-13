@@ -1,0 +1,210 @@
+﻿
+@model IEnumerable<IFMIS.Areas.LoanMod.Models.LoanProductAttachmentVM>
+
+@{
+    ViewBag.Title = "Loan Product Attachment";
+    Layout = "~/Views/Shared/_Layout.cshtml";
+}
+
+<style>
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+<div id="content" style="margin: 5px; padding-top: 30px">
+    <div class="row"></div>
+    <section id="widget-grid">
+        <div class="row">
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-table"></i> </span>
+                        <h2>@ViewBag.Title</h2>
+                    </header>
+
+                    <div>
+                        <div class="widget-body">
+                            <center><img src="~/Media/Images/ajax_loader.gif" class="loadingImg" /></center>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <a class="btn btn-info" href='@Url.Action("CreateLoanProductAttachment", "Setting")'>
+                                        <i class="glyphicon glyphicon-plus"></i> Add New
+                                    </a>
+                                </div>
+                                <div class="col-md-6">
+
+                                </div>
+                            </div>
+
+                            <table class="table  table-bordered table-hover table-condensed" id="dt_loanproduct_list">
+                                <thead>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Attachment Name</th>
+                                        <th>Product Name</th>
+                                        <th>Status</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @if (Model != null)
+                                    {
+                                        int i = 0;
+                                        foreach (var item in Model)
+                                        {
+                                            i++;
+                                            <tr>
+                                                <td>@i</td>
+                                                <td>@Html.DisplayFor(modelItem => item.AttachmentName)</td>
+                                                <td>@Html.DisplayFor(modelItem => item.LoanProductName)</td>
+                                                <td>
+                                                    @Html.DisplayFor(modelItem => item.Status)
+                                                </td>
+
+                                                <td style="text-align:center">
+                                                    <div class="btn-group">
+                                                        <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                                            <span class="caret"></span>
+                                                            <span class="sr-only">Toggle Dropdown</span>
+                                                        </button>
+                                                        <ul class="dropdown-menu">
+
+                                                            <li>
+                                                                <a href="@Url.Action("EditLoanProductAttachment", "Setting", new { id = item.LoanProductAttachmentId })" class="btn-xs edit">
+                                                                    <i class="fa fa-edit"></i>  Edit
+                                                                </a>
+                                                            </li>
+
+                                                            <li><a href="#" data-toggle="modal" class="LoanProductAttachmentCancellation   delete" data-id=@item.LoanProductAttachmentId data-name='@item.AttachmentName'><i class="fa fa-trash-o"></i> Cancel</a></li>
+                                                        </ul>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        }
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </article>
+        </div>
+    </section>
+</div>
+
+
+@section pagespecific{
+
+    <script>
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $(".loadingImg").show();
+
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $(".loadingImg").hide();
+        });
+
+        $(document).ready(function () {
+            var dt_loanproduct_list = $('#dt_loanproduct_list').DataTable({});
+        });
+        /* END BASIC */
+        $(".LoanProductAttachmentCancellation").on('click', function () {
+            var id = $(this).data('id');
+            var name = $(this).data('name');
+            swal({
+                title: 'Loan Product Attachment  Cancellation',
+                text: "Do you what to Cancel Loan Product Attachment  " + name + " ?",
+                buttons: [
+                  'No',
+                  'Yes'
+                ],
+            }).then(function (isConfirm) {
+                if (isConfirm) {
+                    var url = '@Url.Action("CancelLoanProductAttachment", "Setting")';
+                    $.ajax(
+        {
+            type: "POST",
+            url: url,
+            data: { id: id },
+            success: function (response) {
+                if (response == "Success") {
+
+                    swal("Cancelled successfully!", { icon: "success" })
+                              .then((value) => {
+                                  location.reload();
+                              });
+
+                }
+                else {
+
+                    swal("Failed to Cancel Loan Product Attachment "+response);
+                }
+            },
+            error: function (xhr) {
+                swal(error);
+                $("#divLoader").hide();
+            },
+
+        });
+                } else {
+                    swal("Cancelled", "No change was made");
+                }
+            });
+
+        });
+
+    </script>
+}

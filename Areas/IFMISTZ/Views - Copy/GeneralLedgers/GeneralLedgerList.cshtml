@@ -1,0 +1,425 @@
+﻿@model IEnumerable<IFMIS.Areas.IFMISTZ.Models.GeneralLedgerListVM>
+@using PagedList.Mvc;
+<link href="~/Content/PagedList.css" rel="stylesheet" type="text/css" />
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<style>
+    table, th, tr, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+        border-color: gray;
+        /*border-collapse: separate;*/
+        border-spacing: 0;
+        color: #4a4a4d;
+        font: 12px/1.8 "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 100%;
+        padding: 5px 11px;
+        vertical-align: middle;
+    }
+
+        tr:not([data-level='2']) {
+            cursor: pointer;
+        }
+
+        tr.expanded .sign:after {
+            /*content: "-";*/
+            content: url(/Media/Images/Minus3.png);
+        }
+
+        tr.folded .sign:after {
+            /*content: "+";*/
+            content: url(/Media/Images/Collapse2.png);
+            /*background:url('../Media/Images/Collapse1.png');*/
+            /*background: url('../Media/Images/details_open.png');*/
+            cursor: pointer;
+        }
+
+        td:first-child {
+            padding: inherit;
+        }
+
+    /*  */
+
+
+    td {
+        border-bottom: 1px solid #cecfd5;
+        border-right: 1px solid #cecfd5;
+        width: auto;
+    }
+
+
+    thead {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+
+    tfoot {
+        background: #395870;
+        color: #fff;
+        font-weight: bold;
+    }
+</style>
+
+<div id="content">
+    <div class="panel panel-default">
+        <!-- Default panell contents -->
+        <div class="panel-heading">GL Entry</div>
+        <div class="panel-body">
+            @*<div id="divLoader" style="text-align:center; display:none">
+                    <img src="~/Media/Images/ajax_loader.gif" />
+                </div>*@
+            <div class="row" style="padding-left: 10px; padding-right: 10px">
+                @using (Html.BeginForm(null, null, FormMethod.Get))
+                {
+                    <div class="col-md-4" style="padding-left: 4px">
+                        <div class="input-group">
+                            <input type="text" id="searchQuery" name="searchQuery" class="form-control" placeholder="Search..." />
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" type="submit">
+                                    <span class="glyphicon glyphicon-search" aria-hidden="true"></span>
+                                </button>
+                            </span>
+                        </div><!-- /input-group -->
+                    </div><!-- /.col-lg-6 -->
+                }
+            </div>
+
+
+        </div>
+        <hr />
+        @if (Model.Count() > 0)
+        {
+            <table border="0">
+                <thead>
+                    <tr style="background:#f5f5f5; color:#000000">
+                        <td colspan="3">Book</td>
+                        <td colspan="3">Total Amount</td>
+                    </tr>
+                </thead>
+                <tbody>
+                    @{
+                        int i = 0;
+                        decimal? grandTotal = 0;
+                        decimal? totalAmount = 0;
+                    }
+                    @foreach (var group in Model.OrderBy(a => a.PostedAt).GroupBy(a => a.Book))
+                    {
+                        grandTotal += group.Where(a => a.Book == group.Key).Sum(a => a.BaseAmount);
+                        <tr data-level='1'>
+                            <td colspan="3">
+                                <span class="sign"></span>
+                                @group.Select(a => a.Book).FirstOrDefault() - @group.Where(a => a.Book == group.Key).Select(a => a.Book).FirstOrDefault()
+                            </td>
+                            <td style="text-align:right">@string.Format("{0:#,0.00}", group.Where(a => a.Book == group.Key).Sum(a => a.BaseAmount))</td>
+                        </tr>
+                        foreach (var group1 in group.GroupBy(a => a.LegalNumber))
+                        {
+                            grandTotal += group1.Where(a => a.LegalNumber == group1.Key).Sum(a => a.BaseAmount);
+                            <tr data-level='2'>
+                                <td colspan="3">
+                                    <span class="sign"></span>
+                                    @group1.Select(a => a.LegalNumber).FirstOrDefault() - @group1.Where(a => a.LegalNumber == group1.Key).Select(a => a.PayeeName).FirstOrDefault()
+                                </td>
+                                <td style="text-align:right">@string.Format("{0:#,0.00}", group1.Where(a => a.LegalNumber == group1.Key).Sum(a => a.BaseAmount))</td>
+                            </tr>
+                            <tr data-level='2' style="background:#f5f5f5; color:#000000">
+                                <td>#</td>
+                                <td>Amount</td>
+                                <td>Gl Account</td>
+                                <td>Transaction Type</td>
+                                <td>Action</td>
+                            </tr>
+                            i = 0;
+                            foreach (var item in group1)
+                            {
+                                i++;
+                                //totalAmount += item.TrxAmount;
+
+                <tr data-level='2'>
+                    <td>@i</td>
+                    <td>
+
+                        @Html.DisplayFor(modelItem => item.BaseAmount)
+
+
+                    </td>
+                    <td>
+                        @Html.DisplayFor(modelItem => item.GlAccountCode)
+                    </td>
+                    <td>
+
+                        @Html.DisplayFor(modelItem => item.TransactionType)
+
+                    </td>
+                    <td style="text-align:center">
+
+                        <div class="btn-group">
+
+                            <button type="button" class="btn btn-info btn-xs dropdown-toggle" data-toggle="dropdown" style="width:40px;border-radius:1px;" aria-haspopup="true" aria-expanded="false">
+                                <span class="caret"></span>
+                                <span class="sr-only">Toggle Dropdown</span>
+                            </button>
+                            <ul class="dropdown-menu">
+                                <li>
+                                    <a href="@Url.Action("EditGL", "GeneralLedgers",new {id=item.GeneralLedgerId})" class="btn-xs edit">
+                                        <i class="fa fa-search-minus"></i>Edit
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="@Url.Action("CreateGl", "GeneralLedgers",new {id=item.GeneralLedgerId})" class="btn-xs edit">
+                                        <i class="fa fa-search-minus"></i>Add GL
+                                    </a>
+                                </li>
+                                <li><a href="#" onclick="confirmGl(@item.GeneralLedgerId)" class="btn-xs edit"><i class="fa fa-edit"></i> Confirm</a></li>
+                                @*<li><a href="#" onclick="cancelGl(@item.GeneralLedgerId)" class="btn-xs edit"><i class="fa fa-edit"></i> Cancel</a></li>*@
+
+                            </ul>
+                        </div>
+                    </td>
+                </tr>
+                            }
+                        }
+
+                    }
+                </tbody>
+                <tfoot>
+                    <tr style="background:#f5f5f5; color:#000000">
+                        <td colspan="3" style="text-align:right"><b>Grand Total</b></td>
+                        <td style="text-align: right"><b>@string.Format("{0:#,0.00}", grandTotal)</b></td>
+
+                    </tr>
+                </tfoot>
+            </table>
+        }
+
+        else
+        {
+            <div class="alert alert-info" role="alert">
+                No Records!
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Modal -->
+<div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Edit Description</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                @*<button class="btn btn-success approve-confirm" onclick="allocateAmount()">Ok</button>*@
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="modal fade" id="myModal1" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <!-- Modal content-->
+        <div class="modal-content">
+            <div class="modal-header" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+                <h4 class="modal-title">Edit Reference</h4>
+            </div>
+            <div class="modal-body"></div>
+            <div class="modal-footer">
+                @*<button class="btn btn-success approve-confirm" onclick="allocateAmount()">Ok</button>*@
+                <button class="btn btn-default delete-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<div class="modal fade" id="responseModal" tabindex="-1" role="dialog" aria-labelledby="lblmodal">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header alert alert-danger" style="font:bold 16px Trebuchet MS, Lucida Sans Unicode, Lucida Grande, Lucida Sans, Arial, sans-serif">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+
+                <h4 class="modal-title" id="lblmodal">Confirm Unapplied</h4>
+            </div>
+            <div class="modal-body">
+                <p class="success-message">Are you sure you want to Confirm? </p>
+                @*<img src="~/Media/Images/ajax_loader.gif" />*@
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success confirm-confirm">Ok</button>
+                <button class="btn btn-default confirm-cancel" data-dismiss="modal">Cancel</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts{
+    <script>
+        $(".cbCheckAll").click(function () {
+            $(".checkBox").prop('checked',
+                $(this).prop('checked'));
+        });
+
+        var confirmUnappliedList = function () {
+
+            var csvIds = [];
+
+            $("input:checkbox.checkBox").each(function () {
+                if ($(this).prop("checked")) {
+                    csvIds.push($(this).val());
+                }
+            });
+
+            if (csvIds.length == 0) {
+                alert("No record selected!");
+                return;
+            }
+
+            $("#responseModal").modal('show');
+
+            $(".confirm-confirm").click(function () {
+                $('.confirm-confirm').css('display', 'none');
+                if (csvIds.length > 0) {
+                    var url = '@Url.Action("ConfirmUnappliedList", "Unapplieds")';
+                    $.ajax({
+                        url: url,
+                        data: { ids: csvIds },
+                        type: "POST",
+                        async: false,
+                        success: function (response) {
+                            if (response == "Success") {
+                                //now re-using the boostrap modal popup to show success message.
+                                //dynamically we will change background colour
+                                if ($('.modal-header').hasClass('alert-danger')) {
+                                    $('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                    //hide ok button as it is not necessary
+                                    $('.confirm-confirm').css('display', 'none');
+                                    $('.confirm-cancel').html('Close').click(function () {
+                                        location.reload();
+                                    });
+                                }
+                                $('.success-message').html('Confirmed successfully!');
+                            } else {
+                                if ($('.modal-header').hasClass('alert-danger')) {
+                                    $('.modal-header').removeClass('alert-danger').addClass('alert-success');
+                                }
+                                //hide ok button as it is not necessary
+                                $('.confirm-confirm').css('display', 'none');
+                                $('.confirm-cancel').html('Close').click(function () {
+                                    location.reload();
+                                });
+                                $('.success-message').html(response);
+                            }
+                        }, error: function (err) {
+                            if (!$('.modal-header').hasClass('alert-danger')) {
+                                $('.modal-header').removeClass('alert-success').addClass('alert-danger');
+                                $('.confirm-confirm').css('display', 'none');
+                            }
+                            $('.success-message').html(err.statusText);
+                        }
+                    });
+                }
+            });
+        };
+
+        //function to reset bootstrap modal popups
+        $("#responseModal").on("hidden.bs.modal", function () {
+            $(".modal-header").removeClass(' ').addClass('alert-danger');
+            $('.confirm-confirm').css('display', 'inline-block');
+            $('.success-message').html('').html('Are you sure you want to Confirm this?');
+        });
+
+        var showModal = function (id) {
+            debugger
+            var url = "UpdateUnappliedStatus/" + id;
+
+            $(".modal-body").load(url, function () {
+                $("#myModal").modal("show");
+            });
+        };
+        var showModal1 = function (id) {
+
+            var url = "UpdateUnappliedReference/" + id;
+
+            $(".modal-body").load(url, function () {
+                $("#myModal1").modal("show");
+            });
+        };
+        //For Collapse & Expand
+
+        $(document).ready(function () {
+
+            $("tbody > tr:not([data-level='1'])").hide();
+            $("tbody > tr:not([data-level='4'])").addClass("expandable sign folded");
+            $("tbody > tr")
+                .css("padding-left", function (index) {
+                    return 10 * parseInt($(this).data("level"), 10) + "px";
+                });
+
+            function range(lowEnd, highEnd) {
+                // assert lowEnd >= 0 and highEnd < 100
+                var validation = (lowEnd <= highEnd) && (lowEnd >= 0) && (highEnd < 10000);
+                if (!(validation)) {
+                    console.assert(validation,
+                                   'Function "range" received unlikely values: ' +
+                                   lowEnd + ' and ' + highEnd + "...");
+                } else {
+                    var arr = [];
+                    while (lowEnd <= highEnd) {
+                        arr.push(lowEnd++);
+                    }
+                    return arr;
+                }
+            }
+
+            function name_range(fun, lowEnd, highEnd) {
+                var arr = range(lowEnd, highEnd);
+                jQuery.each(arr, function (index, value) {
+                    arr[index] = fun(value);
+                });
+                return arr;
+            }
+
+            function create_selector(level) {
+                return "[data-level='" + level + "']";
+            }
+
+            $("tr.expandable").click(function () {
+                var this_level = parseInt($(this).data("level"), 10);
+                var this_level_selector = create_selector(this_level);
+                var next_level_selector = create_selector(this_level + 1);
+                var next_or_lower = name_range(create_selector,
+                this_level + 1, 10); // TODO: find last level
+                var this_or_higher = name_range(create_selector, 0, this_level);
+                var node = $(this).nextUntil(this_or_higher.join(","));
+                // different behaviour according to state (expanded / folded):
+                if ($(this).hasClass("expanded")) {
+                    $(node).filter(next_or_lower.join(",")).hide();
+                    $(node).not("expanded").removeClass("expanded").addClass('folded');
+                    $(this).removeClass("expanded").addClass('folded');
+
+
+                } else {
+                    $(node).filter(next_level_selector).show();
+                    $(this).addClass("expanded").removeClass('folded');
+
+
+                }
+            });
+        });
+    </script>
+}

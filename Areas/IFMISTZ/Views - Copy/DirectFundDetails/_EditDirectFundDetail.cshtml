@@ -1,0 +1,111 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.EditDirectFundDetailVM
+
+<form class="form-horizontal" name="directFundDetailForm" id="directFundDetailForm">
+    @Html.AntiForgeryToken()
+    @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+    @Html.HiddenFor(model => model.DirectFundDetailId)
+    @Html.HiddenFor(model => model.DirectFundId)
+    @Html.HiddenFor(model => model.TotalAmount)
+    @Html.HiddenFor(model => model.GlAccountt)
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.GlAccountCoaIdd, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-9">
+            @Html.EditorFor(model => model.GlAccountCoaIdd, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.GlAccountCoaIdd, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.GlAccountDescc, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-9">
+            @Html.EditorFor(model => model.GlAccountDescc, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.GlAccountDescc, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.AllocatedAmountt, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-2">
+            @Html.EditorFor(model => model.AllocatedAmountt, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.AllocatedAmountt, "", new { @class = "text-danger" })
+        </div>
+        @Html.LabelFor(model => model.BalanceAmountt, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-2">
+            @Html.EditorFor(model => model.BalanceAmountt, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.BalanceAmountt, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+        @Html.LabelFor(model => model.ExpensedAmountt, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-2">
+            @Html.EditorFor(model => model.ExpensedAmountt, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.ExpensedAmountt, "", new { @class = "text-danger" })
+        </div>
+    </div>
+</form>
+
+<script>
+    $(function () {
+        $("#GlAccountCoaIdd").select2({
+            minimumInputLength: 2,  // minimumInputLength for sending ajax request to server
+            width: 'resolve',   // to adjust proper width of select2 wrapped elements
+            placeholder: 'Search Gl Account',
+            allowClear: false,
+            initSelection: function (element, callback) {
+                var id = $(element).val();
+                if (id !== "") {
+                    $.ajax('@Url.Action("GetSelectedBudgetCoa", "DirectFunds")', {
+                        data: { id: id },
+                        dataType: "json"
+                    }).done(function (data) {
+                        callback(data);
+                    });
+                }
+            },
+            ajax: {
+                url: '@Url.Action("GetBudgetCoaStrings", "DirectFunds")', // Controller - Select2Demo and Action -AccessRemoteData
+                type: "POST",
+                dataType: 'json',
+                data: function (term) {
+                    return {
+                        id: '@Model.FundingSourceCodee',
+                        term: term
+                    };
+                },
+                results: function (data, page) {
+                    return { results: data.coas }; // data.CountryList returning json data from Controlle
+                }
+            }
+        });
+
+        $('#GlAccountCoaIdd').on("change", function (e) {
+
+            $("#GlAccountt").val($("#GlAccountCoaIdd").select2("data").text);
+            var glAccountId = $("#GlAccountCoaIdd").val();
+            $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetGlAccountDesc", "DirectFunds")',
+                data: { id: glAccountId },
+                success: function (data, status, jqXHR) {
+                    if (data.success) {
+                        $("#GlAccountDescc").val(data.GlAccountDesc);
+                    } else {
+                        alert('Error on accessing GL details');
+                    }
+                },
+                error: function () {
+                    alert("Error on accessing GL details");
+                }
+            })
+        });
+
+        $('#AllocatedAmountt').autoNumeric('init');
+        $('#ExpensedAmountt').autoNumeric('init');
+
+        $("#AllocatedAmountt").keyup(function () {
+            $("#ExpensedAmountt").val($(this).val());
+        });
+    });
+</script>

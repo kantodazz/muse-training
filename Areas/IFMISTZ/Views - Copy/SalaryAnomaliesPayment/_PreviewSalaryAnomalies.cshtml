@@ -1,0 +1,232 @@
+﻿@model IFMIS.Areas.IFMISTZ.Models.SalaryAnomaliesSummary
+@{
+    ViewBag.Title = "Preview Salary Anomalies";
+
+}
+
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    select {
+        padding: 8px;
+        border: 1px solid #ccc;
+        resize: vertical;
+        width: 230px;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+    }
+
+    input[type=text] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    td {
+        padding: 5px;
+    }
+
+    .table-amount td:nth-child(6) {
+        text-align: right;
+    }
+
+    .payee-entry {
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding-bottom: 10px;
+    }
+
+    .entry-label {
+        position: relative;
+        top: -12px;
+        background-color: white;
+        width: 110px;
+        left: 15px;
+        padding-left: 5px;
+        padding-right: 5px;
+        text-align: center;
+        font-weight: bold;
+        color: #2196F3;
+    }
+
+    .total-amount {
+        float: right;
+    }
+
+    .loadingImg {
+        display: none;
+    }
+</style>
+
+<p align="right">
+    <a href="@Url.Action("PrintSalaryAnomalies","SalaryAnomaliesPayment", new {id=Model.SalaryAnomaliesSummaryId})" class="btn btn-info">
+        <span class="glyphicon glyphicon-print"></span>&nbsp;Print
+    </a>
+</p>
+
+<div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6"><strong>Reason &nbsp;:</strong>@Html.DisplayFor(model => model.Description)</div>
+    <div class="col-sm-6 col-md-6 col-lg-6"><strong>ReferenceID &nbsp;:</strong>@Html.DisplayFor(model => model.ReferenceId)</div>
+</div>
+<div class="row">
+    <div class="col-sm-6 col-md-6 col-lg-6"><strong>Number of Employees&nbsp;:</strong>@Html.DisplayFor(model => model.EmpNum)</div>
+    <div class="col-sm-6 col-md-6 col-lg-6"><strong>Salary Month &nbsp;:</strong>@Html.DisplayFor(model => model.SalaryMonthDesc)</div>
+</div>
+@if (Model.OverallStatus != null)
+{
+    <div class="row">
+        <div class="col-sm-6 col-md-6 col-lg-6"><strong>Status&nbsp;:</strong>@Html.DisplayFor(model => model.OverallStatus)</div>
+    </div>
+}
+
+
+<div class="row">
+    <div class="col-md-6"></div>
+    <div class="col-md-6">
+        <div class="search-container" style="float:right">
+            <i class="fa fa-search"></i>
+            <input type="search" name="search" placeholder="Search..." id="search-box">
+        </div>
+    </div>
+</div>
+<table id="dt_preview_missingac" class="table table-bordered table-condensed table-amount">
+    <thead>
+        <tr>
+            <th>#</th>
+            <th>Check Number</th>
+            <th>Name</th>
+            <th>BankAccountNo</th>
+            <th>BankName</th>
+            <th>Vote</th>
+            @if (Model.OverallStatus == "MisMatched")
+            {
+                <th>Reason</th>
+            }
+
+            <th style="text-align:right">Net Amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        @{
+            int m = 0;
+            decimal? TotalAmount = 0;
+        }
+
+        @if (Model.AnomaliesType == "Unapplied")
+        {
+
+            foreach (var item in Model.UnappliedSalaryGspp)
+            {
+                m++;
+                TotalAmount = TotalAmount + item.TrxAmount;
+                <tr>
+                    <td>@m</td>
+                    <td> @item.CheckNo.ToString()</td>
+                    <td>@Html.DisplayFor(modelItem => item.BenName)</td>
+                    <td> @Html.DisplayFor(modelItem => item.BenAcct)</td>
+                    <td> @Html.DisplayFor(modelItem => item.BankName)</td>
+                    <td style="text-align:left"> @Html.DisplayFor(modelItem => item.Vote)</td>
+
+                    @if (Model.OverallStatus == "MisMatched")
+                    {
+                        <td> @Html.DisplayFor(modelItem => item.MissMatchDesc)</td>
+                    }
+                    <td align="right">@Html.DisplayFor(modelItem => item.TrxAmount)</td>
+                </tr>
+            }
+
+        }
+        else if (Model.AnomaliesType == "UnpaidSalaries")
+        {
+
+            foreach (var item in Model.UnpaidSalaryGspps)
+            {
+                m++;
+                TotalAmount = TotalAmount + item.Amount;
+                <tr>
+                    <td>@m</td>
+                    <td> @item.CheckNo.ToString()</td>
+                    <td>@Html.DisplayFor(modelItem => item.FirstName) @Html.DisplayFor(modelItem => item.MiddleName) @Html.DisplayFor(modelItem => item.LastName)</td>
+                    <td> @Html.DisplayFor(modelItem => item.BankAcct)</td>
+                    <td> @Html.DisplayFor(modelItem => item.BankName)</td>
+                    <td style="text-align:left"> @Html.DisplayFor(modelItem => item.VoteCode)-@Html.DisplayFor(modelItem => item.VoteName)</td>
+
+                    @if (Model.OverallStatus == "MisMatched")
+                    {
+                        <td> @Html.DisplayFor(modelItem => item.MissMatchDesc)</td>
+                    }
+                    <td align="right">@Html.DisplayFor(modelItem => item.Amount)</td>
+                </tr>
+            }
+
+        }
+        else
+        {
+
+            foreach (var item in Model.PaylistCurrentAnomalies)
+            {
+                m++;
+                TotalAmount = TotalAmount + item.NetAmountAdjusted;
+                <tr>
+                    <td>@m</td>
+                    <td>@item.EMPLOYEE.ToString()</td>
+                    <td>@Html.DisplayFor(modelItem => item.FIRST_NAME) @Html.DisplayFor(modelItem => item.MIDDLE_NAME) @Html.DisplayFor(modelItem => item.LAST_NAME)</td>
+                    <td> @Html.DisplayFor(modelItem => item.AccountNo)</td>
+                    <td> @Html.DisplayFor(modelItem => item.BANK_NAME)</td>
+                    <td style="text-align:left"> @Html.DisplayFor(modelItem => item.VOTE_CODE)-@Html.DisplayFor(modelItem => item.VOTE_DESC)</td>
+
+                    @if (Model.OverallStatus == "MisMatched")
+                    {
+                        <td> @Html.DisplayFor(modelItem => item.MissMatchDesc)</td>
+                    }
+                    <td align="right">@Html.DisplayFor(modelItem => item.NetAmountAdjusted)</td>
+                </tr>
+            }
+
+        }
+
+    </tbody>
+    <tfoot>
+        <tr>
+            @if (Model.OverallStatus == "MisMatched")
+            {
+                <th colspan="7" style="text-align:right">TOTAL</th>
+            }
+            else
+            {
+                <th colspan="6" style="text-align:right">TOTAL</th>
+            }
+
+            <th style="text-align:right">
+                @string.Format("{0:#,0.00}", TotalAmount)
+            </th>
+        </tr>
+    </tfoot>
+</table>
+
+<div class="modal-footer">
+
+    <button class="btn btn-info btn-flat modal-close" data-dismiss="modal">Close</button>
+</div>
+
+
+
+
+
+
+

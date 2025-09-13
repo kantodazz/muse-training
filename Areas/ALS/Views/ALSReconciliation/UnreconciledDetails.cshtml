@@ -1,0 +1,367 @@
+﻿@model IEnumerable<IFMIS.Areas.ALS.Models.AlsReconciliationDetail>
+
+@{
+    // Layout = null;
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    var i = 0;
+}
+<style>
+    .search-container {
+        background-color: white;
+        color: black;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        padding: 3px;
+        padding-right: 10px;
+        padding-left: 10px;
+    }
+
+    input[type=number] {
+        padding: 8px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=text] {
+        padding: 5px;
+        border: 1px solid #ccc;
+    }
+
+    input[type=search] {
+        padding: 4px;
+        border: hidden;
+        border-radius: 4px;
+    }
+</style>
+
+<div id="divLoader"></div>
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+                    <br />
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2>UnReconsciled Claims Employee List</h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            <div class="row">
+
+                                <div class="col-sm-4 col-md-3 col-lg-3 col-md-offset-7">
+                                    <a href="#" onclick="initiatePayment()" class="btn btn-info" style="border-radius:1px;">
+                                        <i class="fa fa-edit"></i>Initiate Payment
+                                    </a>
+                                </div>
+
+                            </div>
+
+
+
+                            <div class="row">
+                                <div class="col-md-12">
+                                    <div class="search-container" style="float:right">
+                                        <i class="fa fa-search"></i>
+                                        <input type="search" name="search" placeholder="Search..." id="search-box">
+                                    </div>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-hover table-condensed" id="dt_claims">
+                                <thead>
+
+                                    <tr>
+                                        <th style="text-align:right">
+                                            #
+                                        </th>
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.CheckNumber)
+                                        </th>
+
+                                        <th>
+                                            @Html.DisplayNameFor(model => model.FullName)
+                                        </th>
+                                        <th>
+                                            Vote
+                                        </th>
+                                        <th>
+                                            DedCode
+                                        </th>
+
+                                        <th style="text-align:right">
+                                            Amount
+                                        </th>
+                                        <th>
+                                            <input type="checkbox" class="cbCheckAllItems" />
+                                        </th>
+                                        <th>
+                                            Status
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var item in Model)
+                                    {
+                                        i++;
+
+                                        <tr>
+                                            <td style="text-align:right">
+                                                @i
+                                            </td>
+
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.CheckNumber)
+                                            </td>
+
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.FullName)
+                                            </td>
+
+                                            <td>
+                                                @if (!String.IsNullOrEmpty(item.VoteDesc))
+                                                {
+                                                    @Html.DisplayFor(modelItem => item.Vote)
+                                                    <span>-</span>
+                                                    @Html.DisplayFor(modelItem => item.VoteDesc)
+                                                }
+                                                else
+                                                {
+                                                    @Html.DisplayFor(modelItem => item.Vote)
+                                                }
+                                            </td>
+
+                                            <td>
+                                                @Html.DisplayFor(modelItem => item.DeductionCode)
+                                            </td>
+
+
+                                            <td style="text-align:right">
+                                                @Html.DisplayFor(modelItem => item.UnclaimedAmount)
+                                            </td>
+                                            <td style="text-align: center">
+                                                <input type="checkbox" class="checkItem" id=@item.AlsReconciliationDetailId>
+                                            </td>
+
+                                            <td style="text-align:center">
+
+                                                @Html.DisplayFor(modelItem => item.ReconciliationStatus)
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+
+                            <div class="form-actions">
+                                <div class="row">
+                                    <div class="col-md-8 col-md-offset-1">
+                                        <a class="btn btn-info" style="float:left;margin-left:5px" onclick="window.history.back()"><i class="glyphicon glyphicon-arrow-left"></i> Back  </a>
+
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+<div class="modal fade" id="paymentModal">
+    <div class="modal-dialog">
+        <div class="modal-content ">
+            <div class="modal-content">
+                <div class="modal-header" style="background-color:#b3e5fc;">
+                    <a href="#" class="close" data-dismiss="modal">&times;</a>
+                    <h3 class="modal-title" style="text-align:center"> Initiate Payment  </h3>
+                </div>
+                <div class="modal-body">
+                    @using (Html.BeginForm("", "", FormMethod.Post, new { id = "form" }))
+                    {
+                    <div class="form-horizontal">
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <strong>Payee</strong>
+                            </div>
+                            <div class="col-md-7">
+                                @Html.DropDownList("Payee", new List<SelectListItem>{
+                                    new SelectListItem{ Text="--Select--", Value = "" },
+                                    new SelectListItem{ Text="Agency", Value = "Agency" },
+                                    new SelectListItem{ Text="Employees", Value = "Employees" },
+                            }, new { @class = "form-control" })
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-md-3">
+                                <strong>Payment Type</strong>
+                            </div>
+                            <div class="col-md-7">
+                                <select id="PaymentType" name="PaymentType" class = "form-control select">
+                                    <option value>---Select---</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    }
+                </div>
+                <div class="modal-footer">
+                    <a href="#" class="btn btn-info" data-dismiss="modal">Cancel</a>
+                    <button type="button" class="btn btn-info" onclick="submitForm()">
+                        <i class="fa fa-times"></i>Submit
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+        var dt_claims = $('#dt_claims').dataTable();
+        $("#dt_claims_wrapper .dt-toolbar").remove();
+        $("#search-box").on("keyup search input paste cut", function () {
+            $("#dt_claims").DataTable().search(this.value).draw();
+        });
+
+        //CHECK ALL ITEMS
+        $(document).on('click', '.cbCheckAllItems', function () {
+            $(".checkItem").prop('checked',
+                $(this).prop('checked'));
+        });
+        var claimsIds = [];
+        var initiatePayment = function () {
+            claimsIds = [];
+            $("input:checkbox.checkItem").each(function () {
+                if ($(this).prop("checked")) {
+                    claimsIds.push($(this).attr('id'));
+                }
+
+            });
+
+            if (claimsIds.length == 0) {
+
+                swal("Please select at least one employee!", { icon: "info" });
+                return;
+            }
+            else {
+                $('#paymentModal').modal('show');
+
+            }
+        }
+
+        var submitForm = function () {
+            var payee = $("#Payee").val();
+            if (!payee) {
+                swal("Please select Payee!", { icon: "info" });
+                return
+            }
+            var paymentType = $("#PaymentType").val();
+            if (!paymentType) {
+                swal("Please select Payment Type!", { icon: "info" });
+                return
+            }
+
+                  swal({
+                        title: 'Confirmation',
+                        text: "Do you initiate payment of selected entries?",
+                        buttons: [
+                          'No',
+                          'Yes'
+                        ],
+                    }).then(function (isConfirm) {
+                        if (isConfirm) {
+                          var url = '@Url.Action("InitiatePaymentUnreconciled", "ALSReconciliation")';
+                            $.ajax(
+                {
+                    type: "POST",
+                    url: url,
+                    data: { payee: payee, paymentType: paymentType, ids: claimsIds },
+                    success: function (response) {
+                        if (response == "Success") {
+
+                            swal("Payment initiated successfully", { icon: "success" })
+                                      .then((value) => {
+                                          location.reload();
+                                      });
+
+
+                        }
+                        else {
+
+                            swal(response);
+                        }
+                    },
+                    error: function (xhr) {
+                        swal(error);
+                    },
+
+                });
+                        } else {
+                            swal("Cancelled", "No change was made");
+                        }
+                    });
+
+        }
+
+
+        $("#paymentModal #Payee").change(function () {
+            var payee = $(this).val();
+            var url = '@Url.Action("GetPaymentType", "ALSReconciliation")';
+
+            $.ajax({
+                type: "GET",
+                url: url,
+                data: { payee: payee },
+                success: function (response) {
+                    $("#paymentModal #PaymentType").empty();
+                    $("#paymentModal #PaymentType").append(response);
+                }
+            })
+        });
+
+
+
+        //SHOW LOADER ICON
+        $(document).ajaxStart(function () {
+            $("#divLoader").show();
+        });
+        //HIDE LOADER ICON
+        $(document).ajaxStop(function () {
+            $("#divLoader").hide();
+        });
+
+    </script>
+}

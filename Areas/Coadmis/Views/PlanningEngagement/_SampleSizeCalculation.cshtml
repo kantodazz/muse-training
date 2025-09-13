@@ -1,0 +1,238 @@
+﻿@model IFMIS.Areas.Coadmis.Models.EngagementVM
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "calculateSampleSizeForm" }))
+{
+    @Html.AntiForgeryToken()
+<div class="form-horizontal">
+    @Html.HiddenFor(model => model.ClientInformationId)
+    <div class="form-group">
+        @Html.LabelFor(model => model.ClientName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-8">
+            @Html.EditorFor(model => model.ClientName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.ClientName, "", new { @class = "text-danger" })
+        </div>
+    </div>
+    <div class="form-group">
+        @Html.LabelFor(model => model.FinancialYearName, htmlAttributes: new { @class = "control-label col-md-2" })
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.FinancialYearName, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.FinancialYearName, "", new { @class = "text-danger" })
+        </div>
+      
+    </div>
+
+    <div class="form-group">
+        <label class="control-label col-md-2">Auditable Area<span class="redStar">*</span></label>
+        <div class="col-md-8">
+            @if (ViewBag.AuditableArea != null)
+            {
+                @Html.DropDownListFor(model => model.AuditableAreaName, ViewBag.AuditableArea as SelectList, "Select Auditable Area", new { @class = "form-control select2" })
+                @Html.ValidationMessageFor(model => model.AuditableAreaName, "", new { @class = "text-danger" })
+
+            }
+            else
+            {
+                @Html.DropDownList("AuditableAreaName", null, "Select Auditable Area", new { @class = "form-control select2" })
+
+            }
+        </div>
+    </div>
+    <div class="form-group">
+        <label class="control-label col-md-2">Risk Factor<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.RiskFactor, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.RiskFactor, "", new { @class = "text-danger" })
+        </div>
+
+         <label class="control-label col-md-2">Performance Materiality<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.PerformanceMateriality, new { htmlAttributes = new { @class = "form-control", @readonly = true } })
+            @Html.ValidationMessageFor(model => model.PerformanceMateriality, "", new { @class = "text-danger" })
+        </div>
+    </div>
+
+    <div class="form-group">
+
+        <label class="control-label col-md-2">Auditable Item<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            <select id="AuditableItem" name="AuditableItem" class="form-control select2" required="required">
+                <option>Select Auditable Item</option>
+            </select>
+        </div>
+
+        <label class="control-label col-md-2">Residual Population<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.ResidualPopulation, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.ResidualPopulation, "", new { @class = "text-danger" })
+        </div>
+
+    </div>
+    
+    <div class="form-group">
+        <label class="control-label col-md-2">High Value<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.HighValue, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.HighValue, "", new { @class = "text-danger" })
+        </div>
+
+        <label class="control-label col-md-2">Key Item<span class="redStar">*</span></label>
+        <div class="col-md-3">
+            @Html.EditorFor(model => model.KeyItem, new { htmlAttributes = new { @class = "form-control" } })
+            @Html.ValidationMessageFor(model => model.KeyItem, "", new { @class = "text-danger" })
+        </div>
+    </div>
+</div>
+}
+<script>
+
+
+     $("#AuditableAreaName").change(function () {
+         var name = $(this).val();
+         var fy = $("#FinancialYearName").val();
+         var clientId = $("#ClientInformationId").val();
+         $("#divLoader").show();
+            if (name != "") {
+                var url = '@Url.Action("GetAuditableItemByName", "PlanningEngagement")';
+                url += '?id=' + clientId + '&fy=' + fy + '&name=' + name;
+               var option = [];
+                $.ajax({
+                    url: url,
+                    type: "GET",
+                    dataType: "json",
+                    success: function (data) {
+
+                        console.log('select', data);
+                        option.empty;
+                        option.push('<option value="">Select Auditable Item</option>');
+                        data.data.forEach(d => {
+                            option.push('<option value=' + d["AuditableItemId"] + '>' + d["AuditableItemName"] + '</option>');
+                        });
+                        option = option.toString().replace(",", "").replace("[", "").replace("]", "");
+                        getSampleSize(name);
+                        $("#AuditableItem").html(option);
+                       
+                    }
+                });
+            }
+         $("#divLoader").hide();
+     })
+
+
+    function getSampleSize(name) {
+        debugger;
+        $("#divLoader").show();
+        var fy = $("#FinancialYearName").val();
+        var clientId = $("#ClientInformationId").val();
+        if (!(name == null)) {
+            if (!(name == "")) {
+                var url = '@Url.Action("GetSampleSizeInputCalculation", "PlanningEngagement")';
+                url += '?id=' + clientId + '&fy=' + fy + '&name=' + name;
+                $.ajax({
+                    type: "POST",
+                    url: url,
+                    dataType: "json",
+                    success: function (data, status, jqXHR) {
+                        $("#divLoader").hide();
+                        if (data.success) {
+                            document.getElementById('RiskFactor').value = data.RiskFactor.toLocaleString();
+                            document.getElementById('PerformanceMateriality').value = data.PerformanceMateriality.toLocaleString();
+                            $("#amountId").show();
+
+                        } else {
+                            swal('No Risk Factor and Performance Materiality', {icon:"warning"});
+                            document.getElementById('RiskFactor').value = "";
+                            document.getElementById('PerformanceMateriality').value = "";
+                        }
+                    }
+                });
+            }
+        }
+        $("#divLoader").hide();
+    }
+
+    $(document).ready(function () {
+        $("#AuditableAreaName, #AuditableItem").select2({
+            dropdownParent: $("#calculateSampleSizeForm")
+        });
+    });
+
+
+
+    $("#SampleSizeModal").on('click', function () {
+        debugger;
+       
+        var clientName = $("#ClientName").val();
+        var clientId = $("#ClientInformationId").val();
+        var fy = $("#FinancialYearName").val();
+        var auditableAreaName = $("#AuditableAreaName").val();
+        var riskFactor = $("#RiskFactor").val();
+        var performanceMateriality = $("#PerformanceMateriality").val();
+        var auditableItem = $("#AuditableItem").val();
+        var residualPopulation = $("#ResidualPopulation").val();
+        var keyItem1 = $("#KeyItem").val();
+        var highValue1 = $("#HighValue").val();
+
+        var keyItem = parseFloat($("#KeyItem").val().toString().split(",").join(""));
+        var highValue = parseFloat($("#HighValue").val().toString().split(",").join(""));
+        var residualAmount = parseFloat($("#ResidualPopulation").val().toString().split(",").join(""));
+        var performanceAmount = parseFloat($("#PerformanceMateriality").val().toString().split(",").join(""));
+
+        var sampleSize = ((residualAmount / performanceAmount) * riskFactor);
+        var totalSampleSize = (sampleSize + keyItem + highValue);
+        if (keyItem1 == '' || highValue1 == '' || riskFactor == '' || performanceMateriality == '' ||
+            residualPopulation == '' || clientId == '' || auditableItem == '') {
+            swal("Please Fill All the required Fields", { icon: "warning" });
+            return false;
+        }
+
+        var formdata = new FormData();
+        formdata.append("__RequestVerificationToken", $('[name=__RequestVerificationToken]').val());
+        formdata.append("ClientInformationId", clientId);
+        formdata.append("ClientName", clientName);
+        formdata.append("FinancialYearName", fy);
+        formdata.append("AuditableAreaName", auditableAreaName);
+        formdata.append("RiskFactor", riskFactor);
+        formdata.append("PerformanceMateriality", performanceMateriality);
+        formdata.append("AuditableItem", auditableItem);
+        formdata.append("ResidualPopulation", residualPopulation);
+        formdata.append("SampleSizeValue", sampleSize);
+        formdata.append("KeyItem", keyItem);
+        formdata.append("TotalSampleSize", totalSampleSize);
+        formdata.append("HighValue", highValue);
+        $("#SampleSizeModal").prop('disabled', true);
+        $("#divLoader").show();
+        var url = '@Url.Action("SaveSamplingCalculation", "PlanningEngagement")';
+        $.ajax({
+            url: url,
+            data: formdata,
+            type: 'POST',
+            contentType: false,
+            processData: false,
+            success: function (response) {
+                console.log('response', response)
+                //$("#SampleSizeModal").prop('disabled', false);
+                $("#divLoader").hide();
+                if (response == "Success") {
+                    swal("Saved Successfully!", { icon: "success" })
+                        .then((value) => {
+                            window.location.reload();
+                        });
+                } else if (response == "Duplicate") {
+                    swal("Dublicate Sample Record!", { icon: "warning" })
+                        .then((value) => {
+                            return false;
+                        });
+                }
+                else {
+                    swal(response);
+                }
+            },
+            failure: function (error) {
+                $("#SampleSizeModal").prop('disabled', false);
+                $("#divLoader").hide();
+                swal(error);
+            }
+        });
+    });
+
+
+</script>

@@ -1,0 +1,195 @@
+﻿@model IFMIS.Areas.Gacs.Models.TemplateGeneratorVM
+
+@{
+    Layout = "~/Views/Shared/_Layout.cshtml";
+    ViewBag.Title = "Create";
+}
+
+<div id="content" style="margin: 5px; padding-top: 30px">
+
+    <div class="row">
+
+
+    </div>
+
+
+    <!-- widget grid -->
+    <section id="widget-grid" class="">
+
+
+        <!-- START ROW -->
+
+        <div class="row">
+
+            <!-- NEW COL START -->
+            <article class="col-sm-12 col-md-12 col-lg-12">
+
+                <!-- Widget ID (each widget will need unique ID)-->
+                <div class="jarviswidget" id="wid-id-0" data-widget-editbutton="false" data-widget-custombutton="false" data-widget-colorbutton="false" data-widget-deletebutton="false" data-widget-togglebutton="false">
+
+                    <header>
+                        <span class="widget-icon"> <i class="fa fa-edit"></i> </span>
+                        <h2> GACS </h2>
+
+                    </header>
+
+
+                    <div>
+                        <div class="widget-body " style="padding-top:10px;width:100%">
+
+                            @using (Html.BeginForm(null, null, FormMethod.Post, new { enctype = "multipart/form-data", onsubmit = "return GenarateTemplate(this)" }))
+                            {
+                                @Html.AntiForgeryToken()
+
+                            <div class="form-horizontal">
+                                <h4> Template Generator</h4>
+                                <div align="center">
+                                    <img src="~/Media/Images/ajax_loader.gif" class="loadingImg" style="display:none" />
+                                </div>
+                                <hr />
+                                @Html.ValidationSummary(true, "", new { @class = "text-danger" })
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.FiscalYearId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.DropDownListFor(model => model.FiscalYearId, Model.FiscalYearsList, "Select Fiscal Year", new { @class = "form-control select2", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.FiscalYearId, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.InstitutionalCode, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.DropDownListFor(model => model.InstitutionalCode, Model.EntitiesList, "Select Institution", new { @class = "form-control select2", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.InstitutionalCode, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.NoteId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        @Html.DropDownListFor(model => model.NoteId, Model.NotesList, "Select Note", new { @class = "form-control select2", @required = "required" })
+                                        @Html.ValidationMessageFor(model => model.NoteId, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+                                <div class="form-group">
+                                    @Html.LabelFor(model => model.ItemId, htmlAttributes: new { @class = "control-label col-md-2" })
+                                    <div class="col-md-5">
+                                        <select name="ItemId" id="ItemId" class="form-control select2">
+                                            <option value="0">All</option>
+                                        </select>
+                                        @Html.ValidationMessageFor(model => model.ItemId, "", new { @class = "text-danger" })
+                                    </div>
+                                </div>
+
+
+                                <div class="form-actions">
+                                    <div class="row">
+                                        <div class="col-md-8 col-md-offset-2">
+                                            <button class="btn btn-info" id="save_button" style="float: left; margin-left: 5px">
+                                                <i class="glyphicon glyphicon-floppy-disk"></i> Generate
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            }
+
+                        </div>
+
+                    
+
+
+
+                    </div>
+
+
+                </div>
+            </article>
+
+        </div>
+    </section>
+
+</div>
+
+@section pagespecific {
+    <!-- PAGE RELATED PLUGIN(S) -->
+
+    <script type="text/javascript">
+
+        function GetGacNotItem(id) {
+             $.ajax({
+                type: "GET",
+                url: '@Url.Action("GetNoteItems", "TemplateGenerator")',
+                data: { id: id },
+                 success: function (response) {
+                     $("#ItemId").empty();
+                     $("#ItemId").append(response);
+                 },
+                error: function () {
+                    swal({
+                        text: "Error on accessing Gacs Not items",
+                        icon: "error",
+                        button: "OK",
+                    })
+                }
+            })
+        }
+            //SHOW LOADER ICON
+            $(document).ajaxStart(function () {
+                $(".loadingImg").show();
+
+            });
+            //HIDE LOADER ICON
+            $(document).ajaxStop(function () {
+                $(".loadingImg").hide();
+            });
+
+        $("#NoteId").on("change", function () {
+            var id = $(this).val();
+             GetGacNotItem(id);
+        })
+
+        function GenarateTemplate(formData) {
+
+            var fiscalYearId = $("#FiscalYearId").val();
+            if (!fiscalYearId) {
+                swal("Please select Fiscal Year !");
+                return
+            }
+            var entityCode = $("#InstitutionalCode").val();
+            if (!entityCode) {
+                swal("Please select Entity Code !");
+                return
+            }
+            var noteId = $("#NoteId").val();
+            if (!noteId) {
+                swal("Please select Note No !");
+                return
+            }
+
+             $("#save_button").prop('disabled', true);
+            var url = '@Url.Action("Generate", "TemplateGenerator")';
+            var ajaxConfig = {
+                type: "post",
+                url: url,
+                data: new FormData(formData),
+                success: function (response) {
+                      $("#save_button").prop('disabled', false);
+                    if (response == "Success") {
+                        swal("Template generated  successfully");
+                    }                   
+                    else {
+                        swal(response);
+                    }
+                }
+            }
+
+            if ($(formData).attr('enctype') == "multipart/form-data") {
+                ajaxConfig["contentType"] = false;
+                ajaxConfig["processData"] = false;
+            }
+            $.ajax(ajaxConfig);
+            return false;
+        }
+    </script>
+}
+
